@@ -7,9 +7,11 @@ export function Footer() {
         <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
           © 2025 Impulsa Pro. Todos los derechos reservados. Aplicación creada por Search and Make S.L.
         </p>
-        <nav className="flex gap-4">
-          <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Términos</Link>
-          <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Privacidad</Link>
+        <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+          <Link href="/politica-de-privacidad" className="text-sm text-muted-foreground hover:text-foreground">Política de Privacidad</Link>
+          <Link href="/politica-de-cookies" className="text-sm text-muted-foreground hover:text-foreground">Política de Cookies</Link>
+          <Link href="/aviso-legal" className="text-sm text-muted-foreground hover:text-foreground">Aviso Legal</Link>
+          <Link href="/condiciones-de-uso" className="text-sm text-muted-foreground hover:text-foreground">Condiciones de Uso</Link>
         </nav>
       </div>
     </footer>
