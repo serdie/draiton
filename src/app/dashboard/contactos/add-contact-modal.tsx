@@ -17,15 +17,17 @@ interface AddContactModalProps {
 export function AddContactModal({ isOpen, onClose }: AddContactModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Añadir Nuevo Contacto</DialogTitle>
           <DialogDescription>
             Completa la información para el nuevo contacto.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          <AddContactForm onClose={onClose} />
+        <div className="flex-1 overflow-y-auto pr-6 -mr-6">
+            <div className="py-4 pr-2">
+                <AddContactForm onClose={onClose} />
+            </div>
         </div>
       </DialogContent>
     </Dialog>
