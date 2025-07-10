@@ -18,19 +18,29 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Trash2, ExternalLink } from 'lucide-react';
-import Image from 'next/image';
+import { MoreHorizontal, PlusCircle, Trash2, Mail, Facebook, Linkedin, Bot, Stripe, MessageSquare, Server } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import React from 'react';
+
+const GoogleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15.5 16.5c-1.5-1.5-2-4-1-6 1-2 3-3 5-2 2 1 3 3 2 5-1 2-3.5 2.5-6.5 3" />
+    <path d="M12 14c-1.5-1.5-1.5-3.5 0-5 1.5-1.5 3.5-1.5 5 0" />
+    <path d="M8.5 11.5c-1-1-1-2.5 0-3.5 1-1 2.5-1 3.5 0" />
+    <path d="M14 12c-1.5-1.5-2-4-1-6 1-2 3-3 5-2 2 1 3 3 2 5-1 2-3.5 2.5-6.5 3" />
+    <path d="M18 10c-1-1-1-2.5 0-3.5 1-1 2.5-1 3.5 0" />
+  </svg>
+);
 
 const availableConnections = [
-  { name: 'Google', description: 'Gmail, Drive, Calendar...', logo: '/logos/google.svg' },
-  { name: 'Facebook', description: 'Facebook Pages, Messenger...', logo: '/logos/facebook.svg' },
-  { name: 'Instagram', description: 'Instagram for Business', logo: '/logos/instagram.svg' },
-  { name: 'LinkedIn', description: 'Perfiles y páginas de empresa', logo: '/logos/linkedin.svg' },
-  { name: 'Mailchimp', description: 'Listas y campañas', logo: '/logos/mailchimp.svg' },
-  { name: 'Stripe', description: 'Pagos y clientes', logo: '/logos/stripe.svg' },
-  { name: 'WhatsApp', description: 'WhatsApp Business API', logo: '/logos/whatsapp.svg' },
-  { name: 'SMTP', description: 'Envío de correo personalizado', logo: '/logos/smtp.svg' },
+  { name: 'Google', description: 'Gmail, Drive, Calendar...', icon: <GoogleIcon /> },
+  { name: 'Facebook', description: 'Facebook Pages, Messenger...', icon: <Facebook /> },
+  { name: 'Instagram', description: 'Instagram for Business', icon: <Bot /> }, // Placeholder for Instagram
+  { name: 'LinkedIn', description: 'Perfiles y páginas de empresa', icon: <Linkedin /> },
+  { name: 'Mailchimp', description: 'Listas y campañas', icon: <Mail /> },
+  { name: 'Stripe', description: 'Pagos y clientes', icon: <Stripe /> },
+  { name: 'WhatsApp', description: 'WhatsApp Business API', icon: <MessageSquare /> },
+  { name: 'SMTP', description: 'Envío de correo personalizado', icon: <Server /> },
 ];
 
 const connectedAccounts = [
@@ -44,9 +54,9 @@ const getStatusBadgeClass = (status: string) => {
   return 'bg-yellow-100 text-yellow-800 border-yellow-200';
 };
 
-const getProviderLogo = (provider: string) => {
+const getProviderIcon = (provider: string) => {
     const conn = availableConnections.find(c => c.name.toLowerCase() === provider.toLowerCase());
-    return conn ? conn.logo : '/logos/default.svg';
+    return conn ? conn.icon : <Server />;
 }
 
 export default function IntegracionesPage() {
@@ -76,7 +86,9 @@ export default function IntegracionesPage() {
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {availableConnections.map((conn) => (
             <Card key={conn.name} className="flex flex-col items-center justify-center text-center p-4">
-              <Image data-ai-hint={`${conn.name} logo`} src={conn.logo} alt={`${conn.name} Logo`} width={48} height={48} className="mb-4" />
+              <div className="mb-4 h-12 w-12 flex items-center justify-center bg-muted rounded-full text-primary">
+                    {React.cloneElement(conn.icon, { className: "h-6 w-6" })}
+               </div>
               <p className="font-semibold">{conn.name}</p>
               <p className="text-xs text-muted-foreground mb-4">{conn.description}</p>
               <Button variant="outline" size="sm" onClick={() => handleConnect(conn.name)}>
@@ -97,7 +109,7 @@ export default function IntegracionesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50px]">Logo</TableHead>
+                <TableHead className="w-[50px]">Icono</TableHead>
                 <TableHead>Servicio</TableHead>
                 <TableHead>Nombre de la Conexión</TableHead>
                 <TableHead>Estado</TableHead>
@@ -107,8 +119,8 @@ export default function IntegracionesPage() {
             <TableBody>
               {connectedAccounts.map((acc) => (
                 <TableRow key={acc.id}>
-                  <TableCell>
-                     <Image data-ai-hint={`${acc.provider} logo`} src={getProviderLogo(acc.provider)} alt={`${acc.provider} logo`} width={24} height={24} />
+                  <TableCell className="text-muted-foreground">
+                     {React.cloneElement(getProviderIcon(acc.provider), { className: "h-5 w-5" })}
                   </TableCell>
                   <TableCell className="font-medium">{acc.provider}</TableCell>
                   <TableCell className="text-muted-foreground">{acc.name}</TableCell>
