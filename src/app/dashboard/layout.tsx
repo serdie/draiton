@@ -27,30 +27,33 @@ import {
 import {
   LayoutDashboard,
   FileText,
-  Mail,
-  Share2,
+  Landmark,
   Users,
-  Wand2,
-  Sparkles,
-  MonitorCog,
-  ScanLine,
-  Plug,
+  Briefcase,
+  BrainCircuit,
+  Megaphone,
+  Palette,
+  Zap,
+  Bot,
+  Link2,
   Settings,
   LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
-  { href: '/dashboard', icon: <LayoutDashboard />, label: 'Inicio' },
-  { href: '/dashboard/facturacion', icon: <FileText />, label: 'Facturación' },
-  { href: '/dashboard/marketing', icon: <Mail />, label: 'Marketing' },
-  { href: '/dashboard/redes-sociales', icon: <Share2 />, label: 'Redes Sociales' },
-  { href: '/dashboard/clientes-proveedores', icon: <Users />, label: 'Clientes y Proveedores' },
-  { href: '/dashboard/automatizaciones', icon: <Wand2 />, label: 'Automatizaciones' },
-  { href: '/dashboard/asistente-ia', icon: <Sparkles />, label: 'Asistente IA' },
-  { href: '/dashboard/gestor-web-ia', icon: <MonitorCog />, label: 'Gestor Web IA' },
-  { href: '/dashboard/extractor-facturas', icon: <ScanLine />, label: 'Extractor de Facturas' },
-  { href: '/dashboard/conexiones', icon: <Plug />, label: 'Conexiones' },
+  { href: '/dashboard', icon: <LayoutDashboard />, label: 'Panel de Control' },
+  { href: '/dashboard/documentos', icon: <FileText />, label: 'Documentos' },
+  { href: '/dashboard/gastos', icon: <Landmark />, label: 'Gastos' },
+  { href: '/dashboard/contactos', icon: <Users />, label: 'Contactos' },
+  { href: '/dashboard/proyectos', icon: <Briefcase />, label: 'Proyectos' },
+  { href: '/dashboard/perspectivas-ia', icon: <BrainCircuit />, label: 'Perspectivas IA' },
+  { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing' },
+  { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA' },
+  { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones' },
+  { href: '/dashboard/gestor-ia', icon: <Bot />, label: 'Gestor IA' },
+  { href: '/dashboard/integraciones', icon: <Link2 />, label: 'Integraciones' },
+  { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },
 ];
 
 export default function DashboardLayout({
@@ -103,10 +106,12 @@ export default function DashboardLayout({
             <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
               <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Ajustes</span>
-              </DropdownMenuItem>
+              <Link href="/dashboard/configuracion">
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Configuración</span>
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuSeparator />
               <Link href="/">
                 <DropdownMenuItem>
@@ -124,9 +129,11 @@ export default function DashboardLayout({
             <SidebarTrigger />
           </div>
           <div className="flex-1 text-right">
+            <Link href="/dashboard/configuracion">
              <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5"/>
              </Button>
+            </Link>
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
