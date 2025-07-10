@@ -23,31 +23,14 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { useToast } from '@/hooks/use-toast';
-import { extractReceiptData, ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
+import { type ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
+import { scanReceiptAction } from './actions';
 
 interface RegisterExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenModal: (data: ExtractReceiptDataOutput) => void;
   initialData?: ExtractReceiptDataOutput;
-}
-
-// Server action to process the image with Genkit
-async function scanReceiptAction(formData: FormData): Promise<{ data: ExtractReceiptDataOutput | null; error: string | null }> {
-  'use server';
-  const receiptDataUri = formData.get('receiptDataUri') as string;
-
-  if (!receiptDataUri) {
-    return { data: null, error: 'No se ha proporcionado ninguna imagen.' };
-  }
-
-  try {
-    const result = await extractReceiptData({ receiptDataUri });
-    return { data: result, error: null };
-  } catch (e: any) {
-    console.error(e);
-    return { data: null, error: 'No se pudo extraer la información del ticket. Asegúrate de que la imagen sea clara.' };
-  }
 }
 
 export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData }: RegisterExpenseModalProps) {
