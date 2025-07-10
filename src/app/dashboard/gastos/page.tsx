@@ -115,9 +115,9 @@ export default function GastosPage() {
 
   // Filter states
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [categoria, setCategoria] = useState('');
+  const [categoria, setCategoria] = useState('all');
   const [proveedor, setProveedor] = useState('');
-  const [metodoPago, setMetodoPago] = useState('');
+  const [metodoPago, setMetodoPago] = useState('all');
 
   const gastosFiltrados = useMemo(() => {
     return gastos.filter(gasto => {
@@ -126,9 +126,9 @@ export default function GastosPage() {
         (!dateRange.from || fechaGasto >= dateRange.from) &&
         (!dateRange.to || fechaGasto <= dateRange.to)
       );
-      const porCategoria = !categoria || gasto.categoria === categoria;
+      const porCategoria = categoria === 'all' || gasto.categoria === categoria;
       const porProveedor = !proveedor || gasto.proveedor.toLowerCase().includes(proveedor.toLowerCase());
-      const porMetodoPago = !metodoPago || gasto.metodoPago === metodoPago;
+      const porMetodoPago = metodoPago === 'all' || gasto.metodoPago === metodoPago;
       
       return enRangoFecha && porCategoria && porProveedor && porMetodoPago;
     });
@@ -136,9 +136,9 @@ export default function GastosPage() {
 
   const resetFilters = () => {
     setDateRange(undefined);
-    setCategoria('');
+    setCategoria('all');
     setProveedor('');
-    setMetodoPago('');
+    setMetodoPago('all');
   }
 
   const handleOpenModal = (data?: ExtractReceiptDataOutput) => {
@@ -221,7 +221,7 @@ export default function GastosPage() {
                             <SelectValue placeholder="Categoría" />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">Todas</SelectItem>
+                             <SelectItem value="all">Todas</SelectItem>
                             {categoriasUnicas.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                         </SelectContent>
                     </Select>
@@ -235,7 +235,7 @@ export default function GastosPage() {
                             <SelectValue placeholder="Método de pago" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Todos</SelectItem>
+                            <SelectItem value="all">Todos</SelectItem>
                             {metodosPagoUnicos.map(met => <SelectItem key={met} value={met}>{met}</SelectItem>)}
                         </SelectContent>
                     </Select>
