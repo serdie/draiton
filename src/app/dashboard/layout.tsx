@@ -1,7 +1,10 @@
+
 'use client';
 
+import { useEffect, useContext, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { AuthContext, User } from '@/context/auth-context';
 import {
   SidebarProvider,
   Sidebar,
@@ -39,9 +42,12 @@ import {
   Settings,
   LogOut,
   Newspaper,
-  FileEdit
+  FileEdit,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
 
 const navItems = [
   { href: '/dashboard', icon: <LayoutDashboard />, label: 'Panel de Control' },
@@ -58,12 +64,51 @@ const navItems = [
   { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },
 ];
 
+function UserAvatar({ user }: { user: User }) {
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
+
+  return (
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'Usuario'} />
+        <AvatarFallback>{user.displayName ? getInitials(user.displayName) : 'U'}</AvatarFallback>
+      </Avatar>
+  )
+}
+
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading } = useContext(AuthContext);
+  const router = useRouter();
   const pathname = usePathname();
+  
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // or a login form, but we redirect so this is fine
+  }
 
   return (
     <SidebarProvider>
@@ -95,13 +140,10 @@ export default function DashboardLayout({
            <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-2 p-2 rounded-md hover:bg-sidebar-accent cursor-pointer w-full text-left">
-                    <Avatar className="h-8 w-8">
-                        <AvatarImage src="https://placehold.co/40x40.png" alt="Usuario" />
-                        <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
+                    <UserAvatar user={user} />
                     <div className="flex flex-col overflow-hidden">
-                        <span className="font-medium truncate">Usuario</span>
-                        <span className="text-xs text-muted-foreground truncate">usuario@email.com</span>
+                        <span className="font-medium truncate">{user.displayName || 'Usuario'}</span>
+                        <span className="text-xs text-muted-foreground truncate">{user.email}</span>
                     </div>
                 </div>
             </DropdownMenuTrigger>
@@ -115,12 +157,10 @@ export default function DashboardLayout({
                 </DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />
-              <Link href="/">
-                <DropdownMenuItem>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar sesión</span>
-                </DropdownMenuItem>
-              </Link>
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar sesión</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarFooter>
