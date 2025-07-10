@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import type { DateRange } from "react-day-picker"
 import {
   Card,
   CardContent,
@@ -24,15 +25,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, FilterX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RegisterExpenseModal } from './register-expense-modal';
 import type { ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 
 const gastos = [
   {
-    fecha: '01 nov 2023',
+    fecha: '2023-11-01',
     categoria: 'Software',
     proveedor: 'Suscripción GenialApp',
     descripcion: 'Suscripción mensual a herramienta de diseño.',
@@ -40,7 +47,7 @@ const gastos = [
     importe: 49.99,
   },
   {
-    fecha: '05 nov 2023',
+    fecha: '2023-11-05',
     categoria: 'Oficina',
     proveedor: 'Materiales Escritorio S.L.',
     descripcion: 'Compra de bolígrafos y libretas.',
@@ -48,7 +55,7 @@ const gastos = [
     importe: 25.5,
   },
   {
-    fecha: '10 nov 2023',
+    fecha: '2023-11-10',
     categoria: 'Marketing',
     proveedor: 'Publicidad Online',
     descripcion: 'Campaña de anuncios en Facebook.',
@@ -56,7 +63,7 @@ const gastos = [
     importe: 150.0,
   },
   {
-    fecha: '15 nov 2023',
+    fecha: '2023-11-15',
     categoria: 'Viajes',
     proveedor: 'Renfe',
     descripcion: 'Billete de tren para reunión con cliente.',
@@ -64,14 +71,26 @@ const gastos = [
     importe: 75.2,
   },
   {
-    fecha: '20 nov 2023',
+    fecha: '2023-11-20',
     categoria: 'Otros',
     proveedor: 'Cafetería La Esquina',
     descripcion: 'Café reunión equipo.',
     metodoPago: 'Cash',
     importe: 12.8,
   },
+  {
+    fecha: '2023-10-25',
+    categoria: 'Software',
+    proveedor: 'Adobe',
+    descripcion: 'Suscripción Creative Cloud',
+    metodoPago: 'Credit Card',
+    importe: 59.99,
+  },
 ];
+
+const categoriasUnicas = [...new Set(gastos.map(g => g.categoria))];
+const proveedoresUnicos = [...new Set(gastos.map(g => g.proveedor))];
+const metodosPagoUnicos = [...new Set(gastos.map(g => g.metodoPago))];
 
 const getCategoryBadgeClass = (category: string) => {
   switch (category.toLowerCase()) {
@@ -94,6 +113,34 @@ export default function GastosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialData, setInitialData] = useState<ExtractReceiptDataOutput | undefined>();
 
+  // Filter states
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [categoria, setCategoria] = useState('');
+  const [proveedor, setProveedor] = useState('');
+  const [metodoPago, setMetodoPago] = useState('');
+
+  const gastosFiltrados = useMemo(() => {
+    return gastos.filter(gasto => {
+      const fechaGasto = new Date(gasto.fecha);
+      const enRangoFecha = !dateRange || (
+        (!dateRange.from || fechaGasto >= dateRange.from) &&
+        (!dateRange.to || fechaGasto <= dateRange.to)
+      );
+      const porCategoria = !categoria || gasto.categoria === categoria;
+      const porProveedor = !proveedor || gasto.proveedor.toLowerCase().includes(proveedor.toLowerCase());
+      const porMetodoPago = !metodoPago || gasto.metodoPago === metodoPago;
+      
+      return enRangoFecha && porCategoria && porProveedor && porMetodoPago;
+    });
+  }, [dateRange, categoria, proveedor, metodoPago]);
+
+  const resetFilters = () => {
+    setDateRange(undefined);
+    setCategoria('');
+    setProveedor('');
+    setMetodoPago('');
+  }
+
   const handleOpenModal = (data?: ExtractReceiptDataOutput) => {
     setInitialData(data);
     setIsModalOpen(true);
@@ -101,7 +148,6 @@ export default function GastosPage() {
   
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    // Clear initial data when closing, so the form is empty next time it opens manually
     setInitialData(undefined);
   }
 
@@ -128,6 +174,80 @@ export default function GastosPage() {
         </div>
 
         <Card>
+            <CardHeader>
+                <CardTitle>Filtros</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            id="date"
+                            variant={"outline"}
+                            className={cn(
+                            "justify-start text-left font-normal",
+                            !dateRange && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateRange?.from ? (
+                            dateRange.to ? (
+                                <>
+                                {format(dateRange.from, "LLL dd, y", { locale: es })} -{" "}
+                                {format(dateRange.to, "LLL dd, y", { locale: es })}
+                                </>
+                            ) : (
+                                format(dateRange.from, "LLL dd, y", { locale: es })
+                            )
+                            ) : (
+                            <span>Selecciona un rango</span>
+                            )}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={setDateRange}
+                            numberOfMonths={2}
+                            locale={es}
+                        />
+                        </PopoverContent>
+                    </Popover>
+                    <Select value={categoria} onValueChange={setCategoria}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Categoría" />
+                        </SelectTrigger>
+                        <SelectContent>
+                             <SelectItem value="">Todas</SelectItem>
+                            {categoriasUnicas.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                     <Input 
+                        placeholder="Buscar por proveedor..."
+                        value={proveedor}
+                        onChange={(e) => setProveedor(e.target.value)}
+                    />
+                    <Select value={metodoPago} onValueChange={setMetodoPago}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Método de pago" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="">Todos</SelectItem>
+                            {metodosPagoUnicos.map(met => <SelectItem key={met} value={met}>{met}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Button variant="outline" onClick={resetFilters}>
+                        <FilterX className="mr-2 h-4 w-4" />
+                        Limpiar Filtros
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader>
             <CardTitle>Listado de Gastos</CardTitle>
             <CardDescription>
@@ -148,9 +268,9 @@ export default function GastosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {gastos.map((gasto, index) => (
+                {gastosFiltrados.length > 0 ? gastosFiltrados.map((gasto, index) => (
                   <TableRow key={index}>
-                    <TableCell>{gasto.fecha}</TableCell>
+                    <TableCell>{format(new Date(gasto.fecha), "dd MMM yyyy", { locale: es })}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={cn('font-normal', getCategoryBadgeClass(gasto.categoria))}>
                         {gasto.categoria}
@@ -183,7 +303,13 @@ export default function GastosPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                    <TableRow>
+                        <TableCell colSpan={7} className="text-center h-24">
+                            No se encontraron gastos con los filtros aplicados.
+                        </TableCell>
+                    </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
