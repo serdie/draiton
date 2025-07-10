@@ -9,7 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { FileUp, FilePlus, MoreHorizontal } from 'lucide-react';
 import { ImportInvoiceModal } from './import-invoice-modal';
+import { CreateDocumentForm } from './create-document-form';
 
+type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
 
 const facturas = [
   {
@@ -69,11 +71,22 @@ const getBadgeClass = (estado: string) => {
 
 
 export default function DocumentosPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<DocumentType>('factura');
+  
+  const handleCreateNew = () => {
+    setIsCreateModalOpen(true);
+  };
 
   return (
     <>
-      <ImportInvoiceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <ImportInvoiceModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} />
+      <CreateDocumentForm 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        documentType={activeTab}
+      />
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -83,25 +96,25 @@ export default function DocumentosPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsModalOpen(true)}>
+            <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
               <FileUp className="mr-2 h-4 w-4" />
               Importar Facturas
             </Button>
-            <Button>
+            <Button onClick={handleCreateNew}>
               <FilePlus className="mr-2 h-4 w-4" />
               Crear Nuevo Documento
             </Button>
           </div>
         </div>
 
-        <Tabs defaultValue="facturas">
+        <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as DocumentType)}>
           <TabsList>
-            <TabsTrigger value="facturas">Facturas</TabsTrigger>
-            <TabsTrigger value="presupuestos">Presupuestos</TabsTrigger>
-            <TabsTrigger value="notas-credito">Notas de Crédito</TabsTrigger>
+            <TabsTrigger value="factura">Facturas</TabsTrigger>
+            <TabsTrigger value="presupuesto">Presupuestos</TabsTrigger>
+            <TabsTrigger value="nota-credito">Notas de Crédito</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="facturas">
+          <TabsContent value="factura">
             <Card>
               <CardHeader>
                   <p className="text-sm text-muted-foreground">Una lista de tus facturas recientes.</p>
@@ -159,7 +172,7 @@ export default function DocumentosPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="presupuestos">
+          <TabsContent value="presupuesto">
             <Card>
               <CardHeader>
                   <p className="text-sm text-muted-foreground">Aquí aparecerá la lista de tus presupuestos.</p>
@@ -171,7 +184,7 @@ export default function DocumentosPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="notas-credito">
+          <TabsContent value="nota-credito">
             <Card>
               <CardHeader>
                   <p className="text-sm text-muted-foreground">Aquí aparecerá la lista de tus notas de crédito.</p>

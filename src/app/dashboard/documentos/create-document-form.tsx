@@ -1,0 +1,292 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CalendarIcon, PlusCircle, Trash2, Pencil } from 'lucide-react';
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+import { cn } from "@/lib/utils"
+
+type LineItem = {
+  id: number;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+};
+
+type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
+
+interface CreateDocumentFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  documentType: DocumentType;
+}
+
+const getDocumentTypeLabel = (type: DocumentType) => {
+    switch (type) {
+        case 'factura': return 'Factura';
+        case 'presupuesto': return 'Presupuesto';
+        case 'nota-credito': return 'Nota de Crédito';
+    }
+}
+
+export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocumentFormProps) {
+  const [docType, setDocType] = useState(documentType);
+  const [docNumber, setDocNumber] = useState('');
+  const [emissionDate, setEmissionDate] = useState<Date | undefined>(new Date());
+  const [dueDate, setDueDate] = useState<Date | undefined>();
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { id: 1, description: '', quantity: 1, unitPrice: 0, total: 0 },
+  ]);
+  const [taxRate, setTaxRate] = useState(21);
+
+  useEffect(() => {
+    setDocType(documentType);
+  }, [documentType]);
+  
+  useEffect(() => {
+    const prefix = {
+        'factura': 'FACT',
+        'presupuesto': 'PRES',
+        'nota-credito': 'NC'
+    }[docType];
+    const year = new Date().getFullYear();
+    // In a real app, this would come from a database sequence
+    const randomId = Math.floor(Math.random() * 900) + 100;
+    setDocNumber(`${prefix}-${year}-${String(randomId).padStart(3, '0')}`);
+  }, [docType]);
+
+  const handleAddLine = () => {
+    const newLine: LineItem = {
+      id: Date.now(),
+      description: '',
+      quantity: 1,
+      unitPrice: 0,
+      total: 0,
+    };
+    setLineItems([...lineItems, newLine]);
+  };
+
+  const handleRemoveLine = (id: number) => {
+    setLineItems(lineItems.filter((item) => item.id !== id));
+  };
+  
+  const handleLineItemChange = (id: number, field: keyof Omit<LineItem, 'id' | 'total'>, value: string | number) => {
+    const updatedItems = lineItems.map((item) => {
+      if (item.id === id) {
+        const newItem = { ...item, [field]: value };
+        if (field === 'quantity' || field === 'unitPrice') {
+            const quantity = field === 'quantity' ? Number(value) : newItem.quantity;
+            const unitPrice = field === 'unitPrice' ? Number(value) : newItem.unitPrice;
+            newItem.total = quantity * unitPrice;
+        }
+        return newItem;
+      }
+      return item;
+    });
+    setLineItems(updatedItems);
+  };
+  
+  const { subtotal, taxAmount, total } = useMemo(() => {
+    const subtotal = lineItems.reduce((acc, item) => acc + item.total, 0);
+    const taxAmount = (subtotal * taxRate) / 100;
+    const total = subtotal + taxAmount;
+    return { subtotal, taxAmount, total };
+  }, [lineItems, taxRate]);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Crear {getDocumentTypeLabel(docType)}</DialogTitle>
+          <DialogDescription>
+            Completa los detalles para crear un nuevo documento.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto pr-6 -mr-6 space-y-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <Select value={docType} onValueChange={(value) => setDocType(value as DocumentType)}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar tipo de documento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="factura">Factura</SelectItem>
+                        <SelectItem value="presupuesto">Presupuesto</SelectItem>
+                        <SelectItem value="nota-credito">Nota de Crédito</SelectItem>
+                    </SelectContent>
+                </Select>
+                <div />
+                 <Input value={docNumber} readOnly className="font-mono text-right" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-base">Detalles del Emisor</CardTitle>
+                        <Button variant="ghost" size="icon" className="h-6 w-6"><Pencil className="h-4 w-4" /></Button>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                         <div>
+                            <Label>Nombre Emisor</Label>
+                            <Input defaultValue="Tu Empresa S.L." />
+                        </div>
+                         <div>
+                            <Label>CIF/NIF Emisor</Label>
+                            <Input defaultValue="Y12345672" />
+                        </div>
+                        <div>
+                            <Label>Dirección Emisor</Label>
+                            <Textarea defaultValue="Tu Dirección, Ciudad, País" />
+                        </div>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-base">Detalles del Cliente</CardTitle>
+                         <Button variant="ghost" size="icon" className="h-6 w-6"><Pencil className="h-4 w-4" /></Button>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                         <div>
+                            <Label>Nombre Cliente</Label>
+                            <Input placeholder="Nombre del Cliente" />
+                        </div>
+                         <div>
+                            <Label>CIF/NIF Cliente</Label>
+                            <Input placeholder="CIF/NIF del Cliente" />
+                        </div>
+                        <div>
+                            <Label>Dirección Cliente</Label>
+                            <Textarea placeholder="Dirección Completa del Cliente" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+            
+             <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <Label>Fecha Emisión</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !emissionDate && "text-muted-foreground")}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {emissionDate ? format(emissionDate, "PPP", {locale: es}) : <span>Elige una fecha</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                           <Calendar mode="single" selected={emissionDate} onSelect={setEmissionDate} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                 <div>
+                    <Label>Fecha Vencimiento</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                           <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !dueDate && "text-muted-foreground")}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dueDate ? format(dueDate, "PPP", {locale: es}) : <span>Elige una fecha</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                           <Calendar mode="single" selected={dueDate} onSelect={setDueDate} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base">Conceptos / Artículos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-2">
+                        <div className="hidden md:grid md:grid-cols-[1fr_80px_100px_100px_40px] gap-2 font-medium text-muted-foreground text-xs px-2">
+                            <span>Descripción</span>
+                            <span className="text-right">Cant.</span>
+                            <span className="text-right">P. Unit.</span>
+                            <span className="text-right">Total</span>
+                            <span></span>
+                        </div>
+                        {lineItems.map((item, index) => (
+                            <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_80px_100px_100px_40px] gap-2 items-start border-b pb-2">
+                                <Textarea placeholder="Descripción del servicio/producto" value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} rows={1} className="md:h-10" />
+                                <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', e.target.value)} className="text-right" min="0"/>
+                                <Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', e.target.value)} className="text-right" min="0" step="0.01"/>
+                                <Input value={item.total.toFixed(2)} readOnly className="text-right bg-muted" />
+                                <Button variant="ghost" size="icon" className="text-destructive h-10 w-10" onClick={() => handleRemoveLine(item.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                     <Button variant="outline" size="sm" onClick={handleAddLine} className="mt-4">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Añadir Línea
+                    </Button>
+                </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                             <Label>Moneda</Label>
+                             <Input value="EUR" readOnly />
+                        </div>
+                        <div>
+                             <Label>Tasa Impuesto (%)</Label>
+                             <Input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} />
+                        </div>
+                    </div>
+                     <div>
+                        <Label>Notas Adicionales / Términos</Label>
+                        <Textarea defaultValue="Condiciones de pago: 30 días." />
+                    </div>
+                </div>
+
+                <div className="flex flex-col items-end space-y-2">
+                    <Select defaultValue="borrador">
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="borrador">Borrador</SelectItem>
+                            <SelectItem value="emitido">Emitido</SelectItem>
+                             <SelectItem value="pagado">Pagado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <div className="w-[240px] space-y-1 text-right p-4 bg-muted rounded-md">
+                        <div className="flex justify-between"><span>Subtotal:</span><span>{subtotal.toFixed(2)} EUR</span></div>
+                        <div className="flex justify-between"><span>Impuestos ({taxRate}%):</span><span>{taxAmount.toFixed(2)} EUR</span></div>
+                        <div className="font-bold text-lg flex justify-between"><span>Total:</span><span>{total.toFixed(2)} EUR</span></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancelar</Button>
+          </DialogClose>
+          <Button onClick={onClose}>Crear Documento</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
