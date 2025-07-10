@@ -38,6 +38,7 @@ import {
   Link2,
   Settings,
   LogOut,
+  ScanLine
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -53,6 +54,7 @@ const navItems = [
   { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones' },
   { href: '/dashboard/gestor-ia', icon: <Bot />, label: 'Gestor IA' },
   { href: '/dashboard/integraciones', icon: <Link2 />, label: 'Integraciones' },
+  { href: '/dashboard/extractor-facturas', icon: <ScanLine />, label: 'Extractor Facturas' },
   { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },
 ];
 
