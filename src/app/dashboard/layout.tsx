@@ -38,7 +38,7 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/dashboard', icon: <LayoutDashboard />, label: 'Inicio' },
