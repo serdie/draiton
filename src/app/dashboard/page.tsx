@@ -3,12 +3,14 @@ import { DollarSign, Users, CreditCard, Activity } from 'lucide-react';
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Inicio</h1>
-      <p className="text-muted-foreground">
-        Bienvenido de nuevo. Aquí tienes un resumen de tu actividad.
-      </p>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div className="text-center md:text-left">
+        <h1 className="text-3xl font-bold">Inicio</h1>
+        <p className="text-muted-foreground">
+          Bienvenido de nuevo. Aquí tienes un resumen de tu actividad.
+        </p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
