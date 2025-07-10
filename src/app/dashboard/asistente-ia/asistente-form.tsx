@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Loader2, Sparkles, Terminal } from 'lucide-react';
 import type { GenerateBusinessIdeasOutput } from '@/ai/flows/generate-business-ideas';
 
@@ -55,7 +56,7 @@ export function AsistenteForm({ action }: { action: (currentState: FormState, fo
         </Alert>
       )}
 
-      {state.output && (
+      {state.output && state.output.suggestions && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -64,9 +65,18 @@ export function AsistenteForm({ action }: { action: (currentState: FormState, fo
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-sm max-w-none whitespace-pre-wrap">
-              {state.output.suggestions}
-            </div>
+            <Accordion type="single" collapsible className="w-full">
+              {state.output.suggestions.map((suggestion, index) => (
+                <AccordionItem value={`item-${index}`} key={index}>
+                  <AccordionTrigger className="font-medium text-left">{suggestion.title}</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="prose prose-sm max-w-none whitespace-pre-wrap text-muted-foreground">
+                      {suggestion.details}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </CardContent>
         </Card>
       )}

@@ -5,7 +5,7 @@
  *
  * - generateBusinessIdeas - A function that takes company data as input and returns AI-generated suggestions for improving commercialization and product offerings.
  * - GenerateBusinessIdeasInput - The input type for the generateBusinessIdeas function.
- * - GenerateBusinessIdeasOutput - The return type for the generateBusinessIdeas function.
+ * - GenerateBusinessIdeasOutput - The return type for the generateBusinessideas function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -20,9 +20,16 @@ export type GenerateBusinessIdeasInput = z.infer<typeof GenerateBusinessIdeasInp
 
 const GenerateBusinessIdeasOutputSchema = z.object({
   suggestions: z
-    .string()
+    .array(
+      z.object({
+        title: z.string().describe('Un título conciso para la sugerencia.'),
+        details: z
+          .string()
+          .describe('Una descripción detallada de la sugerencia.'),
+      })
+    )
     .describe(
-      'AI-generated suggestions for improving the company’s commercialization strategies and product offerings.'
+      'Una lista de sugerencias para mejorar las estrategias de comercialización y la oferta de productos de la empresa.'
     ),
 });
 export type GenerateBusinessIdeasOutput = z.infer<typeof GenerateBusinessIdeasOutputSchema>;
@@ -37,11 +44,13 @@ const prompt = ai.definePrompt({
   name: 'generateBusinessIdeasPrompt',
   input: {schema: GenerateBusinessIdeasInputSchema},
   output: {schema: GenerateBusinessIdeasOutputSchema},
-  prompt: `You are an expert business consultant. Analyze the provided company data and generate actionable suggestions for improving their commercialization strategies and product offerings.
+  prompt: `Eres un consultor de negocios experto. Analiza los datos de la empresa proporcionados y genera sugerencias prácticas para mejorar sus estrategias de comercialización y oferta de productos.
+
+Responde siempre en español.
 
 Company Data: {{{companyData}}}
 
-Suggestions:`,
+Genera una lista de sugerencias con un título y detalles para cada una.`,
 });
 
 const generateBusinessIdeasFlow = ai.defineFlow(
