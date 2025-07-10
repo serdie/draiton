@@ -82,7 +82,7 @@ export default function DashboardLayout({
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                   <SidebarMenuButton
-                    isActive={pathname === item.href || (item.href === '/dashboard/web-ia' && pathname.startsWith('/dashboard/gestor-web-ia'))}
+                    isActive={pathname === item.href}
                     tooltip={item.label}
                   >
                     {item.icon}
