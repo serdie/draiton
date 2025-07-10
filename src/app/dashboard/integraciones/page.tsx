@@ -7,7 +7,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
 import {
   Table,
@@ -18,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Trash2, Mail, Facebook, Linkedin, Bot, Stripe, MessageSquare, Server } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Mail, Facebook, Linkedin, Instagram, CreditCard, MessageSquare, Server } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import React from 'react';
 
@@ -35,10 +34,10 @@ const GoogleIcon = () => (
 const availableConnections = [
   { name: 'Google', description: 'Gmail, Drive, Calendar...', icon: <GoogleIcon /> },
   { name: 'Facebook', description: 'Facebook Pages, Messenger...', icon: <Facebook /> },
-  { name: 'Instagram', description: 'Instagram for Business', icon: <Bot /> }, // Placeholder for Instagram
+  { name: 'Instagram', description: 'Instagram for Business', icon: <Instagram /> },
   { name: 'LinkedIn', description: 'Perfiles y páginas de empresa', icon: <Linkedin /> },
   { name: 'Mailchimp', description: 'Listas y campañas', icon: <Mail /> },
-  { name: 'Stripe', description: 'Pagos y clientes', icon: <Stripe /> },
+  { name: 'Stripe', description: 'Pagos y clientes', icon: <CreditCard /> },
   { name: 'WhatsApp', description: 'WhatsApp Business API', icon: <MessageSquare /> },
   { name: 'SMTP', description: 'Envío de correo personalizado', icon: <Server /> },
 ];
