@@ -29,6 +29,13 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (!auth) {
+        setError('El servicio de autenticación no está disponible. Por favor, contacta al soporte.');
+        setLoading(false);
+        return;
+    }
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboard');
@@ -44,6 +51,13 @@ export default function LoginPage() {
     setGoogleLoading(true);
     setError(null);
     const provider = new GoogleAuthProvider();
+
+    if (!auth) {
+        setError('El servicio de autenticación no está disponible. Por favor, contacta al soporte.');
+        setGoogleLoading(false);
+        return;
+    }
+
     try {
       await signInWithPopup(auth, provider);
       router.push('/dashboard');

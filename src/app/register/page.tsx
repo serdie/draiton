@@ -32,19 +32,23 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
     
+    if (!auth || !db) {
+        setError('El servicio de registro no está disponible. Por favor, contacta al soporte.');
+        setLoading(false);
+        return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      // Update profile
       await updateProfile(user, { displayName: name });
       
-      // Create user document in Firestore
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         displayName: name,
         email: user.email,
-        plan: 'free', // Default plan
+        plan: 'free', 
         createdAt: new Date(),
       });
       
@@ -65,19 +69,25 @@ export default function RegisterPage() {
     setGoogleLoading(true);
     setError(null);
     const provider = new GoogleAuthProvider();
+
+    if (!auth || !db) {
+        setError('El servicio de registro no está disponible. Por favor, contacta al soporte.');
+        setGoogleLoading(false);
+        return;
+    }
+
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      // Create user document in Firestore
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         displayName: user.displayName,
         email: user.email,
         photoURL: user.photoURL,
-        plan: 'free', // Default plan
+        plan: 'free', 
         createdAt: new Date(),
-      }, { merge: true }); // Merge to avoid overwriting existing data if user logs in again
+      }, { merge: true }); 
       
       router.push('/dashboard');
     } catch (err: any) {
