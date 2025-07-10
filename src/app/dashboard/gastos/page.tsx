@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -23,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RegisterExpenseModal } from './register-expense-modal';
 
 const gastos = [
   {
@@ -85,82 +89,87 @@ const getCategoryBadgeClass = (category: string) => {
 };
 
 export default function GastosPage() {
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Gastos</h1>
-          <p className="text-muted-foreground">
-            Lleva un control detallado de todos los gastos de tu negocio.
-          </p>
-        </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Registrar Nuevo Gasto
-        </Button>
-      </div>
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Listado de Gastos</CardTitle>
-          <CardDescription>
-            Listado de tus gastos recientes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead>Proveedor</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Método Pago</TableHead>
-                <TableHead className="text-right">Importe</TableHead>
-                <TableHead className="text-center">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {gastos.map((gasto, index) => (
-                <TableRow key={index}>
-                  <TableCell>{gasto.fecha}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={cn('font-normal', getCategoryBadgeClass(gasto.categoria))}>
-                      {gasto.categoria}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">{gasto.proveedor}</TableCell>
-                  <TableCell>{gasto.descripcion}</TableCell>
-                  <TableCell>{gasto.metodoPago}</TableCell>
-                  <TableCell className="text-right">
-                    {new Intl.NumberFormat('es-ES', {
-                      style: 'currency',
-                      currency: 'EUR',
-                    }).format(gasto.importe)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Abrir menú</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Ver detalle</DropdownMenuItem>
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive">
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+  return (
+    <>
+      <RegisterExpenseModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Gestión de Gastos</h1>
+            <p className="text-muted-foreground">
+              Lleva un control detallado de todos los gastos de tu negocio.
+            </p>
+          </div>
+          <Button onClick={() => setIsModalOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Registrar Nuevo Gasto
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Listado de Gastos</CardTitle>
+            <CardDescription>
+              Listado de tus gastos recientes.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Categoría</TableHead>
+                  <TableHead>Proveedor</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead>Método Pago</TableHead>
+                  <TableHead className="text-right">Importe</TableHead>
+                  <TableHead className="text-center">Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+              </TableHeader>
+              <TableBody>
+                {gastos.map((gasto, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{gasto.fecha}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={cn('font-normal', getCategoryBadgeClass(gasto.categoria))}>
+                        {gasto.categoria}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">{gasto.proveedor}</TableCell>
+                    <TableCell>{gasto.descripcion}</TableCell>
+                    <TableCell>{gasto.metodoPago}</TableCell>
+                    <TableCell className="text-right">
+                      {new Intl.NumberFormat('es-ES', {
+                        style: 'currency',
+                        currency: 'EUR',
+                      }).format(gasto.importe)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menú</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Ver detalle</DropdownMenuItem>
+                          <DropdownMenuItem>Editar</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive">
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }
