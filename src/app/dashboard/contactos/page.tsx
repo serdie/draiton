@@ -1,15 +1,17 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { UserPlus, MoreHorizontal } from 'lucide-react';
+import { UserPlus, MoreHorizontal, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { AddContactModal } from './add-contact-modal';
 
@@ -33,7 +35,10 @@ const contacts: Contact[] = [
   { id: '3', avatar: '', name: 'Carlos Proveedor', email: 'carlos@supply.com', company: 'Suministros Globales', cif: 'C98765432', phone: '555-8765', type: 'Proveedor', lastInteraction: '2023-11-20' },
   { id: '4', avatar: '', name: 'Laura Prospecto', email: 'laura@leads.com', company: 'Innovate Corp', cif: '', phone: '555-4321', type: 'Lead', lastInteraction: '2023-11-18' },
   { id: '5', avatar: '', name: 'David Eléctrico', email: 'david@chispas.com', company: 'Instalaciones Rápidas', cif: 'D23456789', phone: '555-1122', type: 'Proveedor', lastInteraction: '2023-11-22' },
-   { id: '6', avatar: '', name: 'Eva Diseño', email: 'eva@design.art', company: 'Estudio Creativo', cif: 'E34567890', phone: '555-3344', type: 'Colaborador', lastInteraction: '2023-11-12' },
+  { id: '6', avatar: '', name: 'Eva Diseño', email: 'eva@design.art', company: 'Estudio Creativo', cif: 'E34567890', phone: '555-3344', type: 'Colaborador', lastInteraction: '2023-11-12' },
+  { id: '7', avatar: '', name: 'Pedro Cliente', email: 'pedro@client.com', company: 'Servicios de Calidad', cif: 'B98765432', phone: '555-9876', type: 'Cliente', lastInteraction: '2023-12-01' },
+  { id: '8', avatar: '', name: 'Sara Logística', email: 'sara@logistics.net', company: 'Transportes Veloz', cif: 'A12312312', phone: '555-1111', type: 'Proveedor', lastInteraction: '2023-11-28' },
+  { id: '9', avatar: '', name: 'Miguel Potencial', email: 'miguel@potential.io', company: 'Tech Startups', cif: '', phone: '555-2222', type: 'Lead', lastInteraction: '2023-12-02' },
 ];
 
 const getBadgeClassForType = (type: ContactType) => {
@@ -55,16 +60,50 @@ const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
 }
 
-export default function ContactosPage() {
-    const [activeTab, setActiveTab] = useState('clientes');
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+const contactTypes: ContactType[] = ['Cliente', 'Proveedor', 'Lead', 'Colaborador'];
 
-    const filteredContacts = contacts.filter(contact => {
-        if (activeTab === 'clientes') return contact.type === 'Cliente' || contact.type === 'Colaborador';
-        if (activeTab === 'proveedores') return contact.type === 'Proveedor';
-        if (activeTab === 'leads') return contact.type === 'Lead';
-        return true;
-    });
+export default function ContactosPage() {
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    
+    // Filter states
+    const [filtroTexto, setFiltroTexto] = useState('');
+    const [filtroTipo, setFiltroTipo] = useState('all');
+
+    // Pagination states
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const filteredContacts = useMemo(() => {
+        return contacts.filter(contact => {
+            const porTexto = !filtroTexto || 
+                contact.name.toLowerCase().includes(filtroTexto.toLowerCase()) ||
+                contact.email.toLowerCase().includes(filtroTexto.toLowerCase()) ||
+                contact.company.toLowerCase().includes(filtroTexto.toLowerCase());
+
+            const porTipo = filtroTipo === 'all' || contact.type === filtroTipo;
+            
+            return porTexto && porTipo;
+        });
+    }, [filtroTexto, filtroTipo]);
+
+    const totalPages = Math.ceil(filteredContacts.length / itemsPerPage);
+
+    const paginatedContacts = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredContacts.slice(startIndex, endIndex);
+    }, [filteredContacts, currentPage, itemsPerPage]);
+
+    const resetFilters = () => {
+        setFiltroTexto('');
+        setFiltroTipo('all');
+        setCurrentPage(1);
+    };
+
+    const handleItemsPerPageChange = (value: string) => {
+        setItemsPerPage(Number(value));
+        setCurrentPage(1);
+    };
 
   return (
     <>
@@ -83,33 +122,45 @@ export default function ContactosPage() {
             </Button>
         </div>
 
+        <Card>
+            <CardHeader>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <Input 
+                        placeholder="Buscar por nombre, email, empresa..."
+                        value={filtroTexto}
+                        onChange={(e) => setFiltroTexto(e.target.value)}
+                    />
+                    <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+                        <SelectTrigger><SelectValue placeholder="Filtrar por tipo" /></SelectTrigger>
+                        <SelectContent>
+                             <SelectItem value="all">Todos los tipos</SelectItem>
+                            {contactTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Button variant="outline" onClick={resetFilters}><FilterX className="mr-2 h-4 w-4" />Limpiar Filtros</Button>
+                </div>
+            </CardHeader>
+        </Card>
+
       <Card>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <CardHeader className="px-6 pt-6 pb-0">
-             <TabsList>
-                <TabsTrigger value="clientes">Clientes</TabsTrigger>
-                <TabsTrigger value="proveedores">Proveedores</TabsTrigger>
-                <TabsTrigger value="leads">Leads</TabsTrigger>
-             </TabsList>
-          </CardHeader>
-          <CardContent>
-            <TabsContent value={activeTab}>
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead className="w-12">Avatar</TableHead>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Correo Electrónico</TableHead>
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>CIF/NIF</TableHead>
-                    <TableHead>Teléfono</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Última Interacción</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {filteredContacts.map((contact) => (
+        <CardContent className="pt-6">
+            <Table>
+            <TableHeader>
+                <TableRow>
+                <TableHead className="w-12">Avatar</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Correo Electrónico</TableHead>
+                <TableHead>Empresa</TableHead>
+                <TableHead>CIF/NIF</TableHead>
+                <TableHead>Teléfono</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Última Interacción</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {paginatedContacts.length > 0 ? (
+                    paginatedContacts.map((contact) => (
                     <TableRow key={contact.id}>
                         <TableCell>
                             <Avatar className="h-9 w-9">
@@ -144,13 +195,52 @@ export default function ContactosPage() {
                             </DropdownMenu>
                         </TableCell>
                     </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
-                <p className="text-sm text-center text-muted-foreground pt-4">Una lista de tus {activeTab}.</p>
-            </TabsContent>
-          </CardContent>
-        </Tabs>
+                    ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={9} className="h-24 text-center">
+                            No se encontraron contactos con los filtros aplicados.
+                        </TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+            </Table>
+        </CardContent>
+        <CardFooter className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Resultados por página:</span>
+            <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+              <SelectTrigger className="w-20 h-8">
+                <SelectValue placeholder={itemsPerPage} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-4 text-sm">
+            <span>Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline" size="icon" className="h-8 w-8"
+                onClick={() => setCurrentPage(p => p - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline" size="icon" className="h-8 w-8"
+                onClick={() => setCurrentPage(p => p + 1)}
+                disabled={currentPage === totalPages || totalPages === 0}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardFooter>
       </Card>
     </div>
     </>
