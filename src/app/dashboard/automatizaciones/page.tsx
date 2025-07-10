@@ -30,6 +30,7 @@ import {
 import { MoreHorizontal, PlusCircle, Power, PowerOff, Trash2, Pencil, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 type AutomationStatus = 'Activo' | 'Inactivo';
 
@@ -104,7 +105,7 @@ export default function AutomatizacionesPage() {
   const handleComingSoon = () => {
     toast({
       title: 'Función en desarrollo',
-      description: 'El editor de flujos de trabajo estará disponible muy pronto.',
+      description: 'Esta acción estará disponible pronto.',
     });
   };
 
@@ -117,9 +118,11 @@ export default function AutomatizacionesPage() {
             Crea flujos de trabajo personalizados para automatizar tareas repetitivas y conectar tus aplicaciones.
           </p>
         </div>
-        <Button onClick={handleComingSoon}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Crear Nueva Automatización
+        <Button asChild>
+          <Link href="/dashboard/automatizaciones/crear">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Crear Nueva Automatización
+          </Link>
         </Button>
       </div>
       
