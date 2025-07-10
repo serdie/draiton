@@ -6,7 +6,8 @@ import { PerfilSettings } from "./perfil-settings";
 import { EmpresaSettings } from "./empresa-settings";
 import { NotificacionesSettings } from "./notificaciones-settings";
 import { AparienciaSettings } from "./apariencia-settings";
-import { User, Building, Bell, Palette } from "lucide-react";
+import { SuscripcionSettings } from "./suscripcion-settings";
+import { User, Building, Bell, Palette, CreditCard } from "lucide-react";
 
 export default function ConfiguracionPage() {
   return (
@@ -18,7 +19,7 @@ export default function ConfiguracionPage() {
         </p>
       </div>
       <Tabs defaultValue="perfil" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
           <TabsTrigger value="perfil">
             <User className="mr-2 h-4 w-4" />
             Perfil
@@ -26,6 +27,10 @@ export default function ConfiguracionPage() {
           <TabsTrigger value="empresa">
             <Building className="mr-2 h-4 w-4" />
             Empresa
+          </TabsTrigger>
+          <TabsTrigger value="suscripcion">
+            <CreditCard className="mr-2 h-4 w-4" />
+            Suscripción
           </TabsTrigger>
           <TabsTrigger value="notificaciones">
             <Bell className="mr-2 h-4 w-4" />
@@ -39,6 +44,7 @@ export default function ConfiguracionPage() {
         <div className="mt-6">
             <TabsContent value="perfil"><PerfilSettings /></TabsContent>
             <TabsContent value="empresa"><EmpresaSettings /></TabsContent>
+            <TabsContent value="suscripcion"><SuscripcionSettings /></TabsContent>
             <TabsContent value="notificaciones"><NotificacionesSettings /></TabsContent>
             <TabsContent value="apariencia"><AparienciaSettings /></TabsContent>
         </div>
