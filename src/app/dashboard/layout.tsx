@@ -52,7 +52,7 @@ const navItems = [
   { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing' },
   { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA' },
   { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones' },
-  { href: '/dashboard/gestor-ia', icon: <Bot />, label: 'Gestor IA' },
+  { href: '/dashboard/asistente-ia', icon: <Bot />, label: 'Asistente IA' },
   { href: '/dashboard/integraciones', icon: <Link2 />, label: 'Integraciones' },
   { href: '/dashboard/extractor-facturas', icon: <ScanLine />, label: 'Extractor Facturas' },
   { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },

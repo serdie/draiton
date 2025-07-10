@@ -41,7 +41,7 @@ const prompt = ai.definePrompt({
 
 Company Data: {{{companyData}}}
 
-Suggestions:`, // Make sure to include "Suggestions:" to prompt for the suggestions directly
+Suggestions:`,
 });
 
 const generateBusinessIdeasFlow = ai.defineFlow(
