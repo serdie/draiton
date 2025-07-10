@@ -27,6 +27,8 @@ import {
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RegisterExpenseModal } from './register-expense-modal';
+import type { ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
+
 
 const gastos = [
   {
@@ -90,10 +92,27 @@ const getCategoryBadgeClass = (category: string) => {
 
 export default function GastosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [initialData, setInitialData] = useState<ExtractReceiptDataOutput | undefined>();
+
+  const handleOpenModal = (data?: ExtractReceiptDataOutput) => {
+    setInitialData(data);
+    setIsModalOpen(true);
+  };
+  
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // Clear initial data when closing, so the form is empty next time it opens manually
+    setInitialData(undefined);
+  }
 
   return (
     <>
-      <RegisterExpenseModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <RegisterExpenseModal 
+        isOpen={isModalOpen} 
+        onClose={handleCloseModal}
+        onOpenModal={handleOpenModal} 
+        initialData={initialData}
+      />
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -102,7 +121,7 @@ export default function GastosPage() {
               Lleva un control detallado de todos los gastos de tu negocio.
             </p>
           </div>
-          <Button onClick={() => setIsModalOpen(true)}>
+          <Button onClick={() => handleOpenModal()}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Registrar Nuevo Gasto
           </Button>
