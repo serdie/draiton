@@ -37,7 +37,9 @@ import {
   Bot,
   Link2,
   Settings,
-  LogOut
+  LogOut,
+  Newspaper,
+  FileEdit
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -51,6 +53,7 @@ const navItems = [
   { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing' },
   { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA' },
   { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones' },
+  { href: '/dashboard/gestor-ia', icon: <Bot />, label: 'Gestor IA' },
   { href: '/dashboard/conexiones', icon: <Link2 />, label: 'Conexiones' },
   { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },
 ];
