@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { UserPlus, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AddContactModal } from './add-contact-modal';
 
 type ContactType = 'Cliente' | 'Proveedor' | 'Lead' | 'Colaborador';
 
@@ -56,6 +57,7 @@ const getInitials = (name: string) => {
 
 export default function ContactosPage() {
     const [activeTab, setActiveTab] = useState('clientes');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const filteredContacts = contacts.filter(contact => {
         if (activeTab === 'clientes') return contact.type === 'Cliente' || contact.type === 'Colaborador';
@@ -65,6 +67,8 @@ export default function ContactosPage() {
     });
 
   return (
+    <>
+    <AddContactModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
     <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -73,7 +77,7 @@ export default function ContactosPage() {
                     Mantén un registro de tus clientes, proveedores, leads y colaboradores.
                 </p>
             </div>
-            <Button>
+            <Button onClick={() => setIsAddModalOpen(true)}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Añadir Nuevo Contacto
             </Button>
@@ -149,5 +153,6 @@ export default function ContactosPage() {
         </Tabs>
       </Card>
     </div>
+    </>
   );
 }
