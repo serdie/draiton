@@ -37,9 +37,7 @@ import {
   Bot,
   Link2,
   Settings,
-  LogOut,
-  ScanLine,
-  Share2
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -53,8 +51,7 @@ const navItems = [
   { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing' },
   { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA' },
   { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones' },
-  { href: '/dashboard/asistente-ia', icon: <Bot />, label: 'Asistente IA' },
-  { href: '/dashboard/integraciones', icon: <Link2 />, label: 'Integraciones' },
+  { href: '/dashboard/conexiones', icon: <Link2 />, label: 'Conexiones' },
   { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },
 ];
 
@@ -80,7 +77,7 @@ export default function DashboardLayout({
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                   <SidebarMenuButton
-                    isActive={pathname === item.href}
+                    isActive={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')}
                     tooltip={item.label}
                   >
                     {item.icon}
