@@ -38,7 +38,8 @@ import {
   Link2,
   Settings,
   LogOut,
-  ScanLine
+  ScanLine,
+  Share2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -50,6 +51,7 @@ const navItems = [
   { href: '/dashboard/proyectos', icon: <Briefcase />, label: 'Proyectos' },
   { href: '/dashboard/perspectivas-ia', icon: <BrainCircuit />, label: 'Perspectivas IA' },
   { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing' },
+  { href: '/dashboard/redes-sociales', icon: <Share2 />, label: 'Redes Sociales' },
   { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA' },
   { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones' },
   { href: '/dashboard/asistente-ia', icon: <Bot />, label: 'Asistente IA' },
