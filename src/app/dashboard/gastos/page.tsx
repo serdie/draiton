@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
 import {
   Table,
@@ -25,7 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, FilterX } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RegisterExpenseModal } from './register-expense-modal';
 import type { ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
@@ -86,6 +87,46 @@ const gastos = [
     metodoPago: 'Credit Card',
     importe: 59.99,
   },
+  {
+    fecha: '2023-11-21',
+    categoria: 'Suministros',
+    proveedor: 'Amazon',
+    descripcion: 'Agua y café para la oficina',
+    metodoPago: 'Credit Card',
+    importe: 35.0,
+  },
+  {
+    fecha: '2023-11-22',
+    categoria: 'Viajes',
+    proveedor: 'Booking.com',
+    descripcion: 'Hotel para viaje de negocios',
+    metodoPago: 'Credit Card',
+    importe: 120.0,
+  },
+  {
+    fecha: '2023-11-23',
+    categoria: 'Oficina',
+    proveedor: 'Ikea',
+    descripcion: 'Silla de oficina nueva',
+    metodoPago: 'Debit Card',
+    importe: 89.99,
+  },
+  {
+    fecha: '2023-11-24',
+    categoria: 'Software',
+    proveedor: 'Google Workspace',
+    descripcion: 'Suscripción mensual',
+    metodoPago: 'Credit Card',
+    importe: 12.5,
+  },
+  {
+    fecha: '2023-11-25',
+    categoria: 'Marketing',
+    proveedor: 'Canva Pro',
+    descripcion: 'Suscripción anual',
+    metodoPago: 'Credit Card',
+    importe: 109.99,
+  },
 ];
 
 const categoriasUnicas = [...new Set(gastos.map(g => g.categoria))];
@@ -102,6 +143,8 @@ const getCategoryBadgeClass = (category: string) => {
       return 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800';
     case 'viajes':
       return 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-800';
+    case 'suministros':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800';
     case 'otros':
       return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
     default:
@@ -118,13 +161,17 @@ export default function GastosPage() {
   const [categoria, setCategoria] = useState('all');
   const [proveedor, setProveedor] = useState('');
   const [metodoPago, setMetodoPago] = useState('all');
+  
+  // Pagination states
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const gastosFiltrados = useMemo(() => {
     return gastos.filter(gasto => {
       const fechaGasto = new Date(gasto.fecha);
       const enRangoFecha = !dateRange || (
         (!dateRange.from || fechaGasto >= dateRange.from) &&
-        (!dateRange.to || fechaGasto <= dateRange.to)
+        (!dateRange.to || fechaGasto <= new Date(new Date(dateRange.to).setHours(23, 59, 59, 999)))
       );
       const porCategoria = categoria === 'all' || gasto.categoria === categoria;
       const porProveedor = !proveedor || gasto.proveedor.toLowerCase().includes(proveedor.toLowerCase());
@@ -134,11 +181,20 @@ export default function GastosPage() {
     });
   }, [dateRange, categoria, proveedor, metodoPago]);
 
+  const totalPages = Math.ceil(gastosFiltrados.length / itemsPerPage);
+
+  const paginatedGastos = useMemo(() => {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return gastosFiltrados.slice(startIndex, endIndex);
+  }, [gastosFiltrados, currentPage, itemsPerPage]);
+
   const resetFilters = () => {
     setDateRange(undefined);
     setCategoria('all');
     setProveedor('');
     setMetodoPago('all');
+    setCurrentPage(1);
   }
 
   const handleOpenModal = (data?: ExtractReceiptDataOutput) => {
@@ -150,6 +206,11 @@ export default function GastosPage() {
     setIsModalOpen(false);
     setInitialData(undefined);
   }
+  
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1);
+  };
 
   return (
     <>
@@ -221,7 +282,7 @@ export default function GastosPage() {
                             <SelectValue placeholder="Categoría" />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="all">Todas</SelectItem>
+                             <SelectItem value="all">Todas las categorías</SelectItem>
                             {categoriasUnicas.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                         </SelectContent>
                     </Select>
@@ -235,7 +296,7 @@ export default function GastosPage() {
                             <SelectValue placeholder="Método de pago" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="all">Todos los métodos</SelectItem>
                             {metodosPagoUnicos.map(met => <SelectItem key={met} value={met}>{met}</SelectItem>)}
                         </SelectContent>
                     </Select>
@@ -268,7 +329,7 @@ export default function GastosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {gastosFiltrados.length > 0 ? gastosFiltrados.map((gasto, index) => (
+                {paginatedGastos.length > 0 ? paginatedGastos.map((gasto, index) => (
                   <TableRow key={index}>
                     <TableCell>{format(new Date(gasto.fecha), "dd MMM yyyy", { locale: es })}</TableCell>
                     <TableCell>
@@ -313,8 +374,49 @@ export default function GastosPage() {
               </TableBody>
             </Table>
           </CardContent>
+           <CardFooter className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Resultados por página:</span>
+                    <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+                        <SelectTrigger className="w-20 h-8">
+                            <SelectValue placeholder={itemsPerPage} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="20">20</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                    <span>Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setCurrentPage(p => p - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                             className="h-8 w-8"
+                            onClick={() => setCurrentPage(p => p + 1)}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </CardFooter>
         </Card>
       </div>
     </>
   );
 }
+
+    
