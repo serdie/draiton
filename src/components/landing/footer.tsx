@@ -5,7 +5,7 @@ export function Footer() {
     <footer className="border-t">
       <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
         <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-          © {new Date().getFullYear()} Emprende Total. Todos los derechos reservados.
+          © 2025 Impulsa Pro. Todos los derechos reservados. Aplicación creada por Search and Make S.L.
         </p>
         <nav className="flex gap-4">
           <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Términos</Link>
