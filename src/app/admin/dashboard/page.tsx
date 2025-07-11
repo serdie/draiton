@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "@/context/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,7 @@ import { MoreHorizontal, Loader2, User, Trash2, ShieldCheck, UserCog } from "luc
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { collection, getDocs, Timestamp } from "firebase/firestore";
+import { collection, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -27,23 +28,24 @@ export type User = {
 };
 
 export default function AdminDashboardPage() {
+    const { user: adminUser } = useContext(AuthContext);
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
     const [userToChangeRole, setUserToChangeRole] = useState<{ user: User; newRole: UserRole } | null>(null);
     const { toast } = useToast();
 
-    const fetchUsers = async () => {
-        if (!db) {
-            console.error("Firestore no está inicializado.");
+    useEffect(() => {
+        if (!db || !adminUser || adminUser.role !== 'admin') {
             setLoading(false);
             return;
         }
-        try {
-            setLoading(true);
-            const usersCollection = collection(db, "users");
-            const userSnapshot = await getDocs(usersCollection);
-            const userList = userSnapshot.docs.map(doc => {
+
+        const usersCollectionRef = collection(db, "users");
+
+        // Escucha cambios en tiempo real
+        const unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
+            const userList = snapshot.docs.map(doc => {
                 const data = doc.data();
                 const registeredDate = data.createdAt instanceof Timestamp 
                     ? data.createdAt.toDate() 
@@ -55,28 +57,27 @@ export default function AdminDashboardPage() {
                     email: data.email,
                     role: data.role || 'free',
                     registered: registeredDate,
-                }
+                };
             });
             setUsers(userList);
-        } catch (error) {
-            console.error("Error al obtener usuarios:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los usuarios.' });
-        } finally {
             setLoading(false);
-        }
-    };
+        }, (error) => {
+            console.error("Error al obtener usuarios con onSnapshot:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los usuarios en tiempo real.' });
+            setLoading(false);
+        });
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
+        // Limpia el listener cuando el componente se desmonta
+        return () => unsubscribe();
+    }, [adminUser, toast]);
+
 
     const handleRoleChange = async () => {
         if (!userToChangeRole) return;
         
         try {
-            await updateUserRole(userToChangeRole.user.id, userToChangeRole.newRole);
+            await updateUserRole(userToChangeRole.user.id, userToChange-role.newRole);
             toast({ title: 'Éxito', description: `El rol de ${userToChangeRole.user.name} ha sido cambiado a ${userToChangeRole.newRole}.` });
-            await fetchUsers(); // Re-fetch users to show updated data
         } catch (error) {
             console.error("Error al cambiar rol:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo cambiar el rol del usuario.' });
@@ -91,7 +92,6 @@ export default function AdminDashboardPage() {
         try {
             await deleteUser(userToDelete.id);
             toast({ title: 'Éxito', description: `El usuario ${userToDelete.name} ha sido eliminado.` });
-            await fetchUsers(); // Re-fetch users
         } catch (error) {
             console.error("Error al eliminar usuario:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo eliminar al usuario.' });
