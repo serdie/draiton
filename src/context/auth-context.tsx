@@ -48,7 +48,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            setUser({ ...firebaseUser, ...userData } as User);
+            const fullUser = { ...firebaseUser, ...userData } as User;
+            console.log("Revisando usuario PRO:", fullUser); // DEBUGGING LINE ADDED
+            setUser(fullUser);
         } else {
             // This case might happen if user is created in Auth but not in Firestore
             setUser(firebaseUser);
