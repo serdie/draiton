@@ -9,7 +9,7 @@ export default function PoliticaDePrivacidadPage() {
         <div className="prose max-w-4xl mx-auto">
           <h1>Política de Privacidad</h1>
           <p>
-            <strong>Última actualización:</strong> {new Date().toLocaleDateString('es-ES')}
+            <strong>Última actualización:</strong> 11 de Julio, 2024
           </p>
           <p>
             Bienvenido a Emprende Total. Su privacidad es de suma importancia para nosotros. Esta Política de Privacidad describe cómo recopilamos, usamos, procesamos y divulgamos su información, incluida la información personal, en conjunto con su acceso y uso de nuestra plataforma.

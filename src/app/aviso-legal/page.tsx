@@ -9,7 +9,7 @@ export default function AvisoLegalPage() {
         <div className="prose max-w-4xl mx-auto">
           <h1>Aviso Legal</h1>
           <p>
-            <strong>Última actualización:</strong> {new Date().toLocaleDateString('es-ES')}
+            <strong>Última actualización:</strong> 11 de Julio, 2024
           </p>
           <h2>1. Información Legal</h2>
           <p>

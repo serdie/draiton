@@ -9,7 +9,7 @@ export default function PoliticaDeCookiesPage() {
         <div className="prose max-w-4xl mx-auto">
           <h1>Política de Cookies</h1>
           <p>
-            <strong>Última actualización:</strong> {new Date().toLocaleDateString('es-ES')}
+            <strong>Última actualización:</strong> 11 de Julio, 2024
           </p>
           <p>
             Esta política explica qué son las cookies y cómo las usamos. Debe leer esta política para comprender qué son las cookies, cómo las usamos, los tipos de cookies que usamos, es decir, la información que recopilamos usando cookies y cómo se usa esa información y cómo controlar las preferencias de las cookies.

@@ -9,7 +9,7 @@ export default function CondicionesDeUsoPage() {
         <div className="prose max-w-4xl mx-auto">
           <h1>Condiciones de Uso</h1>
           <p>
-            <strong>Última actualización:</strong> {new Date().toLocaleDateString('es-ES')}
+            <strong>Última actualización:</strong> 11 de Julio, 2024
           </p>
           <p>
             El acceso y uso de este sitio web atribuye la condición de usuario, y acepta, desde dicho acceso y/o uso, las Condiciones Generales de Uso aquí reflejadas. Las citadas Condiciones serán de aplicación independientemente de las Condiciones Generales de Contratación que en su caso resulten de obligado cumplimiento.
@@ -23,7 +23,7 @@ export default function CondicionesDeUsoPage() {
             El usuario se compromete a hacer un uso adecuado de los contenidos y servicios que Search and Make S.L. ofrece a través de su portal y con carácter enunciativo pero no limitativo, a no emplearlos para:
           </p>
           <ul>
-            <li>Incurrir en actividades ilícitas, ilegales o contrarias a la buena fe y al orden público.</li>
+            <li>Incurrir en actividades ilícitas, legales o contrarias a la buena fe y al orden público.</li>
             <li>Difundir contenidos o propaganda de carácter racista, xenófobo, pornográfico-ilegal, de apología del terrorismo o atentatorio contra los derechos humanos.</li>
             <li>Provocar daños en los sistemas físicos y lógicos de Search and Make S.L., de sus proveedores o de terceras personas.</li>
           </ul>
