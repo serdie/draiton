@@ -4,38 +4,17 @@
 import { useContext } from 'react';
 import Link from 'next/link';
 import { AuthContext } from '@/context/auth-context';
-import { generateBusinessIdeas, GenerateBusinessIdeasOutput } from '@/ai/flows/generate-business-ideas';
 import { AsistenteForm } from '../asistente-ia/asistente-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getBusinessIdeasAction } from './actions';
 
 export default function PerspectivasIAPage() {
   const { user } = useContext(AuthContext);
   const isProUser = user?.role === 'pro' || user?.role === 'admin';
   
-  async function getBusinessIdeas(
-    currentState: { output: GenerateBusinessIdeasOutput | null; error: string | null },
-    formData: FormData
-  ): Promise<{ output: GenerateBusinessIdeasOutput | null; error: string | null }> {
-    "use server";
-    
-    const companyData = formData.get('companyData') as string;
-
-    if (!companyData) {
-      return { output: null, error: "Por favor, introduce la información de tu empresa." };
-    }
-
-    try {
-      const result = await generateBusinessIdeas({ companyData });
-      return { output: result, error: null };
-    } catch (e: any) {
-      console.error(e);
-      return { output: null, error: "Ha ocurrido un error al generar las ideas. Inténtalo de nuevo." };
-    }
-  }
-
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -79,9 +58,10 @@ export default function PerspectivasIAPage() {
           <CardDescription>Cuantos más detalles proporciones, mejores serán las sugerencias.</CardDescription>
         </CardHeader>
         <CardContent>
-          <AsistenteForm action={getBusinessIdeas} />
+          <AsistenteForm action={getBusinessIdeasAction} />
         </CardContent>
       </Card>
     </div>
   );
 }
+
