@@ -8,36 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Mail, Users, Zap, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function MarketingPage() {
   const { user } = useContext(AuthContext);
   const isProUser = user?.role === 'pro' || user?.role === 'admin';
-
-  if (!isProUser) {
-    return (
-      <Card className="max-w-lg mx-auto">
-        <CardHeader className="text-center">
-            <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full mb-4 mx-auto w-fit">
-                <Lock className="h-6 w-6 text-primary" />
-              </div>
-          <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
-          <CardDescription>
-            El Centro de Marketing es una herramienta avanzada para potenciar tu negocio.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-sm text-muted-foreground">
-            Actualiza al plan Pro para acceder a campañas de email, gestión de redes sociales y automatizaciones de marketing.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button className="w-full" asChild>
-            <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -47,8 +22,36 @@ export default function MarketingPage() {
           Gestiona tus campañas de correo electrónico, boletines y presencia en redes sociales.
         </p>
       </div>
+
+       {!isProUser && (
+        <Card className="border-primary/50 bg-primary/10">
+          <CardHeader>
+            <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                    <Lock className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                    <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
+                    <CardDescription className="text-primary/90">
+                      El Centro de Marketing es una herramienta avanzada para potenciar tu negocio.
+                    </CardDescription>
+                </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-primary/80">
+              Actualiza al plan Pro para acceder a campañas de email, gestión de redes sociales y automatizaciones de marketing.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
+              <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={cn("grid grid-cols-1 lg:grid-cols-3 gap-6", !isProUser && "opacity-50 pointer-events-none")}>
         
         <Card className="flex flex-col">
           <CardHeader>

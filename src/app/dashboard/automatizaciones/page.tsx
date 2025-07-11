@@ -114,32 +114,6 @@ export default function AutomatizacionesPage() {
     });
   };
 
-  if (!isProUser) {
-    return (
-      <Card className="max-w-lg mx-auto">
-        <CardHeader className="text-center">
-            <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full mb-4 mx-auto w-fit">
-                <Lock className="h-6 w-6 text-primary" />
-              </div>
-          <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
-          <CardDescription>
-            Las automatizaciones te permiten conectar tus apps y ahorrar cientos de horas.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-sm text-muted-foreground">
-            Actualiza al plan Pro para crear flujos de trabajo ilimitados y conectar todas las aplicaciones disponibles.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button className="w-full" asChild>
-            <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -149,15 +123,43 @@ export default function AutomatizacionesPage() {
             Crea flujos de trabajo personalizados para automatizar tareas repetitivas y conectar tus aplicaciones.
           </p>
         </div>
-        <Button asChild>
+        <Button asChild disabled={!isProUser}>
           <Link href="/dashboard/automatizaciones/crear">
             <PlusCircle className="mr-2 h-4 w-4" />
             Crear Nueva Automatización
           </Link>
         </Button>
       </div>
+
+       {!isProUser && (
+        <Card className="border-primary/50 bg-primary/10">
+          <CardHeader>
+            <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                    <Lock className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                    <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
+                    <CardDescription className="text-primary/90">
+                        Las automatizaciones te permiten conectar tus apps y ahorrar cientos de horas.
+                    </CardDescription>
+                </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-primary/80">
+                Actualiza al plan Pro para crear flujos de trabajo ilimitados y conectar todas las aplicaciones disponibles.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
+              <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
       
-       <Card>
+       <Card className={cn(!isProUser && "opacity-50 pointer-events-none")}>
         <CardHeader>
           <CardTitle>Mis Flujos de Trabajo</CardTitle>
           <CardDescription>Gestiona tus automatizaciones activas e inactivas.</CardDescription>
@@ -182,6 +184,7 @@ export default function AutomatizacionesPage() {
                           checked={automation.status === 'Activo'}
                           onCheckedChange={(checked) => handleStatusChange(automation.id, checked)}
                           aria-label={`Activar o desactivar la automatización ${automation.name}`}
+                          disabled={!isProUser}
                         />
                         <Badge variant="outline" className={cn("text-xs", getStatusBadgeClass(automation.status))}>
                            {automation.status}
@@ -199,7 +202,7 @@ export default function AutomatizacionesPage() {
                   <TableCell className="text-right">
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
+                          <Button variant="ghost" className="h-8 w-8 p-0" disabled={!isProUser}>
                             <span className="sr-only">Abrir menú</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>

@@ -70,32 +70,6 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
   const { user } = useContext(AuthContext);
   const isProUser = user?.role === 'pro' || user?.role === 'admin';
 
-  if (!isProUser) {
-    return (
-      <Card className="max-w-lg mx-auto">
-        <CardHeader className="text-center">
-            <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full mb-4 mx-auto w-fit">
-                <Lock className="h-6 w-6 text-primary" />
-              </div>
-          <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
-          <CardDescription>
-            Crea y administra tu presencia online con el poder de la inteligencia artificial.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-sm text-muted-foreground">
-            Actualiza al plan Pro para crear sitios web, tiendas online y landing pages ilimitadas con nuestro asistente inteligente.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button className="w-full" asChild>
-            <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -110,14 +84,42 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
           Ver Plantillas IA (Próximamente)
         </Button>
       </div>
+      
+      {!isProUser && (
+        <Card className="border-primary/50 bg-primary/10">
+          <CardHeader>
+            <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                    <Lock className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                    <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
+                    <CardDescription className="text-primary/90">
+                      Crea y administra tu presencia online con el poder de la inteligencia artificial.
+                    </CardDescription>
+                </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-primary/80">
+              Actualiza al plan Pro para crear sitios web, tiendas online y landing pages ilimitadas con nuestro asistente inteligente.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
+              <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
 
       <Tabs defaultValue="gestionar" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="crear">Crear Nuevo Sitio</TabsTrigger>
+            <TabsTrigger value="crear" disabled={!isProUser}>Crear Nuevo Sitio</TabsTrigger>
             <TabsTrigger value="gestionar">Gestionar Sitios Existentes</TabsTrigger>
         </TabsList>
         <TabsContent value="crear">
-          <Card>
+          <Card className={cn(!isProUser && "opacity-50 pointer-events-none")}>
             <CardHeader>
               <CardTitle>Crear un nuevo sitio web</CardTitle>
               <CardDescription>Proporciona los detalles para que la IA pueda generar un concepto a tu medida.</CardDescription>
@@ -128,7 +130,7 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
           </Card>
         </TabsContent>
         <TabsContent value="gestionar">
-           <div className="space-y-6">
+           <div className={cn("space-y-6", !isProUser && "opacity-50 pointer-events-none")}>
                 <h2 className="text-2xl font-semibold tracking-tight">Mis Sitios Web Generados</h2>
                 <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {generatedSites.map(site => (
