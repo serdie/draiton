@@ -92,10 +92,30 @@ const getStatusBadgeClass = (status: AutomationStatus) => {
   }
 };
 
+function ProFeatureLock() {
+  return (
+    <Card className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-sm">
+      <CardContent className="text-center">
+        <Lock className="mx-auto h-12 w-12 text-primary" />
+        <h3 className="mt-4 text-2xl font-semibold">Función Exclusiva del Plan Pro</h3>
+        <p className="mt-2 text-muted-foreground">
+          Mejora tu plan para crear y gestionar automatizaciones ilimitadas.
+        </p>
+        <Button asChild className="mt-4">
+          <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export default function AutomatizacionesPage() {
   const [automations, setAutomations] = useState<Automation[]>(initialAutomations);
   const { toast } = useToast();
+  const { user } = useContext(AuthContext);
+
+  const isProUser = user?.role === 'pro' || user?.role === 'admin';
 
   const handleStatusChange = (id: string, newStatus: boolean) => {
     setAutomations(
@@ -113,93 +133,96 @@ export default function AutomatizacionesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Automatizaciones</h1>
-          <p className="text-muted-foreground">
-            Crea flujos de trabajo personalizados para automatizar tareas repetitivas y conectar tus aplicaciones.
-          </p>
+    <div className="relative">
+      {!isProUser && <ProFeatureLock />}
+      <div className={cn("space-y-6", !isProUser && "opacity-50 pointer-events-none")}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Automatizaciones</h1>
+            <p className="text-muted-foreground">
+              Crea flujos de trabajo personalizados para automatizar tareas repetitivas y conectar tus aplicaciones.
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/dashboard/automatizaciones/crear">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Crear Nueva Automatización
+            </Link>
+          </Button>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/automatizaciones/crear">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Crear Nueva Automatización
-          </Link>
-        </Button>
-      </div>
-      
-       <Card>
-        <CardHeader>
-          <CardTitle>Mis Flujos de Trabajo</CardTitle>
-          <CardDescription>Gestiona tus automatizaciones activas e inactivas.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[60px]">Estado</TableHead>
-                <TableHead>Nombre del Flujo</TableHead>
-                <TableHead>Disparador</TableHead>
-                <TableHead>Última Ejecución</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {automations.map((automation) => (
-                <TableRow key={automation.id}>
-                  <TableCell>
-                     <div className="flex flex-col items-center gap-2">
-                        <Switch
-                          checked={automation.status === 'Activo'}
-                          onCheckedChange={(checked) => handleStatusChange(automation.id, checked)}
-                          aria-label={`Activar o desactivar la automatización ${automation.name}`}
-                        />
-                        <Badge variant="outline" className={cn("text-xs", getStatusBadgeClass(automation.status))}>
-                           {automation.status}
-                        </Badge>
-                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium">{automation.name}</p>
-                    <p className="text-sm text-muted-foreground">{automation.description}</p>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{automation.trigger}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{automation.lastRun}</TableCell>
-                  <TableCell className="text-right">
-                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Abrir menú</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                           <DropdownMenuItem onClick={handleComingSoon}>
-                             <Pencil className="mr-2 h-4 w-4" />
-                            <span>Editar Flujo</span>
-                           </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleComingSoon}>
-                             <Play className="mr-2 h-4 w-4" />
-                             <span>Ejecutar ahora</span>
-                           </DropdownMenuItem>
-                           <DropdownMenuSeparator />
-                           <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => alert('Simulación: Eliminar flujo')}>
-                             <Trash2 className="mr-2 h-4 w-4" />
-                             <span>Eliminar</span>
-                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                  </TableCell>
+        
+         <Card>
+          <CardHeader>
+            <CardTitle>Mis Flujos de Trabajo</CardTitle>
+            <CardDescription>Gestiona tus automatizaciones activas e inactivas.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60px]">Estado</TableHead>
+                  <TableHead>Nombre del Flujo</TableHead>
+                  <TableHead>Disparador</TableHead>
+                  <TableHead>Última Ejecución</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {automations.map((automation) => (
+                  <TableRow key={automation.id}>
+                    <TableCell>
+                       <div className="flex flex-col items-center gap-2">
+                          <Switch
+                            checked={automation.status === 'Activo'}
+                            onCheckedChange={(checked) => handleStatusChange(automation.id, checked)}
+                            aria-label={`Activar o desactivar la automatización ${automation.name}`}
+                          />
+                          <Badge variant="outline" className={cn("text-xs", getStatusBadgeClass(automation.status))}>
+                             {automation.status}
+                          </Badge>
+                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium">{automation.name}</p>
+                      <p className="text-sm text-muted-foreground">{automation.description}</p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{automation.trigger}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{automation.lastRun}</TableCell>
+                    <TableCell className="text-right">
+                       <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Abrir menú</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                             <DropdownMenuItem onClick={handleComingSoon}>
+                               <Pencil className="mr-2 h-4 w-4" />
+                              <span>Editar Flujo</span>
+                             </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleComingSoon}>
+                               <Play className="mr-2 h-4 w-4" />
+                               <span>Ejecutar ahora</span>
+                             </DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => alert('Simulación: Eliminar flujo')}>
+                               <Trash2 className="mr-2 h-4 w-4" />
+                               <span>Eliminar</span>
+                             </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
