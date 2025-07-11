@@ -4,7 +4,7 @@
 import { useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
-import { Loader2, ShieldAlert } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -61,11 +61,19 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold">Panel de Administración</h1>
-                <p className="text-muted-foreground">
-                    Control total sobre la aplicación, usuarios y contenido.
-                </p>
+            <div className="flex justify-between items-start">
+                 <div>
+                    <h1 className="text-3xl font-bold">Panel de Administración</h1>
+                    <p className="text-muted-foreground">
+                        Control total sobre la aplicación, usuarios y contenido.
+                    </p>
+                </div>
+                 <Button asChild variant="outline">
+                    <Link href="/dashboard">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Regresar a la aplicación
+                    </Link>
+                </Button>
             </div>
 
             <Tabs defaultValue="users" className="w-full">
