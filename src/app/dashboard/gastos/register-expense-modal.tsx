@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,12 +18,13 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CalendarIcon, Loader2, ScanLine, Terminal, Upload, Camera, VideoOff } from 'lucide-react';
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { useToast } from '@/hooks/use-toast';
 import { type ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
 import { scanReceiptAction } from './actions';
+import { createExpense } from '@/lib/firebase/expense-actions';
 
 interface RegisterExpenseModalProps {
   isOpen: boolean;
@@ -43,6 +43,7 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
   const [scanError, setScanError] = useState<string | null>(null);
   const [view, setView] = useState<'form' | 'camera'>('form');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isSaving, startTransition] = useTransition();
 
   // Form state
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -50,11 +51,21 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
   const [proveedor, setProveedor] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [importe, setImporte] = useState('');
+  const [metodoPago, setMetodoPago] = useState('');
   
+  const resetForm = useCallback(() => {
+    setDate(new Date());
+    setCategory('');
+    setProveedor('');
+    setDescripcion('');
+    setImporte('');
+    setMetodoPago('');
+    setScanError(null);
+  }, []);
+
   useEffect(() => {
     if (initialData) {
-      // If a date string is provided, try to parse it. Default to now if invalid.
-      const parsedDate = initialData.date ? new Date(initialData.date) : new Date();
+      const parsedDate = initialData.date ? parseISO(initialData.date) : new Date();
       setDate(isNaN(parsedDate.getTime()) ? new Date() : parsedDate);
       
       setCategory(initialData.category || '');
@@ -62,34 +73,60 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
       setDescripcion(initialData.description || '');
       setImporte(initialData.totalAmount?.toString() || '');
     } else {
-        // Reset form when there's no initial data
         resetForm();
     }
-  }, [initialData]);
+  }, [initialData, resetForm]);
 
-  const resetForm = () => {
-    setDate(new Date());
-    setCategory('');
-    setProveedor('');
-    setDescripcion('');
-    setImporte('');
-    setScanError(null);
-  }
+  const stopCamera = useCallback(() => {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     stopCamera();
     setView('form');
     resetForm();
     onClose();
-  }
+  }, [stopCamera, resetForm, onClose]);
+
 
   const handleRegister = () => {
-    // Here you would typically handle form submission
-    toast({
-      title: 'Gasto Registrado (Simulación)',
-      description: 'El nuevo gasto ha sido añadido a tu lista.',
+    if (!date || !category || !proveedor || !importe || !metodoPago) {
+        toast({
+            variant: 'destructive',
+            title: 'Campos requeridos',
+            description: 'Por favor, completa todos los campos obligatorios.',
+        });
+        return;
+    }
+    
+    startTransition(async () => {
+        const expenseData = {
+            fecha: date,
+            categoria: category,
+            proveedor: proveedor,
+            descripcion: descripcion,
+            importe: parseFloat(importe),
+            metodoPago: metodoPago,
+        };
+        const result = await createExpense(expenseData);
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error al registrar el gasto',
+                description: result.error,
+            });
+        } else {
+            toast({
+                title: 'Gasto Registrado',
+                description: 'El nuevo gasto ha sido añadido a tu lista.',
+            });
+            handleClose();
+        }
     });
-    handleClose();
   };
   
   const handleImportClick = () => {
@@ -111,6 +148,10 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
     if (result.error) {
         setScanError(result.error);
     } else if (result.data) {
+        toast({
+          title: 'Datos extraídos con IA',
+          description: 'Revisa y completa el formulario con los datos cargados.',
+        })
         onOpenModal(result.data);
     }
   }
@@ -126,14 +167,6 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
     };
     event.target.value = ''; // Reset file input
   };
-  
-  const stopCamera = useCallback(() => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  }, []);
 
   const getCameraPermission = useCallback(async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -195,10 +228,10 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
           <div className="space-y-4 py-4">
               <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" className="w-full" onClick={handleImportClick} disabled={isScanning}>
+                <Button variant="outline" className="w-full" onClick={handleImportClick} disabled={isScanning || isSaving}>
                     {isScanning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Procesando...</> : <><Upload className="mr-2 h-4 w-4" /> Importar Ticket</>}
                 </Button>
-                 <Button variant="outline" className="w-full" onClick={() => setView('camera')} disabled={isScanning}>
+                 <Button variant="outline" className="w-full" onClick={() => setView('camera')} disabled={isScanning || isSaving}>
                     <Camera className="mr-2 h-4 w-4" /> Escanear con Cámara
                  </Button>
               </div>
@@ -216,7 +249,7 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
               )}
               
               <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="date" className="text-right">Fecha</Label>
+                  <Label htmlFor="date" className="text-right">Fecha *</Label>
                    <Popover>
                       <PopoverTrigger asChild>
                           <Button variant={"outline"} className={cn("w-full col-span-3 justify-start text-left font-normal", !date && "text-muted-foreground")}>
@@ -231,7 +264,7 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
               </div>
               
                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="category" className="text-right">Categoría</Label>
+                  <Label htmlFor="category" className="text-right">Categoría *</Label>
                   <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger className="col-span-3">
                           <SelectValue placeholder="Selecciona una categoría" />
@@ -248,7 +281,7 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="proveedor" className="text-right">Proveedor</Label>
+                  <Label htmlFor="proveedor" className="text-right">Proveedor *</Label>
                   <Input id="proveedor" placeholder="Ej: Amazon, Ferretería Paco" className="col-span-3" value={proveedor} onChange={(e) => setProveedor(e.target.value)} />
               </div>
 
@@ -258,22 +291,22 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="importe" className="text-right">Importe (€)</Label>
+                  <Label htmlFor="importe" className="text-right">Importe (€) *</Label>
                   <Input id="importe" type="number" placeholder="Ej: 75.50" className="col-span-3" value={importe} onChange={(e) => setImporte(e.target.value)} />
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="metodo-pago" className="text-right">Método Pago</Label>
-                   <Select>
+                  <Label htmlFor="metodo-pago" className="text-right">Método Pago *</Label>
+                   <Select value={metodoPago} onValueChange={setMetodoPago}>
                       <SelectTrigger className="col-span-3">
                           <SelectValue placeholder="Selecciona un método" />
                       </SelectTrigger>
                       <SelectContent>
-                          <SelectItem value="credit-card">Tarjeta de Crédito</SelectItem>
-                          <SelectItem value="debit-card">Tarjeta de Débito</SelectItem>
-                          <SelectItem value="cash">Efectivo</SelectItem>
-                          <SelectItem value="bank-transfer">Transferencia</SelectItem>
-                          <SelectItem value="paypal">Paypal</SelectItem>
+                          <SelectItem value="Tarjeta de Crédito">Tarjeta de Crédito</SelectItem>
+                          <SelectItem value="Tarjeta de Débito">Tarjeta de Débito</SelectItem>
+                          <SelectItem value="Efectivo">Efectivo</SelectItem>
+                          <SelectItem value="Transferencia">Transferencia</SelectItem>
+                          <SelectItem value="Paypal">Paypal</SelectItem>
                       </SelectContent>
                   </Select>
               </div>
@@ -310,11 +343,14 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => view === 'form' ? handleClose() : setView('form')}>
+          <Button variant="outline" onClick={() => view === 'form' ? handleClose() : setView('camera')} disabled={isSaving}>
             {view === 'form' ? 'Cancelar' : 'Volver'}
           </Button>
           {view === 'form' && (
-            <Button onClick={handleRegister}>Registrar Gasto</Button>
+            <Button onClick={handleRegister} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving ? 'Guardando...' : 'Registrar Gasto'}
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>

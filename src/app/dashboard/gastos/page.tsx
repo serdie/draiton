@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useContext } from 'react';
 import type { DateRange } from "react-day-picker"
 import {
   Card,
@@ -26,7 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RegisterExpenseModal } from './register-expense-modal';
 import type { ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
@@ -36,105 +37,29 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { AuthContext } from '@/context/auth-context';
+import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { useToast } from '@/hooks/use-toast';
+import { deleteExpense } from '@/lib/firebase/expense-actions';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 
-const gastos = [
-  {
-    fecha: '2023-11-01',
-    categoria: 'Software',
-    proveedor: 'Suscripción GenialApp',
-    descripcion: 'Suscripción mensual a herramienta de diseño.',
-    metodoPago: 'Credit Card',
-    importe: 49.99,
-  },
-  {
-    fecha: '2023-11-05',
-    categoria: 'Oficina',
-    proveedor: 'Materiales Escritorio S.L.',
-    descripcion: 'Compra de bolígrafos y libretas.',
-    metodoPago: 'Cash',
-    importe: 25.5,
-  },
-  {
-    fecha: '2023-11-10',
-    categoria: 'Marketing',
-    proveedor: 'Publicidad Online',
-    descripcion: 'Campaña de anuncios en Facebook.',
-    metodoPago: 'Credit Card',
-    importe: 150.0,
-  },
-  {
-    fecha: '2023-11-15',
-    categoria: 'Viajes',
-    proveedor: 'Renfe',
-    descripcion: 'Billete de tren para reunión con cliente.',
-    metodoPago: 'Debit Card',
-    importe: 75.2,
-  },
-  {
-    fecha: '2023-11-20',
-    categoria: 'Otros',
-    proveedor: 'Cafetería La Esquina',
-    descripcion: 'Café reunión equipo.',
-    metodoPago: 'Cash',
-    importe: 12.8,
-  },
-  {
-    fecha: '2023-10-25',
-    categoria: 'Software',
-    proveedor: 'Adobe',
-    descripcion: 'Suscripción Creative Cloud',
-    metodoPago: 'Credit Card',
-    importe: 59.99,
-  },
-  {
-    fecha: '2023-11-21',
-    categoria: 'Suministros',
-    proveedor: 'Amazon',
-    descripcion: 'Agua y café para la oficina',
-    metodoPago: 'Credit Card',
-    importe: 35.0,
-  },
-  {
-    fecha: '2023-11-22',
-    categoria: 'Viajes',
-    proveedor: 'Booking.com',
-    descripcion: 'Hotel para viaje de negocios',
-    metodoPago: 'Credit Card',
-    importe: 120.0,
-  },
-  {
-    fecha: '2023-11-23',
-    categoria: 'Oficina',
-    proveedor: 'Ikea',
-    descripcion: 'Silla de oficina nueva',
-    metodoPago: 'Debit Card',
-    importe: 89.99,
-  },
-  {
-    fecha: '2023-11-24',
-    categoria: 'Software',
-    proveedor: 'Google Workspace',
-    descripcion: 'Suscripción mensual',
-    metodoPago: 'Credit Card',
-    importe: 12.5,
-  },
-  {
-    fecha: '2023-11-25',
-    categoria: 'Marketing',
-    proveedor: 'Canva Pro',
-    descripcion: 'Suscripción anual',
-    metodoPago: 'Credit Card',
-    importe: 109.99,
-  },
-];
+export type Expense = {
+  id: string;
+  fecha: Date;
+  categoria: string;
+  proveedor: string;
+  descripcion: string;
+  metodoPago: string;
+  importe: number;
+}
 
-const categoriasUnicas = [...new Set(gastos.map(g => g.categoria))];
-const proveedoresUnicos = [...new Set(gastos.map(g => g.proveedor))];
-const metodosPagoUnicos = [...new Set(gastos.map(g => g.metodoPago))];
+const categoriasUnicas = ['Software', 'Oficina', 'Marketing', 'Viajes', 'Suministros', 'Otros'];
+const metodosPagoUnicos = ['Tarjeta de Crédito', 'Tarjeta de Débito', 'Efectivo', 'Transferencia', 'Paypal'];
 
 const getCategoryBadgeClass = (category: string) => {
-  switch (category.toLowerCase()) {
+  switch (category?.toLowerCase()) {
     case 'software':
       return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800';
     case 'oficina':
@@ -153,6 +78,13 @@ const getCategoryBadgeClass = (category: string) => {
 };
 
 export default function GastosPage() {
+  const { user } = useContext(AuthContext);
+  const { toast } = useToast();
+
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialData, setInitialData] = useState<ExtractReceiptDataOutput | undefined>();
 
@@ -165,9 +97,38 @@ export default function GastosPage() {
   // Pagination states
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  useEffect(() => {
+    if (!db || !user) {
+        setLoading(false);
+        return;
+    }
+    setLoading(true);
+
+    const q = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const docsList = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                fecha: data.fecha instanceof Timestamp ? data.fecha.toDate() : new Date(),
+            } as Expense;
+        });
+        setExpenses(docsList.sort((a,b) => b.fecha.getTime() - a.fecha.getTime()));
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching expenses:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los gastos.' });
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, toast]);
 
   const gastosFiltrados = useMemo(() => {
-    return gastos.filter(gasto => {
+    return expenses.filter(gasto => {
       const fechaGasto = new Date(gasto.fecha);
       const enRangoFecha = !dateRange || (
         (!dateRange.from || fechaGasto >= dateRange.from) &&
@@ -179,7 +140,7 @@ export default function GastosPage() {
       
       return enRangoFecha && porCategoria && porProveedor && porMetodoPago;
     });
-  }, [dateRange, categoria, proveedor, metodoPago]);
+  }, [expenses, dateRange, categoria, proveedor, metodoPago]);
 
   const totalPages = Math.ceil(gastosFiltrados.length / itemsPerPage);
 
@@ -211,6 +172,137 @@ export default function GastosPage() {
     setItemsPerPage(Number(value));
     setCurrentPage(1);
   };
+  
+  const handleDelete = async () => {
+    if (!expenseToDelete) return;
+
+    try {
+      await deleteExpense(expenseToDelete.id);
+      toast({
+        title: 'Gasto Eliminado',
+        description: `El gasto de ${expenseToDelete.proveedor} ha sido eliminado.`,
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al eliminar',
+        description: 'No se pudo eliminar el gasto.',
+      });
+    } finally {
+      setExpenseToDelete(null);
+    }
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <CardContent>
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </CardContent>
+      )
+    }
+
+    if (paginatedGastos.length === 0) {
+      return (
+        <CardContent>
+          <div className="text-center text-muted-foreground py-12">
+            No hay gastos para mostrar con los filtros aplicados.
+          </div>
+        </CardContent>
+      );
+    }
+    
+    return (
+      <>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Categoría</TableHead>
+                <TableHead>Proveedor</TableHead>
+                <TableHead>Método Pago</TableHead>
+                <TableHead className="text-right">Importe</TableHead>
+                <TableHead className="text-center">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedGastos.map((gasto) => (
+                <TableRow key={gasto.id}>
+                  <TableCell>{format(new Date(gasto.fecha), "dd MMM yyyy", { locale: es })}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={cn('font-normal', getCategoryBadgeClass(gasto.categoria))}>
+                      {gasto.categoria}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">{gasto.proveedor}</TableCell>
+                  <TableCell>{gasto.metodoPago}</TableCell>
+                  <TableCell className="text-right">
+                    {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(gasto.importe)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Abrir menú</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Ver detalle</DropdownMenuItem>
+                        <DropdownMenuItem>Editar</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setExpenseToDelete(gasto)}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+         <CardFooter className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Resultados por página:</span>
+                  <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+                      <SelectTrigger className="w-20 h-8">
+                          <SelectValue placeholder={itemsPerPage} />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                          <SelectItem value="100">100</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                  <span>Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
+                  <div className="flex items-center gap-2">
+                      <Button
+                          variant="outline" size="icon" className="h-8 w-8"
+                          onClick={() => setCurrentPage(p => p - 1)}
+                          disabled={currentPage === 1}
+                      >
+                          <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                          variant="outline" size="icon" className="h-8 w-8"
+                          onClick={() => setCurrentPage(p => p + 1)}
+                          disabled={currentPage === totalPages || totalPages === 0}
+                      >
+                          <ChevronRight className="h-4 w-4" />
+                      </Button>
+                  </div>
+              </div>
+          </CardFooter>
+      </>
+    );
+  }
 
   return (
     <>
@@ -220,6 +312,22 @@ export default function GastosPage() {
         onOpenModal={handleOpenModal} 
         initialData={initialData}
       />
+      <AlertDialog open={!!expenseToDelete} onOpenChange={(open) => !open && setExpenseToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de que quieres eliminar este gasto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción es irreversible. El gasto de <strong>{expenseToDelete?.proveedor}</strong> será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setExpenseToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Sí, eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -307,112 +415,14 @@ export default function GastosPage() {
                 </div>
             </CardContent>
         </Card>
-
         <Card>
-          <CardHeader>
-            <CardTitle>Listado de Gastos</CardTitle>
-            <CardDescription>
-              Listado de tus gastos recientes.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Proveedor</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>Método Pago</TableHead>
-                  <TableHead className="text-right">Importe</TableHead>
-                  <TableHead className="text-center">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedGastos.length > 0 ? paginatedGastos.map((gasto, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{format(new Date(gasto.fecha), "dd MMM yyyy", { locale: es })}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn('font-normal', getCategoryBadgeClass(gasto.categoria))}>
-                        {gasto.categoria}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{gasto.proveedor}</TableCell>
-                    <TableCell>{gasto.descripcion}</TableCell>
-                    <TableCell>{gasto.metodoPago}</TableCell>
-                    <TableCell className="text-right">
-                      {new Intl.NumberFormat('es-ES', {
-                        style: 'currency',
-                        currency: 'EUR',
-                      }).format(gasto.importe)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Abrir menú</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Ver detalle</DropdownMenuItem>
-                          <DropdownMenuItem>Editar</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive">
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )) : (
-                    <TableRow>
-                        <TableCell colSpan={7} className="text-center h-24">
-                            No se encontraron gastos con los filtros aplicados.
-                        </TableCell>
-                    </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-           <CardFooter className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>Resultados por página:</span>
-                    <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
-                        <SelectTrigger className="w-20 h-8">
-                            <SelectValue placeholder={itemsPerPage} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="10">10</SelectItem>
-                            <SelectItem value="20">20</SelectItem>
-                            <SelectItem value="50">50</SelectItem>
-                            <SelectItem value="100">100</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="flex items-center gap-4 text-sm">
-                    <span>Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setCurrentPage(p => p - 1)}
-                            disabled={currentPage === 1}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                             className="h-8 w-8"
-                            onClick={() => setCurrentPage(p => p + 1)}
-                            disabled={currentPage === totalPages || totalPages === 0}
-                        >
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-            </CardFooter>
+            <CardHeader>
+                <CardTitle>Listado de Gastos</CardTitle>
+                <CardDescription>
+                Listado de tus gastos recientes.
+                </CardDescription>
+            </CardHeader>
+            {renderContent()}
         </Card>
       </div>
     </>
