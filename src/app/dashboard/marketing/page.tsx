@@ -12,18 +12,20 @@ import { cn } from '@/lib/utils';
 
 function ProFeatureLock() {
   return (
-    <Card className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-sm">
-      <CardContent className="text-center">
-        <Lock className="mx-auto h-12 w-12 text-primary" />
-        <h3 className="mt-4 text-2xl font-semibold">Función Exclusiva del Plan Pro</h3>
-        <p className="mt-2 text-muted-foreground">
-          Desbloquea las herramientas de marketing para automatizar campañas y gestionar redes sociales.
-        </p>
-        <Button asChild className="mt-4">
-          <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-sm">
+      <Card className="max-w-md text-center">
+        <CardContent className="p-8">
+          <Lock className="mx-auto h-12 w-12 text-primary" />
+          <h3 className="mt-4 text-2xl font-semibold">Función Exclusiva del Plan Pro</h3>
+          <p className="mt-2 text-muted-foreground">
+            Desbloquea las herramientas de marketing para automatizar campañas y gestionar redes sociales.
+          </p>
+          <Button asChild className="mt-4">
+            <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
