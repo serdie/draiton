@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useRef, useEffect, useCallback, useTransition } from 'react';
+import { useState, useRef, useEffect, useCallback, useTransition, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -25,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { type ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
 import { scanReceiptAction } from './actions';
 import { createExpense } from '@/lib/firebase/expense-actions';
+import { AuthContext } from '@/context/auth-context';
 
 interface RegisterExpenseModalProps {
   isOpen: boolean;
@@ -34,6 +36,7 @@ interface RegisterExpenseModalProps {
 }
 
 export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData }: RegisterExpenseModalProps) {
+  const { user } = useContext(AuthContext);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -104,6 +107,15 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
     }
     
     startTransition(async () => {
+        if (!user) {
+            toast({
+                variant: 'destructive',
+                title: 'No estás autenticado',
+                description: 'Por favor, inicia sesión para registrar un gasto.',
+            });
+            return;
+        }
+
         const expenseData = {
             fecha: date,
             categoria: category,
@@ -112,7 +124,7 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
             importe: parseFloat(importe),
             metodoPago: metodoPago,
         };
-        const result = await createExpense(expenseData);
+        const result = await createExpense(expenseData, user.uid);
         if (result.error) {
             toast({
                 variant: 'destructive',

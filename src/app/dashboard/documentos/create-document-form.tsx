@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useTransition } from 'react';
+import { useState, useEffect, useMemo, useTransition, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,6 +26,7 @@ import { type DocumentType, type DocumentStatus } from './page';
 import { createDocument } from '@/lib/firebase/document-actions';
 import { useToast } from '@/hooks/use-toast';
 import { type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
+import { AuthContext } from '@/context/auth-context';
 
 type LineItem = {
   id: number;
@@ -51,6 +52,7 @@ const getDocumentTypeLabel = (type: DocumentType) => {
 }
 
 export function CreateDocumentForm({ isOpen, onClose, documentType, initialData }: CreateDocumentFormProps) {
+  const { user } = useContext(AuthContext);
   const [docType, setDocType] = useState(documentType);
   const [docNumber, setDocNumber] = useState('');
   const [emissionDate, setEmissionDate] = useState<Date | undefined>(new Date());
@@ -159,6 +161,15 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
 
   const handleSubmit = () => {
     startTransition(async () => {
+        if (!user) {
+            toast({
+                variant: 'destructive',
+                title: 'No estás autenticado',
+                description: 'Por favor, inicia sesión para crear un documento.',
+            });
+            return;
+        }
+
         const documentData = {
             numero: docNumber,
             tipo: docType,
@@ -175,7 +186,7 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
             moneda: 'EUR'
         };
 
-        const result = await createDocument(documentData);
+        const result = await createDocument(documentData, user.uid);
 
         if (result.error) {
             toast({
