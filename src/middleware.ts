@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  auth,
+  authMiddleware,
   refreshAuth,
   redirectToLogin,
   redirectToHome,
@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  return auth(request, {
+  return authMiddleware(request, {
     loginPath: '/api/auth',
     logoutPath: '/api/auth',
     apiKey: authConfig.apiKey,
