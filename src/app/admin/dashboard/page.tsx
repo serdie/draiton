@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useMemo } from "react";
 import { AuthContext } from "@/context/auth-context";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Loader2, User, Trash2, ShieldCheck, UserCog } from "lucide-react";
+import { MoreHorizontal, Loader2, User, Trash2, ShieldCheck, UserCog, FilterX, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { updateUserRole, deleteUser } from "@/lib/firebase/admin-actions";
 import { getRoleBadgeClass } from "@/lib/utils";
 import { EditUserModal } from "./edit-user-modal";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export type UserRole = 'free' | 'pro' | 'admin';
 
@@ -28,6 +30,8 @@ export type User = {
   registered: Date;
 };
 
+const userRoles: UserRole[] = ['free', 'pro', 'admin'];
+
 export default function AdminDashboardPage() {
     const { user: adminUser } = useContext(AuthContext);
     const [users, setUsers] = useState<User[]>([]);
@@ -36,6 +40,14 @@ export default function AdminDashboardPage() {
     const [userToEdit, setUserToEdit] = useState<User | null>(null);
     const [userToChangeRole, setUserToChangeRole] = useState<{ user: User; newRole: UserRole } | null>(null);
     const { toast } = useToast();
+
+    // Filter states
+    const [filtroTexto, setFiltroTexto] = useState('');
+    const [filtroRol, setFiltroRol] = useState<UserRole | 'all'>('all');
+
+    // Pagination states
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         if (!db || !adminUser || adminUser.role !== 'admin') {
@@ -70,7 +82,37 @@ export default function AdminDashboardPage() {
 
         return () => unsubscribe();
     }, [adminUser, toast]);
+    
+    const filteredUsers = useMemo(() => {
+        return users.filter(user => {
+            const porTexto = !filtroTexto || 
+                user.name.toLowerCase().includes(filtroTexto.toLowerCase()) ||
+                user.email.toLowerCase().includes(filtroTexto.toLowerCase());
 
+            const porRol = filtroRol === 'all' || user.role === filtroRol;
+            
+            return porTexto && porRol;
+        });
+    }, [users, filtroTexto, filtroRol]);
+
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+    const paginatedUsers = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredUsers.slice(startIndex, endIndex);
+    }, [filteredUsers, currentPage, itemsPerPage]);
+
+    const resetFilters = () => {
+        setFiltroTexto('');
+        setFiltroRol('all');
+        setCurrentPage(1);
+    };
+
+    const handleItemsPerPageChange = (value: string) => {
+        setItemsPerPage(Number(value));
+        setCurrentPage(1);
+    };
 
     const handleRoleChange = async () => {
         if (!userToChangeRole) return;
@@ -119,6 +161,21 @@ export default function AdminDashboardPage() {
                 <CardHeader>
                     <CardTitle>Gestión de Usuarios</CardTitle>
                     <CardDescription>Ver y administrar todos los usuarios registrados.</CardDescription>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4">
+                        <Input 
+                            placeholder="Buscar por nombre o email..."
+                            value={filtroTexto}
+                            onChange={(e) => setFiltroTexto(e.target.value)}
+                        />
+                        <Select value={filtroRol} onValueChange={(value) => setFiltroRol(value as any)}>
+                            <SelectTrigger><SelectValue placeholder="Filtrar por rol" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos los roles</SelectItem>
+                                {userRoles.map(role => <SelectItem key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <Button variant="outline" onClick={resetFilters}><FilterX className="mr-2 h-4 w-4" />Limpiar Filtros</Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {loading ? (
@@ -137,7 +194,8 @@ export default function AdminDashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.map(user => (
+                                {paginatedUsers.length > 0 ? (
+                                    paginatedUsers.map(user => (
                                     <TableRow key={user.id}>
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
@@ -184,11 +242,53 @@ export default function AdminDashboardPage() {
                                             </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            No se encontraron usuarios con los filtros aplicados.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     )}
                 </CardContent>
+                 <CardFooter className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Resultados por página:</span>
+                        <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+                        <SelectTrigger className="w-20 h-8">
+                            <SelectValue placeholder={itemsPerPage} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="20">20</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                        <span>Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
+                        <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline" size="icon" className="h-8 w-8"
+                            onClick={() => setCurrentPage(p => p - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline" size="icon" className="h-8 w-8"
+                            onClick={() => setCurrentPage(p => p + 1)}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        </div>
+                    </div>
+                </CardFooter>
             </Card>
         </div>
 
