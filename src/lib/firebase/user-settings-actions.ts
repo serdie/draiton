@@ -3,9 +3,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { doc, updateDoc } from 'firebase/firestore';
-import { auth, db } from './config';
-import { getAuth } from 'firebase-admin/auth';
-import { adminApp } from './admin-config';
+import { db } from './config';
+import { getTokens } from 'next-firebase-auth-edge';
+import { cookies } from 'next/headers';
+import { authConfig } from '@/config/auth-config';
 
 export type CompanySettings = {
     name?: string;
@@ -18,13 +19,14 @@ export async function updateCompanySettings(
     currentState: { message: string; error: boolean; },
     formData: FormData
 ): Promise<{ message: string; error: boolean; }> {
-    const { session } = auth; // This gets the session cookie on the server.
-    if (!session) {
-        return { message: 'No estás autenticado.', error: true };
+    const tokens = await getTokens(cookies(), authConfig);
+
+    if (!tokens) {
+         return { message: 'No estás autenticado.', error: true };
     }
 
     try {
-        const decodedToken = await getAuth(adminApp).verifySessionCookie(session);
+        const { decodedToken } = tokens;
         const uid = decodedToken.uid;
         
         const companyData: CompanySettings = {
