@@ -26,6 +26,7 @@ export async function updateUser(uid: string, data: UserUpdateData): Promise<voi
         throw new Error("Se requiere el ID del usuario.");
     }
     const userDocRef = doc(db, 'users', uid);
+    // The data object from the form already has the correct shape.
     await updateDoc(userDocRef, data);
 }
 
