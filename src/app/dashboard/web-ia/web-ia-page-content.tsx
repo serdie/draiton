@@ -1,16 +1,14 @@
 
 'use client';
 
-import { useContext } from 'react';
-import { AuthContext } from '@/context/auth-context';
 import { GestorWebForm } from '../gestor-web-ia/gestor-web-form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Pencil, Eye, Lock } from 'lucide-react';
+import { MoreHorizontal, Pencil, Eye } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { AIPoweredWebManagementOutput } from '@/ai/flows/ai-powered-web-management';
@@ -67,59 +65,23 @@ type GetWebsiteConceptAction = (
 
 
 export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConceptAction: GetWebsiteConceptAction }) {
-  const { user } = useContext(AuthContext);
-  const isProUser = user?.role === 'pro' || user?.role === 'admin';
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Tu Asistente Web Inteligente</h1>
-          <p className="text-muted-foreground">
-            Crea y administra tu presencia online: sitios web, tiendas online y landing pages con el poder de la IA.
-          </p>
-        </div>
+      <div className="text-right">
         <Button variant="outline" disabled>
           <Eye className="mr-2 h-4 w-4" />
           Ver Plantillas IA (Próximamente)
         </Button>
       </div>
       
-      {!isProUser && (
-        <Card className="border-primary/50 bg-primary/10">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
-                    <Lock className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                    <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
-                    <CardDescription className="text-primary/90">
-                      Crea y administra tu presencia online con el poder de la inteligencia artificial.
-                    </CardDescription>
-                </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-primary/80">
-              Actualiza al plan Pro para crear sitios web, tiendas online y landing pages ilimitadas con nuestro asistente inteligente.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-              <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-
       <Tabs defaultValue="gestionar" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="crear">Crear Nuevo Sitio</TabsTrigger>
             <TabsTrigger value="gestionar">Gestionar Sitios Existentes</TabsTrigger>
         </TabsList>
         <TabsContent value="crear">
-          <Card className={cn(!isProUser && "opacity-50 pointer-events-none")}>
+          <Card>
             <CardHeader>
               <CardTitle>Crear un nuevo sitio web</CardTitle>
               <CardDescription>Proporciona los detalles para que la IA pueda generar un concepto a tu medida.</CardDescription>
@@ -130,7 +92,7 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
           </Card>
         </TabsContent>
         <TabsContent value="gestionar">
-           <div className={cn("space-y-6", !isProUser && "opacity-50 pointer-events-none")}>
+           <div className="space-y-6">
                 <h2 className="text-2xl font-semibold tracking-tight">Mis Sitios Web Generados</h2>
                 <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {generatedSites.map(site => (
