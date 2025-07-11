@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,7 +10,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,10 +18,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, PlusCircle, Trash2, Pencil } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2 } from 'lucide-react';
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
+import { type DocumentType, type DocumentStatus } from './page';
+import { createDocument } from '@/lib/firebase/document-actions';
+import { useToast } from '@/hooks/use-toast';
 
 type LineItem = {
   id: number;
@@ -30,8 +33,6 @@ type LineItem = {
   unitPrice: number;
   total: number;
 };
-
-type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
 
 interface CreateDocumentFormProps {
   isOpen: boolean;
@@ -56,6 +57,13 @@ export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocu
     { id: 1, description: '', quantity: 1, unitPrice: 0, total: 0 },
   ]);
   const [taxRate, setTaxRate] = useState(21);
+  const [status, setStatus] = useState<DocumentStatus>('Borrador');
+  const [clientName, setClientName] = useState('');
+  const [clientCif, setClientCif] = useState('');
+  const [clientAddress, setClientAddress] = useState('');
+  
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
   useEffect(() => {
     setDocType(documentType);
@@ -111,6 +119,43 @@ export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocu
     return { subtotal, taxAmount, total };
   }, [lineItems, taxRate]);
 
+  const handleSubmit = () => {
+    startTransition(async () => {
+        const documentData = {
+            numero: docNumber,
+            tipo: docType,
+            cliente: clientName,
+            clienteCif: clientCif,
+            clienteDireccion: clientAddress,
+            fechaEmision: emissionDate,
+            fechaVto: dueDate,
+            lineas: lineItems.map(({id, ...rest}) => rest), // Remove ID from line items
+            subtotal,
+            impuestos: taxAmount,
+            importe: total,
+            estado: status,
+            moneda: 'EUR'
+        };
+
+        const result = await createDocument(documentData);
+
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error al crear el documento',
+                description: result.error,
+            });
+        } else {
+            toast({
+                title: 'Documento Creado',
+                description: `El documento ${docNumber} se ha guardado correctamente.`,
+            });
+            onClose();
+        }
+    });
+  }
+
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
@@ -145,35 +190,34 @@ export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocu
                     <CardContent className="space-y-2">
                          <div>
                             <Label>Nombre Emisor</Label>
-                            <Input defaultValue="Tu Empresa S.L." />
+                            <Input defaultValue="Tu Empresa S.L." readOnly />
                         </div>
                          <div>
                             <Label>CIF/NIF Emisor</Label>
-                            <Input defaultValue="Y12345672" />
+                            <Input defaultValue="Y12345672" readOnly/>
                         </div>
                         <div>
                             <Label>Dirección Emisor</Label>
-                            <Textarea defaultValue="Tu Dirección, Ciudad, País" />
+                            <Textarea defaultValue="Tu Dirección, Ciudad, País" readOnly/>
                         </div>
                     </CardContent>
                 </Card>
                  <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-base">Detalles del Cliente</CardTitle>
-                         <Button variant="ghost" size="icon" className="h-6 w-6"><Pencil className="h-4 w-4" /></Button>
                     </CardHeader>
                     <CardContent className="space-y-2">
                          <div>
                             <Label>Nombre Cliente</Label>
-                            <Input placeholder="Nombre del Cliente" />
+                            <Input placeholder="Nombre del Cliente" value={clientName} onChange={e => setClientName(e.target.value)} />
                         </div>
                          <div>
                             <Label>CIF/NIF Cliente</Label>
-                            <Input placeholder="CIF/NIF del Cliente" />
+                            <Input placeholder="CIF/NIF del Cliente" value={clientCif} onChange={e => setClientCif(e.target.value)}/>
                         </div>
                         <div>
                             <Label>Dirección Cliente</Label>
-                            <Textarea placeholder="Dirección Completa del Cliente" />
+                            <Textarea placeholder="Dirección Completa del Cliente" value={clientAddress} onChange={e => setClientAddress(e.target.value)}/>
                         </div>
                     </CardContent>
                 </Card>
@@ -223,7 +267,7 @@ export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocu
                             <span className="text-right">Total</span>
                             <span></span>
                         </div>
-                        {lineItems.map((item, index) => (
+                        {lineItems.map((item) => (
                             <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_80px_100px_100px_40px] gap-2 items-start border-b pb-2">
                                 <Textarea placeholder="Descripción del servicio/producto" value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} rows={1} className="md:h-10" />
                                 <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', e.target.value)} className="text-right" min="0"/>
@@ -261,14 +305,16 @@ export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocu
                 </div>
 
                 <div className="flex flex-col items-end space-y-2">
-                    <Select defaultValue="borrador">
+                    <Select value={status} onValueChange={(v) => setStatus(v as DocumentStatus)}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Estado" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="borrador">Borrador</SelectItem>
-                            <SelectItem value="emitido">Emitido</SelectItem>
-                             <SelectItem value="pagado">Pagado</SelectItem>
+                            <SelectItem value="Borrador">Borrador</SelectItem>
+                            <SelectItem value="Emitido">Emitido</SelectItem>
+                            <SelectItem value="Pagado">Pagado</SelectItem>
+                            <SelectItem value="Enviado">Enviado</SelectItem>
+                             <SelectItem value="Aceptado">Aceptado</SelectItem>
                         </SelectContent>
                     </Select>
                     <div className="w-[240px] space-y-1 text-right p-4 bg-muted rounded-md">
@@ -281,12 +327,14 @@ export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocu
 
         </div>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancelar</Button>
-          </DialogClose>
-          <Button onClick={onClose}>Crear Documento</Button>
+          <Button variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isPending ? "Guardando..." : "Crear Documento"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+

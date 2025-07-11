@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { DateRange } from "react-day-picker"
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileUp, FilePlus, MoreHorizontal, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileUp, FilePlus, MoreHorizontal, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { ImportInvoiceModal } from './import-invoice-modal';
 import { CreateDocumentForm } from './create-document-form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -18,26 +19,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { useToast } from '@/hooks/use-toast';
+import { deleteDocument } from '@/lib/firebase/document-actions';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 
-type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
+export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
+export type DocumentStatus = 'Pagado' | 'Pendiente' | 'Vencido' | 'Enviado' | 'Aceptado' | 'Rechazado' | 'Emitido' | 'Aplicado' | 'Borrador';
 
-const documentos = [
-  // Facturas
-  { id: 'FACT-2023-001', cliente: 'Soluciones Tecnológicas S.A.', tipo: 'factura' as DocumentType, importe: 1452.61, estado: 'Pagado', fechaEmision: '2023-10-15', fechaVto: '2023-11-15' },
-  { id: 'FACT-2023-002', cliente: 'Diseños Creativos Cía.', tipo: 'factura' as DocumentType, importe: 1028.50, estado: 'Pendiente', fechaEmision: '2023-10-20', fechaVto: '2023-11-20' },
-  { id: 'FACT-2023-003', cliente: 'Maestros del Marketing', tipo: 'factura' as DocumentType, importe: 3025.91, estado: 'Vencido', fechaEmision: '2023-09-01', fechaVto: '2023-10-01' },
-  { id: 'FACT-2023-004', cliente: 'Soluciones Tecnológicas S.A.', tipo: 'factura' as DocumentType, importe: 850.00, estado: 'Pendiente', fechaEmision: '2023-11-05', fechaVto: '2023-12-05' },
-  
-  // Presupuestos
-  { id: 'PRES-2023-010', cliente: 'Innovación Digital Corp', tipo: 'presupuesto' as DocumentType, importe: 5500.00, estado: 'Enviado', fechaEmision: '2023-11-01', fechaVto: '2023-11-30' },
-  { id: 'PRES-2023-011', cliente: 'Futuro Verde ONG', tipo: 'presupuesto' as DocumentType, importe: 1200.75, estado: 'Aceptado', fechaEmision: '2023-10-25', fechaVto: '2023-11-25' },
-  { id: 'PRES-2023-012', cliente: 'Construcciones Rápidas', tipo: 'presupuesto' as DocumentType, importe: 8900.00, estado: 'Rechazado', fechaEmision: '2023-11-10', fechaVto: '2023-12-10' },
-
-  // Notas de Crédito
-  { id: 'NC-2023-005', cliente: 'Maestros del Marketing', tipo: 'nota-credito' as DocumentType, importe: 250.00, estado: 'Emitido', fechaEmision: '2023-09-15', fechaVto: '' },
-  { id: 'NC-2023-006', cliente: 'Diseños Creativos Cía.', tipo: 'nota-credito' as DocumentType, importe: 100.50, estado: 'Aplicado', fechaEmision: '2023-11-02', fechaVto: '' },
-];
+export type Document = {
+  id: string;
+  cliente: string;
+  tipo: DocumentType;
+  importe: number;
+  estado: DocumentStatus;
+  fechaEmision: Date;
+  fechaVto: Date | null;
+  numero: string;
+};
 
 
 const getBadgeClass = (estado: string) => {
@@ -58,12 +59,16 @@ const getBadgeClass = (estado: string) => {
   }
 };
 
-const estadosUnicos = [...new Set(documentos.map(d => d.estado))];
+const estadosUnicos: DocumentStatus[] = ['Pagado', 'Pendiente', 'Vencido', 'Enviado', 'Aceptado', 'Rechazado', 'Emitido', 'Aplicado', 'Borrador'];
 
 export default function DocumentosPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<DocumentType>('factura');
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [docToDelete, setDocToDelete] = useState<Document | null>(null);
+  const { toast } = useToast();
 
   // Filter states
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -74,10 +79,41 @@ export default function DocumentosPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   
+  useEffect(() => {
+    if (!db) {
+        setLoading(false);
+        return;
+    }
+    setLoading(true);
+
+    const q = query(collection(db, 'documents'), where('tipo', '==', activeTab));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const docsList = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                fechaEmision: data.fechaEmision instanceof Timestamp ? data.fechaEmision.toDate() : new Date(),
+                fechaVto: data.fechaVto instanceof Timestamp ? data.fechaVto.toDate() : null,
+            } as Document;
+        });
+        setDocuments(docsList);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching documents:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los documentos.' });
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+}, [activeTab, toast]);
+
+
   const handleCreateNew = () => setIsCreateModalOpen(true);
 
   const documentosFiltrados = useMemo(() => {
-    return documentos.filter(doc => {
+    return documents.filter(doc => {
       const fechaDoc = new Date(doc.fechaEmision);
       const enRangoFecha = !dateRange || (
         (!dateRange.from || fechaDoc >= dateRange.from) &&
@@ -86,9 +122,9 @@ export default function DocumentosPage() {
       const porCliente = !filtroCliente || doc.cliente.toLowerCase().includes(filtroCliente.toLowerCase());
       const porEstado = filtroEstado === 'all' || doc.estado === filtroEstado;
       
-      return doc.tipo === activeTab && enRangoFecha && porCliente && porEstado;
+      return enRangoFecha && porCliente && porEstado;
     });
-  }, [activeTab, dateRange, filtroCliente, filtroEstado]);
+  }, [documents, dateRange, filtroCliente, filtroEstado]);
 
   const totalPages = Math.ceil(documentosFiltrados.length / itemsPerPage);
 
@@ -115,8 +151,39 @@ export default function DocumentosPage() {
     setCurrentPage(1);
   };
 
-  const renderContent = (docs: typeof documentos) => {
-    if (docs.length === 0) {
+  const handleDelete = async () => {
+    if (!docToDelete) return;
+
+    try {
+      await deleteDocument(docToDelete.id);
+      toast({
+        title: 'Documento Eliminado',
+        description: `El documento ${docToDelete.numero} ha sido eliminado.`,
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al eliminar',
+        description: 'No se pudo eliminar el documento.',
+      });
+    } finally {
+      setDocToDelete(null);
+    }
+  };
+
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <CardContent>
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </CardContent>
+      )
+    }
+
+    if (paginatedDocs.length === 0) {
       return (
         <CardContent>
           <div className="text-center text-muted-foreground py-12">
@@ -142,9 +209,9 @@ export default function DocumentosPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {docs.map((doc) => (
+              {paginatedDocs.map((doc) => (
                 <TableRow key={doc.id}>
-                  <TableCell className="font-medium">{doc.id}</TableCell>
+                  <TableCell className="font-medium">{doc.numero}</TableCell>
                   <TableCell>{doc.cliente}</TableCell>
                   <TableCell className="text-right">
                     {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(doc.importe)}
@@ -168,7 +235,10 @@ export default function DocumentosPage() {
                         <DropdownMenuItem>Ver</DropdownMenuItem>
                         <DropdownMenuItem>Editar</DropdownMenuItem>
                         <DropdownMenuItem>Descargar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive">Eliminar</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDocToDelete(doc)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Eliminar
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -224,6 +294,24 @@ export default function DocumentosPage() {
         onClose={() => setIsCreateModalOpen(false)} 
         documentType={activeTab}
       />
+
+       <AlertDialog open={!!docToDelete} onOpenChange={(open) => !open && setDocToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de que quieres eliminar este documento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción es irreversible. El documento <strong>{docToDelete?.numero}</strong> será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDocToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Sí, eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -278,9 +366,9 @@ export default function DocumentosPage() {
             <TabsTrigger value="nota-credito">Notas de Crédito</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="factura"><Card>{renderContent(paginatedDocs)}</Card></TabsContent>
-          <TabsContent value="presupuesto"><Card>{renderContent(paginatedDocs)}</Card></TabsContent>
-          <TabsContent value="nota-credito"><Card>{renderContent(paginatedDocs)}</Card></TabsContent>
+          <TabsContent value="factura"><Card>{renderContent()}</Card></TabsContent>
+          <TabsContent value="presupuesto"><Card>{renderContent()}</Card></TabsContent>
+          <TabsContent value="nota-credito"><Card>{renderContent()}</Card></TabsContent>
         </Tabs>
       </div>
     </>
