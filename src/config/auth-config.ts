@@ -4,7 +4,10 @@ import { AuthOptions } from "next-firebase-auth-edge";
 export const authConfig: AuthOptions = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
     cookieName: 'auth-token',
-    cookieSignatureKeys: [process.env.COOKIE_SECRET_CURRENT!, process.env.COOKIE_SECRET_PREVIOUS!],
+    cookieSignatureKeys: [
+        process.env.COOKIE_SECRET_CURRENT ?? 'secret1',
+        process.env.COOKIE_SECRET_PREVIOUS ?? 'secret2'
+    ],
     cookieSerializeOptions: {
         path: '/',
         httpOnly: true,
