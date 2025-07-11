@@ -1,8 +1,44 @@
+
+'use client';
+
+import { useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Newspaper, FileEdit, Bot } from 'lucide-react';
+import { Newspaper, FileEdit, Bot, Lock } from 'lucide-react';
+import Link from 'next/link';
 
 export default function GestorIAPage() {
+  const { user } = useContext(AuthContext);
+  const isProUser = user?.role === 'pro' || user?.role === 'admin';
+
+  if (!isProUser) {
+    return (
+      <Card className="max-w-lg mx-auto">
+        <CardHeader className="text-center">
+            <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full mb-4 mx-auto w-fit">
+                <Lock className="h-6 w-6 text-primary" />
+              </div>
+          <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
+          <CardDescription>
+            El Gestor IA Personalizado es una herramienta avanzada para llevar tu negocio al siguiente nivel.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-sm text-muted-foreground">
+            Actualiza al plan Pro para acceder a noticias relevantes, ayudas personalizadas y nuestro asistente de formularios fiscales.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button className="w-full" asChild>
+            <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
+
   return (
     <div className="space-y-8">
       <div>

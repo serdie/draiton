@@ -1,6 +1,8 @@
 
 'use client';
 
+import { useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
 import { GestorWebForm } from '../gestor-web-ia/gestor-web-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Pencil, Eye } from 'lucide-react';
+import { MoreHorizontal, Pencil, Eye, Lock } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { AIPoweredWebManagementOutput } from '@/ai/flows/ai-powered-web-management';
@@ -65,6 +67,34 @@ type GetWebsiteConceptAction = (
 
 
 export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConceptAction: GetWebsiteConceptAction }) {
+  const { user } = useContext(AuthContext);
+  const isProUser = user?.role === 'pro' || user?.role === 'admin';
+
+  if (!isProUser) {
+    return (
+      <Card className="max-w-lg mx-auto">
+        <CardHeader className="text-center">
+            <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full mb-4 mx-auto w-fit">
+                <Lock className="h-6 w-6 text-primary" />
+              </div>
+          <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
+          <CardDescription>
+            Crea y administra tu presencia online con el poder de la inteligencia artificial.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-sm text-muted-foreground">
+            Actualiza al plan Pro para crear sitios web, tiendas online y landing pages ilimitadas con nuestro asistente inteligente.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button className="w-full" asChild>
+            <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

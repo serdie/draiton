@@ -1,6 +1,8 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -8,6 +10,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from '@/components/ui/card';
 import {
   Table,
@@ -27,7 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Power, PowerOff, Trash2, Pencil, Play } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Power, PowerOff, Trash2, Pencil, Play, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -93,6 +96,8 @@ const getStatusBadgeClass = (status: AutomationStatus) => {
 export default function AutomatizacionesPage() {
   const [automations, setAutomations] = useState<Automation[]>(initialAutomations);
   const { toast } = useToast();
+  const { user } = useContext(AuthContext);
+  const isProUser = user?.role === 'pro' || user?.role === 'admin';
 
   const handleStatusChange = (id: string, newStatus: boolean) => {
     setAutomations(
@@ -108,6 +113,32 @@ export default function AutomatizacionesPage() {
       description: 'Esta acción estará disponible pronto.',
     });
   };
+
+  if (!isProUser) {
+    return (
+      <Card className="max-w-lg mx-auto">
+        <CardHeader className="text-center">
+            <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full mb-4 mx-auto w-fit">
+                <Lock className="h-6 w-6 text-primary" />
+              </div>
+          <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
+          <CardDescription>
+            Las automatizaciones te permiten conectar tus apps y ahorrar cientos de horas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-sm text-muted-foreground">
+            Actualiza al plan Pro para crear flujos de trabajo ilimitados y conectar todas las aplicaciones disponibles.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button className="w-full" asChild>
+            <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

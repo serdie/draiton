@@ -8,6 +8,7 @@ import { auth, db } from '@/lib/firebase/config';
 
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro';
+    role?: 'free' | 'pro' | 'admin';
 }
 
 interface AuthContextType {

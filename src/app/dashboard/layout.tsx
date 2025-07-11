@@ -44,6 +44,7 @@ import {
   Newspaper,
   FileEdit,
   Loader2,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -55,11 +56,11 @@ const navItems = [
   { href: '/dashboard/gastos', icon: <Landmark />, label: 'Gastos' },
   { href: '/dashboard/contactos', icon: <Users />, label: 'Contactos' },
   { href: '/dashboard/proyectos', icon: <Briefcase />, label: 'Proyectos' },
-  { href: '/dashboard/perspectivas-ia', icon: <BrainCircuit />, label: 'Perspectivas IA' },
-  { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing' },
-  { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA' },
-  { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones' },
-  { href: '/dashboard/gestor-ia', icon: <Bot />, label: 'Gestor IA' },
+  { href: '/dashboard/perspectivas-ia', icon: <BrainCircuit />, label: 'Perspectivas IA', role: 'pro' },
+  { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing', role: 'pro' },
+  { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA', role: 'pro' },
+  { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones', role: 'pro' },
+  { href: '/dashboard/gestor-ia', icon: <Bot />, label: 'Gestor IA', role: 'pro'},
   { href: '/dashboard/conexiones', icon: <Link2 />, label: 'Conexiones' },
   { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },
 ];
@@ -110,6 +111,8 @@ export default function DashboardLayout({
     return null; // or a login form, but we redirect so this is fine
   }
 
+  const userIsPro = user?.role === 'pro' || user?.role === 'admin';
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -121,7 +124,9 @@ export default function DashboardLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {navItems.map((item) => (
+            {navItems.map((item) => {
+              if (item.role === 'pro' && !userIsPro) return null;
+              return (
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                   <SidebarMenuButton
@@ -133,7 +138,21 @@ export default function DashboardLayout({
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
-            ))}
+              )
+            })}
+             {user?.role === 'admin' && (
+                <SidebarMenuItem>
+                    <Link href="/admin/dashboard">
+                    <SidebarMenuButton
+                        isActive={pathname.startsWith('/admin')}
+                        tooltip="Panel de Admin"
+                    >
+                        <Shield />
+                        <span>Panel de Admin</span>
+                    </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
