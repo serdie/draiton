@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,82 +16,108 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info, UploadCloud, Camera, VideoOff } from 'lucide-react';
+import { Info, UploadCloud, Camera, VideoOff, Loader2, Terminal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { scanInvoiceAction } from '@/lib/firebase/document-actions';
+import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 
 export function ImportInvoiceModal({
   isOpen,
   onClose,
+  onDataExtracted,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  onDataExtracted: (data: ExtractInvoiceDataOutput) => void;
 }) {
   const [activeTab, setActiveTab] = useState('upload');
   const [fileName, setFileName] = useState('');
+  const [fileDataUri, setFileDataUri] = useState<string | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    setFileName(file ? file.name : '');
+    if (file) {
+      setFileName(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFileDataUri(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFileName('');
+      setFileDataUri(null);
+    }
   };
 
   const handleImport = () => {
-    toast({
-      title: 'Importación Simulada',
-      description: 'La funcionalidad de importación real se implementará pronto.',
+    if (!fileDataUri) return;
+
+    startTransition(async () => {
+      const result = await scanInvoiceAction(fileDataUri);
+      if (result.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error al Extraer Datos',
+          description: result.error,
+        });
+      } else if (result.data) {
+        toast({
+          title: 'Datos Extraídos',
+          description: 'La información de la factura se ha cargado en el formulario.',
+        });
+        onDataExtracted(result.data);
+      }
     });
-    onClose();
   };
-  
+
   const getCameraPermission = async () => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        toast({
-          variant: 'destructive',
-          title: 'Cámara no soportada',
-          description: 'Tu navegador no soporta el acceso a la cámara.',
-        });
-        setHasCameraPermission(false);
-        return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast({
+        variant: 'destructive',
+        title: 'Cámara no soportada',
+        description: 'Tu navegador no soporta el acceso a la cámara.',
+      });
+      setHasCameraPermission(false);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasCameraPermission(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
       }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        setHasCameraPermission(true);
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error('Error al acceder a la cámara:', error);
-        setHasCameraPermission(false);
-        toast({
-          variant: 'destructive',
-          title: 'Acceso a la cámara denegado',
-          description: 'Por favor, activa los permisos de la cámara en tu navegador.',
-        });
-      }
-    };
+    } catch (error) {
+      console.error('Error al acceder a la cámara:', error);
+      setHasCameraPermission(false);
+      toast({
+        variant: 'destructive',
+        title: 'Acceso a la cámara denegado',
+        description: 'Por favor, activa los permisos de la cámara en tu navegador.',
+      });
+    }
+  };
 
-    useEffect(() => {
-        if (isOpen && activeTab === 'camera') {
-            getCameraPermission();
-        } else {
-            if (videoRef.current?.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(track => track.stop());
-                videoRef.current.srcObject = null;
-            }
-        }
-    }, [isOpen, activeTab]);
-
+  useEffect(() => {
+    if (isOpen && activeTab === 'camera') {
+      getCameraPermission();
+    } else if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  }, [isOpen, activeTab]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Importar Facturas</DialogTitle>
+          <DialogTitle>Importar Facturas con IA</DialogTitle>
           <DialogDescription>
-            Sube archivos o usa tu cámara para importar facturas a la plataforma.
+            Sube un archivo o usa tu cámara para que la IA extraiga los datos.
           </DialogDescription>
         </DialogHeader>
 
@@ -101,41 +128,48 @@ export function ImportInvoiceModal({
           </TabsList>
           <TabsContent value="upload" className="pt-4 space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="file-upload">Seleccionar Archivo (Excel o PDF)</Label>
-                <Input id="file-upload" type="file" onChange={handleFileChange} className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
+              <Label htmlFor="file-upload">Seleccionar Archivo (JPG, PNG, PDF)</Label>
+              <Input
+                id="file-upload"
+                type="file"
+                onChange={handleFileChange}
+                accept="image/*,application/pdf"
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+              />
             </div>
-            <Button onClick={handleImport} className="w-full" disabled={!fileName}>
-              <UploadCloud className="mr-2 h-4 w-4" />
-              Importar Archivo
+            <Button onClick={handleImport} className="w-full" disabled={!fileName || isPending}>
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
+              {isPending ? 'Extrayendo...' : `Importar ${fileName}`}
             </Button>
             <Alert>
               <Info className="h-4 w-4" />
-              <AlertTitle>Nota sobre la importación</AlertTitle>
+              <AlertTitle>¿Cómo funciona?</AlertTitle>
               <AlertDescription>
-                La importación desde Excel/PDF está en desarrollo. Por ahora,
-                esto es una simulación.
+                La IA procesará la imagen y rellenará el formulario de creación de documentos por ti.
               </AlertDescription>
             </Alert>
           </TabsContent>
           <TabsContent value="camera" className="pt-4 space-y-4">
             <div className="relative aspect-video bg-muted rounded-md flex items-center justify-center">
-                 <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline />
-                {hasCameraPermission === false && (
-                    <div className="absolute flex flex-col items-center text-muted-foreground">
-                        <VideoOff className="h-12 w-12" />
-                        <p className="mt-2 text-sm">Cámara no disponible</p>
-                    </div>
-                )}
+              <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted playsInline />
+              {hasCameraPermission === false && (
+                <div className="absolute flex flex-col items-center text-muted-foreground">
+                  <VideoOff className="h-12 w-12" />
+                  <p className="mt-2 text-sm">Cámara no disponible</p>
+                </div>
+              )}
             </div>
-             <Button className="w-full" disabled={!hasCameraPermission}>
-                <Camera className="mr-2 h-4 w-4" />
-                Capturar Foto
+            <Button className="w-full" disabled={!hasCameraPermission || isPending}>
+              <Camera className="mr-2 h-4 w-4" />
+              Capturar y Extraer
             </Button>
           </TabsContent>
         </Tabs>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline" onClick={onClose}>Cerrar</Button>
+            <Button variant="outline" onClick={onClose}>
+              Cerrar
+            </Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

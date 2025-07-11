@@ -24,6 +24,7 @@ import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { deleteDocument } from '@/lib/firebase/document-actions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 
 
 export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
@@ -64,6 +65,7 @@ const estadosUnicos: DocumentStatus[] = ['Pagado', 'Pendiente', 'Vencido', 'Envi
 export default function DocumentosPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [initialDataForForm, setInitialDataForForm] = useState<ExtractInvoiceDataOutput | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<DocumentType>('factura');
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,8 +111,20 @@ export default function DocumentosPage() {
     return () => unsubscribe();
 }, [activeTab, toast]);
 
+  const handleCreateNew = (initialData?: ExtractInvoiceDataOutput) => {
+    setInitialDataForForm(initialData);
+    setIsCreateModalOpen(true);
+  };
 
-  const handleCreateNew = () => setIsCreateModalOpen(true);
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+    setInitialDataForForm(undefined);
+  };
+
+  const handleDataExtracted = (data: ExtractInvoiceDataOutput) => {
+    setIsImportModalOpen(false);
+    handleCreateNew(data);
+  };
 
   const documentosFiltrados = useMemo(() => {
     return documents.filter(doc => {
@@ -288,11 +302,16 @@ export default function DocumentosPage() {
 
   return (
     <>
-      <ImportInvoiceModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} />
+      <ImportInvoiceModal 
+        isOpen={isImportModalOpen} 
+        onClose={() => setIsImportModalOpen(false)} 
+        onDataExtracted={handleDataExtracted}
+      />
       <CreateDocumentForm 
         isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
+        onClose={handleCloseCreateModal} 
         documentType={activeTab}
+        initialData={initialDataForForm}
       />
 
        <AlertDialog open={!!docToDelete} onOpenChange={(open) => !open && setDocToDelete(null)}>
@@ -325,7 +344,7 @@ export default function DocumentosPage() {
               <FileUp className="mr-2 h-4 w-4" />
               Importar Facturas
             </Button>
-            <Button onClick={handleCreateNew}>
+            <Button onClick={() => handleCreateNew()}>
               <FilePlus className="mr-2 h-4 w-4" />
               Crear Nuevo Documento
             </Button>

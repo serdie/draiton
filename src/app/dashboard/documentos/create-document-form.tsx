@@ -19,12 +19,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2 } from 'lucide-react';
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { type DocumentType, type DocumentStatus } from './page';
 import { createDocument } from '@/lib/firebase/document-actions';
 import { useToast } from '@/hooks/use-toast';
+import { type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 
 type LineItem = {
   id: number;
@@ -38,6 +39,7 @@ interface CreateDocumentFormProps {
   isOpen: boolean;
   onClose: () => void;
   documentType: DocumentType;
+  initialData?: ExtractInvoiceDataOutput;
 }
 
 const getDocumentTypeLabel = (type: DocumentType) => {
@@ -48,14 +50,12 @@ const getDocumentTypeLabel = (type: DocumentType) => {
     }
 }
 
-export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocumentFormProps) {
+export function CreateDocumentForm({ isOpen, onClose, documentType, initialData }: CreateDocumentFormProps) {
   const [docType, setDocType] = useState(documentType);
   const [docNumber, setDocNumber] = useState('');
   const [emissionDate, setEmissionDate] = useState<Date | undefined>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>();
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: 1, description: '', quantity: 1, unitPrice: 0, total: 0 },
-  ]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [taxRate, setTaxRate] = useState(21);
   const [status, setStatus] = useState<DocumentStatus>('Borrador');
   const [clientName, setClientName] = useState('');
@@ -76,10 +76,34 @@ export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocu
         'nota-credito': 'NC'
     }[docType];
     const year = new Date().getFullYear();
-    // In a real app, this would come from a database sequence
     const randomId = Math.floor(Math.random() * 900) + 100;
     setDocNumber(`${prefix}-${year}-${String(randomId).padStart(3, '0')}`);
   }, [docType]);
+
+  useEffect(() => {
+    if (initialData) {
+      setDocNumber(initialData.invoiceNumber || docNumber);
+      const parsedDate = initialData.invoiceDate ? parseISO(initialData.invoiceDate) : new Date();
+      setEmissionDate(isNaN(parsedDate.getTime()) ? new Date() : parsedDate);
+      setClientName(initialData.clientName || '');
+      // Assuming no CIF/Address from AI for now
+      setLineItems(initialData.lineItems.map((item, index) => ({
+        id: index,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.amount,
+      })));
+      setStatus('Borrador');
+    } else {
+        setLineItems([{ id: 1, description: '', quantity: 1, unitPrice: 0, total: 0 }])
+        setClientName('');
+        setClientCif('');
+        setClientAddress('');
+        setEmissionDate(new Date());
+        setDueDate(undefined);
+    }
+  }, [initialData, docNumber]);
 
   const handleAddLine = () => {
     const newLine: LineItem = {
@@ -178,7 +202,7 @@ export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocu
                     </SelectContent>
                 </Select>
                 <div />
-                 <Input value={docNumber} readOnly className="font-mono text-right" />
+                 <Input value={docNumber} onChange={e => setDocNumber(e.target.value)} className="font-mono text-right" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -337,4 +361,3 @@ export function CreateDocumentForm({ isOpen, onClose, documentType }: CreateDocu
     </Dialog>
   );
 }
-
