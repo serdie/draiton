@@ -123,7 +123,7 @@ export default function AutomatizacionesPage() {
             Crea flujos de trabajo personalizados para automatizar tareas repetitivas y conectar tus aplicaciones.
           </p>
         </div>
-        <Button asChild disabled={!isProUser}>
+        <Button asChild>
           <Link href="/dashboard/automatizaciones/crear">
             <PlusCircle className="mr-2 h-4 w-4" />
             Crear Nueva Automatización

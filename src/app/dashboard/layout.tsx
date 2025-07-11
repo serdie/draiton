@@ -45,10 +45,12 @@ import {
   FileEdit,
   Loader2,
   Shield,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/dashboard', icon: <LayoutDashboard />, label: 'Panel de Control' },
@@ -56,11 +58,11 @@ const navItems = [
   { href: '/dashboard/gastos', icon: <Landmark />, label: 'Gastos' },
   { href: '/dashboard/contactos', icon: <Users />, label: 'Contactos' },
   { href: '/dashboard/proyectos', icon: <Briefcase />, label: 'Proyectos' },
-  { href: '/dashboard/perspectivas-ia', icon: <BrainCircuit />, label: 'Perspectivas IA', role: 'pro' },
-  { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing', role: 'pro' },
-  { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA', role: 'pro' },
-  { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones', role: 'pro' },
-  { href: '/dashboard/gestor-ia', icon: <Bot />, label: 'Gestor IA', role: 'pro'},
+  { href: '/dashboard/perspectivas-ia', icon: <BrainCircuit />, label: 'Perspectivas IA', pro: true },
+  { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing', pro: true },
+  { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA', pro: true },
+  { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones', pro: true },
+  { href: '/dashboard/gestor-ia', icon: <Bot />, label: 'Gestor IA', pro: true },
   { href: '/dashboard/conexiones', icon: <Link2 />, label: 'Conexiones' },
   { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },
 ];
@@ -111,7 +113,7 @@ export default function DashboardLayout({
     return null; // or a login form, but we redirect so this is fine
   }
 
-  const userIsPro = user?.role === 'pro' || user?.role === 'admin';
+  const isProUser = user?.role === 'pro' || user?.role === 'admin';
 
   return (
     <SidebarProvider>
@@ -124,22 +126,20 @@ export default function DashboardLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {navItems.map((item) => {
-              if (item.role === 'pro' && !userIsPro) return null;
-              return (
+            {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href}>
+                <Link href={item.href} className="flex w-full items-center justify-between">
                   <SidebarMenuButton
                     isActive={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')}
                     tooltip={item.label}
+                    className="flex-grow"
                   >
                     {item.icon}
                     <span>{item.label}</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
-              )
-            })}
+            ))}
              {user?.role === 'admin' && (
                 <SidebarMenuItem>
                     <Link href="/admin/dashboard">
