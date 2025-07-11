@@ -1,18 +1,12 @@
 
 'use client';
 
-import { useContext } from 'react';
-import { AuthContext } from '@/context/auth-context';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Newspaper, FileEdit, Bot, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Newspaper, FileEdit, Bot } from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
 
 export default function GestorIAPage() {
-  const { user } = useContext(AuthContext);
-  const isProUser = user?.role === 'pro' || user?.role === 'admin';
-
   return (
     <div className="space-y-8">
       <div>
@@ -22,35 +16,7 @@ export default function GestorIAPage() {
         </p>
       </div>
 
-      {!isProUser && (
-        <Card className="border-primary/50 bg-primary/10">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
-                    <Lock className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                    <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
-                    <CardDescription className="text-primary/90">
-                      El Gestor IA Personalizado es una herramienta avanzada para llevar tu negocio al siguiente nivel.
-                    </CardDescription>
-                </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-primary/80">
-              Actualiza al plan Pro para acceder a noticias relevantes, ayudas personalizadas y nuestro asistente de formularios fiscales.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-              <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-      
-      <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-6", !isProUser && "opacity-50 pointer-events-none")}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="flex flex-col">
           <CardHeader>
             <div className="flex items-start gap-4">

@@ -1,19 +1,13 @@
 
 'use client';
 
-import { useContext } from 'react';
-import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Users, Zap, Lock } from 'lucide-react';
+import { Mail, Users, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 export default function MarketingPage() {
-  const { user } = useContext(AuthContext);
-  const isProUser = user?.role === 'pro' || user?.role === 'admin';
-
   return (
     <div className="space-y-6">
       <div>
@@ -23,36 +17,7 @@ export default function MarketingPage() {
         </p>
       </div>
 
-       {!isProUser && (
-        <Card className="border-primary/50 bg-primary/10">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
-                    <Lock className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                    <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
-                    <CardDescription className="text-primary/90">
-                      El Centro de Marketing es una herramienta avanzada para potenciar tu negocio.
-                    </CardDescription>
-                </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-primary/80">
-              Actualiza al plan Pro para acceder a campañas de email, gestión de redes sociales y automatizaciones de marketing.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-              <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-      
-      <div className={cn("grid grid-cols-1 lg:grid-cols-3 gap-6", !isProUser && "opacity-50 pointer-events-none")}>
-        
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="flex flex-col">
           <CardHeader>
             <div className="flex items-center gap-4">
@@ -119,7 +84,6 @@ export default function MarketingPage() {
             </Button>
           </CardFooter>
         </Card>
-
       </div>
     </div>
   );

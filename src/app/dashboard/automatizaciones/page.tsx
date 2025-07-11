@@ -96,8 +96,6 @@ const getStatusBadgeClass = (status: AutomationStatus) => {
 export default function AutomatizacionesPage() {
   const [automations, setAutomations] = useState<Automation[]>(initialAutomations);
   const { toast } = useToast();
-  const { user } = useContext(AuthContext);
-  const isProUser = user?.role === 'pro' || user?.role === 'admin';
 
   const handleStatusChange = (id: string, newStatus: boolean) => {
     setAutomations(
@@ -130,36 +128,8 @@ export default function AutomatizacionesPage() {
           </Link>
         </Button>
       </div>
-
-       {!isProUser && (
-        <Card className="border-primary/50 bg-primary/10">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
-                    <Lock className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                    <CardTitle>Función Exclusiva del Plan Pro</CardTitle>
-                    <CardDescription className="text-primary/90">
-                        Las automatizaciones te permiten conectar tus apps y ahorrar cientos de horas.
-                    </CardDescription>
-                </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-primary/80">
-                Actualiza al plan Pro para crear flujos de trabajo ilimitados y conectar todas las aplicaciones disponibles.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-              <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
       
-       <Card className={cn(!isProUser && "opacity-50 pointer-events-none")}>
+       <Card>
         <CardHeader>
           <CardTitle>Mis Flujos de Trabajo</CardTitle>
           <CardDescription>Gestiona tus automatizaciones activas e inactivas.</CardDescription>
