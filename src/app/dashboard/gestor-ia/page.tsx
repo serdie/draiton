@@ -71,7 +71,7 @@ export default function GestorIAPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" disabled>Ver Novedades Personalizadas</Button>
+            <Button variant="outline" disabled={!isProUser}>Ver Novedades Personalizadas</Button>
           </CardFooter>
         </Card>
         
@@ -95,7 +95,7 @@ export default function GestorIAPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" disabled>Acceder al Asistente Fiscal</Button>
+            <Button variant="outline" disabled={!isProUser}>Acceder al Asistente Fiscal</Button>
           </CardFooter>
         </Card>
       </div>

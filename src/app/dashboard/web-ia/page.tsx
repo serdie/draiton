@@ -156,13 +156,13 @@ export default function WebIAPage() {
                                 </div>
                             </CardContent>
                             <CardFooter className="p-4 border-t flex justify-between items-center">
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" disabled={!isProUser}>
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Editar con IA
                                 </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!isProUser}>
                                             <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>

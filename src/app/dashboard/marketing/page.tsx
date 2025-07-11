@@ -70,7 +70,7 @@ export default function MarketingPage() {
              <Badge variant="outline">Función próximamente</Badge>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" disabled>Crear Campaña de Correo</Button>
+            <Button variant="outline" disabled={!isProUser}>Crear Campaña de Correo</Button>
           </CardFooter>
         </Card>
 
@@ -91,7 +91,7 @@ export default function MarketingPage() {
              <Badge variant="outline">Función próximamente</Badge>
           </CardContent>
           <CardFooter>
-            <Button asChild>
+            <Button asChild disabled={!isProUser}>
                 <Link href="/dashboard/redes-sociales">Gestionar Redes Sociales</Link>
             </Button>
           </CardFooter>
@@ -114,7 +114,7 @@ export default function MarketingPage() {
             <Badge variant="outline">Funciones avanzadas planeadas</Badge>
           </CardContent>
           <CardFooter>
-             <Button asChild>
+             <Button asChild disabled={!isProUser}>
                 <Link href="/dashboard/automatizaciones">Explorar Automatizaciones</Link>
             </Button>
           </CardFooter>
