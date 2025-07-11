@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { updateUserRole, deleteUser } from "@/lib/firebase/admin-actions";
 import { getRoleBadgeClass } from "@/lib/utils";
+import { EditUserModal } from "./edit-user-modal";
 
 export type UserRole = 'free' | 'pro' | 'admin';
 
@@ -32,6 +33,7 @@ export default function AdminDashboardPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [userToEdit, setUserToEdit] = useState<User | null>(null);
     const [userToChangeRole, setUserToChangeRole] = useState<{ user: User; newRole: UserRole } | null>(null);
     const { toast } = useToast();
 
@@ -43,7 +45,6 @@ export default function AdminDashboardPage() {
 
         const usersCollectionRef = collection(db, "users");
 
-        // Escucha cambios en tiempo real
         const unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
             const userList = snapshot.docs.map(doc => {
                 const data = doc.data();
@@ -67,7 +68,6 @@ export default function AdminDashboardPage() {
             setLoading(false);
         });
 
-        // Limpia el listener cuando el componente se desmonta
         return () => unsubscribe();
     }, [adminUser, toast]);
 
@@ -76,7 +76,7 @@ export default function AdminDashboardPage() {
         if (!userToChangeRole) return;
         
         try {
-            await updateUserRole(userToChangeRole.user.id, userToChange-role.newRole);
+            await updateUserRole(userToChangeRole.user.id, userToChangeRole.newRole);
             toast({ title: 'Éxito', description: `El rol de ${userToChangeRole.user.name} ha sido cambiado a ${userToChangeRole.newRole}.` });
         } catch (error) {
             console.error("Error al cambiar rol:", error);
@@ -98,10 +98,6 @@ export default function AdminDashboardPage() {
         } finally {
             setUserToDelete(null);
         }
-    };
-
-    const handleComingSoon = () => {
-        toast({ title: 'Próximamente', description: 'La edición de perfiles de usuario estará disponible pronto.' });
     };
 
     return (
@@ -158,7 +154,7 @@ export default function AdminDashboardPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent>
                                                     <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={handleComingSoon}>
+                                                    <DropdownMenuItem onClick={() => setUserToEdit(user)}>
                                                         <UserCog className="mr-2 h-4 w-4" />
                                                         Editar Usuario
                                                     </DropdownMenuItem>
@@ -196,7 +192,14 @@ export default function AdminDashboardPage() {
             </Card>
         </div>
 
-        {/* Dialog para confirmar eliminación */}
+        {userToEdit && (
+            <EditUserModal
+                isOpen={!!userToEdit}
+                onClose={() => setUserToEdit(null)}
+                user={userToEdit}
+            />
+        )}
+
         <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -214,7 +217,6 @@ export default function AdminDashboardPage() {
             </AlertDialogContent>
         </AlertDialog>
 
-         {/* Dialog para confirmar cambio de rol */}
         <AlertDialog open={!!userToChangeRole} onOpenChange={(open) => !open && setUserToChangeRole(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
