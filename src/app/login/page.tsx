@@ -40,7 +40,11 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboard');
     } catch (err: any) {
-      setError('Credenciales inválidas. Por favor, inténtalo de nuevo.');
+      if (err.code === 'auth/unauthorized-domain') {
+        setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
+      } else {
+        setError('Credenciales inválidas. Por favor, inténtalo de nuevo.');
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -62,7 +66,11 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       router.push('/dashboard');
     } catch (err: any) {
-      setError('No se pudo iniciar sesión con Google. Inténtalo más tarde.');
+      if (err.code === 'auth/unauthorized-domain') {
+        setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
+      } else {
+        setError('No se pudo iniciar sesión con Google. Inténtalo más tarde.');
+      }
       console.error(err);
     } finally {
       setGoogleLoading(false);

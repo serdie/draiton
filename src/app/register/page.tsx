@@ -56,6 +56,8 @@ export default function RegisterPage() {
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
         setError('Este correo electrónico ya está en uso.');
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
       } else {
         setError('Ocurrió un error durante el registro.');
       }
@@ -91,7 +93,11 @@ export default function RegisterPage() {
       
       router.push('/dashboard');
     } catch (err: any) {
-      setError('No se pudo registrar con Google. Inténtalo más tarde.');
+      if (err.code === 'auth/unauthorized-domain') {
+        setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
+      } else {
+        setError('No se pudo registrar con Google. Inténtalo más tarde.');
+      }
       console.error(err);
     } finally {
       setGoogleLoading(false);
