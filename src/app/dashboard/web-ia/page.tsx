@@ -37,7 +37,7 @@ export default function WebIAPage() {
 
   return (
     <div className="relative">
-       {!isProUser && <ProFeatureLock />}
+      {!isProUser && <ProFeatureLock />}
       <div className={cn("space-y-6", !isProUser && "opacity-50 pointer-events-none")}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
