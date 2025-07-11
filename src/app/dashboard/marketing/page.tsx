@@ -30,13 +30,12 @@ function ProFeatureLock() {
 }
 
 export default function MarketingPage() {
-  const { user } = useContext(AuthContext);
-  const isProUser = user?.role === 'pro' || user?.role === 'admin';
+  const { isPro } = useContext(AuthContext);
 
   return (
     <div className="relative">
-      {!isProUser && <ProFeatureLock />}
-      <div className={cn("space-y-6", !isProUser && "opacity-50 pointer-events-none")}>
+      {!isPro && <ProFeatureLock />}
+      <div className={cn("space-y-6", !isPro && "opacity-50 pointer-events-none")}>
         <div>
           <h1 className="text-3xl font-bold">Centro de Marketing</h1>
           <p className="text-muted-foreground">

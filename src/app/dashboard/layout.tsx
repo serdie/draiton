@@ -18,7 +18,7 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/ui/user-avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,26 +67,12 @@ const navItems = [
   { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },
 ];
 
-function UserAvatar({ user }: { user: User }) {
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  }
-
-  return (
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'Usuario'} />
-        <AvatarFallback>{user.displayName ? getInitials(user.displayName) : 'U'}</AvatarFallback>
-      </Avatar>
-  )
-}
-
-
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useContext(AuthContext);
+  const { user, loading, isAdmin } = useContext(AuthContext);
   const router = useRouter();
   const pathname = usePathname();
   
@@ -113,8 +99,6 @@ export default function DashboardLayout({
     return null; // or a login form, but we redirect so this is fine
   }
 
-  const isProUser = user?.role === 'pro' || user?.role === 'admin';
-
   return (
     <SidebarProvider>
       <Sidebar>
@@ -140,7 +124,7 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuItem>
             ))}
-             {user?.role === 'admin' && (
+             {isAdmin && (
                 <SidebarMenuItem>
                     <Link href="/admin/dashboard">
                     <SidebarMenuButton

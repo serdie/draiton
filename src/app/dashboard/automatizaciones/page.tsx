@@ -115,9 +115,7 @@ function ProFeatureLock() {
 export default function AutomatizacionesPage() {
   const [automations, setAutomations] = useState<Automation[]>(initialAutomations);
   const { toast } = useToast();
-  const { user } = useContext(AuthContext);
-
-  const isProUser = user?.role === 'pro' || user?.role === 'admin';
+  const { isPro } = useContext(AuthContext);
 
   const handleStatusChange = (id: string, newStatus: boolean) => {
     setAutomations(
@@ -136,8 +134,8 @@ export default function AutomatizacionesPage() {
 
   return (
     <div className="relative">
-      {!isProUser && <ProFeatureLock />}
-      <div className={cn("space-y-6", !isProUser && "opacity-50 pointer-events-none")}>
+      {!isPro && <ProFeatureLock />}
+      <div className={cn("space-y-6", !isPro && "opacity-50 pointer-events-none")}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">Automatizaciones</h1>

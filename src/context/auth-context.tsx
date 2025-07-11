@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useState, useEffect, ReactNode, useContext } from 'react';
+import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
@@ -14,11 +14,17 @@ export interface User extends FirebaseUser {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isPro: boolean;
+  isAdmin: boolean;
+  isFree: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isPro: false,
+  isAdmin: false,
+  isFree: true,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -59,8 +65,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
+  const roles = useMemo(() => {
+    const isAdmin = user?.role === 'admin';
+    const isPro = user?.role === 'pro' || isAdmin;
+    const isFree = !isPro && !isAdmin;
+    return { isPro, isAdmin, isFree };
+  }, [user]);
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, ...roles }}>
       {children}
     </AuthContext.Provider>
   );

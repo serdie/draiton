@@ -32,13 +32,12 @@ function ProFeatureLock() {
 
 
 export default function WebIAPage() {
-  const { user } = useContext(AuthContext);
-  const isProUser = user?.role === 'pro' || user?.role === 'admin';
+  const { isPro } = useContext(AuthContext);
 
   return (
     <div className="relative">
-      {!isProUser && <ProFeatureLock />}
-      <div className={cn("space-y-6", !isProUser && "opacity-50 pointer-events-none")}>
+      {!isPro && <ProFeatureLock />}
+      <div className={cn("space-y-6", !isPro && "opacity-50 pointer-events-none")}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">Tu Asistente Web Inteligente</h1>
