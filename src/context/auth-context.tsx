@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode, useContext } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            setUser({ ...firebaseUser, plan: userData.plan });
+            setUser({ ...firebaseUser, ...userData } as User);
         } else {
             // This case might happen if user is created in Auth but not in Firestore
             setUser(firebaseUser);
