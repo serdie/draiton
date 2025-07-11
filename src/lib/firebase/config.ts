@@ -3,6 +3,8 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getSession } from 'next-firebase-auth-edge/lib/auth';
+import { cookies } from 'next/headers';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -18,20 +20,34 @@ const firebaseConfig = {
 
 // Initialize Firebase
 let app: FirebaseApp;
-let auth: Auth;
+let clientAuth: Auth;
 let db: Firestore;
 
 // This guard prevents the app from crashing on the server if the environment variables are not set.
 if (firebaseConfig.apiKey) {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
+    clientAuth = getAuth(app);
     db = getFirestore(app);
 } else {
     console.warn("Firebase configuration is missing. Firebase features will be disabled.");
     // Provide default null values or mock implementations if needed
     app = null as any;
-    auth = null as any;
+    clientAuth = null as any;
     db = null as any;
 }
+
+const auth = {
+    client: clientAuth,
+    get session() {
+        try {
+            return cookies().get('session')?.value ?? null;
+        } catch (error) {
+            // cookies() will throw an error in non-request environments
+            // like route handlers, so we return null as a fallback.
+            return null;
+        }
+    }
+}
+
 
 export { app, auth, db };

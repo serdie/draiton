@@ -2,13 +2,15 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/config';
+import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
+import { doc, onSnapshot } from 'firebase/firestore'; 
+import { auth as clientAuth, db } from '@/lib/firebase/config';
+import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
 
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro';
     role?: 'free' | 'pro' | 'admin';
+    company?: CompanySettings;
 }
 
 interface AuthContextType {
@@ -27,44 +29,59 @@ export const AuthContext = createContext<AuthContextType>({
   isFree: true,
 });
 
+async function handleTokenChange(idToken: string | null) {
+  const endpoint = idToken ? '/api/auth' : '/api/auth';
+  const method = idToken ? 'POST' : 'GET';
+  const body = idToken ? JSON.stringify({ idToken }) : undefined;
+  
+  await fetch(endpoint, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only subscribe if Firebase auth is initialized
-    if (!auth) {
+    if (!clientAuth) {
       setUser(null);
       setLoading(false);
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribeAuth = onIdTokenChanged(clientAuth, async (firebaseUser) => {
+      const idToken = await firebaseUser?.getIdToken() ?? null;
+      handleTokenChange(idToken);
+      
       if (firebaseUser) {
-        // User is signed in, see docs for a list of available properties
-        // https://firebase.google.com/docs/reference/js/firebase.User
         const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            const fullUser = { ...firebaseUser, ...userData } as User;
-            console.log("Revisando usuario PRO:", fullUser); // DEBUGGING LINE ADDED
-            setUser(fullUser);
-        } else {
-            // This case might happen if user is created in Auth but not in Firestore
+        
+        const unsubscribeDoc = onSnapshot(userDocRef, (userDocSnap) => {
+            if (userDocSnap.exists()) {
+                const userData = userDocSnap.data();
+                const fullUser = { ...firebaseUser, ...userData } as User;
+                setUser(fullUser);
+            } else {
+                setUser(firebaseUser);
+            }
+            setLoading(false);
+        }, (error) => {
+            console.error("Error listening to user document:", error);
             setUser(firebaseUser);
-        }
-
+            setLoading(false);
+        });
+        
+        return () => unsubscribeDoc();
       } else {
-        // User is signed out
         setUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
   const roles = useMemo(() => {
