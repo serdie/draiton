@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2 } from 'lucide-react';
-import { format, parseISO } from "date-fns"
+import { format, parseISO, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { type DocumentType, type DocumentStatus } from './page';
@@ -83,18 +83,31 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
   useEffect(() => {
     if (initialData) {
       setDocNumber(initialData.invoiceNumber || docNumber);
-      const parsedDate = initialData.invoiceDate ? parseISO(initialData.invoiceDate) : new Date();
-      setEmissionDate(isNaN(parsedDate.getTime()) ? new Date() : parsedDate);
+      
+      const parsedEmissionDate = initialData.invoiceDate ? parseISO(initialData.invoiceDate) : new Date();
+      setEmissionDate(isValid(parsedEmissionDate) ? parsedEmissionDate : new Date());
+
+      const parsedDueDate = initialData.dueDate ? parseISO(initialData.dueDate) : undefined;
+      setDueDate(isValid(parsedDueDate) ? parsedDueDate : undefined);
+
       setClientName(initialData.clientName || '');
-      // Assuming no CIF/Address from AI for now
-      setLineItems(initialData.lineItems.map((item, index) => ({
-        id: index,
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.amount,
-      })));
+      setClientCif(initialData.clientCif || '');
+      setClientAddress(initialData.clientAddress || '');
+      setTaxRate(initialData.taxRate || 21);
+
+      if (initialData.lineItems && initialData.lineItems.length > 0) {
+        setLineItems(initialData.lineItems.map((item, index) => ({
+          id: index,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.amount,
+        })));
+      } else {
+        setLineItems([{ id: 1, description: '', quantity: 1, unitPrice: 0, total: 0 }]);
+      }
       setStatus('Borrador');
+
     } else {
         setLineItems([{ id: 1, description: '', quantity: 1, unitPrice: 0, total: 0 }])
         setClientName('');
@@ -102,6 +115,7 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
         setClientAddress('');
         setEmissionDate(new Date());
         setDueDate(undefined);
+        setTaxRate(21);
     }
   }, [initialData, docNumber]);
 
