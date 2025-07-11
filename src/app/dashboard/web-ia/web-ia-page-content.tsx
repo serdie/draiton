@@ -115,7 +115,7 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
 
       <Tabs defaultValue="gestionar" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="crear" disabled={!isProUser}>Crear Nuevo Sitio</TabsTrigger>
+            <TabsTrigger value="crear">Crear Nuevo Sitio</TabsTrigger>
             <TabsTrigger value="gestionar">Gestionar Sitios Existentes</TabsTrigger>
         </TabsList>
         <TabsContent value="crear">

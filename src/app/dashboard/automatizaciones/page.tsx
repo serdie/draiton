@@ -184,7 +184,6 @@ export default function AutomatizacionesPage() {
                           checked={automation.status === 'Activo'}
                           onCheckedChange={(checked) => handleStatusChange(automation.id, checked)}
                           aria-label={`Activar o desactivar la automatización ${automation.name}`}
-                          disabled={!isProUser}
                         />
                         <Badge variant="outline" className={cn("text-xs", getStatusBadgeClass(automation.status))}>
                            {automation.status}
@@ -202,7 +201,7 @@ export default function AutomatizacionesPage() {
                   <TableCell className="text-right">
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0" disabled={!isProUser}>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
                             <span className="sr-only">Abrir menú</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
