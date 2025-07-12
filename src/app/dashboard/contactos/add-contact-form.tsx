@@ -1,7 +1,8 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useFormState } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +23,10 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { createContact } from '@/lib/firebase/contact-actions';
+import { useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
+import { Loader2 } from 'lucide-react';
 
 const contactFormSchema = z.object({
   name: z.string().min(1, { message: 'El nombre es obligatorio.' }),
@@ -37,6 +42,7 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 export function AddContactForm({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
+  const { user } = useContext(AuthContext);
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
@@ -50,14 +56,33 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
     },
   });
 
-  function onSubmit(data: ContactFormValues) {
-    // Aquí se manejaría el envío de datos reales a un backend.
-    console.log(data);
-    toast({
-      title: 'Contacto Añadido (Simulación)',
-      description: `Se ha añadido a ${data.name} a tus contactos.`,
-    });
-    onClose();
+  const { isSubmitting } = form.formState;
+
+  async function onSubmit(data: ContactFormValues) {
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Error de autenticación',
+            description: 'Debes iniciar sesión para añadir un contacto.',
+        });
+        return;
+    }
+    
+    try {
+        await createContact(data, user.uid);
+        toast({
+            title: 'Contacto Añadido',
+            description: `Se ha añadido a ${data.name} a tus contactos.`,
+        });
+        onClose();
+    } catch (error) {
+        console.error("Error al añadir contacto:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'No se pudo añadir el contacto. Inténtalo de nuevo.',
+        });
+    }
   }
 
   return (
@@ -96,7 +121,7 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
             <FormItem>
               <FormLabel>Teléfono</FormLabel>
               <FormControl>
-                <Input placeholder="Ej: (555) 123-4567" {...field} />
+                <Input placeholder="Ej: +34 600 123 456" {...field} />
               </FormControl>
             </FormItem>
           )}
@@ -164,10 +189,13 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
           )}
         />
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <Button type="submit">Añadir Contacto</Button>
+          <Button type="submit" disabled={isSubmitting}>
+             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Añadir Contacto
+          </Button>
         </div>
       </form>
     </Form>
