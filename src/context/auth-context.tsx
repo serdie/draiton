@@ -7,6 +7,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { auth as clientAuth, db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
 import { sessionLogin, sessionLogout } from '@/lib/firebase/auth-actions';
+import { useRouter } from 'next/navigation';
 
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro';
@@ -33,6 +34,7 @@ export const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (!clientAuth) {
@@ -42,6 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribeAuth = onIdTokenChanged(clientAuth, async (firebaseUser) => {
+      const wasUser = !!user; // check if user was previously logged in
       if (firebaseUser) {
         const idToken = await firebaseUser.getIdToken();
         await sessionLogin(idToken);
@@ -57,10 +60,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(firebaseUser);
             }
             setLoading(false);
+
+            // Redirect only if it's a new login
+            if (!wasUser) {
+                router.push('/dashboard');
+            }
         }, (error) => {
             console.error("Error listening to user document:", error);
             setUser(firebaseUser);
             setLoading(false);
+            if (!wasUser) {
+                router.push('/dashboard');
+            }
         });
         
         return () => unsubscribeDoc();
@@ -68,10 +79,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await sessionLogout();
         setUser(null);
         setLoading(false);
+        // Redirect only if user was logged in and now is not
+        if (wasUser) {
+            router.push('/login');
+        }
       }
     });
 
     return () => unsubscribeAuth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const roles = useMemo(() => {
