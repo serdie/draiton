@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useContext, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useContext, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,58 +11,58 @@ import { Textarea } from '@/components/ui/textarea';
 import { Upload, Image as ImageIcon, Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
-import { updateCompanySettings } from '@/lib/firebase/user-settings-actions';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
-
-type FormState = {
-    message: string;
-    error: boolean;
-};
-
-function SubmitButton() {
-    const { pending } = useFormStatus();
-    return (
-        <Button type="submit" disabled={pending}>
-            {pending ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Guardando...
-                </>
-            ) : (
-                <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Guardar Cambios
-                </>
-            )}
-        </Button>
-    );
-}
 
 export function EmpresaSettings() {
     const { user } = useContext(AuthContext);
     const { toast } = useToast();
+    const [isSaving, setIsSaving] = useState(false);
 
-    const initialState: FormState = { message: '', error: false };
+    const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setIsSaving(true);
 
-    // Wrapper action to show toast on success/error
-    const actionWithToast = async (currentState: FormState, formData: FormData): Promise<FormState> => {
-        const result = await updateCompanySettings(currentState, formData);
-        if (result.error) {
+        if (!user) {
             toast({
                 variant: 'destructive',
-                title: 'Error',
-                description: result.message,
+                title: 'Error de autenticación',
+                description: 'No se pudo encontrar al usuario. Por favor, inicia sesión de nuevo.',
             });
-        } else {
+            setIsSaving(false);
+            return;
+        }
+
+        const formData = new FormData(event.currentTarget);
+        const companyData: CompanySettings = {
+            name: formData.get('companyName') as string,
+            cif: formData.get('companyCif') as string,
+            address: formData.get('companyAddress') as string,
+            brandColor: formData.get('brandColor') as string,
+        };
+
+        try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, {
+                company: companyData,
+            });
+
             toast({
                 title: 'Configuración guardada',
-                description: result.message,
+                description: 'Los detalles de tu empresa han sido actualizados.',
             });
+        } catch (error) {
+            console.error("Error al actualizar la configuración de la empresa:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Error al guardar',
+                description: 'No se pudo guardar la configuración. Revisa los permisos de Firestore.',
+            });
+        } finally {
+            setIsSaving(false);
         }
-        return result;
     };
-    
-    const [state, formAction] = useActionState(actionWithToast, initialState);
     
     const companyData = user?.company as CompanySettings | undefined;
 
@@ -74,7 +73,7 @@ export function EmpresaSettings() {
         <CardDescription>Configura los detalles de tu empresa, marca y plantillas de facturas.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="space-y-8">
+        <form onSubmit={handleSave} className="space-y-8">
             {/* Company Details Section */}
             <div className="space-y-4">
                 <h3 className="font-medium text-lg">Datos Fiscales</h3>
@@ -116,7 +115,7 @@ export function EmpresaSettings() {
                     <Label htmlFor="brandColor">Color de Marca</Label>
                     <div className="flex items-center gap-2">
                          <Input type="color" id="brandColor" name="brandColor" defaultValue={companyData?.brandColor || "#7EC8E3"} className="w-12 h-10 p-1"/>
-                         <Input id="brandColorHex" defaultValue={companyData?.brandColor || "#7EC8E3"} />
+                         <Input id="brandColorHex" name="brandColorHex" defaultValue={companyData?.brandColor || "#7EC8E3"} />
                     </div>
                      <p className="text-xs text-muted-foreground">Este color se usará en los títulos de tus facturas.</p>
                 </div>
@@ -125,7 +124,19 @@ export function EmpresaSettings() {
             <Separator />
 
             <div className="flex justify-start">
-                <SubmitButton />
+                <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Guardando...
+                        </>
+                    ) : (
+                        <>
+                            <Save className="mr-2 h-4 w-4" />
+                            Guardar Cambios
+                        </>
+                    )}
+                </Button>
             </div>
         </form>
       </CardContent>
