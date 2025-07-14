@@ -1,11 +1,7 @@
 
 'use server';
 
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from './config';
-
-// Asegúrate de tener reglas de seguridad en Firestore que solo permitan a los administradores ejecutar estas acciones.
-// Por ejemplo: `allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';`
+import { getFirebaseAuth } from './firebase-admin';
 
 type UserUpdateData = {
     displayName: string;
@@ -19,15 +15,12 @@ type UserUpdateData = {
  * @param data - Los nuevos datos del usuario.
  */
 export async function updateUser(uid: string, data: UserUpdateData): Promise<void> {
-    if (!db) {
-        throw new Error("Firestore no está inicializado.");
-    }
+    const { db } = getFirebaseAuth();
     if (!uid) {
         throw new Error("Se requiere el ID del usuario.");
     }
-    const userDocRef = doc(db, 'users', uid);
-    // The data object from the form already has the correct shape.
-    await updateDoc(userDocRef, data);
+    const userDocRef = db.collection('users').doc(uid);
+    await userDocRef.update(data);
 }
 
 
@@ -37,14 +30,12 @@ export async function updateUser(uid: string, data: UserUpdateData): Promise<voi
  * @param newRole - El nuevo rol a asignar ('free', 'pro', 'admin').
  */
 export async function updateUserRole(uid: string, newRole: 'free' | 'pro' | 'admin'): Promise<void> {
-  if (!db) {
-    throw new Error("Firestore no está inicializado.");
-  }
+  const { db } = getFirebaseAuth();
   if (!uid) {
     throw new Error("Se requiere el ID del usuario.");
   }
-  const userDocRef = doc(db, 'users', uid);
-  await updateDoc(userDocRef, { role: newRole });
+  const userDocRef = db.collection('users').doc(uid);
+  await userDocRef.update({ role: newRole });
 }
 
 /**
@@ -52,12 +43,23 @@ export async function updateUserRole(uid: string, newRole: 'free' | 'pro' | 'adm
  * @param uid - El ID del usuario a eliminar.
  */
 export async function deleteUser(uid: string): Promise<void> {
-  if (!db) {
-    throw new Error("Firestore no está inicializado.");
-  }
+  const { db } = getFirebaseAuth();
   if (!uid) {
     throw new Error("Se requiere el ID del usuario.");
   }
-  const userDocRef = doc(db, 'users', uid);
+  const userDocRef = db.collection('users').doc(uid);
   await deleteDoc(userDocRef);
+}
+
+/**
+ * Elimina un usuario del servicio de Autenticación de Firebase.
+ * ¡CUIDADO! Esta acción es destructiva e irreversible.
+ * @param uid - El ID del usuario a eliminar.
+ */
+export async function deleteAuthUser(uid: string): Promise<void> {
+    const { auth } = getFirebaseAuth();
+     if (!uid) {
+        throw new Error("Se requiere el ID del usuario.");
+    }
+    await auth.deleteUser(uid);
 }

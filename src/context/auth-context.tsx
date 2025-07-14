@@ -6,6 +6,7 @@ import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore'; 
 import { auth as clientAuth, db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
+import { sessionLogin, sessionLogout } from '@/lib/firebase/auth-actions';
 
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro';
@@ -29,21 +30,6 @@ export const AuthContext = createContext<AuthContextType>({
   isFree: true,
 });
 
-async function handleTokenChange(idToken: string | null) {
-  const method = idToken ? 'POST' : 'DELETE';
-  const response = await fetch('/api/auth', {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    console.error(`Failed to ${method} session: ${response.statusText}`);
-  }
-}
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,10 +42,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribeAuth = onIdTokenChanged(clientAuth, async (firebaseUser) => {
-      const idToken = await firebaseUser?.getIdToken() ?? null;
-      await handleTokenChange(idToken);
-      
       if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken();
+        await sessionLogin(idToken);
+        
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         
         const unsubscribeDoc = onSnapshot(userDocRef, (userDocSnap) => {
@@ -79,6 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         return () => unsubscribeDoc();
       } else {
+        await sessionLogout();
         setUser(null);
         setLoading(false);
       }

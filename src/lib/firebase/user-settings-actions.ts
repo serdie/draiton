@@ -2,11 +2,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from './config';
-import { getTokens } from 'next-firebase-auth-edge';
+import { getFirebaseAuth } from './firebase-admin';
 import { cookies } from 'next/headers';
-import { authConfig } from '@/config/auth-config';
 
 export type CompanySettings = {
     name?: string;
@@ -19,14 +16,14 @@ export async function updateCompanySettings(
     currentState: { message: string; error: boolean; },
     formData: FormData
 ): Promise<{ message: string; error: boolean; }> {
-    const tokens = await getTokens(cookies(), authConfig);
-
-    if (!tokens) {
-         return { message: 'No estás autenticado.', error: true };
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) {
+        return { message: 'No estás autenticado.', error: true };
     }
-
+    
     try {
-        const { decodedToken } = tokens;
+        const { auth, db } = getFirebaseAuth();
+        const decodedToken = await auth.verifySessionCookie(sessionCookie);
         const uid = decodedToken.uid;
         
         const companyData: CompanySettings = {
@@ -36,8 +33,8 @@ export async function updateCompanySettings(
             brandColor: formData.get('brandColor') as string,
         };
 
-        const userDocRef = doc(db, 'users', uid);
-        await updateDoc(userDocRef, {
+        const userDocRef = db.collection('users').doc(uid);
+        await userDocRef.update({
             company: companyData,
         });
         
