@@ -98,16 +98,16 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
 
 
   const handleRegister = () => {
-    if (!date || !category || !proveedor || !importe || !metodoPago) {
-        toast({
-            variant: 'destructive',
-            title: 'Campos requeridos',
-            description: 'Por favor, completa todos los campos obligatorios.',
-        });
-        return;
-    }
-    
     startTransition(async () => {
+        if (!date || !category || !proveedor || !importe || !metodoPago) {
+            toast({
+                variant: 'destructive',
+                title: 'Campos requeridos',
+                description: 'Por favor, completa todos los campos obligatorios.',
+            });
+            return;
+        }
+
         if (!user) {
             toast({
                 variant: 'destructive',
