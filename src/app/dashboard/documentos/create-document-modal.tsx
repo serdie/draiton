@@ -4,9 +4,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import { CreateDocumentForm } from './create-document-form';
 import type { DocumentType } from './page';
@@ -23,22 +20,14 @@ export function CreateDocumentModal({ isOpen, onClose, documentType, initialData
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Crear Nuevo Documento</DialogTitle>
-          <DialogDescription>
-            Completa los detalles para crear un nuevo documento de tipo {documentType}.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex-1 overflow-y-auto pr-6 -mr-6">
-            <div className="py-4 pr-2">
-              <CreateDocumentForm 
-                onClose={onClose} 
-                documentType={documentType}
-                initialData={initialData}
-              />
-            </div>
-        </div>
+          <CreateDocumentForm 
+            onClose={onClose} 
+            documentType={documentType}
+            initialData={initialData}
+            />
       </DialogContent>
     </Dialog>
   );
 }
+
+    

@@ -85,12 +85,12 @@ export default function DocumentosPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [docToEdit, setDocToEdit] = useState<Document | null>(null);
   const [docToView, setDocToView] = useState<Document | null>(null);
+  const [docToDelete, setDocToDelete] = useState<Document | null>(null);
 
   const [initialDataForForm, setInitialDataForForm] = useState<ExtractInvoiceDataOutput | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<DocumentType>('factura');
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
-  const [docToDelete, setDocToDelete] = useState<Document | null>(null);
   const { toast } = useToast();
 
   // Filter states
@@ -353,12 +353,14 @@ export default function DocumentosPage() {
         onClose={() => setIsImportModalOpen(false)} 
         onDataExtracted={handleDataExtracted}
       />
-      <CreateDocumentModal 
-        isOpen={isCreateModalOpen} 
-        onClose={handleCloseCreateModal} 
-        documentType={activeTab}
-        initialData={initialDataForForm}
-      />
+      {isCreateModalOpen && (
+        <CreateDocumentModal 
+            isOpen={isCreateModalOpen} 
+            onClose={handleCloseCreateModal} 
+            documentType={activeTab}
+            initialData={initialDataForForm}
+        />
+      )}
       {docToEdit && (
         <EditDocumentModal
             isOpen={!!docToEdit}
@@ -453,3 +455,5 @@ export default function DocumentosPage() {
     </>
   );
 }
+
+    
