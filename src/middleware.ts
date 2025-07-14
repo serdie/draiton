@@ -2,9 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   authMiddleware,
-  refreshAuth,
   redirectToLogin,
-  redirectToHome,
 } from 'next-firebase-auth-edge';
 import { authConfig } from './config/auth-config';
 
