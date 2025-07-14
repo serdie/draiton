@@ -48,7 +48,7 @@ export async function deleteUser(uid: string): Promise<void> {
     throw new Error("Se requiere el ID del usuario.");
   }
   const userDocRef = db.collection('users').doc(uid);
-  await deleteDoc(userDocRef);
+  await userDocRef.delete();
 }
 
 /**
