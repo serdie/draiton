@@ -25,11 +25,11 @@ import { AuthContext } from '@/context/auth-context';
 interface ViewDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  document: Document;
+  document: Document | null;
 }
 
-const getBadgeClass = (estado: DocumentStatus) => {
-  switch (estado.toLowerCase()) {
+const getBadgeClass = (estado?: DocumentStatus) => {
+  switch (estado?.toLowerCase()) {
     case 'pagado':
     case 'aceptado':
     case 'aplicado':
@@ -46,7 +46,7 @@ const getBadgeClass = (estado: DocumentStatus) => {
   }
 };
 
-const getDocumentTypeLabel = (type: DocumentType) => {
+const getDocumentTypeLabel = (type?: DocumentType) => {
     switch (type) {
         case 'factura': return 'Factura';
         case 'presupuesto': return 'Presupuesto';
@@ -59,7 +59,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
   const { user } = useContext(AuthContext);
   const companyData = user?.company;
 
-  if (!document) return null;
+  if (!isOpen || !document) return null;
 
   const handlePrint = () => {
     toast({

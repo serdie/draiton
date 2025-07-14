@@ -60,7 +60,7 @@ export type Document = {
 
 
 const getBadgeClass = (estado: string) => {
-  switch (estado.toLowerCase()) {
+  switch (estado?.toLowerCase()) {
     case 'pagado':
     case 'aceptado':
     case 'aplicado':
@@ -137,21 +137,6 @@ export default function DocumentosPage() {
     setIsCreateModalOpen(true);
   };
 
-  const handleEdit = (doc: Document) => {
-    setDocToEdit(doc);
-  }
-
-  const handleView = (doc: Document) => {
-    setDocToView(doc);
-  }
-
-  const handleDownload = () => {
-    toast({
-      title: 'Función en desarrollo',
-      description: 'La descarga de PDF estará disponible próximamente.',
-    });
-  }
-
   const handleCloseCreateModal = () => {
     setIsCreateModalOpen(false);
     setInitialDataForForm(undefined);
@@ -221,6 +206,13 @@ export default function DocumentosPage() {
     setDocToDelete(null);
   };
 
+  const handleDownload = () => {
+    toast({
+      title: 'Función en desarrollo',
+      description: 'La descarga de PDF estará disponible próximamente.',
+    });
+  }
+
 
   const renderContent = () => {
     if (loading) {
@@ -282,11 +274,11 @@ export default function DocumentosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleView(doc)}>
+                        <DropdownMenuItem onClick={() => setDocToView(doc)}>
                             <Eye className="mr-2 h-4 w-4" />
                             Ver
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(doc)}>
+                        <DropdownMenuItem onClick={() => setDocToEdit(doc)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Editar
                         </DropdownMenuItem>
@@ -455,5 +447,3 @@ export default function DocumentosPage() {
     </>
   );
 }
-
-    
