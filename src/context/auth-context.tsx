@@ -8,6 +8,7 @@ import { auth as clientAuth, db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
 import { sessionLogin, sessionLogout } from '@/lib/firebase/auth-actions';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro';
@@ -58,21 +59,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(fullUser);
             } else {
                 // Handle case where user exists in Auth but not in Firestore
+                // This could happen if Firestore data creation fails after auth creation
                 setUser(firebaseUser);
             }
             setLoading(false);
 
-            // Redirect only if it's a new login, not on every token refresh
+            // Redirect only if it's a new login, not on every token refresh or page reload
             if (!wasUser) {
                 router.push('/dashboard');
             }
         }, (error) => {
             console.error("Error listening to user document:", error);
-            setUser(firebaseUser); // Still set the user from auth
+            // Still set the user from auth to avoid getting stuck
+            setUser(firebaseUser);
             setLoading(false);
-            if (!wasUser) {
-                router.push('/dashboard');
-            }
         });
         
         return () => unsubscribeDoc();
@@ -97,6 +97,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isFree = !isPro && !isAdmin;
     return { isPro, isAdmin, isFree };
   }, [user]);
+
+  if (loading) {
+      return (
+          <div className="flex h-screen w-screen items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+      );
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, ...roles }}>

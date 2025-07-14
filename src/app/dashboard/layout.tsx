@@ -87,16 +87,12 @@ export default function DashboardLayout({
     }
   }, [user, loading, router]);
 
-  if (loading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
+  // If auth is loading, the AuthProvider will show a spinner.
+  // If not loading and no user, the effect above will redirect.
+  // So, if we reach this point and there's no user, it's a brief moment before redirect.
+  // Returning null prevents rendering the layout for a split second for non-authenticated users.
   if (!user) {
-    return null; // or a login form, but we redirect so this is fine
+    return null;
   }
 
   return (
