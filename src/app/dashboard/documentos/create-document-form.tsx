@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useTransition, useContext } from 'react';
+import { useState, useEffect, useMemo, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,20 +26,15 @@ import { type DocumentType, type DocumentStatus } from './page';
 import { useToast } from '@/hooks/use-toast';
 import { type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { createDocument } from '@/lib/firebase/document-actions';
 import Link from 'next/link';
+import type { Document, LineItem as DocLineItem } from './page';
 
-type LineItem = {
+type LineItem = DocLineItem & {
   id: number;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
 };
 
 interface CreateDocumentFormProps {
-  isOpen: boolean;
   onClose: () => void;
   documentType: DocumentType;
   initialData?: ExtractInvoiceDataOutput;
@@ -53,7 +48,7 @@ const getDocumentTypeLabel = (type: DocumentType) => {
     }
 }
 
-export function CreateDocumentForm({ isOpen, onClose, documentType, initialData }: CreateDocumentFormProps) {
+export function CreateDocumentForm({ onClose, documentType, initialData }: CreateDocumentFormProps) {
   const { user } = useContext(AuthContext);
   const [docType, setDocType] = useState(documentType);
   const [docNumber, setDocNumber] = useState('');
@@ -66,7 +61,7 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
   const [clientCif, setClientCif] = useState('');
   const [clientAddress, setClientAddress] = useState('');
   
-  const [isPending, startTransition] = useTransition();
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   
   const companyData = user?.company;
@@ -163,64 +158,66 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
     return { subtotal, taxAmount, total };
   }, [lineItems, taxRate]);
 
-  const handleSubmit = () => {
-    startTransition(async () => {
-        if (!user) {
-            toast({
-                variant: 'destructive',
-                title: 'No estás autenticado',
-                description: 'Por favor, inicia sesión para crear un documento.',
-            });
-            return;
-        }
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSaving(true);
+    
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'No estás autenticado',
+            description: 'Por favor, inicia sesión para crear un documento.',
+        });
+        setIsSaving(false);
+        return;
+    }
 
-        const documentData = {
-            ownerId: user.uid,
-            numero: docNumber,
-            tipo: docType,
-            cliente: clientName,
-            clienteCif: clientCif,
-            clienteDireccion: clientAddress,
-            fechaEmision: emissionDate,
-            fechaVto: dueDate,
-            lineas: lineItems.map(({id, ...rest}) => rest), // Remove ID from line items
-            subtotal,
-            impuestos: taxAmount,
-            importe: total,
-            estado: status,
-            moneda: 'EUR',
-            fechaCreacion: serverTimestamp(),
-        };
+    const documentData: Omit<Document, 'id' | 'fechaCreacion'> = {
+        ownerId: user.uid,
+        numero: docNumber,
+        tipo: docType,
+        cliente: clientName,
+        clienteCif: clientCif,
+        clienteDireccion: clientAddress,
+        fechaEmision: emissionDate!,
+        fechaVto: dueDate || null,
+        lineas: lineItems.map(({id, ...rest}) => rest),
+        subtotal,
+        impuestos: taxAmount,
+        importe: total,
+        estado: status,
+        moneda: 'EUR',
+    };
 
-        try {
-            await addDoc(collection(db, "invoices"), documentData);
-            toast({
-                title: 'Documento Creado',
-                description: `El documento ${docNumber} se ha guardado correctamente.`,
-            });
-            onClose();
-        } catch (error) {
-            console.error("Error al crear documento: ", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error al crear el documento',
-                description: 'No se pudo guardar el documento. Revisa las reglas de Firestore.',
-            });
-        }
-    });
+    try {
+        await createDocument(documentData);
+        toast({
+            title: 'Documento Creado',
+            description: `El documento ${docNumber} se ha guardado correctamente.`,
+        });
+        onClose();
+    } catch (error) {
+        console.error("Error al crear documento: ", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error al crear el documento',
+            description: 'No se pudo guardar el documento. Revisa los permisos de Firestore.',
+        });
+    } finally {
+        setIsSaving(false);
+    }
   }
 
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full">
         <DialogHeader>
           <DialogTitle>Crear {getDocumentTypeLabel(docType)}</DialogTitle>
           <DialogDescription>
             Completa los detalles para crear un nuevo documento.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto pr-6 -mr-6 space-y-4 text-sm">
+        <div className="flex-1 overflow-y-auto pr-6 -mr-6 space-y-4 text-sm py-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                 <Select value={docType} onValueChange={(value) => setDocType(value as DocumentType)}>
                     <SelectTrigger>
@@ -329,16 +326,16 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
                         {lineItems.map((item) => (
                             <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_80px_100px_100px_40px] gap-2 items-start border-b pb-2">
                                 <Textarea placeholder="Descripción del servicio/producto" value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} rows={1} className="md:h-10" />
-                                <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', e.target.value)} className="text-right" min="0"/>
-                                <Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', e.target.value)} className="text-right" min="0" step="0.01"/>
+                                <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} className="text-right" min="0"/>
+                                <Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} className="text-right" min="0" step="0.01"/>
                                 <Input value={item.total.toFixed(2)} readOnly className="text-right bg-muted" />
-                                <Button variant="ghost" size="icon" className="text-destructive h-10 w-10" onClick={() => handleRemoveLine(item.id)}>
+                                <Button type="button" variant="ghost" size="icon" className="text-destructive h-10 w-10" onClick={() => handleRemoveLine(item.id)}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
                         ))}
                     </div>
-                     <Button variant="outline" size="sm" onClick={handleAddLine} className="mt-4">
+                     <Button type="button" variant="outline" size="sm" onClick={handleAddLine} className="mt-4">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Añadir Línea
                     </Button>
@@ -386,13 +383,12 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
 
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isPending}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isPending ? "Guardando..." : "Crear Documento"}
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving ? "Guardando..." : "Crear Documento"}
           </Button>
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </form>
   );
 }

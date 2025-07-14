@@ -16,8 +16,7 @@ import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { type DocumentType, type DocumentStatus, type Document, type LineItem as DocLineItem } from './page';
 import { useToast } from '@/hooks/use-toast';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { updateDocument } from '@/lib/firebase/document-actions';
 import { AuthContext } from '@/context/auth-context';
 import Link from 'next/link';
 
@@ -107,14 +106,13 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
     }
 
     const documentData = {
-      ownerId: user.uid,
       numero: docNumber,
       tipo: docType,
       cliente: clientName,
       clienteCif: clientCif,
       clienteDireccion: clientAddress,
-      fechaEmision: emissionDate,
-      fechaVto: dueDate,
+      fechaEmision: emissionDate!,
+      fechaVto: dueDate || null,
       lineas: lineItems.map(({id, ...rest}) => rest),
       subtotal,
       impuestos: taxAmount,
@@ -124,8 +122,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
     };
 
     try {
-      const docRef = doc(db, "invoices", document.id);
-      await updateDoc(docRef, documentData);
+      await updateDocument(document.id, documentData);
       toast({
         title: 'Documento Actualizado',
         description: `El documento ${docNumber} se ha actualizado correctamente.`,
@@ -254,8 +251,8 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                     {lineItems.map((item) => (
                         <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_80px_100px_100px_40px] gap-2 items-start border-b pb-2">
                             <Textarea placeholder="Descripción del servicio/producto" value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} rows={1} className="md:h-10" />
-                            <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', e.target.value)} className="text-right" min="0"/>
-                            <Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', e.target.value)} className="text-right" min="0" step="0.01"/>
+                            <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} className="text-right" min="0"/>
+                            <Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} className="text-right" min="0" step="0.01"/>
                             <Input value={item.total.toFixed(2)} readOnly className="text-right bg-muted" />
                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-10 w-10" onClick={() => handleRemoveLine(item.id)}>
                                 <Trash2 className="h-4 w-4" />

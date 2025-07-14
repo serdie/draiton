@@ -1,27 +1,44 @@
 
 'use server';
 
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc, deleteDoc, addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from './config';
 import { extractInvoiceData, type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
+import type { Document } from '@/app/dashboard/documentos/page';
 
-export async function deleteDocument(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteDocument(id: string): Promise<void> {
     if (!db) {
-        return { success: false, error: "La base de datos no está inicializada." };
+        throw new Error("La base de datos no está inicializada.");
     }
-
     if (!id) {
-        return { success: false, error: "Se requiere el ID del documento." };
+        throw new Error("Se requiere el ID del documento.");
     }
-
-    try {
-        await deleteDoc(doc(db, "invoices", id));
-        return { success: true };
-    } catch (error: any) {
-        console.error("Error al eliminar documento: ", error);
-        return { success: false, error: error.message };
-    }
+    const docRef = doc(db, "invoices", id);
+    await deleteDoc(docRef);
 }
+
+
+export async function createDocument(documentData: Omit<Document, 'id' | 'fechaCreacion'>): Promise<void> {
+    if (!db) {
+        throw new Error("La base de datos no está inicializada.");
+    }
+    await addDoc(collection(db, "invoices"), {
+        ...documentData,
+        fechaCreacion: serverTimestamp(),
+    });
+}
+
+export async function updateDocument(id: string, documentData: Omit<Document, 'id' | 'ownerId' | 'fechaCreacion'>): Promise<void> {
+    if (!db) {
+        throw new Error("La base de datos no está inicializada.");
+    }
+    if (!id) {
+        throw new Error("Se requiere el ID del documento para actualizar.");
+    }
+    const docRef = doc(db, "invoices", id);
+    await updateDoc(docRef, documentData);
+}
+
 
 export async function scanInvoiceAction(invoiceDataUri: string): Promise<{ data: ExtractInvoiceDataOutput | null; error: string | null }> {
   if (!invoiceDataUri) {

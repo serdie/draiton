@@ -109,7 +109,7 @@ export default function DocumentosPage() {
     }
     setLoading(true);
 
-    const q = query(collection(db, 'invoices'), where('tipo', '==', activeTab), where('ownerId', '==', user.uid));
+    const q = query(collection(db, "invoices"), where('tipo', '==', activeTab), where('ownerId', '==', user.uid));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const docsList = snapshot.docs.map(doc => {
@@ -188,22 +188,23 @@ export default function DocumentosPage() {
 
   const handleDelete = async () => {
     if (!docToDelete) return;
-
-    const result = await deleteDocument(docToDelete.id);
-
-    if (result.success) {
-      toast({
-        title: 'Documento Eliminado',
-        description: `El documento ${docToDelete.numero} ha sido eliminado.`,
-      });
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Error al eliminar',
-        description: result.error || 'No se pudo eliminar el documento.',
-      });
+    
+    try {
+        await deleteDocument(docToDelete.id);
+        toast({
+            title: 'Documento Eliminado',
+            description: `El documento ${docToDelete.numero} ha sido eliminado.`,
+        });
+        // La actualización de la UI se maneja con onSnapshot, por lo que no es necesario filtrar el estado localmente.
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Error al eliminar',
+            description: 'No se pudo eliminar el documento. Revisa la consola para más detalles.',
+        });
+    } finally {
+        setDocToDelete(null);
     }
-    setDocToDelete(null);
   };
 
   const handleDownload = () => {
