@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,8 +48,8 @@ export default function RegisterPage() {
         uid: user.uid,
         displayName: name,
         email: user.email,
-        plan: 'free', 
-        createdAt: new Date(),
+        role: 'free', 
+        createdAt: serverTimestamp(),
       });
       
       router.push('/dashboard');
@@ -87,8 +87,8 @@ export default function RegisterPage() {
         displayName: user.displayName,
         email: user.email,
         photoURL: user.photoURL,
-        plan: 'free', 
-        createdAt: new Date(),
+        role: 'free', 
+        createdAt: serverTimestamp(),
       }, { merge: true }); 
       
       router.push('/dashboard');
