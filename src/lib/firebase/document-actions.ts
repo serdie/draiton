@@ -5,12 +5,12 @@ import { collection, addDoc, doc, deleteDoc, serverTimestamp } from 'firebase/fi
 import { db } from './config';
 import { extractInvoiceData, type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 
-export async function createDocument(data: any, ownerId: string): Promise<{ success: boolean; error?: string }> {
+export async function createDocument(data: any): Promise<{ success: boolean; error?: string }> {
   if (!db) {
     return { success: false, error: "La base de datos no está inicializada." };
   }
   
-  if (!ownerId) {
+  if (!data.ownerId) {
       return { success: false, error: "No hay un usuario autenticado para crear el documento." };
   }
 
@@ -21,7 +21,6 @@ export async function createDocument(data: any, ownerId: string): Promise<{ succ
   try {
     await addDoc(collection(db, "documents"), {
       ...data,
-      ownerId: ownerId,
       fechaCreacion: serverTimestamp(),
     });
     return { success: true };

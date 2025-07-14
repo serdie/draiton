@@ -171,6 +171,7 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
         }
 
         const documentData = {
+            ownerId: user.uid,
             numero: docNumber,
             tipo: docType,
             cliente: clientName,
@@ -186,7 +187,7 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
             moneda: 'EUR'
         };
 
-        const result = await createDocument(documentData, user.uid);
+        const result = await createDocument(documentData);
 
         if (result.error) {
             toast({
