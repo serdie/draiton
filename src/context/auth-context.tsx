@@ -44,18 +44,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const unsubscribeAuth = onIdTokenChanged(clientAuth, (firebaseUser) => {
+    const unsubscribeAuth = onIdTokenChanged(clientAuth, async (firebaseUser) => {
+        const wasUser = !!user;
         let unsubscribeDoc: (() => void) | undefined;
 
         if (firebaseUser) {
-            // User is signed in.
-            const wasUser = !!user; // Check if there was a user before this change.
-            
-            unsubscribeDoc = onSnapshot(doc(db, 'users', firebaseUser.uid), 
-                async (userDocSnap) => {
-                    const idToken = await firebaseUser.getIdToken();
-                    await sessionLogin(idToken); // Ensure server session is created first.
+            const idToken = await firebaseUser.getIdToken();
+            await sessionLogin(idToken); // Create server session cookie first
 
+            unsubscribeDoc = onSnapshot(doc(db, 'users', firebaseUser.uid), 
+                (userDocSnap) => {
                     if (userDocSnap.exists()) {
                         const userData = userDocSnap.data();
                         const fullUser = { ...firebaseUser, ...userData } as User;
@@ -65,22 +63,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setUser(firebaseUser);
                     }
                     
-                    if (!wasUser) { // Only redirect on new login.
+                    if (!wasUser) { // Only redirect on a *new* login event
                         router.push('/dashboard');
                     }
                     setLoading(false);
                 }, 
                 (error) => {
                     console.error("Error listening to user document:", error);
-                    setUser(firebaseUser); // Still set auth user to avoid getting stuck
+                    setUser(firebaseUser);
                     setLoading(false);
                 }
             );
 
         } else {
             // User is signed out.
-            const wasUser = !!user;
-            sessionLogout();
+            await sessionLogout();
             setUser(null);
             setLoading(false);
             if(wasUser) {
@@ -88,6 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         }
         
+        // Cleanup the Firestore listener on unmount or when the user changes
         return () => {
             if (unsubscribeDoc) {
                 unsubscribeDoc();

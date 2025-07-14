@@ -30,7 +30,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     // If auth is not loading and user exists, redirect them.
-    // This handles users who are already logged in and visit the login page.
+    // This is now handled by the AuthContext to prevent race conditions.
     if (!authLoading && user) {
       router.push('/dashboard');
     }
@@ -49,7 +49,7 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Redirect is now handled by AuthContext after session is created
+      // **REMOVED REDIRECTION**: AuthContext will handle redirection after session is created.
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
@@ -91,7 +91,7 @@ export default function LoginPage() {
             createdAt: serverTimestamp(),
           });
       }
-      // Redirect is now handled by AuthContext after session is created
+      // **REMOVED REDIRECTION**: AuthContext will handle redirection.
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
@@ -113,7 +113,7 @@ export default function LoginPage() {
     );
   }
   
-  // If user is logged in, this component will redirect, so we can return null.
+  // If user is logged in, this component will redirect via the useEffect above.
   if (user) {
     return null;
   }
