@@ -35,7 +35,6 @@ export const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [wasUser, setWasUser] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -48,11 +47,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const unsubscribe = onIdTokenChanged(clientAuth, async (firebaseUser) => {
       if (firebaseUser) {
-        if (!wasUser) { // Only call sessionLogin on a new login event
-            const idToken = await firebaseUser.getIdToken();
-            await sessionLogin(idToken);
-            setWasUser(true);
-        }
+        const idToken = await firebaseUser.getIdToken();
+        await sessionLogin(idToken);
 
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
@@ -73,13 +69,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         await sessionLogout();
         setUser(null);
-        setWasUser(false);
         setLoading(false);
       }
     });
 
     return () => unsubscribe();
-  }, [wasUser]);
+  }, []);
 
   useEffect(() => {
     if (loading) return;
