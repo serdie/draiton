@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { FileUp, FilePlus, MoreHorizontal, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2, Pencil, Eye, Download } from 'lucide-react';
 import { ImportInvoiceModal } from './import-invoice-modal';
-import { CreateDocumentForm } from './create-document-form';
+import { CreateDocumentModal } from './create-document-modal';
 import { EditDocumentModal } from './edit-document-modal';
 import { ViewDocumentModal } from './view-document-modal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,12 +21,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { collection, onSnapshot, query, where, Timestamp, doc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
+import { deleteDocument } from '@/lib/firebase/document-actions';
 
 
 export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
@@ -41,6 +42,7 @@ export type LineItem = {
 
 export type Document = {
   id: string;
+  ownerId: string;
   cliente: string;
   clienteCif?: string;
   clienteDireccion?: string;
@@ -81,8 +83,6 @@ export default function DocumentosPage() {
   const { user } = useContext(AuthContext);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [docToEdit, setDocToEdit] = useState<Document | null>(null);
   const [docToView, setDocToView] = useState<Document | null>(null);
 
@@ -139,12 +139,10 @@ export default function DocumentosPage() {
 
   const handleEdit = (doc: Document) => {
     setDocToEdit(doc);
-    setIsEditModalOpen(true);
   }
 
   const handleView = (doc: Document) => {
     setDocToView(doc);
-    setIsViewModalOpen(true);
   }
 
   const handleDownload = () => {
@@ -206,21 +204,21 @@ export default function DocumentosPage() {
   const handleDelete = async () => {
     if (!docToDelete) return;
 
-    try {
-      await deleteDoc(doc(db, "invoices", docToDelete.id));
+    const result = await deleteDocument(docToDelete.id);
+
+    if (result.success) {
       toast({
         title: 'Documento Eliminado',
         description: `El documento ${docToDelete.numero} ha sido eliminado.`,
       });
-    } catch (error) {
+    } else {
       toast({
         variant: 'destructive',
         title: 'Error al eliminar',
-        description: 'No se pudo eliminar el documento.',
+        description: result.error || 'No se pudo eliminar el documento.',
       });
-    } finally {
-      setDocToDelete(null);
     }
+    setDocToDelete(null);
   };
 
 
@@ -355,7 +353,7 @@ export default function DocumentosPage() {
         onClose={() => setIsImportModalOpen(false)} 
         onDataExtracted={handleDataExtracted}
       />
-      <CreateDocumentForm 
+      <CreateDocumentModal 
         isOpen={isCreateModalOpen} 
         onClose={handleCloseCreateModal} 
         documentType={activeTab}
@@ -363,15 +361,15 @@ export default function DocumentosPage() {
       />
       {docToEdit && (
         <EditDocumentModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
+            isOpen={!!docToEdit}
+            onClose={() => setDocToEdit(null)}
             document={docToEdit}
         />
       )}
       {docToView && (
         <ViewDocumentModal
-            isOpen={isViewModalOpen}
-            onClose={() => setIsViewModalOpen(false)}
+            isOpen={!!docToView}
+            onClose={() => setDocToView(null)}
             document={docToView}
         />
       )}
