@@ -4,8 +4,6 @@
 import { useState, useEffect, useMemo, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
@@ -26,9 +24,10 @@ import { type DocumentType, type DocumentStatus } from './page';
 import { useToast } from '@/hooks/use-toast';
 import { type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
-import { createDocument } from '@/lib/firebase/document-actions';
 import Link from 'next/link';
 import type { Document, LineItem as DocLineItem } from './page';
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 type LineItem = DocLineItem & {
   id: number;
@@ -172,6 +171,16 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
         return;
     }
 
+    if (!clientName) {
+        toast({
+            variant: 'destructive',
+            title: 'Campo requerido',
+            description: 'El nombre del cliente es obligatorio.',
+        });
+        setIsSaving(false);
+        return;
+    }
+
     const documentData: Omit<Document, 'id' | 'fechaCreacion'> = {
         ownerId: user.uid,
         numero: docNumber,
@@ -190,14 +199,45 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
     };
 
     try {
-        await createDocument(documentData);
-        toast({
-            title: 'Documento Creado',
-            description: `El documento ${docNumber} se ha guardado correctamente.`,
+        // Guardar el documento
+        await addDoc(collection(db, "invoices"), {
+            ...documentData,
+            fechaCreacion: serverTimestamp(),
         });
+
+        // Comprobar y crear contacto si no existe
+        const contactsRef = collection(db, 'contacts');
+        const q = query(contactsRef, where('name', '==', clientName), where('ownerId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            const newContactData = {
+                ownerId: user.uid,
+                name: clientName,
+                company: '', // Se puede dejar en blanco o intentar inferirlo
+                cif: clientCif,
+                address: clientAddress,
+                email: '', // El formulario de factura no tiene email de cliente
+                phone: '',
+                type: 'Cliente',
+                notes: `Contacto creado automáticamente desde el documento ${docNumber}`,
+                createdAt: serverTimestamp(),
+            };
+            await addDoc(contactsRef, newContactData);
+            toast({
+                title: 'Documento y Contacto Creados',
+                description: `El documento ${docNumber} se ha guardado y se ha añadido a ${clientName} a tus contactos.`,
+            });
+        } else {
+             toast({
+                title: 'Documento Creado',
+                description: `El documento ${docNumber} se ha guardado correctamente.`,
+            });
+        }
+        
         onClose();
     } catch (error) {
-        console.error("Error al crear documento: ", error);
+        console.error("Error al crear documento/contacto: ", error);
         toast({
             variant: 'destructive',
             title: 'Error al crear el documento',
