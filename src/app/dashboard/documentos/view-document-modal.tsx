@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useContext } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import type { Document, DocumentType, DocumentStatus } from './page';
 import { cn } from '@/lib/utils';
 import { Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AuthContext } from '@/context/auth-context';
 
 interface ViewDocumentModalProps {
   isOpen: boolean;
@@ -54,6 +56,9 @@ const getDocumentTypeLabel = (type: DocumentType) => {
 
 export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentModalProps) {
   const { toast } = useToast();
+  const { user } = useContext(AuthContext);
+  const companyData = user?.company;
+
   if (!document) return null;
 
   const handlePrint = () => {
@@ -81,9 +86,9 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
             <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
                  <div className="space-y-1">
                     <h3 className="font-semibold text-base">Emisor</h3>
-                    <p className="font-bold">Tu Empresa S.L.</p>
-                    <p>Y12345672</p>
-                    <p>Tu Dirección, Ciudad, País</p>
+                    <p className="font-bold">{companyData?.name || 'Tu Empresa S.L.'}</p>
+                    <p>{companyData?.cif || 'Y12345672'}</p>
+                    <p>{companyData?.address || 'Tu Dirección, Ciudad, País'}</p>
                 </div>
                  <div className="space-y-1 @lg:text-right">
                     <h3 className="font-semibold text-base">Cliente</h3>
