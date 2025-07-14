@@ -57,17 +57,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const fullUser = { ...firebaseUser, ...userData } as User;
                 setUser(fullUser);
             } else {
+                // Handle case where user exists in Auth but not in Firestore
                 setUser(firebaseUser);
             }
             setLoading(false);
 
-            // Redirect only if it's a new login
+            // Redirect only if it's a new login, not on every token refresh
             if (!wasUser) {
                 router.push('/dashboard');
             }
         }, (error) => {
             console.error("Error listening to user document:", error);
-            setUser(firebaseUser);
+            setUser(firebaseUser); // Still set the user from auth
             setLoading(false);
             if (!wasUser) {
                 router.push('/dashboard');
