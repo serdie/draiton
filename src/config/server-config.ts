@@ -1,8 +1,5 @@
 
 import 'server-only';
-import { config } from 'dotenv';
-
-config({ path: '.env' });
 
 function formatPrivateKey(key?: string) {
     if (!key) {
