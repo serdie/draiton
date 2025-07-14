@@ -8,10 +8,12 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileUp, FilePlus, MoreHorizontal, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { FileUp, FilePlus, MoreHorizontal, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2, Pencil, Eye, Download } from 'lucide-react';
 import { ImportInvoiceModal } from './import-invoice-modal';
 import { CreateDocumentForm } from './create-document-form';
+import { EditDocumentModal } from './edit-document-modal';
+import { ViewDocumentModal } from './view-document-modal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -19,10 +21,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
-import { deleteDocument } from '@/lib/firebase/document-actions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
@@ -31,15 +32,28 @@ import { AuthContext } from '@/context/auth-context';
 export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
 export type DocumentStatus = 'Pagado' | 'Pendiente' | 'Vencido' | 'Enviado' | 'Aceptado' | 'Rechazado' | 'Emitido' | 'Aplicado' | 'Borrador';
 
+export type LineItem = {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+};
+
 export type Document = {
   id: string;
   cliente: string;
+  clienteCif?: string;
+  clienteDireccion?: string;
   tipo: DocumentType;
   importe: number;
+  subtotal: number;
+  impuestos: number;
   estado: DocumentStatus;
   fechaEmision: Date;
   fechaVto: Date | null;
   numero: string;
+  lineas: LineItem[];
+  moneda: string;
 };
 
 
@@ -67,6 +81,11 @@ export default function DocumentosPage() {
   const { user } = useContext(AuthContext);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [docToEdit, setDocToEdit] = useState<Document | null>(null);
+  const [docToView, setDocToView] = useState<Document | null>(null);
+
   const [initialDataForForm, setInitialDataForForm] = useState<ExtractInvoiceDataOutput | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<DocumentType>('factura');
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -102,7 +121,7 @@ export default function DocumentosPage() {
                 fechaVto: data.fechaVto instanceof Timestamp ? data.fechaVto.toDate() : null,
             } as Document;
         });
-        setDocuments(docsList);
+        setDocuments(docsList.sort((a,b) => b.fechaEmision.getTime() - a.fechaEmision.getTime()));
         setLoading(false);
     }, (error) => {
         console.error("Error fetching documents:", error);
@@ -117,6 +136,23 @@ export default function DocumentosPage() {
     setInitialDataForForm(initialData);
     setIsCreateModalOpen(true);
   };
+
+  const handleEdit = (doc: Document) => {
+    setDocToEdit(doc);
+    setIsEditModalOpen(true);
+  }
+
+  const handleView = (doc: Document) => {
+    setDocToView(doc);
+    setIsViewModalOpen(true);
+  }
+
+  const handleDownload = () => {
+    toast({
+      title: 'Función en desarrollo',
+      description: 'La descarga de PDF estará disponible próximamente.',
+    });
+  }
 
   const handleCloseCreateModal = () => {
     setIsCreateModalOpen(false);
@@ -171,7 +207,7 @@ export default function DocumentosPage() {
     if (!docToDelete) return;
 
     try {
-      await deleteDocument(docToDelete.id);
+      await deleteDoc(doc(db, "invoices", docToDelete.id));
       toast({
         title: 'Documento Eliminado',
         description: `El documento ${docToDelete.numero} ha sido eliminado.`,
@@ -230,7 +266,7 @@ export default function DocumentosPage() {
                   <TableCell className="font-medium">{doc.numero}</TableCell>
                   <TableCell>{doc.cliente}</TableCell>
                   <TableCell className="text-right">
-                    {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(doc.importe)}
+                    {new Intl.NumberFormat('es-ES', { style: 'currency', currency: doc.moneda || 'EUR' }).format(doc.importe)}
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge variant="outline" className={cn('font-normal', getBadgeClass(doc.estado))}>
@@ -248,9 +284,19 @@ export default function DocumentosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Ver</DropdownMenuItem>
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem>Descargar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleView(doc)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(doc)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleDownload}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Descargar
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDocToDelete(doc)}>
                           <Trash2 className="mr-2 h-4 w-4" />
                           Eliminar
@@ -315,6 +361,20 @@ export default function DocumentosPage() {
         documentType={activeTab}
         initialData={initialDataForForm}
       />
+      {docToEdit && (
+        <EditDocumentModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            document={docToEdit}
+        />
+      )}
+      {docToView && (
+        <ViewDocumentModal
+            isOpen={isViewModalOpen}
+            onClose={() => setIsViewModalOpen(false)}
+            document={docToView}
+        />
+      )}
 
        <AlertDialog open={!!docToDelete} onOpenChange={(open) => !open && setDocToDelete(null)}>
         <AlertDialogContent>
