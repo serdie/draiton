@@ -16,7 +16,7 @@ const ExtractInvoiceDataInputSchema = z.object({
   invoiceDataUri: z
     .string()
     .describe(
-      "A photo or document of an invoice, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'" // Corrected typo here
+      "A photo or document of an invoice, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
 });
 export type ExtractInvoiceDataInput = z.infer<typeof ExtractInvoiceDataInputSchema>;
