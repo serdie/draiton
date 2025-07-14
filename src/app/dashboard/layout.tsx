@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useEffect, useContext, useState } from 'react';
+import { useContext } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { AuthContext, User } from '@/context/auth-context';
 import {
   SidebarProvider,
@@ -41,16 +41,11 @@ import {
   Link2,
   Settings,
   LogOut,
-  Newspaper,
-  FileEdit,
-  Loader2,
   Shield,
-  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
-import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/dashboard', icon: <LayoutDashboard />, label: 'Panel de Control' },
@@ -72,29 +67,19 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, isAdmin } = useContext(AuthContext);
-  const router = useRouter();
+  const { user, isAdmin } = useContext(AuthContext);
   const pathname = usePathname();
   
   const handleLogout = async () => {
     await signOut(auth);
-    // Redirection will be handled by AuthContext
   };
-  
-  // The AuthProvider now handles the main loading state and redirection.
-  // This layout can assume that if it's rendered, the user is authenticated.
-  if (loading) {
-    // AuthProvider shows a global loader, so we can show a minimal one here
-    // or nothing, to avoid layout shifts. Returning null is often best.
-    return null;
-  }
 
   if (!user) {
-    // This case should ideally not be hit if AuthProvider is working correctly,
-    // as it would have redirected. But as a fallback, we render nothing.
+    // AuthProvider is responsible for redirecting, so we can return null here to prevent flashing the layout.
+    // The global loader in AuthProvider will be shown.
     return null;
   }
-
+  
   return (
     <SidebarProvider>
       <Sidebar>
@@ -110,7 +95,7 @@ export default function DashboardLayout({
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href} className="flex w-full items-center justify-between">
                   <SidebarMenuButton
-                    isActive={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')}
+                    isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
                     tooltip={item.label}
                     className="flex-grow"
                   >
