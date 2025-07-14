@@ -1,38 +1,9 @@
 
 'use server';
 
-import { collection, addDoc, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from './config';
 import { extractInvoiceData, type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
-
-export async function createDocument(data: any): Promise<{ success: boolean; error?: string }> {
-  if (!db) {
-    return { success: false, error: "La base de datos no está inicializada." };
-  }
-  
-  if (!data.ownerId) {
-      return { success: false, error: "No hay un usuario autenticado para crear el documento." };
-  }
-
-  if (!data.cliente || !data.tipo) {
-      return { success: false, error: "El cliente y el tipo de documento son obligatorios." };
-  }
-
-  try {
-    await addDoc(collection(db, "invoices"), {
-      ...data,
-      fechaCreacion: serverTimestamp(),
-    });
-    return { success: true };
-  } catch (error: any) {
-    console.error("Error al crear documento: ", error);
-    // Devuelve un mensaje de error más específico si es un problema de permisos
-    if (error.code === 'permission-denied') {
-        return { success: false, error: "Permiso denegado. Revisa que las reglas de Firestore para 'invoices' son correctas." };
-    }
-    return { success: false, error: "Ocurrió un error inesperado al guardar el documento." };
-  }
-}
 
 export async function deleteDocument(id: string): Promise<{ success: boolean; error?: string }> {
     if (!db) {

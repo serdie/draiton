@@ -23,10 +23,11 @@ import { format, parseISO, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { type DocumentType, type DocumentStatus } from './page';
-import { createDocument } from '@/lib/firebase/document-actions';
 import { useToast } from '@/hooks/use-toast';
 import { type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 type LineItem = {
   id: number;
@@ -184,22 +185,23 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
             impuestos: taxAmount,
             importe: total,
             estado: status,
-            moneda: 'EUR'
+            moneda: 'EUR',
+            fechaCreacion: serverTimestamp(),
         };
 
-        const result = await createDocument(documentData);
-
-        if (result.success) {
-             toast({
+        try {
+            await addDoc(collection(db, "invoices"), documentData);
+            toast({
                 title: 'Documento Creado',
                 description: `El documento ${docNumber} se ha guardado correctamente.`,
             });
             onClose();
-        } else {
-           toast({
+        } catch (error) {
+            console.error("Error al crear documento: ", error);
+            toast({
                 variant: 'destructive',
                 title: 'Error al crear el documento',
-                description: result.error || 'No se pudo guardar el documento. Por favor, inténtelo de nuevo.',
+                description: 'No se pudo guardar el documento. Revisa las reglas de Firestore.',
             });
         }
     });

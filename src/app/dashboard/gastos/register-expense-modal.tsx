@@ -25,8 +25,9 @@ import { cn } from "@/lib/utils"
 import { useToast } from '@/hooks/use-toast';
 import { type ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
 import { scanReceiptAction } from './actions';
-import { createExpense } from '@/lib/firebase/expense-actions';
 import { AuthContext } from '@/context/auth-context';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 interface RegisterExpenseModalProps {
   isOpen: boolean;
@@ -117,27 +118,29 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
         }
 
         const expenseData = {
+            ownerId: user.uid,
             fecha: date,
             categoria: category,
             proveedor: proveedor,
             descripcion: descripcion,
             importe: parseFloat(importe),
             metodoPago: metodoPago,
+            fechaCreacion: serverTimestamp(),
         };
         
-        const result = await createExpense(expenseData, user.uid);
-        
-        if (result.success) {
+        try {
+            await addDoc(collection(db, "expenses"), expenseData);
             toast({
                 title: 'Gasto Registrado',
                 description: 'El nuevo gasto ha sido añadido a tu lista.',
             });
             handleClose();
-        } else {
-             toast({
+        } catch (error) {
+            console.error("Error al registrar gasto: ", error);
+            toast({
                 variant: 'destructive',
                 title: 'Error al registrar el gasto',
-                description: result.error || 'No se pudo guardar el gasto. Por favor, inténtelo de nuevo.',
+                description: 'No se pudo guardar el gasto. Revisa las reglas de Firestore.',
             });
         }
     });

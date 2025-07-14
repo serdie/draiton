@@ -23,10 +23,11 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { createContact } from '@/lib/firebase/contact-actions';
-import { useContext } from 'react';
+import { useState, useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 const contactFormSchema = z.object({
   name: z.string().min(1, { message: 'El nombre es obligatorio.' }),
@@ -43,6 +44,8 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 export function AddContactForm({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
   const { user } = useContext(AuthContext);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
@@ -56,32 +59,40 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
     },
   });
 
-  const { isSubmitting } = form.formState;
-
   async function onSubmit(data: ContactFormValues) {
+    setIsSubmitting(true);
     if (!user) {
         toast({
             variant: 'destructive',
             title: 'Error de autenticación',
             description: 'Debes iniciar sesión para añadir un contacto.',
         });
+        setIsSubmitting(false);
         return;
     }
     
-    const result = await createContact(data, user.uid);
+    const contactData = {
+        ...data,
+        ownerId: user.uid,
+        createdAt: serverTimestamp(),
+    };
 
-    if (result.success) {
+    try {
+        await addDoc(collection(db, "contacts"), contactData);
         toast({
             title: 'Contacto Añadido',
             description: `Se ha añadido a ${data.name} a tus contactos.`,
         });
         onClose();
-    } else {
+    } catch (error) {
+        console.error("Error al añadir contacto: ", error);
         toast({
             variant: 'destructive',
             title: 'Error al añadir contacto',
-            description: result.error || 'No se pudo añadir el contacto. Inténtalo de nuevo.',
+            description: 'No se pudo añadir el contacto. Revisa las reglas de Firestore.',
         });
+    } finally {
+        setIsSubmitting(false);
     }
   }
 
