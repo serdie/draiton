@@ -6,7 +6,6 @@ import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore'; 
 import { auth as clientAuth, db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
-import { sessionLogin, sessionLogout } from '@/lib/firebase/auth-edge-actions';
 
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro';
@@ -31,10 +30,17 @@ export const AuthContext = createContext<AuthContextType>({
 });
 
 async function handleTokenChange(idToken: string | null) {
-  if (idToken) {
-    await sessionLogin(idToken);
-  } else {
-    await sessionLogout();
+  const method = idToken ? 'POST' : 'DELETE';
+  const response = await fetch('/api/auth', {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    console.error(`Failed to ${method} session: ${response.statusText}`);
   }
 }
 
