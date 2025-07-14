@@ -78,20 +78,20 @@ export default function DashboardLayout({
   
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/login');
+    // Redirection will be handled by AuthContext
   };
+  
+  // The AuthProvider now handles the main loading state and redirection.
+  // This layout can assume that if it's rendered, the user is authenticated.
+  if (loading) {
+    // AuthProvider shows a global loader, so we can show a minimal one here
+    // or nothing, to avoid layout shifts. Returning null is often best.
+    return null;
+  }
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  // If auth is loading, the AuthProvider will show a spinner.
-  // If not loading and no user, the effect above will redirect.
-  // So, if we reach this point and there's no user, it's a brief moment before redirect.
-  // Returning null prevents rendering the layout for a split second for non-authenticated users.
   if (!user) {
+    // This case should ideally not be hit if AuthProvider is working correctly,
+    // as it would have redirected. But as a fallback, we render nothing.
     return null;
   }
 

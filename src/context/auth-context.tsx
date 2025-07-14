@@ -2,12 +2,11 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore'; 
 import { auth as clientAuth, db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
-import { sessionLogin, sessionLogout } from '@/lib/firebase/auth-actions';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
 export interface User extends FirebaseUser {
@@ -36,6 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!clientAuth) {
@@ -44,58 +44,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const unsubscribeAuth = onIdTokenChanged(clientAuth, async (firebaseUser) => {
-        const wasUser = !!user;
-        let unsubscribeDoc: (() => void) | undefined;
+    const unsubscribe = onAuthStateChanged(clientAuth, (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in, see if we have their details in Firestore
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            // Combine Firebase user with Firestore data
+            const fullUser: User = { ...firebaseUser, ...docSnap.data() };
+            setUser(fullUser);
+          } else {
+            // User exists in Auth, but not in Firestore (e.g., during registration)
+            setUser(firebaseUser);
+          }
+          setLoading(false);
+        }, (error) => {
+           console.error("Error fetching user data from Firestore:", error);
+           // Fallback to just the Firebase user
+           setUser(firebaseUser);
+           setLoading(false);
+        });
 
-        if (firebaseUser) {
-            const idToken = await firebaseUser.getIdToken();
-            await sessionLogin(idToken); // Create server session cookie first
-
-            unsubscribeDoc = onSnapshot(doc(db, 'users', firebaseUser.uid), 
-                (userDocSnap) => {
-                    if (userDocSnap.exists()) {
-                        const userData = userDocSnap.data();
-                        const fullUser = { ...firebaseUser, ...userData } as User;
-                        setUser(fullUser);
-                    } else {
-                        // User exists in Auth but not Firestore, use basic info.
-                        setUser(firebaseUser);
-                    }
-                    
-                    if (!wasUser) { // Only redirect on a *new* login event
-                        router.push('/dashboard');
-                    }
-                    setLoading(false);
-                }, 
-                (error) => {
-                    console.error("Error listening to user document:", error);
-                    setUser(firebaseUser);
-                    setLoading(false);
-                }
-            );
-
-        } else {
-            // User is signed out.
-            await sessionLogout();
-            setUser(null);
-            setLoading(false);
-            if(wasUser) {
-                router.push('/login');
-            }
-        }
-        
-        // Cleanup the Firestore listener on unmount or when the user changes
-        return () => {
-            if (unsubscribeDoc) {
-                unsubscribeDoc();
-            }
-        };
+        // Return cleanup function for the document listener
+        return () => unsubscribeDoc();
+      } else {
+        // User is signed out
+        setUser(null);
+        setLoading(false);
+      }
     });
 
-    return () => unsubscribeAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const isAuthPage = pathname === '/login' || pathname === '/register';
+
+    // If there's no user and we're on a protected page, redirect to login
+    if (!user && !isAuthPage && !pathname.startsWith('/_next/') && pathname !== '/' && !pathname.startsWith('/#')) {
+        const publicPaths = ['/politica-de-privacidad', '/politica-de-cookies', '/aviso-legal', '/condiciones-de-uso'];
+        if (!publicPaths.includes(pathname)) {
+             router.push('/login');
+        }
+    }
+
+    // If there is a user and we're on an auth page, redirect to dashboard
+    if (user && isAuthPage) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, pathname, router]);
+
 
   const roles = useMemo(() => {
     const isAdmin = user?.role === 'admin';

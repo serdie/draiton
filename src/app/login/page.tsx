@@ -25,12 +25,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const router = useRouter();
   const { user, loading: authLoading } = useContext(AuthContext);
+  const router = useRouter();
 
+
+  // Effect to redirect if user is already logged in
   useEffect(() => {
-    // If auth is not loading and user exists, redirect them.
-    // This is now handled by the AuthContext to prevent race conditions.
     if (!authLoading && user) {
       router.push('/dashboard');
     }
@@ -49,12 +49,14 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // **REMOVED REDIRECTION**: AuthContext will handle redirection after session is created.
+      // Redirection is now handled by the AuthContext
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
-      } else {
+      } else if (err.code === 'auth/invalid-credential') {
         setError('Credenciales inválidas. Por favor, inténtalo de nuevo.');
+      } else {
+        setError('Ocurrió un error al iniciar sesión.');
       }
       console.error(err);
     } finally {
@@ -77,7 +79,6 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Check if user document exists, if not, create it
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
 
@@ -91,7 +92,7 @@ export default function LoginPage() {
             createdAt: serverTimestamp(),
           });
       }
-      // **REMOVED REDIRECTION**: AuthContext will handle redirection.
+       // Redirection is now handled by the AuthContext
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
@@ -104,17 +105,9 @@ export default function LoginPage() {
     }
   };
 
-  // While auth is loading, show a spinner to prevent flicker
-  if (authLoading) {
-    return (
-       <div className="flex h-screen items-center justify-center">
-         <Loader2 className="h-8 w-8 animate-spin" />
-       </div>
-    );
-  }
-  
-  // If user is logged in, this component will redirect via the useEffect above.
-  if (user) {
+  // While auth is loading, we show nothing to prevent flicker, AuthProvider shows a global loader.
+  // If user is logged in, the useEffect above will trigger a redirect.
+  if (authLoading || user) {
     return null;
   }
 
