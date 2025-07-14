@@ -30,15 +30,20 @@ export const AuthContext = createContext<AuthContextType>({
 });
 
 async function handleTokenChange(idToken: string | null) {
-  const endpoint = idToken ? '/api/auth' : '/api/auth';
+  const endpoint = '/api/auth';
   const method = idToken ? 'POST' : 'GET';
-  const body = idToken ? JSON.stringify({ idToken }) : undefined;
   
-  await fetch(endpoint, {
+  const response = await fetch(endpoint, {
     method,
-    headers: { 'Content-Type': 'application/json' },
-    body,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: idToken ? JSON.stringify({ idToken }) : undefined,
   });
+
+  if (!response.ok) {
+    console.error(`Failed to ${method} session: ${response.statusText}`);
+  }
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -53,34 +58,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribeAuth = onIdTokenChanged(clientAuth, async (firebaseUser) => {
+      // First, handle the server-side session cookie.
       const idToken = await firebaseUser?.getIdToken() ?? null;
-      handleTokenChange(idToken);
+      await handleTokenChange(idToken);
       
       if (firebaseUser) {
+        // Now, fetch the user's custom data from Firestore.
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         
         const unsubscribeDoc = onSnapshot(userDocRef, (userDocSnap) => {
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
+                // Combine FirebaseUser with Firestore data
                 const fullUser = { ...firebaseUser, ...userData } as User;
                 setUser(fullUser);
             } else {
+                // This case might happen briefly during registration
                 setUser(firebaseUser);
             }
             setLoading(false);
         }, (error) => {
             console.error("Error listening to user document:", error);
+            // Still set the basic firebaseUser if Firestore fails
             setUser(firebaseUser);
             setLoading(false);
         });
         
+        // Return the cleanup function for the document listener
         return () => unsubscribeDoc();
       } else {
+        // User is signed out
         setUser(null);
         setLoading(false);
       }
     });
 
+    // Return the cleanup function for the auth state listener
     return () => unsubscribeAuth();
   }, []);
 
