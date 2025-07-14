@@ -23,7 +23,7 @@ export async function updateCompanySettings(
     
     try {
         const { auth, db } = getFirebaseAuth();
-        const decodedToken = await auth.verifySessionCookie(sessionCookie);
+        const decodedToken = await auth.verifySessionCookie(sessionCookie, true); // Check if revoked
         const uid = decodedToken.uid;
         
         const companyData: CompanySettings = {
@@ -38,11 +38,14 @@ export async function updateCompanySettings(
             company: companyData,
         });
         
-        revalidatePath('/dashboard/configuracion', 'page');
+        revalidatePath('/dashboard/configuracion');
         return { message: 'Los detalles de tu empresa han sido actualizados.', error: false };
 
     } catch (e: any) {
         console.error("Error updating company settings:", e);
+        if (e.code === 'auth/session-cookie-revoked' || e.code === 'auth/session-cookie-expired') {
+            return { message: 'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.', error: true };
+        }
         return { message: 'Ocurrió un error al guardar la configuración.', error: true };
     }
 }

@@ -2,12 +2,13 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore'; 
 import { auth as clientAuth, db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { sessionLogin, sessionLogout } from '@/lib/firebase/auth-actions';
 
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro';
@@ -34,6 +35,7 @@ export const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [wasUser, setWasUser] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -44,54 +46,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(clientAuth, (firebaseUser) => {
+    const unsubscribe = onIdTokenChanged(clientAuth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in, see if we have their details in Firestore
+        if (!wasUser) { // Only call sessionLogin on a new login event
+            const idToken = await firebaseUser.getIdToken();
+            await sessionLogin(idToken);
+            setWasUser(true);
+        }
+
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
-            // Combine Firebase user with Firestore data
             const fullUser: User = { ...firebaseUser, ...docSnap.data() };
             setUser(fullUser);
           } else {
-            // User exists in Auth, but not in Firestore (e.g., during registration)
             setUser(firebaseUser);
           }
           setLoading(false);
         }, (error) => {
            console.error("Error fetching user data from Firestore:", error);
-           // Fallback to just the Firebase user
            setUser(firebaseUser);
            setLoading(false);
         });
-
-        // Return cleanup function for the document listener
+        
         return () => unsubscribeDoc();
       } else {
-        // User is signed out
+        await sessionLogout();
         setUser(null);
+        setWasUser(false);
         setLoading(false);
       }
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [wasUser]);
 
   useEffect(() => {
     if (loading) return;
 
     const isAuthPage = pathname === '/login' || pathname === '/register';
+    const isProtected = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
 
-    // If there's no user and we're on a protected page, redirect to login
-    if (!user && !isAuthPage && !pathname.startsWith('/_next/') && pathname !== '/' && !pathname.startsWith('/#')) {
-        const publicPaths = ['/politica-de-privacidad', '/politica-de-cookies', '/aviso-legal', '/condiciones-de-uso'];
-        if (!publicPaths.includes(pathname)) {
-             router.push('/login');
-        }
+    if (!user && isProtected) {
+        router.push('/login');
     }
 
-    // If there is a user and we're on an auth page, redirect to dashboard
     if (user && isAuthPage) {
       router.push('/dashboard');
     }
