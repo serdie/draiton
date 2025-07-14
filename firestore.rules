@@ -1,28 +1,17 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      // Los usuarios pueden leer y actualizar su propio documento
-      allow read, update: if request.auth.uid == userId;
+      allow read, update: if request.auth != null && request.auth.uid == userId;
     }
-
     match /invoices/{invoiceId} {
-      // Los usuarios autenticados pueden crear documentos si son los propietarios
-      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
-      // Solo el propietario puede leer, actualizar o eliminar su documento
-      allow read, update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow read, write, delete: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
     }
-
-    match /expenses/{expenseId} {
-      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
-      allow read, update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
-    }
-
     match /contacts/{contactId} {
-      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
-      allow read, update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow read, write, delete: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+    }
+    match /expenses/{expenseId} {
+      allow read, write, delete: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
     }
   }
 }
