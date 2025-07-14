@@ -3,7 +3,8 @@
 
 import { extractReceiptData, type ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
 
-export async function scanReceiptAction(receiptDataUri: string): Promise<{ data: ExtractReceiptDataOutput | null; error: string | null }> {
+export async function scanReceiptAction(formData: FormData): Promise<{ data: ExtractReceiptDataOutput | null; error: string | null }> {
+  const receiptDataUri = formData.get('receiptDataUri') as string;
   if (!receiptDataUri) {
     return { data: null, error: 'No se ha proporcionado ninguna imagen.' };
   }
