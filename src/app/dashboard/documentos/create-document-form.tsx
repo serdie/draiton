@@ -28,6 +28,7 @@ import { type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import Link from 'next/link';
 
 type LineItem = {
   id: number;
@@ -67,6 +68,8 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
   
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  
+  const companyData = user?.company;
 
   useEffect(() => {
     setDocType(documentType);
@@ -237,20 +240,24 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-base">Detalles del Emisor</CardTitle>
-                        <Button variant="ghost" size="icon" className="h-6 w-6"><Pencil className="h-4 w-4" /></Button>
+                         <Button asChild variant="ghost" size="icon" className="h-6 w-6">
+                           <Link href="/dashboard/configuracion?tab=empresa">
+                            <Pencil className="h-4 w-4" />
+                           </Link>
+                         </Button>
                     </CardHeader>
                     <CardContent className="space-y-2">
                          <div>
                             <Label>Nombre Emisor</Label>
-                            <Input defaultValue="Tu Empresa S.L." readOnly />
+                            <Input value={companyData?.name || 'Tu Empresa S.L.'} readOnly />
                         </div>
                          <div>
                             <Label>CIF/NIF Emisor</Label>
-                            <Input defaultValue="Y12345672" readOnly/>
+                            <Input value={companyData?.cif || 'Y12345672'} readOnly/>
                         </div>
                         <div>
                             <Label>Dirección Emisor</Label>
-                            <Textarea defaultValue="Tu Dirección, Ciudad, País" readOnly/>
+                            <Textarea value={companyData?.address || 'Tu Dirección, Ciudad, País'} readOnly/>
                         </div>
                     </CardContent>
                 </Card>
