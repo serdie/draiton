@@ -1,5 +1,5 @@
 
-import { AuthOptions } from "next-firebase-auth-edge";
+import type { AuthOptions } from "next-firebase-auth-edge";
 
 export const authConfig: AuthOptions = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -20,8 +20,4 @@ export const authConfig: AuthOptions = {
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
         privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
     },
-    // Optional: customize the token claims
-    // onValidToken: (token) => {
-    //   return { ...token, custom: 'claim' }
-    // }
 };

@@ -2,7 +2,6 @@
 import {
   getTokens,
   setTokens,
-  sessionCookie,
 } from 'next-firebase-auth-edge/lib/next/tokens';
 import { NextRequest, NextResponse } from 'next/server';
 import { authConfig } from '@/config/auth-config';
@@ -16,16 +15,13 @@ export async function sessionLogin(request: NextRequest) {
 
   const response = new NextResponse();
 
+  // The client SDK does not return a refresh token.
+  // We don't need to worry about the refresh token since we are using session cookies.
+  // The session cookie will be refreshed automatically by the middleware.
   await setTokens(response.cookies, {
     idToken,
-    refreshToken: '', // The client SDK does not return a refresh token.
-    cookie: sessionCookie({
-      ...authConfig,
-      cookieName: authConfig.cookieName,
-      cookieSignatureKeys: authConfig.cookieSignatureKeys,
-      cookieSerializeOptions: authConfig.cookieSerializeOptions,
-      serviceAccount: authConfig.serviceAccount,
-    }),
+    refreshToken: '', 
+    ...authConfig
   });
 
   return response;
