@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useContext } from 'react';
 import type { DateRange } from "react-day-picker"
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { deleteDocument } from '@/lib/firebase/document-actions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
+import { AuthContext } from '@/context/auth-context';
 
 
 export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
@@ -63,6 +64,7 @@ const getBadgeClass = (estado: string) => {
 const estadosUnicos: DocumentStatus[] = ['Pagado', 'Pendiente', 'Vencido', 'Enviado', 'Aceptado', 'Rechazado', 'Emitido', 'Aplicado', 'Borrador'];
 
 export default function DocumentosPage() {
+  const { user } = useContext(AuthContext);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [initialDataForForm, setInitialDataForForm] = useState<ExtractInvoiceDataOutput | undefined>(undefined);
@@ -82,13 +84,13 @@ export default function DocumentosPage() {
   const [currentPage, setCurrentPage] = useState(1);
   
   useEffect(() => {
-    if (!db) {
+    if (!db || !user) {
         setLoading(false);
         return;
     }
     setLoading(true);
 
-    const q = query(collection(db, 'documents'), where('tipo', '==', activeTab));
+    const q = query(collection(db, 'invoices'), where('tipo', '==', activeTab), where('ownerId', '==', user.uid));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const docsList = snapshot.docs.map(doc => {
@@ -109,7 +111,7 @@ export default function DocumentosPage() {
     });
 
     return () => unsubscribe();
-}, [activeTab, toast]);
+}, [activeTab, toast, user]);
 
   const handleCreateNew = (initialData?: ExtractInvoiceDataOutput) => {
     setInitialDataForForm(initialData);

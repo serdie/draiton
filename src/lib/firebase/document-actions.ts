@@ -19,7 +19,7 @@ export async function createDocument(data: any): Promise<{ success: boolean; err
   }
 
   try {
-    await addDoc(collection(db, "documents"), {
+    await addDoc(collection(db, "invoices"), {
       ...data,
       fechaCreacion: serverTimestamp(),
     });
@@ -40,7 +40,7 @@ export async function deleteDocument(id: string): Promise<{ success: boolean; er
     }
 
     try {
-        await deleteDoc(doc(db, "documents", id));
+        await deleteDoc(doc(db, "invoices", id));
         return { success: true };
     } catch (error: any) {
         console.error("Error al eliminar documento: ", error);
