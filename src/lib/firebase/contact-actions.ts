@@ -26,7 +26,11 @@ export async function createContact(data: any, ownerId: string): Promise<{ succe
     return { success: true };
   } catch (error: any) {
     console.error("Error al crear contacto: ", error);
-    return { success: false, error: error.message };
+    // Devuelve un mensaje de error más específico si es un problema de permisos
+    if (error.code === 'permission-denied') {
+        return { success: false, error: "Permiso denegado. Asegúrate de que las reglas de Firestore son correctas." };
+    }
+    return { success: false, error: "Ocurrió un error inesperado al guardar el contacto." };
   }
 }
 

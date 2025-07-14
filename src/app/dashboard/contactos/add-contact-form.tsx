@@ -2,7 +2,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, useFormState } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -68,19 +68,19 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
         return;
     }
     
-    try {
-        await createContact(data, user.uid);
+    const result = await createContact(data, user.uid);
+
+    if (result.success) {
         toast({
             title: 'Contacto Añadido',
             description: `Se ha añadido a ${data.name} a tus contactos.`,
         });
         onClose();
-    } catch (error) {
-        console.error("Error al añadir contacto:", error);
+    } else {
         toast({
             variant: 'destructive',
-            title: 'Error',
-            description: 'No se pudo añadir el contacto. Inténtalo de nuevo.',
+            title: 'Error al añadir contacto',
+            description: result.error || 'No se pudo añadir el contacto. Inténtalo de nuevo.',
         });
     }
   }

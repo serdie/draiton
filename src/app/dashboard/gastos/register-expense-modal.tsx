@@ -124,19 +124,21 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
             importe: parseFloat(importe),
             metodoPago: metodoPago,
         };
+        
         const result = await createExpense(expenseData, user.uid);
-        if (result.error) {
-            toast({
-                variant: 'destructive',
-                title: 'Error al registrar el gasto',
-                description: result.error,
-            });
-        } else {
+        
+        if (result.success) {
             toast({
                 title: 'Gasto Registrado',
                 description: 'El nuevo gasto ha sido añadido a tu lista.',
             });
             handleClose();
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Error al registrar el gasto',
+                description: result.error || 'No se pudo guardar el gasto. Por favor, inténtelo de nuevo.',
+            });
         }
     });
   };
@@ -355,7 +357,7 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => view === 'form' ? handleClose() : setView('camera')} disabled={isSaving}>
+          <Button variant="outline" onClick={() => view === 'form' ? handleClose() : setView('form')} disabled={isSaving}>
             {view === 'form' ? 'Cancelar' : 'Volver'}
           </Button>
           {view === 'form' && (

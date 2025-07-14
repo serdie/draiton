@@ -189,18 +189,18 @@ export function CreateDocumentForm({ isOpen, onClose, documentType, initialData 
 
         const result = await createDocument(documentData);
 
-        if (result.error) {
-            toast({
-                variant: 'destructive',
-                title: 'Error al crear el documento',
-                description: result.error,
-            });
-        } else {
-            toast({
+        if (result.success) {
+             toast({
                 title: 'Documento Creado',
                 description: `El documento ${docNumber} se ha guardado correctamente.`,
             });
             onClose();
+        } else {
+           toast({
+                variant: 'destructive',
+                title: 'Error al crear el documento',
+                description: result.error || 'No se pudo guardar el documento. Por favor, inténtelo de nuevo.',
+            });
         }
     });
   }
