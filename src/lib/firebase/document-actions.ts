@@ -1,9 +1,8 @@
 
 'use server';
 
-import { doc, deleteDoc, addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from './config';
-import { extractInvoiceData, type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import type { Document } from '@/app/dashboard/documentos/page';
 
 export async function deleteDocument(id: string): Promise<void> {
@@ -17,18 +16,7 @@ export async function deleteDocument(id: string): Promise<void> {
     await deleteDoc(docRef);
 }
 
-
-export async function createDocument(documentData: Omit<Document, 'id' | 'fechaCreacion'>): Promise<void> {
-    if (!db) {
-        throw new Error("La base de datos no está inicializada.");
-    }
-    await addDoc(collection(db, "invoices"), {
-        ...documentData,
-        fechaCreacion: serverTimestamp(),
-    });
-}
-
-export async function updateDocument(id: string, documentData: Omit<Document, 'id' | 'ownerId' | 'fechaCreacion'>): Promise<void> {
+export async function updateDocument(id: string, documentData: Partial<Omit<Document, 'id' | 'ownerId' | 'fechaCreacion'>>): Promise<void> {
     if (!db) {
         throw new Error("La base de datos no está inicializada.");
     }
@@ -37,20 +25,4 @@ export async function updateDocument(id: string, documentData: Omit<Document, 'i
     }
     const docRef = doc(db, "invoices", id);
     await updateDoc(docRef, documentData);
-}
-
-
-export async function scanInvoiceAction(invoiceDataUri: string): Promise<{ data: ExtractInvoiceDataOutput | null; error: string | null }> {
-  if (!invoiceDataUri) {
-    return { data: null, error: 'No se ha proporcionado ninguna imagen.' };
-  }
-
-  try {
-    const result = await extractInvoiceData({ invoiceDataUri });
-    return { data: result, error: null };
-  } catch (e: any)
-  {
-    console.error(e);
-    return { data: null, error: 'No se pudo extraer la información de la factura. Asegúrate de que la imagen sea clara.' };
-  }
 }
