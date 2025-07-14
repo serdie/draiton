@@ -8,17 +8,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { UserPlus, MoreHorizontal, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
+import { UserPlus, MoreHorizontal, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { AddContactModal } from './add-contact-modal';
+import { EditContactModal } from './edit-contact-modal';
 import { AuthContext } from '@/context/auth-context';
-import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { deleteContact } from '@/lib/firebase/contact-actions';
 
 
 export type ContactType = 'Cliente' | 'Proveedor' | 'Lead' | 'Colaborador';
@@ -32,6 +32,7 @@ export type Contact = {
   cif: string;
   phone: string;
   type: ContactType;
+  notes?: string;
   createdAt: Date;
 };
 
@@ -51,6 +52,7 @@ const getBadgeClassForType = (type: ContactType) => {
 }
 
 const getInitials = (name: string) => {
+    if (!name) return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
 }
 
@@ -62,6 +64,7 @@ export default function ContactosPage() {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [loading, setLoading] = useState(true);
     const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+    const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     
@@ -108,7 +111,7 @@ export default function ContactosPage() {
             const porTexto = !filtroTexto || 
                 contact.name.toLowerCase().includes(filtroTexto.toLowerCase()) ||
                 contact.email.toLowerCase().includes(filtroTexto.toLowerCase()) ||
-                contact.company.toLowerCase().includes(filtroTexto.toLowerCase());
+                (contact.company && contact.company.toLowerCase().includes(filtroTexto.toLowerCase()));
 
             const porTipo = filtroTipo === 'all' || contact.type === filtroTipo;
             
@@ -137,18 +140,19 @@ export default function ContactosPage() {
 
     const handleDelete = async () => {
         if (!contactToDelete) return;
-
+        
         try {
-            await deleteContact(contactToDelete.id);
+            await deleteDoc(doc(db, "contacts", contactToDelete.id));
             toast({
                 title: 'Contacto Eliminado',
                 description: `El contacto ${contactToDelete.name} ha sido eliminado.`,
             });
         } catch (error) {
+            console.error("FALLO AL ELIMINAR DE FIREBASE:", error);
             toast({
                 variant: 'destructive',
                 title: 'Error al eliminar',
-                description: 'No se pudo eliminar el contacto.',
+                description: 'No se pudo eliminar el contacto. Revisa la consola y los permisos.',
             });
         } finally {
             setContactToDelete(null);
@@ -208,8 +212,10 @@ export default function ContactosPage() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
-                                    <DropdownMenuItem>Editar</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setContactToEdit(contact)}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Editar
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setContactToDelete(contact)}>
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Eliminar
@@ -234,6 +240,14 @@ export default function ContactosPage() {
   return (
     <>
     <AddContactModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
+    {contactToEdit && (
+        <EditContactModal
+            isOpen={!!contactToEdit}
+            onClose={() => setContactToEdit(null)}
+            contact={contactToEdit}
+        />
+    )}
+
      <AlertDialog open={!!contactToDelete} onOpenChange={(open) => !open && setContactToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
