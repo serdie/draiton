@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useContext } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useContext, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,7 +63,7 @@ export function EmpresaSettings() {
         return result;
     };
     
-    const [state, formAction] = useFormState(actionWithToast, initialState);
+    const [state, formAction] = useActionState(actionWithToast, initialState);
     
     const companyData = user?.company as CompanySettings | undefined;
 
