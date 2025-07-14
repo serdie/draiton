@@ -44,51 +44,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const unsubscribeAuth = onIdTokenChanged(clientAuth, async (firebaseUser) => {
-      const wasUser = !!user; // check if user was previously logged in
-      if (firebaseUser) {
-        const idToken = await firebaseUser.getIdToken();
-        await sessionLogin(idToken);
-        
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        
-        const unsubscribeDoc = onSnapshot(userDocRef, (userDocSnap) => {
-            if (userDocSnap.exists()) {
-                const userData = userDocSnap.data();
-                const fullUser = { ...firebaseUser, ...userData } as User;
-                setUser(fullUser);
-            } else {
-                // Handle case where user exists in Auth but not in Firestore
-                // This could happen if Firestore data creation fails after auth creation
-                setUser(firebaseUser);
-            }
-            setLoading(false);
+    const unsubscribeAuth = onIdTokenChanged(clientAuth, (firebaseUser) => {
+        let unsubscribeDoc: (() => void) | undefined;
 
-            // Redirect only if it's a new login, not on every token refresh or page reload
-            if (!wasUser) {
-                router.push('/dashboard');
-            }
-        }, (error) => {
-            console.error("Error listening to user document:", error);
-            // Still set the user from auth to avoid getting stuck
-            setUser(firebaseUser);
+        if (firebaseUser) {
+            // User is signed in.
+            const wasUser = !!user; // Check if there was a user before this change.
+            
+            unsubscribeDoc = onSnapshot(doc(db, 'users', firebaseUser.uid), 
+                async (userDocSnap) => {
+                    const idToken = await firebaseUser.getIdToken();
+                    await sessionLogin(idToken); // Ensure server session is created first.
+
+                    if (userDocSnap.exists()) {
+                        const userData = userDocSnap.data();
+                        const fullUser = { ...firebaseUser, ...userData } as User;
+                        setUser(fullUser);
+                    } else {
+                        // User exists in Auth but not Firestore, use basic info.
+                        setUser(firebaseUser);
+                    }
+                    
+                    if (!wasUser) { // Only redirect on new login.
+                        router.push('/dashboard');
+                    }
+                    setLoading(false);
+                }, 
+                (error) => {
+                    console.error("Error listening to user document:", error);
+                    setUser(firebaseUser); // Still set auth user to avoid getting stuck
+                    setLoading(false);
+                }
+            );
+
+        } else {
+            // User is signed out.
+            const wasUser = !!user;
+            sessionLogout();
+            setUser(null);
             setLoading(false);
-        });
-        
-        return () => unsubscribeDoc();
-      } else {
-        await sessionLogout();
-        setUser(null);
-        setLoading(false);
-        // Redirect only if user was logged in and now is not
-        if (wasUser) {
-            router.push('/login');
+            if(wasUser) {
+                router.push('/login');
+            }
         }
-      }
+        
+        return () => {
+            if (unsubscribeDoc) {
+                unsubscribeDoc();
+            }
+        };
     });
 
     return () => unsubscribeAuth();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const roles = useMemo(() => {
