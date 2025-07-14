@@ -1,3 +1,6 @@
+
+'use client';
+
 import {
   Activity,
   ArrowRight,
@@ -7,6 +10,7 @@ import {
   Plus,
   TrendingUp,
   UserPlus,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,16 +27,112 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar';
 import Link from 'next/link';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
+import { collection, query, where, getDocs, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import type { Document } from './documentos/page';
+import type { Expense } from './gastos/page';
+import type { Contact } from './contactos/page';
 
-const recentActivities = [
-    { user: 'Alicia Maravillas', action: 'ha pagado la factura FACT-2023-001.' },
-    { user: 'Tú', action: 'has añadido un nuevo gasto de 150.00€.' },
-    { user: 'Tú', action: 'has completado el proyecto \'Consultoría SEO\'.' },
-    { user: 'Laura Prospecto', action: 'ha sido añadida como nuevo Lead.' },
-];
+type ActivityItem = {
+    id: string;
+    type: 'Gasto' | 'Ingreso' | 'Contacto' | 'Proyecto';
+    text: string;
+    date: Date;
+    user: string;
+    avatar: string;
+};
 
 
 export default function DashboardPage() {
+    const { user } = useContext(AuthContext);
+    const [loading, setLoading] = useState(true);
+    const [income, setIncome] = useState(0);
+    const [expenses, setExpenses] = useState(0);
+    const [activeProjects, setActiveProjects] = useState(0);
+    const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
+
+    useEffect(() => {
+        if (!user || !db) return;
+
+        const fetchData = async () => {
+            setLoading(true);
+            
+            // --- Financial Data ---
+            // Income (Paid Invoices)
+            const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
+            const invoicesSnapshot = await getDocs(invoicesQuery);
+            const totalIncome = invoicesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Document).importe, 0);
+            setIncome(totalIncome);
+
+            // Expenses
+            const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
+            const expensesSnapshot = await getDocs(expensesQuery);
+            const totalExpenses = expensesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Expense).importe, 0);
+            setExpenses(totalExpenses);
+
+             // --- Recent Activity ---
+            const activities: ActivityItem[] = [];
+
+            // Paid Invoices
+            const paidInvoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'), orderBy('fechaEmision', 'desc'), limit(4));
+            const paidInvoicesSnapshot = await getDocs(paidInvoicesQuery);
+            paidInvoicesSnapshot.forEach(doc => {
+                const invoice = doc.data() as Document;
+                activities.push({
+                    id: doc.id,
+                    type: 'Ingreso',
+                    text: `La factura ${invoice.numero} ha sido pagada.`,
+                    date: invoice.fechaEmision instanceof Timestamp ? invoice.fechaEmision.toDate() : new Date(invoice.fechaEmision),
+                    user: invoice.cliente,
+                    avatar: '/other-avatar.png'
+                });
+            });
+
+            // New Expenses
+            const newExpensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(4));
+            const newExpensesSnapshot = await getDocs(newExpensesQuery);
+            newExpensesSnapshot.forEach(doc => {
+                const expense = doc.data() as Expense;
+                activities.push({
+                    id: doc.id,
+                    type: 'Gasto',
+                    text: `Has añadido un nuevo gasto de ${expense.importe.toFixed(2)}€ de ${expense.proveedor}.`,
+                    date: expense.fecha instanceof Timestamp ? expense.fecha.toDate() : new Date(expense.fecha),
+                    user: 'Tú',
+                    avatar: '/user-avatar.png'
+                });
+            });
+
+             // New Contacts
+            const newContactsQuery = query(collection(db, 'contacts'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(4));
+            const newContactsSnapshot = await getDocs(newContactsQuery);
+            newContactsSnapshot.forEach(doc => {
+                const contact = doc.data() as Contact;
+                activities.push({
+                    id: doc.id,
+                    type: 'Contacto',
+                    text: `Has añadido a ${contact.name} como nuevo ${contact.type}.`,
+                    date: contact.createdAt instanceof Timestamp ? contact.createdAt.toDate() : new Date(contact.createdAt),
+                    user: 'Tú',
+                    avatar: '/user-avatar.png'
+                });
+            });
+            
+            // Sort all activities by date and take the last 4
+            const sortedActivities = activities.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 4);
+            setRecentActivities(sortedActivities);
+
+
+            setLoading(false);
+        };
+
+        fetchData();
+    }, [user]);
+
+    const formatCurrency = (amount: number) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
+
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -52,17 +152,25 @@ export default function DashboardPage() {
             </CardTitle>
             <Landmark className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="flex justify-around gap-4">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Ingresos (Pagados)</p>
-              <p className="text-2xl font-bold text-green-600">€1,452.61</p>
-              <p className="text-xs text-muted-foreground">Este Mes</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Gastos</p>
-              <p className="text-2xl font-bold text-red-600">€403.49</p>
-              <p className="text-xs text-muted-foreground">Este Mes</p>
-            </div>
+           <CardContent className="flex justify-around gap-4">
+            {loading ? (
+                 <div className="flex justify-center items-center w-full h-24">
+                     <Loader2 className="h-6 w-6 animate-spin" />
+                 </div>
+            ) : (
+                <>
+                <div className="text-center">
+                    <p className="text-sm text-muted-foreground">Ingresos (Pagados)</p>
+                    <p className="text-2xl font-bold text-green-600">{formatCurrency(income)}</p>
+                    <p className="text-xs text-muted-foreground">Este Mes</p>
+                </div>
+                <div className="text-center">
+                    <p className="text-sm text-muted-foreground">Gastos</p>
+                    <p className="text-2xl font-bold text-red-600">{formatCurrency(expenses)}</p>
+                    <p className="text-xs text-muted-foreground">Este Mes</p>
+                </div>
+                </>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -107,19 +215,29 @@ export default function DashboardPage() {
                 <Activity className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-               <div className="space-y-4">
-                {recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                       <AvatarImage src={activity.user === 'Tú' ? '/user-avatar.png' : '/other-avatar.png'} alt="Avatar" />
-                       <AvatarFallback>{activity.user.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <p className="text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">{activity.user}</span> {activity.action}
-                    </p>
-                  </div>
-                ))}
-              </div>
+               {loading ? (
+                    <div className="flex justify-center items-center w-full h-40">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                    {recentActivities.length > 0 ? (
+                        recentActivities.map((activity) => (
+                        <div key={activity.id} className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                            <AvatarImage src={activity.avatar} alt="Avatar" />
+                            <AvatarFallback>{activity.user.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <p className="text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground">{activity.user}</span> {activity.text}
+                            </p>
+                        </div>
+                        ))
+                    ) : (
+                         <p className="text-sm text-muted-foreground text-center py-10">No hay actividad reciente.</p>
+                    )}
+                    </div>
+                )}
             </CardContent>
              <CardFooter>
               <Button variant="link" asChild className="w-full">
