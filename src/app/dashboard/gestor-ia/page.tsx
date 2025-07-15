@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Newspaper, FileEdit, Bot, Lock } from 'lucide-react';
+import { Newspaper, FileEdit, Bot, Lock, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function ProFeatureLock() {
@@ -52,18 +52,22 @@ export default function GestorIAPage() {
                 <div>
                   <CardTitle>Noticias y Ayudas Relevantes</CardTitle>
                   <CardDescription>
-                    Recibe información actualizada sobre subvenciones, ayudas y noticias importantes para tu sector y tipo de empresa.
+                    Encuentra subvenciones, ayudas y noticias importantes para tu sector.
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="flex-grow">
               <p className="text-sm text-muted-foreground">
-                La IA analizará tu perfil y te mostrará solo lo que te interesa. (Función próximamente)
+                Introduce el perfil de tu empresa y la IA buscará las oportunidades más relevantes para ti.
               </p>
             </CardContent>
             <CardFooter>
-              <Button variant="outline">Ver Novedades Personalizadas</Button>
+              <Button asChild>
+                <Link href="/dashboard/gestor-ia/ayudas">
+                    Acceder a la Herramienta <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </CardFooter>
           </Card>
           
@@ -76,18 +80,22 @@ export default function GestorIAPage() {
                 <div>
                   <CardTitle>Asistente de Formularios Fiscales</CardTitle>
                   <CardDescription>
-                    Simplifica la cumplimentación de modelos para la Agencia Tributaria y la Seguridad Social con ayuda de la IA.
+                    Simplifica la cumplimentación de modelos para la Agencia Tributaria.
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="flex-grow">
               <p className="text-sm text-muted-foreground">
-                Reduce errores y ahorra tiempo en tus trámites administrativos. (Función próximamente)
+                Reduce errores y ahorra tiempo en tus trámites. Selecciona un modelo y recibe instrucciones claras.
               </p>
             </CardContent>
             <CardFooter>
-              <Button variant="outline">Acceder al Asistente Fiscal</Button>
+               <Button asChild>
+                <Link href="/dashboard/gestor-ia/asistente-fiscal">
+                    Iniciar Asistente Fiscal <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </CardFooter>
           </Card>
         </div>
@@ -97,7 +105,7 @@ export default function GestorIAPage() {
               <div className="inline-flex items-center justify-center bg-background p-3 rounded-full mb-4">
                   <Bot className="h-8 w-8 text-primary"/>
               </div>
-            <h3 className="text-xl font-semibold mb-2">¿Cómo funcionará el Gestor IA?</h3>
+            <h3 className="text-xl font-semibold mb-2">¿Cómo funciona el Gestor IA?</h3>
             <p className="text-muted-foreground max-w-3xl mx-auto">
               El Gestor IA aprenderá sobre tu negocio (actividad, ubicación, tamaño) para ofrecerte información proactiva y relevante. Desde alertarte sobre una nueva subvención a la que podrías optar, hasta guiarte en los campos de los formularios fiscales más comunes, el Gestor IA será tu aliado.
             </p>
