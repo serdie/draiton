@@ -34,6 +34,7 @@ import { db } from '@/lib/firebase/config';
 import type { Document } from './documentos/page';
 import type { Expense } from './gastos/page';
 import type { Contact } from './contactos/page';
+import type { Project } from './proyectos/page';
 
 type ActivityItem = {
     id: string;
@@ -74,6 +75,12 @@ export default function DashboardPage() {
                 const expensesSnapshot = await getDocs(expensesQuery);
                 const totalExpenses = expensesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Expense).importe, 0);
                 setExpenses(totalExpenses);
+
+                // --- Active Projects ---
+                const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid), where('status', '==', 'En Progreso'));
+                const projectsSnapshot = await getDocs(projectsQuery);
+                setActiveProjects(projectsSnapshot.size);
+
 
                 // --- Recent Activity ---
                 const activities: ActivityItem[] = [];
@@ -129,9 +136,9 @@ export default function DashboardPage() {
 
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
-                // Set to default values in case of error
                 setIncome(0);
                 setExpenses(0);
+                setActiveProjects(0);
                 setRecentActivities([]);
             } finally {
                 setLoading(false);
@@ -192,7 +199,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
              <div>
-                <p className="text-3xl font-bold">2</p>
+                <p className="text-3xl font-bold">{loading ? <Loader2 className="h-6 w-6 animate-spin" /> : activeProjects}</p>
                 <p className="text-sm text-muted-foreground">Proyectos en curso</p>
             </div>
             <Button variant="outline" className="w-full" asChild>
