@@ -89,14 +89,14 @@ export default function DashboardLayout({
     return pathname.startsWith(href);
   };
 
-  const isGroupActive = (paths: string[]) => {
-    return paths.some(path => pathname.startsWith(path));
-  }
-
   const financePaths = ['/dashboard/finanzas', '/dashboard/facturas', '/dashboard/gastos', '/dashboard/bancos'];
   const operationsPaths = ['/dashboard/proyectos', '/dashboard/contactos', '/dashboard/tareas', '/dashboard/informes'];
   const aiToolsPaths = ['/dashboard/perspectivas-ia', '/dashboard/gestor-ia', '/dashboard/marketing-ia', '/dashboard/web-ia'];
   const settingsPaths = ['/dashboard/configuracion', '/dashboard/conexiones', '/dashboard/mi-perfil'];
+
+  const isGroupActive = (paths: string[]) => {
+    return paths.some(path => pathname.startsWith(path));
+  };
 
   return (
     <SidebarProvider>
