@@ -67,7 +67,7 @@ function ProjectCard({ project }: { project: Project }) {
 }
 
 function KanbanColumn({ status, projects }: { status: ProjectStatus; projects: Project[] }) {
-    const { setNodeRef } = useSortable({ id: status, data: { isContainer: true } });
+    const { setNodeRef } = useSortable({ id: status });
 
     return (
         <div ref={setNodeRef} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 shrink-0">
