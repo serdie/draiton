@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useContext } from 'react';
@@ -11,10 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { FileUp, FilePlus, MoreHorizontal, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2, Pencil, Eye, Download } from 'lucide-react';
-import { ImportInvoiceModal } from './import-invoice-modal';
-import { CreateDocumentModal } from './create-document-modal';
-import { EditDocumentModal } from './edit-document-modal';
-import { ViewDocumentModal } from './view-document-modal';
+import { ImportInvoiceModal } from '../documentos/import-invoice-modal';
+import { CreateDocumentModal } from '../documentos/create-document-modal';
+import { EditDocumentModal } from '../documentos/edit-document-modal';
+import { ViewDocumentModal } from '../documentos/view-document-modal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -29,35 +28,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
 import { deleteDocument } from '@/lib/firebase/document-actions';
-
-
-export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
-export type DocumentStatus = 'Pagado' | 'Pendiente' | 'Vencido' | 'Enviado' | 'Aceptado' | 'Rechazado' | 'Emitido' | 'Aplicado' | 'Borrador';
-
-export type LineItem = {
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-};
-
-export type Document = {
-  id: string;
-  ownerId: string;
-  cliente: string;
-  clienteCif?: string;
-  clienteDireccion?: string;
-  tipo: DocumentType;
-  importe: number;
-  subtotal: number;
-  impuestos: number;
-  estado: DocumentStatus;
-  fechaEmision: Date;
-  fechaVto: Date | null;
-  numero: string;
-  lineas: LineItem[];
-  moneda: string;
-};
+import type { Document, DocumentStatus, DocumentType, LineItem } from '../documentos/page';
 
 
 const getBadgeClass = (estado: string) => {

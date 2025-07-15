@@ -4,7 +4,7 @@
 import { useContext } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AuthContext, User } from '@/context/auth-context';
+import { AuthContext } from '@/context/auth-context';
 import {
   SidebarProvider,
   Sidebar,
@@ -16,6 +16,8 @@ import {
   SidebarInset,
   SidebarTrigger,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -34,33 +36,24 @@ import {
   Users,
   Briefcase,
   BrainCircuit,
-  Megaphone,
+  Bot,
   Palette,
   Zap,
-  Bot,
   Link2,
   Settings,
   LogOut,
   Shield,
+  Home,
+  Banknote,
+  AreaChart,
+  HardHat,
+  CheckSquare,
+  Sparkles,
+  UserCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
-
-const navItems = [
-  { href: '/dashboard', icon: <LayoutDashboard />, label: 'Panel de Control' },
-  { href: '/dashboard/documentos', icon: <FileText />, label: 'Documentos' },
-  { href: '/dashboard/gastos', icon: <Landmark />, label: 'Gastos' },
-  { href: '/dashboard/contactos', icon: <Users />, label: 'Contactos' },
-  { href: '/dashboard/proyectos', icon: <Briefcase />, label: 'Proyectos' },
-  { href: '/dashboard/perspectivas-ia', icon: <BrainCircuit />, label: 'Perspectivas IA', pro: true },
-  { href: '/dashboard/marketing', icon: <Megaphone />, label: 'Marketing', pro: true },
-  { href: '/dashboard/web-ia', icon: <Palette />, label: 'Web IA', pro: true },
-  { href: '/dashboard/automatizaciones', icon: <Zap />, label: 'Automatizaciones', pro: true },
-  { href: '/dashboard/gestor-ia', icon: <Bot />, label: 'Gestor IA', pro: true },
-  { href: '/dashboard/conexiones', icon: <Link2 />, label: 'Conexiones' },
-  { href: '/dashboard/configuracion', icon: <Settings />, label: 'Configuración' },
-];
 
 export default function DashboardLayout({
   children,
@@ -75,11 +68,16 @@ export default function DashboardLayout({
   };
 
   if (!user) {
-    // AuthProvider is responsible for redirecting, so we can return null here to prevent flashing the layout.
-    // The global loader in AuthProvider will be shown.
     return null;
   }
   
+  const isActive = (href: string) => {
+    if (href === '/dashboard') {
+        return pathname === href;
+    }
+    return pathname.startsWith(href);
+  };
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -91,27 +89,139 @@ export default function DashboardLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href} className="flex w-full items-center justify-between">
-                  <SidebarMenuButton
-                    isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
-                    tooltip={item.label}
-                    className="flex-grow"
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
+            <SidebarMenuItem>
+                <Link href="/dashboard">
+                    <SidebarMenuButton isActive={isActive('/dashboard')} tooltip="Panel de Control">
+                        <Home />
+                        <span>Panel de Control</span>
+                    </SidebarMenuButton>
                 </Link>
-              </SidebarMenuItem>
-            ))}
+            </SidebarMenuItem>
+
+            <SidebarGroup>
+                <SidebarGroupLabel>💰 Finanzas</SidebarGroupLabel>
+                <SidebarMenuItem>
+                    <Link href="/dashboard/finanzas/vision-general">
+                        <SidebarMenuButton isActive={isActive('/dashboard/finanzas/vision-general')} tooltip="Visión General">
+                            <AreaChart />
+                            <span>Visión General</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/dashboard/facturas">
+                        <SidebarMenuButton isActive={isActive('/dashboard/facturas')} tooltip="Facturas">
+                            <FileText />
+                            <span>Facturas</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <Link href="/dashboard/gastos">
+                        <SidebarMenuButton isActive={isActive('/dashboard/gastos')} tooltip="Gastos">
+                            <Banknote />
+                            <span>Gastos</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            </SidebarGroup>
+
+            <SidebarGroup>
+                <SidebarGroupLabel>⚙️ Operaciones</SidebarGroupLabel>
+                 <SidebarMenuItem>
+                    <Link href="/dashboard/proyectos">
+                        <SidebarMenuButton isActive={isActive('/dashboard/proyectos')} tooltip="Proyectos">
+                            <Briefcase />
+                            <span>Proyectos</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/dashboard/contactos">
+                        <SidebarMenuButton isActive={isActive('/dashboard/contactos')} tooltip="Contactos">
+                            <Users />
+                            <span>Contactos</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <Link href="/dashboard/tareas">
+                        <SidebarMenuButton isActive={isActive('/dashboard/tareas')} tooltip="Tareas">
+                            <CheckSquare />
+                            <span>Tareas</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            </SidebarGroup>
+            
+            <SidebarGroup>
+                <SidebarGroupLabel>✨ Herramientas IA</SidebarGroupLabel>
+                 <SidebarMenuItem>
+                    <Link href="/dashboard/perspectivas-ia">
+                        <SidebarMenuButton isActive={isActive('/dashboard/perspectivas-ia')} tooltip="Perspectivas IA">
+                            <BrainCircuit />
+                            <span>Perspectivas IA</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <Link href="/dashboard/gestor-ia">
+                        <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Gestor IA">
+                            <Bot />
+                            <span>Gestor IA</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <Link href="/dashboard/marketing-ia">
+                        <SidebarMenuButton isActive={isActive('/dashboard/marketing-ia')} tooltip="Marketing IA">
+                            <Sparkles />
+                            <span>Marketing IA</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/dashboard/web-ia">
+                        <SidebarMenuButton isActive={isActive('/dashboard/web-ia')} tooltip="Web IA">
+                            <Palette />
+                            <span>Web IA</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            </SidebarGroup>
+
+            <SidebarGroup>
+                <SidebarGroupLabel>🔧 Ajustes</SidebarGroupLabel>
+                 <SidebarMenuItem>
+                    <Link href="/dashboard/configuracion">
+                        <SidebarMenuButton isActive={isActive('/dashboard/configuracion')} tooltip="Generales">
+                            <Settings />
+                            <span>Generales</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <Link href="/dashboard/conexiones">
+                        <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
+                            <Link2 />
+                            <span>Conexiones</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/dashboard/mi-perfil">
+                        <SidebarMenuButton isActive={isActive('/dashboard/mi-perfil')} tooltip="Mi Perfil">
+                            <UserCog />
+                            <span>Mi Perfil</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            </SidebarGroup>
+            
              {isAdmin && (
                 <SidebarMenuItem>
                     <Link href="/admin/dashboard">
-                    <SidebarMenuButton
-                        isActive={pathname.startsWith('/admin')}
-                        tooltip="Panel de Admin"
-                    >
+                    <SidebarMenuButton isActive={pathname.startsWith('/admin')} tooltip="Panel de Admin">
                         <Shield />
                         <span>Panel de Admin</span>
                     </SidebarMenuButton>
