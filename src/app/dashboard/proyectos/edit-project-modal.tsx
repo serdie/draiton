@@ -36,3 +36,5 @@ export function EditProjectModal({ isOpen, onClose, project }: EditProjectModalP
     </Dialog>
   );
 }
+
+    
