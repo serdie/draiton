@@ -74,18 +74,18 @@ export function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                   <DropdownMenuItem asChild>
-                     <Link href="/dashboard">
+                   <Link href="/dashboard">
+                     <DropdownMenuItem>
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         <span>Dashboard</span>
-                     </Link>
-                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/configuracion">
+                     </DropdownMenuItem>
+                   </Link>
+                  <Link href="/dashboard/configuracion">
+                    <DropdownMenuItem>
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Configuración</span>
-                    </Link>
-                  </DropdownMenuItem>
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
