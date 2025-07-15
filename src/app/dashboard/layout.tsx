@@ -93,7 +93,7 @@ export default function DashboardLayout({
     return paths.some(path => pathname.startsWith(path));
   }
 
-  const financePaths = ['/dashboard/finanzas', '/dashboard/facturas', '/dashboard/gastos', '/dashboard/bancos', '/dashboard/prevision-impuestos'];
+  const financePaths = ['/dashboard/finanzas', '/dashboard/facturas', '/dashboard/gastos', '/dashboard/bancos'];
   const operationsPaths = ['/dashboard/proyectos', '/dashboard/contactos', '/dashboard/tareas', '/dashboard/informes'];
   const aiToolsPaths = ['/dashboard/perspectivas-ia', '/dashboard/gestor-ia', '/dashboard/marketing-ia', '/dashboard/web-ia'];
   const settingsPaths = ['/dashboard/configuracion', '/dashboard/conexiones', '/dashboard/mi-perfil'];
@@ -129,7 +129,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/finanzas/vision-general" passHref>
+                        <Link href="/dashboard/finanzas/vision-general">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/vision-general')}>
                                 <AreaChart/>
                                 <span>Visión General</span>
@@ -137,15 +137,15 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/facturas" passHref>
+                        <Link href="/dashboard/facturas">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/facturas')}>
                                 <FileText/>
-                                <span>Facturación</span>
+                                <span>Facturas</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/gastos" passHref>
+                        <Link href="/dashboard/gastos">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')}>
                                 <Banknote/>
                                 <span>Gastos</span>
@@ -153,7 +153,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/finanzas/prevision-impuestos" passHref>
+                        <Link href="/dashboard/finanzas/prevision-impuestos">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/prevision-impuestos')}>
                                 <Scale/>
                                 <span>Previsión Impuestos</span>
@@ -161,7 +161,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/bancos" passHref>
+                        <Link href="/dashboard/bancos">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/bancos')}>
                                 <Landmark/>
                                 <span>Conexión Bancaria</span>
@@ -183,7 +183,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/proyectos" passHref>
+                        <Link href="/dashboard/proyectos">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/proyectos')}>
                                 <Briefcase/>
                                 <span>Proyectos</span>
@@ -191,7 +191,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/contactos" passHref>
+                        <Link href="/dashboard/contactos">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/contactos')}>
                                 <Users/>
                                 <span>Contactos</span>
@@ -199,7 +199,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/tareas" passHref>
+                        <Link href="/dashboard/tareas">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')}>
                                 <CheckSquare/>
                                 <span>Tareas</span>
@@ -207,7 +207,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/informes" passHref>
+                        <Link href="/dashboard/informes">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/informes')}>
                                 <PieChart/>
                                 <span>Informes</span>
@@ -229,7 +229,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/perspectivas-ia" passHref>
+                        <Link href="/dashboard/perspectivas-ia">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/perspectivas-ia')}>
                                 <BrainCircuit/>
                                 <span>Perspectivas IA</span>
@@ -238,25 +238,23 @@ export default function DashboardLayout({
                     </SidebarMenuSubItem>
                     <Collapsible defaultOpen={isGroupActive(['/dashboard/gestor-ia'])}>
                         <CollapsibleTrigger asChild>
-                            <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} className="group w-full justify-start h-auto flex-col items-start">
-                                <div className='flex items-center w-full'>
-                                    <Bot />
-                                    <span className="ml-2">Gestor IA</span>
-                                    <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                                </div>
-                            </SidebarMenuSubButton>
+                             <SidebarMenuButton isActive={isGroupActive(['/dashboard/gestor-ia'])} className="group w-full justify-start">
+                                <Bot />
+                                <span>Gestor IA</span>
+                                <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                            </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                              <SidebarMenuSub>
                                 <SidebarMenuSubItem>
-                                    <Link href="/dashboard/gestor-ia/ayudas" passHref>
+                                    <Link href="/dashboard/gestor-ia/ayudas">
                                         <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia/ayudas')}>
                                             <span>Buscador de Ayudas</span>
                                         </SidebarMenuSubButton>
                                     </Link>
                                 </SidebarMenuSubItem>
                                  <SidebarMenuSubItem>
-                                    <Link href="/dashboard/gestor-ia/asistente-fiscal" passHref>
+                                    <Link href="/dashboard/gestor-ia/asistente-fiscal">
                                         <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia/asistente-fiscal')}>
                                             <span>Asistente Fiscal</span>
                                         </SidebarMenuSubButton>
@@ -266,7 +264,7 @@ export default function DashboardLayout({
                         </CollapsibleContent>
                     </Collapsible>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/marketing-ia" passHref>
+                        <Link href="/dashboard/marketing-ia">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/marketing-ia')}>
                                 <Sparkles/>
                                 <span>Marketing IA</span>
@@ -274,7 +272,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/web-ia" passHref>
+                        <Link href="/dashboard/web-ia">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/web-ia')}>
                                 <Palette/>
                                 <span>Web IA</span>
@@ -296,7 +294,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/configuracion" passHref>
+                        <Link href="/dashboard/configuracion">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/configuracion')}>
                                 <Settings/>
                                 <span>Generales</span>
@@ -304,7 +302,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/conexiones" passHref>
+                        <Link href="/dashboard/conexiones">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/conexiones')}>
                                 <Link2/>
                                 <span>Conexiones</span>
@@ -312,7 +310,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/mi-perfil" passHref>
+                        <Link href="/dashboard/mi-perfil">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/mi-perfil')}>
                                 <UserCog/>
                                 <span>Mi Perfil</span>
@@ -382,4 +380,3 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
-
