@@ -54,78 +54,88 @@ export default function DashboardPage() {
     const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
 
     useEffect(() => {
-        if (!user || !db) return;
+        if (!user || !db) {
+            setLoading(false);
+            return;
+        }
 
         const fetchData = async () => {
             setLoading(true);
-            
-            // --- Financial Data ---
-            // Income (Paid Invoices)
-            const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
-            const invoicesSnapshot = await getDocs(invoicesQuery);
-            const totalIncome = invoicesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Document).importe, 0);
-            setIncome(totalIncome);
+            try {
+                // --- Financial Data ---
+                // Income (Paid Invoices)
+                const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
+                const invoicesSnapshot = await getDocs(invoicesQuery);
+                const totalIncome = invoicesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Document).importe, 0);
+                setIncome(totalIncome);
 
-            // Expenses
-            const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
-            const expensesSnapshot = await getDocs(expensesQuery);
-            const totalExpenses = expensesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Expense).importe, 0);
-            setExpenses(totalExpenses);
+                // Expenses
+                const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
+                const expensesSnapshot = await getDocs(expensesQuery);
+                const totalExpenses = expensesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Expense).importe, 0);
+                setExpenses(totalExpenses);
 
-             // --- Recent Activity ---
-            const activities: ActivityItem[] = [];
+                // --- Recent Activity ---
+                const activities: ActivityItem[] = [];
 
-            // Paid Invoices
-            const paidInvoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'), orderBy('fechaEmision', 'desc'), limit(4));
-            const paidInvoicesSnapshot = await getDocs(paidInvoicesQuery);
-            paidInvoicesSnapshot.forEach(doc => {
-                const invoice = doc.data() as Document;
-                activities.push({
-                    id: doc.id,
-                    type: 'Ingreso',
-                    text: `La factura ${invoice.numero} ha sido pagada.`,
-                    date: invoice.fechaEmision instanceof Timestamp ? invoice.fechaEmision.toDate() : new Date(invoice.fechaEmision),
-                    user: invoice.cliente,
-                    avatar: '/other-avatar.png'
+                // Paid Invoices
+                const paidInvoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'), orderBy('fechaEmision', 'desc'), limit(4));
+                const paidInvoicesSnapshot = await getDocs(paidInvoicesQuery);
+                paidInvoicesSnapshot.forEach(doc => {
+                    const invoice = doc.data() as Document;
+                    activities.push({
+                        id: doc.id,
+                        type: 'Ingreso',
+                        text: `La factura ${invoice.numero} ha sido pagada.`,
+                        date: invoice.fechaEmision instanceof Timestamp ? invoice.fechaEmision.toDate() : new Date(invoice.fechaEmision),
+                        user: invoice.cliente,
+                        avatar: '/other-avatar.png'
+                    });
                 });
-            });
 
-            // New Expenses
-            const newExpensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(4));
-            const newExpensesSnapshot = await getDocs(newExpensesQuery);
-            newExpensesSnapshot.forEach(doc => {
-                const expense = doc.data() as Expense;
-                activities.push({
-                    id: doc.id,
-                    type: 'Gasto',
-                    text: `Has añadido un nuevo gasto de ${expense.importe.toFixed(2)}€ de ${expense.proveedor}.`,
-                    date: expense.fecha instanceof Timestamp ? expense.fecha.toDate() : new Date(expense.fecha),
-                    user: 'Tú',
-                    avatar: '/user-avatar.png'
+                // New Expenses
+                const newExpensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(4));
+                const newExpensesSnapshot = await getDocs(newExpensesQuery);
+                newExpensesSnapshot.forEach(doc => {
+                    const expense = doc.data() as Expense;
+                    activities.push({
+                        id: doc.id,
+                        type: 'Gasto',
+                        text: `Has añadido un nuevo gasto de ${expense.importe.toFixed(2)}€ de ${expense.proveedor}.`,
+                        date: expense.fecha instanceof Timestamp ? expense.fecha.toDate() : new Date(expense.fecha),
+                        user: 'Tú',
+                        avatar: '/user-avatar.png'
+                    });
                 });
-            });
 
-             // New Contacts
-            const newContactsQuery = query(collection(db, 'contacts'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(4));
-            const newContactsSnapshot = await getDocs(newContactsQuery);
-            newContactsSnapshot.forEach(doc => {
-                const contact = doc.data() as Contact;
-                activities.push({
-                    id: doc.id,
-                    type: 'Contacto',
-                    text: `Has añadido a ${contact.name} como nuevo ${contact.type}.`,
-                    date: contact.createdAt instanceof Timestamp ? contact.createdAt.toDate() : new Date(contact.createdAt),
-                    user: 'Tú',
-                    avatar: '/user-avatar.png'
+                // New Contacts
+                const newContactsQuery = query(collection(db, 'contacts'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(4));
+                const newContactsSnapshot = await getDocs(newContactsQuery);
+                newContactsSnapshot.forEach(doc => {
+                    const contact = doc.data() as Contact;
+                    activities.push({
+                        id: doc.id,
+                        type: 'Contacto',
+                        text: `Has añadido a ${contact.name} como nuevo ${contact.type}.`,
+                        date: contact.createdAt instanceof Timestamp ? contact.createdAt.toDate() : new Date(contact.createdAt),
+                        user: 'Tú',
+                        avatar: '/user-avatar.png'
+                    });
                 });
-            });
-            
-            // Sort all activities by date and take the last 4
-            const sortedActivities = activities.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 4);
-            setRecentActivities(sortedActivities);
+                
+                // Sort all activities by date and take the last 4
+                const sortedActivities = activities.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 4);
+                setRecentActivities(sortedActivities);
 
-
-            setLoading(false);
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+                // Set to default values in case of error
+                setIncome(0);
+                setExpenses(0);
+                setRecentActivities([]);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchData();
