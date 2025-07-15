@@ -1,10 +1,15 @@
 
 'use client';
 
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   SidebarProvider,
   Sidebar,
@@ -16,8 +21,6 @@ import {
   SidebarInset,
   SidebarTrigger,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -32,13 +35,11 @@ import {
 import {
   LayoutDashboard,
   FileText,
-  Landmark,
   Users,
   Briefcase,
   BrainCircuit,
   Bot,
   Palette,
-  Zap,
   Link2,
   Settings,
   LogOut,
@@ -46,14 +47,20 @@ import {
   Home,
   Banknote,
   AreaChart,
-  HardHat,
   CheckSquare,
   Sparkles,
   UserCog,
+  ChevronRight,
+  Wallet,
+  Wrench,
+  FlaskConical,
+  Blocks,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { cn } from '@/lib/utils';
+
 
 export default function DashboardLayout({
   children,
@@ -78,6 +85,15 @@ export default function DashboardLayout({
     return pathname.startsWith(href);
   };
 
+  const isGroupActive = (paths: string[]) => {
+    return paths.some(path => pathname.startsWith(path));
+  }
+
+  const financePaths = ['/dashboard/finanzas', '/dashboard/facturas', '/dashboard/gastos'];
+  const operationsPaths = ['/dashboard/proyectos', '/dashboard/contactos', '/dashboard/tareas'];
+  const aiToolsPaths = ['/dashboard/perspectivas-ia', '/dashboard/gestor-ia', '/dashboard/marketing-ia', '/dashboard/web-ia'];
+  const settingsPaths = ['/dashboard/configuracion', '/dashboard/conexiones', '/dashboard/mi-perfil'];
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -89,7 +105,7 @@ export default function DashboardLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            <SidebarMenuItem>
+             <SidebarMenuItem>
                 <Link href="/dashboard">
                     <SidebarMenuButton isActive={isActive('/dashboard')} tooltip="Panel de Control">
                         <Home />
@@ -98,125 +114,165 @@ export default function DashboardLayout({
                 </Link>
             </SidebarMenuItem>
 
-            <SidebarGroup>
-                <SidebarGroupLabel>💰 Finanzas</SidebarGroupLabel>
-                <SidebarMenuItem>
-                    <Link href="/dashboard/finanzas/vision-general">
-                        <SidebarMenuButton isActive={isActive('/dashboard/finanzas/vision-general')} tooltip="Visión General">
-                            <AreaChart />
-                            <span>Visión General</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <Link href="/dashboard/facturas">
-                        <SidebarMenuButton isActive={isActive('/dashboard/facturas')} tooltip="Facturas">
-                            <FileText />
-                            <span>Facturas</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <Link href="/dashboard/gastos">
-                        <SidebarMenuButton isActive={isActive('/dashboard/gastos')} tooltip="Gastos">
-                            <Banknote />
-                            <span>Gastos</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            </SidebarGroup>
+            <Collapsible defaultOpen={isGroupActive(financePaths)}>
+              <CollapsibleTrigger className="w-full">
+                <SidebarMenuButton isActive={isGroupActive(financePaths)} className="w-full justify-start">
+                  <Wallet />
+                  <span>Finanzas</span>
+                  <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                 <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/finanzas/vision-general">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/vision-general')}>
+                                <AreaChart/>
+                                <span>Visión General</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/facturas">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/facturas')}>
+                                <FileText/>
+                                <span>Facturas</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                     <SidebarMenuSubItem>
+                        <Link href="/dashboard/gastos">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')}>
+                                <Banknote/>
+                                <span>Gastos</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                 </SidebarMenuSub>
+              </CollapsibleContent>
+            </Collapsible>
 
-            <SidebarGroup>
-                <SidebarGroupLabel>⚙️ Operaciones</SidebarGroupLabel>
-                 <SidebarMenuItem>
-                    <Link href="/dashboard/proyectos">
-                        <SidebarMenuButton isActive={isActive('/dashboard/proyectos')} tooltip="Proyectos">
-                            <Briefcase />
-                            <span>Proyectos</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <Link href="/dashboard/contactos">
-                        <SidebarMenuButton isActive={isActive('/dashboard/contactos')} tooltip="Contactos">
-                            <Users />
-                            <span>Contactos</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <Link href="/dashboard/tareas">
-                        <SidebarMenuButton isActive={isActive('/dashboard/tareas')} tooltip="Tareas">
-                            <CheckSquare />
-                            <span>Tareas</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            </SidebarGroup>
+            <Collapsible defaultOpen={isGroupActive(operationsPaths)}>
+              <CollapsibleTrigger className="w-full">
+                <SidebarMenuButton isActive={isGroupActive(operationsPaths)} className="w-full justify-start">
+                  <Blocks />
+                  <span>Operaciones</span>
+                  <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                 <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/proyectos">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/proyectos')}>
+                                <Briefcase/>
+                                <span>Proyectos</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/contactos">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/contactos')}>
+                                <Users/>
+                                <span>Contactos</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                     <SidebarMenuSubItem>
+                        <Link href="/dashboard/tareas">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')}>
+                                <CheckSquare/>
+                                <span>Tareas</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                 </SidebarMenuSub>
+              </CollapsibleContent>
+            </Collapsible>
             
-            <SidebarGroup>
-                <SidebarGroupLabel>✨ Herramientas IA</SidebarGroupLabel>
-                 <SidebarMenuItem>
-                    <Link href="/dashboard/perspectivas-ia">
-                        <SidebarMenuButton isActive={isActive('/dashboard/perspectivas-ia')} tooltip="Perspectivas IA">
-                            <BrainCircuit />
-                            <span>Perspectivas IA</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <Link href="/dashboard/gestor-ia">
-                        <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Gestor IA">
-                            <Bot />
-                            <span>Gestor IA</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <Link href="/dashboard/marketing-ia">
-                        <SidebarMenuButton isActive={isActive('/dashboard/marketing-ia')} tooltip="Marketing IA">
-                            <Sparkles />
-                            <span>Marketing IA</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <Link href="/dashboard/web-ia">
-                        <SidebarMenuButton isActive={isActive('/dashboard/web-ia')} tooltip="Web IA">
-                            <Palette />
-                            <span>Web IA</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            </SidebarGroup>
+            <Collapsible defaultOpen={isGroupActive(aiToolsPaths)}>
+              <CollapsibleTrigger className="w-full">
+                <SidebarMenuButton isActive={isGroupActive(aiToolsPaths)} className="w-full justify-start">
+                  <FlaskConical />
+                  <span>Herramientas IA</span>
+                  <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                 <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/perspectivas-ia">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/perspectivas-ia')}>
+                                <BrainCircuit/>
+                                <span>Perspectivas IA</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/gestor-ia">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia')}>
+                                <Bot/>
+                                <span>Gestor IA</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/marketing-ia">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/marketing-ia')}>
+                                <Sparkles/>
+                                <span>Marketing IA</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/web-ia">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/web-ia')}>
+                                <Palette/>
+                                <span>Web IA</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                 </SidebarMenuSub>
+              </CollapsibleContent>
+            </Collapsible>
 
-            <SidebarGroup>
-                <SidebarGroupLabel>🔧 Ajustes</SidebarGroupLabel>
-                 <SidebarMenuItem>
-                    <Link href="/dashboard/configuracion">
-                        <SidebarMenuButton isActive={isActive('/dashboard/configuracion')} tooltip="Generales">
-                            <Settings />
-                            <span>Generales</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <Link href="/dashboard/conexiones">
-                        <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
-                            <Link2 />
-                            <span>Conexiones</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <Link href="/dashboard/mi-perfil">
-                        <SidebarMenuButton isActive={isActive('/dashboard/mi-perfil')} tooltip="Mi Perfil">
-                            <UserCog />
-                            <span>Mi Perfil</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            </SidebarGroup>
+             <Collapsible defaultOpen={isGroupActive(settingsPaths)}>
+              <CollapsibleTrigger className="w-full">
+                <SidebarMenuButton isActive={isGroupActive(settingsPaths)} className="w-full justify-start">
+                  <Wrench />
+                  <span>Ajustes</span>
+                  <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                 <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/configuracion">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/configuracion')}>
+                                <Settings/>
+                                <span>Generales</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/conexiones">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/conexiones')}>
+                                <Link2/>
+                                <span>Conexiones</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                     <SidebarMenuSubItem>
+                        <Link href="/dashboard/mi-perfil">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/mi-perfil')}>
+                                <UserCog/>
+                                <span>Mi Perfil</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                 </SidebarMenuSub>
+              </CollapsibleContent>
+            </Collapsible>
             
              {isAdmin && (
                 <SidebarMenuItem>
