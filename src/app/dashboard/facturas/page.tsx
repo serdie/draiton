@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useContext } from 'react';
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { FileUp, FilePlus, MoreHorizontal, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2, Pencil, Eye, Download } from 'lucide-react';
+import { FileUp, FilePlus, MoreHorizontal, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2, Pencil, Eye, Download, Repeat } from 'lucide-react';
 import { ImportInvoiceModal } from '../documentos/import-invoice-modal';
 import { CreateDocumentModal } from '../documentos/create-document-modal';
 import { EditDocumentModal } from '../documentos/edit-document-modal';
@@ -40,6 +41,7 @@ const getBadgeClass = (estado: string) => {
     case 'pendiente':
     case 'enviado':
     case 'emitido':
+    case 'activo':
       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'vencido':
     case 'rechazado':
@@ -50,6 +52,7 @@ const getBadgeClass = (estado: string) => {
 };
 
 const estadosUnicos: DocumentStatus[] = ['Pagado', 'Pendiente', 'Vencido', 'Enviado', 'Aceptado', 'Rechazado', 'Emitido', 'Aplicado', 'Borrador'];
+const tiposDocumento: DocumentType[] = ['factura', 'presupuesto', 'nota-credito', 'recurrente'];
 
 export default function FacturasPage() {
   const { user } = useContext(AuthContext);
@@ -210,7 +213,7 @@ export default function FacturasPage() {
 
     return (
       <>
-        <CardContent>
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>
@@ -361,62 +364,65 @@ export default function FacturasPage() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Gestionar Facturas</h1>
+            <h1 className="text-3xl font-bold">Facturación</h1>
             <p className="text-muted-foreground">
-              Crea y haz seguimiento de tus facturas, presupuestos y notas de crédito.
+              Crea y haz seguimiento de tus facturas, presupuestos, notas de crédito y facturas recurrentes.
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
               <FileUp className="mr-2 h-4 w-4" />
-              Importar Factura
+              Importar con IA
             </Button>
             <Button onClick={() => handleCreateNew()}>
               <FilePlus className="mr-2 h-4 w-4" />
-              Crear Nuevo Documento
+              Crear Nuevo
             </Button>
           </div>
         </div>
 
-        <Card>
-            <CardHeader>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <Popover>
-                        <PopoverTrigger asChild>
-                        <Button id="date" variant={"outline"} className={cn("justify-start text-left font-normal", !dateRange && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateRange?.from ? (dateRange.to ? (<>{format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}</>) : (format(dateRange.from, "LLL dd, y"))) : (<span>Selecciona un rango</span>)}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar initialFocus mode="range" defaultMonth={dateRange?.from} selected={dateRange} onSelect={setDateRange} numberOfMonths={2} locale={es}/>
-                        </PopoverContent>
-                    </Popover>
-                     <Input placeholder="Buscar por cliente..." value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)} />
-                    <Select value={filtroEstado} onValueChange={setFiltroEstado}>
-                        <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
-                        <SelectContent>
-                             <SelectItem value="all">Todos los estados</SelectItem>
-                            {estadosUnicos.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <Button variant="outline" onClick={resetFilters}><FilterX className="mr-2 h-4 w-4" />Limpiar Filtros</Button>
-                </div>
-            </CardHeader>
-        </Card>
-
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="factura">Facturas</TabsTrigger>
             <TabsTrigger value="presupuesto">Presupuestos</TabsTrigger>
             <TabsTrigger value="nota-credito">Notas de Crédito</TabsTrigger>
+            <TabsTrigger value="recurrente"><Repeat className="mr-2 h-4 w-4" /> Recurrentes</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="factura"><Card>{renderContent()}</Card></TabsContent>
-          <TabsContent value="presupuesto"><Card>{renderContent()}</Card></TabsContent>
-          <TabsContent value="nota-credito"><Card>{renderContent()}</Card></TabsContent>
+          <div className="mt-4">
+            <Card>
+              <CardHeader>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                      <Popover>
+                          <PopoverTrigger asChild>
+                          <Button id="date" variant={"outline"} className={cn("justify-start text-left font-normal", !dateRange && "text-muted-foreground")}>
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {dateRange?.from ? (dateRange.to ? (<>{format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}</>) : (format(dateRange.from, "LLL dd, y"))) : (<span>Selecciona un rango</span>)}
+                          </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar initialFocus mode="range" defaultMonth={dateRange?.from} selected={dateRange} onSelect={setDateRange} numberOfMonths={2} locale={es}/>
+                          </PopoverContent>
+                      </Popover>
+                      <Input placeholder="Buscar por cliente..." value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)} />
+                      <Select value={filtroEstado} onValueChange={setFiltroEstado}>
+                          <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="all">Todos los estados</SelectItem>
+                              {estadosUnicos.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                          </SelectContent>
+                      </Select>
+                      <Button variant="outline" onClick={resetFilters}><FilterX className="mr-2 h-4 w-4" />Limpiar Filtros</Button>
+                  </div>
+              </CardHeader>
+              {tiposDocumento.map(tipo => (
+                 <TabsContent key={tipo} value={tipo}>{renderContent()}</TabsContent>
+              ))}
+            </Card>
+          </div>
         </Tabs>
       </div>
     </>
   );
 }
+

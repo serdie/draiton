@@ -2,13 +2,14 @@
 'use client';
 
 import { useState, useMemo, useEffect, useContext } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, List, LayoutGrid, FilterX, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, List, LayoutGrid, FilterX, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -194,6 +195,12 @@ export default function ProyectosPage() {
                                         </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
+                                            <DropdownMenuItem asChild>
+                                                <Link href={`/dashboard/proyectos/${project.id}`}>
+                                                     <Eye className="mr-2 h-4 w-4" />
+                                                     Ver Detalles
+                                                </Link>
+                                            </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => setProjectToEdit(project)}>
                                                 <Pencil className="mr-2 h-4 w-4" />
                                                 Editar
@@ -339,3 +346,4 @@ export default function ProyectosPage() {
   );
 
     
+

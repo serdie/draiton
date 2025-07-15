@@ -57,6 +57,9 @@ import {
   UserCog,
   ChevronRight,
   Wallet,
+  Repeat,
+  Landmark,
+  PieChart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -89,8 +92,8 @@ export default function DashboardLayout({
     return paths.some(path => pathname.startsWith(path));
   }
 
-  const financePaths = ['/dashboard/finanzas', '/dashboard/facturas', '/dashboard/gastos'];
-  const operationsPaths = ['/dashboard/proyectos', '/dashboard/contactos', '/dashboard/tareas'];
+  const financePaths = ['/dashboard/finanzas', '/dashboard/facturas', '/dashboard/gastos', '/dashboard/bancos'];
+  const operationsPaths = ['/dashboard/proyectos', '/dashboard/contactos', '/dashboard/tareas', '/dashboard/informes'];
   const aiToolsPaths = ['/dashboard/perspectivas-ia', '/dashboard/gestor-ia', '/dashboard/marketing-ia', '/dashboard/web-ia'];
   const settingsPaths = ['/dashboard/configuracion', '/dashboard/conexiones', '/dashboard/mi-perfil'];
 
@@ -136,7 +139,7 @@ export default function DashboardLayout({
                         <Link href="/dashboard/facturas">
                             <SidebarMenuSubButton isActive={isActive('/dashboard/facturas')}>
                                 <FileText/>
-                                <span>Facturas</span>
+                                <span>Facturación</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
@@ -145,6 +148,14 @@ export default function DashboardLayout({
                             <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')}>
                                 <Banknote/>
                                 <span>Gastos</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                     <SidebarMenuSubItem>
+                        <Link href="/dashboard/bancos">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/bancos')}>
+                                <Landmark/>
+                                <span>Conexión Bancaria</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
@@ -183,6 +194,14 @@ export default function DashboardLayout({
                             <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')}>
                                 <CheckSquare/>
                                 <span>Tareas</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                     <SidebarMenuSubItem>
+                        <Link href="/dashboard/informes">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/informes')}>
+                                <PieChart/>
+                                <span>Informes</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useContext } from 'react';
@@ -31,8 +30,8 @@ import { AuthContext } from '@/context/auth-context';
 import { deleteDocument } from '@/lib/firebase/document-actions';
 
 
-export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito';
-export type DocumentStatus = 'Pagado' | 'Pendiente' | 'Vencido' | 'Enviado' | 'Aceptado' | 'Rechazado' | 'Emitido' | 'Aplicado' | 'Borrador';
+export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito' | 'recurrente';
+export type DocumentStatus = 'Pagado' | 'Pendiente' | 'Vencido' | 'Enviado' | 'Aceptado' | 'Rechazado' | 'Emitido' | 'Aplicado' | 'Borrador' | 'Activo' | 'Pausado';
 
 export type LineItem = {
   description: string;
@@ -69,6 +68,7 @@ const getBadgeClass = (estado: string) => {
     case 'pendiente':
     case 'enviado':
     case 'emitido':
+    case 'activo':
       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'vencido':
     case 'rechazado':
@@ -78,9 +78,9 @@ const getBadgeClass = (estado: string) => {
   }
 };
 
-const estadosUnicos: DocumentStatus[] = ['Pagado', 'Pendiente', 'Vencido', 'Enviado', 'Aceptado', 'Rechazado', 'Emitido', 'Aplicado', 'Borrador'];
+const estadosUnicos: DocumentStatus[] = ['Pagado', 'Pendiente', 'Vencido', 'Enviado', 'Aceptado', 'Rechazado', 'Emitido', 'Aplicado', 'Borrador', 'Activo', 'Pausado'];
 
-export default function FacturasPage() {
+export default function DocumentosPage() {
   const { user } = useContext(AuthContext);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -390,7 +390,7 @@ export default function FacturasPage() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Gestionar Facturas</h1>
+            <h1 className="text-3xl font-bold">Gestionar Documentos</h1>
             <p className="text-muted-foreground">
               Crea y haz seguimiento de tus facturas, presupuestos y notas de crédito.
             </p>
@@ -449,3 +449,4 @@ export default function FacturasPage() {
     </>
   );
 }
+
