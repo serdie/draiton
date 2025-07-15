@@ -34,7 +34,7 @@ import { db } from '@/lib/firebase/config';
 import type { Document } from './documentos/page';
 import type { Expense } from './gastos/page';
 import type { Contact } from './contactos/page';
-import type { Project } from './proyectos/page';
+import type { Project, ProjectStatus } from './proyectos/page';
 
 type ActivityItem = {
     id: string;
@@ -77,7 +77,12 @@ export default function DashboardPage() {
                 setExpenses(totalExpenses);
 
                 // --- Active Projects ---
-                const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid), where('status', '==', 'En Progreso'));
+                const activeStatuses: ProjectStatus[] = ['Planificación', 'En Progreso', 'En Espera'];
+                const projectsQuery = query(
+                    collection(db, 'projects'), 
+                    where('ownerId', '==', user.uid), 
+                    where('status', 'in', activeStatuses)
+                );
                 const projectsSnapshot = await getDocs(projectsQuery);
                 setActiveProjects(projectsSnapshot.size);
 
