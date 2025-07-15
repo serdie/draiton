@@ -21,6 +21,9 @@ import {
   SidebarInset,
   SidebarTrigger,
   SidebarFooter,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -115,8 +118,8 @@ export default function DashboardLayout({
             </SidebarMenuItem>
 
             <Collapsible defaultOpen={isGroupActive(financePaths)}>
-              <CollapsibleTrigger className="w-full">
-                <SidebarMenuButton isActive={isGroupActive(financePaths)} className="w-full justify-start">
+              <CollapsibleTrigger asChild>
+                 <SidebarMenuButton isActive={isGroupActive(financePaths)} className="group w-full justify-start">
                   <Wallet />
                   <span>Finanzas</span>
                   <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
@@ -153,8 +156,8 @@ export default function DashboardLayout({
             </Collapsible>
 
             <Collapsible defaultOpen={isGroupActive(operationsPaths)}>
-              <CollapsibleTrigger className="w-full">
-                <SidebarMenuButton isActive={isGroupActive(operationsPaths)} className="w-full justify-start">
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton isActive={isGroupActive(operationsPaths)} className="group w-full justify-start">
                   <Blocks />
                   <span>Operaciones</span>
                   <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
@@ -191,8 +194,8 @@ export default function DashboardLayout({
             </Collapsible>
             
             <Collapsible defaultOpen={isGroupActive(aiToolsPaths)}>
-              <CollapsibleTrigger className="w-full">
-                <SidebarMenuButton isActive={isGroupActive(aiToolsPaths)} className="w-full justify-start">
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton isActive={isGroupActive(aiToolsPaths)} className="group w-full justify-start">
                   <FlaskConical />
                   <span>Herramientas IA</span>
                   <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
@@ -237,8 +240,8 @@ export default function DashboardLayout({
             </Collapsible>
 
              <Collapsible defaultOpen={isGroupActive(settingsPaths)}>
-              <CollapsibleTrigger className="w-full">
-                <SidebarMenuButton isActive={isGroupActive(settingsPaths)} className="w-full justify-start">
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton isActive={isGroupActive(settingsPaths)} className="group w-full justify-start">
                   <Wrench />
                   <span>Ajustes</span>
                   <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
