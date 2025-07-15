@@ -129,7 +129,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/finanzas/vision-general">
+                        <Link href="/dashboard/finanzas/vision-general" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/vision-general')}>
                                 <AreaChart/>
                                 <span>Visión General</span>
@@ -137,7 +137,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/facturas">
+                        <Link href="/dashboard/facturas" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/facturas')}>
                                 <FileText/>
                                 <span>Facturación</span>
@@ -145,7 +145,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/gastos">
+                        <Link href="/dashboard/gastos" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')}>
                                 <Banknote/>
                                 <span>Gastos</span>
@@ -153,7 +153,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/finanzas/prevision-impuestos">
+                        <Link href="/dashboard/finanzas/prevision-impuestos" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/prevision-impuestos')}>
                                 <Scale/>
                                 <span>Previsión Impuestos</span>
@@ -161,7 +161,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/bancos">
+                        <Link href="/dashboard/bancos" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/bancos')}>
                                 <Landmark/>
                                 <span>Conexión Bancaria</span>
@@ -183,7 +183,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/proyectos">
+                        <Link href="/dashboard/proyectos" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/proyectos')}>
                                 <Briefcase/>
                                 <span>Proyectos</span>
@@ -191,7 +191,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/contactos">
+                        <Link href="/dashboard/contactos" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/contactos')}>
                                 <Users/>
                                 <span>Contactos</span>
@@ -199,7 +199,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/tareas">
+                        <Link href="/dashboard/tareas" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')}>
                                 <CheckSquare/>
                                 <span>Tareas</span>
@@ -207,7 +207,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/informes">
+                        <Link href="/dashboard/informes" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/informes')}>
                                 <PieChart/>
                                 <span>Informes</span>
@@ -229,23 +229,44 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/perspectivas-ia">
+                        <Link href="/dashboard/perspectivas-ia" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/perspectivas-ia')}>
                                 <BrainCircuit/>
                                 <span>Perspectivas IA</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/gestor-ia">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia')}>
-                                <Bot/>
-                                <span>Gestor IA</span>
+                    <Collapsible defaultOpen={isGroupActive(['/dashboard/gestor-ia'])}>
+                        <CollapsibleTrigger asChild>
+                            <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} className="group w-full justify-start h-auto flex-col items-start">
+                                <div className='flex items-center w-full'>
+                                    <Bot />
+                                    <span className="ml-2">Gestor IA</span>
+                                    <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                                </div>
                             </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                             <SidebarMenuSub>
+                                <SidebarMenuSubItem>
+                                    <Link href="/dashboard/gestor-ia/ayudas" passHref>
+                                        <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia/ayudas')}>
+                                            <span>Buscador de Ayudas</span>
+                                        </SidebarMenuSubButton>
+                                    </Link>
+                                </SidebarMenuSubItem>
+                                 <SidebarMenuSubItem>
+                                    <Link href="/dashboard/gestor-ia/asistente-fiscal" passHref>
+                                        <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia/asistente-fiscal')}>
+                                            <span>Asistente Fiscal</span>
+                                        </SidebarMenuSubButton>
+                                    </Link>
+                                </SidebarMenuSubItem>
+                             </SidebarMenuSub>
+                        </CollapsibleContent>
+                    </Collapsible>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/marketing-ia">
+                        <Link href="/dashboard/marketing-ia" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/marketing-ia')}>
                                 <Sparkles/>
                                 <span>Marketing IA</span>
@@ -253,7 +274,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/web-ia">
+                        <Link href="/dashboard/web-ia" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/web-ia')}>
                                 <Palette/>
                                 <span>Web IA</span>
@@ -275,7 +296,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/configuracion">
+                        <Link href="/dashboard/configuracion" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/configuracion')}>
                                 <Settings/>
                                 <span>Generales</span>
@@ -283,7 +304,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/conexiones">
+                        <Link href="/dashboard/conexiones" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/conexiones')}>
                                 <Link2/>
                                 <span>Conexiones</span>
@@ -291,7 +312,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/mi-perfil">
+                        <Link href="/dashboard/mi-perfil" passHref>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/mi-perfil')}>
                                 <UserCog/>
                                 <span>Mi Perfil</span>
@@ -351,7 +372,7 @@ export default function DashboardLayout({
           <div className="flex-1 text-right">
             <Link href="/dashboard/configuracion" passHref>
              <Button variant="ghost" size="icon" asChild>
-                <Settings className="h-5 w-5"/>
+                <a><Settings className="h-5 w-5"/></a>
              </Button>
             </Link>
           </div>
@@ -361,3 +382,4 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
+
