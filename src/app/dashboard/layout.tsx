@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
 import {
   Collapsible,
@@ -73,6 +73,7 @@ export default function DashboardLayout({
 }) {
   const { user, isAdmin } = useContext(AuthContext);
   const pathname = usePathname();
+  const router = useRouter();
   
   const handleLogout = async () => {
     await signOut(auth);
@@ -347,7 +348,7 @@ export default function DashboardLayout({
             <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
               <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href="/dashboard/configuracion" passHref>
+              <Link href="/dashboard/configuracion">
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Configuración</span>
@@ -368,11 +369,11 @@ export default function DashboardLayout({
             <SidebarTrigger />
           </div>
           <div className="flex-1 text-right">
-            <Link href="/dashboard/configuracion" passHref>
-             <Button variant="ghost" size="icon" asChild>
-                <a><Settings className="h-5 w-5"/></a>
-             </Button>
-            </Link>
+            <Button variant="ghost" size="icon" asChild>
+             <Link href="/dashboard/configuracion">
+                <Settings className="h-5 w-5"/>
+             </Link>
+            </Button>
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
