@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, BarChart, Users, DollarSign } from 'lucide-react';
+import { Download, BarChart, Users, Euro } from 'lucide-react';
 
 const profitAndLossData = [
     { item: 'Ingresos por Proyectos', amount: 12500, type: 'income' },
@@ -56,7 +56,7 @@ export default function InformesPage() {
         <Card>
             <CardHeader>
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-md"><DollarSign className="h-6 w-6 text-primary"/></div>
+                    <div className="p-2 bg-primary/10 rounded-md"><Euro className="h-6 w-6 text-primary"/></div>
                     <CardTitle>Pérdidas y Ganancias (P&G)</CardTitle>
                 </div>
                 <CardDescription>Resumen de tus ingresos y gastos para el periodo seleccionado.</CardDescription>
