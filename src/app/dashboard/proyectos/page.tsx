@@ -1,42 +1,42 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, List, LayoutGrid, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, List, LayoutGrid, FilterX, ChevronLeft, ChevronRight, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CreateProjectModal } from './create-project-modal';
+import { EditProjectModal } from './edit-project-modal';
+import { AuthContext } from '@/context/auth-context';
+import { collection, onSnapshot, query, where, Timestamp, doc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-type ProjectStatus = 'En Progreso' | 'Planificación' | 'Completado' | 'En Espera' | 'Cancelado';
+export type ProjectStatus = 'En Progreso' | 'Planificación' | 'Completado' | 'En Espera' | 'Cancelado';
 
 export type Project = {
   id: string;
+  ownerId: string;
   name: string;
   client: string;
-  startDate: string;
-  estimatedEndDate: string;
+  description?: string;
+  startDate: Date | null;
+  endDate: Date | null;
   budget: number | null;
   status: ProjectStatus;
+  createdAt: Date;
 };
 
-const projectsData: Project[] = [
-  { id: '1', name: 'Desarrollo Web para \'Café Delicia\'', client: 'Café Delicia S.L.', startDate: '2023-10-01', estimatedEndDate: '2023-12-15', budget: 2500, status: 'En Progreso' },
-  { id: '2', name: 'Campaña Marketing Digital Q4', client: 'Moda Urbana Ltda.', startDate: '2023-09-15', estimatedEndDate: '2023-12-31', budget: 1800, status: 'Planificación' },
-  { id: '3', name: 'Consultoría SEO para \'TecnoSoluciones\'', client: 'TecnoSoluciones Avanzadas', startDate: '2023-08-01', estimatedEndDate: '2023-10-30', budget: 1200, status: 'Completado' },
-  { id: '4', name: 'Diseño de Logo y Branding para \'EcoVida\'', client: 'EcoVida Productos Naturales', startDate: '2023-11-01', estimatedEndDate: 'N/A', budget: null, status: 'En Espera' },
-  { id: '5', name: 'Migración de Servidores', client: 'Global Tech Inc.', startDate: '2023-07-20', estimatedEndDate: '2023-08-30', budget: 5000, status: 'Completado' },
-  { id: '6', name: 'App Móvil para Eventos', client: 'Eventos Plus', startDate: '2024-01-10', estimatedEndDate: '2024-06-30', budget: 12000, status: 'En Progreso' },
-  { id: '7', name: 'Estrategia de Contenidos 2024', client: 'Moda Urbana Ltda.', startDate: '2023-11-15', estimatedEndDate: '2023-12-20', budget: 950, status: 'Planificación' },
-  { id: '8', name: 'Optimización de Base de Datos', client: 'TecnoSoluciones Avanzadas', startDate: '2023-09-05', estimatedEndDate: '2023-09-25', budget: 750, status: 'Cancelado' },
-];
 
 const getStatusBadgeClass = (status: ProjectStatus) => {
   switch (status) {
@@ -52,14 +52,53 @@ const getStatusBadgeClass = (status: ProjectStatus) => {
 const projectStatuses: ProjectStatus[] = ['En Progreso', 'Planificación', 'Completado', 'En Espera', 'Cancelado'];
 
 export default function ProyectosPage() {
+    const { user } = useContext(AuthContext);
+    const { toast } = useToast();
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(true);
+
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
+    const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+
     const [filtroTexto, setFiltroTexto] = useState('');
     const [filtroEstado, setFiltroEstado] = useState<ProjectStatus | 'all'>('all');
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
+    
+    useEffect(() => {
+        if (!db || !user) {
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+
+        const q = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const docsList = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : null,
+                    endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : null,
+                    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
+                } as Project;
+            });
+            setProjects(docsList.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()));
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching projects:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los proyectos.' });
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, toast]);
 
     const filteredProjects = useMemo(() => {
-        return projectsData.filter(project => {
+        return projects.filter(project => {
             const porTexto = !filtroTexto || 
                 project.name.toLowerCase().includes(filtroTexto.toLowerCase()) ||
                 project.client.toLowerCase().includes(filtroTexto.toLowerCase());
@@ -68,7 +107,7 @@ export default function ProyectosPage() {
             
             return porTexto && porEstado;
         });
-    }, [filtroTexto, filtroEstado]);
+    }, [projects, filtroTexto, filtroEstado]);
 
     const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
 
@@ -89,9 +128,123 @@ export default function ProyectosPage() {
         setCurrentPage(1);
     };
 
+    const handleDelete = async () => {
+        if (!projectToDelete) return;
+        
+        try {
+            await deleteDoc(doc(db, "projects", projectToDelete.id));
+            toast({
+                title: 'Proyecto Eliminado',
+                description: `El proyecto ${projectToDelete.name} ha sido eliminado.`,
+            });
+        } catch (error) {
+            console.error("Error al eliminar el proyecto:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Error al eliminar',
+                description: 'No se pudo eliminar el proyecto. Revisa la consola y los permisos.',
+            });
+        } finally {
+            setProjectToDelete(null);
+        }
+    };
+    
+    const renderContent = () => {
+        if (loading) {
+            return (
+                 <div className="flex justify-center items-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            )
+        }
+        return (
+             <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nombre del Proyecto</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Fecha Inicio</TableHead>
+                    <TableHead>Fecha Fin Estimada</TableHead>
+                    <TableHead className="text-right">Presupuesto</TableHead>
+                    <TableHead className="text-center">Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {paginatedProjects.length > 0 ? (
+                        paginatedProjects.map((project) => (
+                            <TableRow key={project.id}>
+                                <TableCell className="font-medium">{project.name}</TableCell>
+                                <TableCell className="text-muted-foreground">{project.client}</TableCell>
+                                <TableCell className="text-muted-foreground">{project.startDate ? format(project.startDate, "dd MMM yyyy", { locale: es }) : 'N/A'}</TableCell>
+                                <TableCell className="text-muted-foreground">{project.endDate ? format(project.endDate, "dd MMM yyyy", { locale: es }) : 'N/A'}</TableCell>
+                                <TableCell className="text-right text-muted-foreground">{project.budget ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(project.budget) : 'N/A'}</TableCell>
+                                <TableCell className="text-center">
+                                    <Badge variant="outline" className={cn('font-semibold', getStatusBadgeClass(project.status))}>
+                                        {project.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <span className="sr-only">Abrir menú</span>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => setProjectToEdit(project)}>
+                                                <Pencil className="mr-2 h-4 w-4" />
+                                                Editar
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setProjectToDelete(project)}>
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Eliminar
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={7} className="h-24 text-center">
+                                No tienes proyectos. ¡Crea uno nuevo para empezar!
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+              </Table>
+        )
+    }
+
   return (
     <>
     <CreateProjectModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+    {projectToEdit && (
+        <EditProjectModal
+            isOpen={!!projectToEdit}
+            onClose={() => setProjectToEdit(null)}
+            project={projectToEdit}
+        />
+    )}
+    <AlertDialog open={!!projectToDelete} onOpenChange={(open) => !open && setProjectToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de que quieres eliminar este proyecto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción es irreversible. El proyecto <strong>{projectToDelete?.name}</strong> será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProjectToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Sí, eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -137,58 +290,7 @@ export default function ProyectosPage() {
         <TabsContent value="listado">
           <Card>
             <CardContent className="pt-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre del Proyecto</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Fecha Inicio</TableHead>
-                    <TableHead>Fecha Fin Estimada</TableHead>
-                    <TableHead className="text-right">Presupuesto</TableHead>
-                    <TableHead className="text-center">Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {paginatedProjects.length > 0 ? (
-                        paginatedProjects.map((project) => (
-                            <TableRow key={project.id}>
-                                <TableCell className="font-medium">{project.name}</TableCell>
-                                <TableCell className="text-muted-foreground">{project.client}</TableCell>
-                                <TableCell className="text-muted-foreground">{format(new Date(project.startDate), "dd MMM yyyy", { locale: es })}</TableCell>
-                                <TableCell className="text-muted-foreground">{project.estimatedEndDate !== 'N/A' ? format(new Date(project.estimatedEndDate), "dd MMM yyyy", { locale: es }) : 'N/A'}</TableCell>
-                                <TableCell className="text-right text-muted-foreground">{project.budget ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(project.budget) : 'N/A'}</TableCell>
-                                <TableCell className="text-center">
-                                    <Badge variant="outline" className={cn('font-semibold', getStatusBadgeClass(project.status))}>
-                                        {project.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                            <span className="sr-only">Abrir menú</span>
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
-                                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive focus:text-destructive">Eliminar</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                            <TableCell colSpan={7} className="h-24 text-center">
-                                No se encontraron proyectos con los filtros aplicados.
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-              </Table>
+              {renderContent()}
             </CardContent>
              <CardFooter className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,12 +17,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { useToast } from '@/hooks/use-toast';
 import type { Project } from './page';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { AuthContext } from '@/context/auth-context';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -31,6 +35,10 @@ interface CreateProjectModalProps {
 type ProjectStatus = Project['status'];
 
 export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps) {
+  const { user } = useContext(AuthContext);
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
   const [name, setName] = useState('');
   const [client, setClient] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>();
@@ -38,9 +46,18 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
   const [budget, setBudget] = useState('');
   const [status, setStatus] = useState<ProjectStatus>('Planificación');
   const [description, setDescription] = useState('');
-  const { toast } = useToast();
 
-  const handleCreateProject = () => {
+  const resetForm = () => {
+      setName('');
+      setClient('');
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setBudget('');
+      setStatus('Planificación');
+      setDescription('');
+  }
+
+  const handleCreateProject = async () => {
     if (!name || !client) {
       toast({
         variant: 'destructive',
@@ -49,13 +66,43 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
       });
       return;
     }
-    // Lógica para crear el proyecto (simulación)
-    console.log({ name, client, startDate, endDate, budget, status, description });
-    toast({
-      title: 'Proyecto Creado',
-      description: `El proyecto "${name}" ha sido creado con éxito.`,
-    });
-    onClose();
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Debes iniciar sesión para crear un proyecto.' });
+        return;
+    }
+
+    setIsLoading(true);
+
+    const projectData = {
+      ownerId: user.uid,
+      name,
+      client,
+      description,
+      startDate: startDate || null,
+      endDate: endDate || null,
+      budget: budget ? parseFloat(budget) : null,
+      status,
+      createdAt: serverTimestamp(),
+    };
+
+    try {
+        await addDoc(collection(db, "projects"), projectData);
+        toast({
+            title: 'Proyecto Creado',
+            description: `El proyecto "${name}" ha sido creado con éxito.`,
+        });
+        resetForm();
+        onClose();
+    } catch (error) {
+        console.error("Error al crear proyecto:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'No se pudo crear el proyecto. Revisa los permisos de Firestore.',
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -133,8 +180,11 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleCreateProject}>Crear Proyecto</Button>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+          <Button onClick={handleCreateProject} disabled={isLoading}>
+             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Crear Proyecto
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
