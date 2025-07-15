@@ -106,8 +106,8 @@ export default function DashboardLayout({
         <SidebarContent>
           <SidebarMenu>
              <SidebarMenuItem>
-                <Link href="/dashboard" asChild>
-                    <SidebarMenuButton isActive={isActive('/dashboard')} tooltip="Panel de Control">
+                <Link href="/dashboard" legacyBehavior passHref>
+                    <SidebarMenuButton as="a" isActive={isActive('/dashboard')} tooltip="Panel de Control">
                         <Home />
                         <span>Panel de Control</span>
                     </SidebarMenuButton>
@@ -125,24 +125,24 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/finanzas/vision-general" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/vision-general')}>
+                        <Link href="/dashboard/finanzas/vision-general" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/finanzas/vision-general')}>
                                 <AreaChart/>
                                 <span>Visión General</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/facturas" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/facturas')}>
+                        <Link href="/dashboard/facturas" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/facturas')}>
                                 <FileText/>
                                 <span>Facturas</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/gastos" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')}>
+                        <Link href="/dashboard/gastos" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/gastos')}>
                                 <Banknote/>
                                 <span>Gastos</span>
                             </SidebarMenuSubButton>
@@ -163,24 +163,24 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/proyectos" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/proyectos')}>
+                        <Link href="/dashboard/proyectos" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/proyectos')}>
                                 <Briefcase/>
                                 <span>Proyectos</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/contactos" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/contactos')}>
+                        <Link href="/dashboard/contactos" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/contactos')}>
                                 <Users/>
                                 <span>Contactos</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/tareas" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')}>
+                        <Link href="/dashboard/tareas" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/tareas')}>
                                 <CheckSquare/>
                                 <span>Tareas</span>
                             </SidebarMenuSubButton>
@@ -201,32 +201,32 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/perspectivas-ia" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/perspectivas-ia')}>
+                        <Link href="/dashboard/perspectivas-ia" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/perspectivas-ia')}>
                                 <BrainCircuit/>
                                 <span>Perspectivas IA</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/gestor-ia" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia')}>
+                        <Link href="/dashboard/gestor-ia" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/gestor-ia')}>
                                 <Bot/>
                                 <span>Gestor IA</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/marketing-ia" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/marketing-ia')}>
+                        <Link href="/dashboard/marketing-ia" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/marketing-ia')}>
                                 <Sparkles/>
                                 <span>Marketing IA</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/web-ia" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/web-ia')}>
+                        <Link href="/dashboard/web-ia" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/web-ia')}>
                                 <Palette/>
                                 <span>Web IA</span>
                             </SidebarMenuSubButton>
@@ -247,24 +247,24 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/configuracion" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/configuracion')}>
+                        <Link href="/dashboard/configuracion" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/configuracion')}>
                                 <Settings/>
                                 <span>Generales</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/conexiones" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/conexiones')}>
+                        <Link href="/dashboard/conexiones" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/conexiones')}>
                                 <Link2/>
                                 <span>Conexiones</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/mi-perfil" asChild>
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/mi-perfil')}>
+                        <Link href="/dashboard/mi-perfil" legacyBehavior passHref>
+                            <SidebarMenuSubButton as="a" isActive={isActive('/dashboard/mi-perfil')}>
                                 <UserCog/>
                                 <span>Mi Perfil</span>
                             </SidebarMenuSubButton>
@@ -276,8 +276,8 @@ export default function DashboardLayout({
             
              {isAdmin && (
                 <SidebarMenuItem>
-                    <Link href="/admin/dashboard" asChild>
-                    <SidebarMenuButton isActive={pathname.startsWith('/admin')} tooltip="Panel de Admin">
+                    <Link href="/admin/dashboard" legacyBehavior passHref>
+                    <SidebarMenuButton as="a" isActive={pathname.startsWith('/admin')} tooltip="Panel de Admin">
                         <Shield />
                         <span>Panel de Admin</span>
                     </SidebarMenuButton>
@@ -300,7 +300,7 @@ export default function DashboardLayout({
             <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
               <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href="/dashboard/configuracion" asChild>
+              <Link href="/dashboard/configuracion" passHref legacyBehavior>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Configuración</span>
@@ -321,8 +321,8 @@ export default function DashboardLayout({
             <SidebarTrigger />
           </div>
           <div className="flex-1 text-right">
-            <Link href="/dashboard/configuracion" asChild>
-             <Button variant="ghost" size="icon">
+            <Link href="/dashboard/configuracion" passHref legacyBehavior>
+             <Button variant="ghost" size="icon" as="a">
                 <Settings className="h-5 w-5"/>
              </Button>
             </Link>
@@ -333,4 +333,3 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
-
