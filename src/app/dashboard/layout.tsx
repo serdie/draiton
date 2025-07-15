@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
@@ -36,34 +36,31 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  LayoutDashboard,
-  FileText,
-  Users,
-  Briefcase,
-  BrainCircuit,
-  Bot,
-  Palette,
-  Link2,
   Settings,
   LogOut,
   Shield,
   Home,
-  Banknote,
   AreaChart,
+  FileText,
+  Banknote,
+  Blocks,
+  Briefcase,
+  Users,
   CheckSquare,
+  FlaskConical,
+  BrainCircuit,
+  Bot,
   Sparkles,
+  Palette,
+  Wrench,
+  Link2,
   UserCog,
   ChevronRight,
   Wallet,
-  Wrench,
-  FlaskConical,
-  Blocks,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
-import { cn } from '@/lib/utils';
-
 
 export default function DashboardLayout({
   children,
@@ -109,7 +106,7 @@ export default function DashboardLayout({
         <SidebarContent>
           <SidebarMenu>
              <SidebarMenuItem>
-                <Link href="/dashboard">
+                <Link href="/dashboard" asChild>
                     <SidebarMenuButton isActive={isActive('/dashboard')} tooltip="Panel de Control">
                         <Home />
                         <span>Panel de Control</span>
@@ -128,7 +125,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/finanzas/vision-general">
+                        <Link href="/dashboard/finanzas/vision-general" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/vision-general')}>
                                 <AreaChart/>
                                 <span>Visión General</span>
@@ -136,7 +133,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/facturas">
+                        <Link href="/dashboard/facturas" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/facturas')}>
                                 <FileText/>
                                 <span>Facturas</span>
@@ -144,7 +141,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/gastos">
+                        <Link href="/dashboard/gastos" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')}>
                                 <Banknote/>
                                 <span>Gastos</span>
@@ -166,7 +163,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/proyectos">
+                        <Link href="/dashboard/proyectos" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/proyectos')}>
                                 <Briefcase/>
                                 <span>Proyectos</span>
@@ -174,7 +171,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/contactos">
+                        <Link href="/dashboard/contactos" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/contactos')}>
                                 <Users/>
                                 <span>Contactos</span>
@@ -182,7 +179,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/tareas">
+                        <Link href="/dashboard/tareas" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')}>
                                 <CheckSquare/>
                                 <span>Tareas</span>
@@ -204,7 +201,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/perspectivas-ia">
+                        <Link href="/dashboard/perspectivas-ia" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/perspectivas-ia')}>
                                 <BrainCircuit/>
                                 <span>Perspectivas IA</span>
@@ -212,7 +209,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/gestor-ia">
+                        <Link href="/dashboard/gestor-ia" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia')}>
                                 <Bot/>
                                 <span>Gestor IA</span>
@@ -220,7 +217,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/marketing-ia">
+                        <Link href="/dashboard/marketing-ia" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/marketing-ia')}>
                                 <Sparkles/>
                                 <span>Marketing IA</span>
@@ -228,7 +225,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/web-ia">
+                        <Link href="/dashboard/web-ia" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/web-ia')}>
                                 <Palette/>
                                 <span>Web IA</span>
@@ -250,7 +247,7 @@ export default function DashboardLayout({
               <CollapsibleContent>
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/configuracion">
+                        <Link href="/dashboard/configuracion" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/configuracion')}>
                                 <Settings/>
                                 <span>Generales</span>
@@ -258,7 +255,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/conexiones">
+                        <Link href="/dashboard/conexiones" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/conexiones')}>
                                 <Link2/>
                                 <span>Conexiones</span>
@@ -266,7 +263,7 @@ export default function DashboardLayout({
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
-                        <Link href="/dashboard/mi-perfil">
+                        <Link href="/dashboard/mi-perfil" asChild>
                             <SidebarMenuSubButton isActive={isActive('/dashboard/mi-perfil')}>
                                 <UserCog/>
                                 <span>Mi Perfil</span>
@@ -279,7 +276,7 @@ export default function DashboardLayout({
             
              {isAdmin && (
                 <SidebarMenuItem>
-                    <Link href="/admin/dashboard">
+                    <Link href="/admin/dashboard" asChild>
                     <SidebarMenuButton isActive={pathname.startsWith('/admin')} tooltip="Panel de Admin">
                         <Shield />
                         <span>Panel de Admin</span>
@@ -303,7 +300,7 @@ export default function DashboardLayout({
             <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
               <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href="/dashboard/configuracion">
+              <Link href="/dashboard/configuracion" asChild>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Configuración</span>
@@ -324,7 +321,7 @@ export default function DashboardLayout({
             <SidebarTrigger />
           </div>
           <div className="flex-1 text-right">
-            <Link href="/dashboard/configuracion">
+            <Link href="/dashboard/configuracion" asChild>
              <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5"/>
              </Button>
@@ -336,3 +333,4 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
+
