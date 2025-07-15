@@ -16,13 +16,14 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CreateProjectModal } from './create-project-modal';
 import { EditProjectModal } from './edit-project-modal';
+import { KanbanBoard } from './kanban-board';
 import { AuthContext } from '@/context/auth-context';
 import { collection, onSnapshot, query, where, Timestamp, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-export type ProjectStatus = 'En Progreso' | 'Planificación' | 'Completado' | 'En Espera' | 'Cancelado';
+export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
 
 export type Project = {
   id: string;
@@ -49,7 +50,7 @@ const getStatusBadgeClass = (status: ProjectStatus) => {
   }
 };
 
-const projectStatuses: ProjectStatus[] = ['En Progreso', 'Planificación', 'Completado', 'En Espera', 'Cancelado'];
+export const projectStatuses: ProjectStatus[] = ['Planificación', 'En Progreso', 'En Espera', 'Completado', 'Cancelado'];
 
 export default function ProyectosPage() {
     const { user } = useContext(AuthContext);
@@ -149,7 +150,7 @@ export default function ProyectosPage() {
         }
     };
     
-    const renderContent = () => {
+    const renderListContent = () => {
         if (loading) {
             return (
                  <div className="flex justify-center items-center py-12">
@@ -284,13 +285,13 @@ export default function ProyectosPage() {
       <Tabs defaultValue="listado" className="w-full">
         <TabsList>
           <TabsTrigger value="listado"><List className="mr-2 h-4 w-4" />Listado</TabsTrigger>
-          <TabsTrigger value="kanban" disabled><LayoutGrid className="mr-2 h-4 w-4" />Kanban (Próximamente)</TabsTrigger>
+          <TabsTrigger value="kanban"><LayoutGrid className="mr-2 h-4 w-4" />Kanban</TabsTrigger>
         </TabsList>
 
         <TabsContent value="listado">
           <Card>
             <CardContent className="pt-6">
-              {renderContent()}
+              {renderListContent()}
             </CardContent>
              <CardFooter className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -330,14 +331,7 @@ export default function ProyectosPage() {
           </Card>
         </TabsContent>
         <TabsContent value="kanban">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Vista Kanban</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">Esta vista estará disponible próximamente para que gestiones tus proyectos arrastrando tarjetas.</p>
-                </CardContent>
-            </Card>
+            <KanbanBoard projects={projects} loading={loading} />
         </TabsContent>
       </Tabs>
     </div>
