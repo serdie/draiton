@@ -60,6 +60,7 @@ import {
   Repeat,
   Landmark,
   PieChart,
+  Scale,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -92,7 +93,7 @@ export default function DashboardLayout({
     return paths.some(path => pathname.startsWith(path));
   }
 
-  const financePaths = ['/dashboard/finanzas', '/dashboard/facturas', '/dashboard/gastos', '/dashboard/bancos'];
+  const financePaths = ['/dashboard/finanzas', '/dashboard/facturas', '/dashboard/gastos', '/dashboard/bancos', '/dashboard/prevision-impuestos'];
   const operationsPaths = ['/dashboard/proyectos', '/dashboard/contactos', '/dashboard/tareas', '/dashboard/informes'];
   const aiToolsPaths = ['/dashboard/perspectivas-ia', '/dashboard/gestor-ia', '/dashboard/marketing-ia', '/dashboard/web-ia'];
   const settingsPaths = ['/dashboard/configuracion', '/dashboard/conexiones', '/dashboard/mi-perfil'];
@@ -148,6 +149,14 @@ export default function DashboardLayout({
                             <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')}>
                                 <Banknote/>
                                 <span>Gastos</span>
+                            </SidebarMenuSubButton>
+                        </Link>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                        <Link href="/dashboard/finanzas/prevision-impuestos">
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/prevision-impuestos')}>
+                                <Scale/>
+                                <span>Previsión Impuestos</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
