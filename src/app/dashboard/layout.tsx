@@ -239,7 +239,7 @@ export default function DashboardLayout({
                     </SidebarMenuSubItem>
                     <Collapsible defaultOpen={isGroupActive(['/dashboard/gestor-ia'])}>
                         <CollapsibleTrigger asChild>
-                             <SidebarMenuButton isActive={isGroupActive(['/dashboard/gestor-ia'])} className="group w-full justify-start">
+                             <SidebarMenuButton isActive={isGroupActive(['/dashboard/gestor-ia'])}>
                                 <Bot />
                                 <span>Gestor IA</span>
                                 <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
