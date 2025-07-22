@@ -76,7 +76,7 @@ export function AyudasForm({ action }: { action: (currentState: FormState, formD
                             <h4 className="font-semibold">{item.title}</h4>
                             <p className="text-sm text-muted-foreground my-1">{item.summary}</p>
                             <Button variant="link" asChild className="p-0 h-auto">
-                                <Link href={item.sourceLink} target="_blank">Ver fuente</Link>
+                                <Link href={item.sourceLink} target="_blank" rel="noopener noreferrer">Ver fuente</Link>
                             </Button>
                         </div>
                     )) : <p className="text-sm text-muted-foreground">No se encontraron ayudas relevantes.</p>}
@@ -95,7 +95,7 @@ export function AyudasForm({ action }: { action: (currentState: FormState, formD
                             <h4 className="font-semibold">{item.title}</h4>
                             <p className="text-sm text-muted-foreground my-1">{item.summary}</p>
                             <Button variant="link" asChild className="p-0 h-auto">
-                                <Link href={item.sourceLink} target="_blank">Leer más</Link>
+                                <Link href={item.sourceLink} target="_blank" rel="noopener noreferrer">Leer más</Link>
                             </Button>
                         </div>
                     )) : <p className="text-sm text-muted-foreground">No se encontraron noticias relevantes.</p>}
