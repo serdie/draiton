@@ -131,7 +131,7 @@ export default function DashboardLayout({
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
                         <Link href="/dashboard/finanzas/vision-general">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/vision-general')}>
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/vision-general')} tooltip="Visión General">
                                 <AreaChart/>
                                 <span>Visión General</span>
                             </SidebarMenuSubButton>
@@ -139,7 +139,7 @@ export default function DashboardLayout({
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                         <Link href="/dashboard/facturas">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/facturas')}>
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/facturas')} tooltip="Facturas">
                                 <FileText/>
                                 <span>Facturas</span>
                             </SidebarMenuSubButton>
@@ -147,7 +147,7 @@ export default function DashboardLayout({
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
                         <Link href="/dashboard/gastos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')}>
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')} tooltip="Gastos">
                                 <Banknote/>
                                 <span>Gastos</span>
                             </SidebarMenuSubButton>
@@ -155,17 +155,17 @@ export default function DashboardLayout({
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                         <Link href="/dashboard/finanzas/prevision-impuestos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/prevision-impuestos')}>
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/prevision-impuestos')} tooltip="Previsión Impuestos">
                                 <Scale/>
-                                <span>Previsión Impuestos</span>
+                                <span>Impuestos</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
                         <Link href="/dashboard/bancos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/bancos')}>
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/bancos')} tooltip="Conexión Bancaria">
                                 <Landmark/>
-                                <span>Conexión Bancaria</span>
+                                <span>Bancos</span>
                             </SidebarMenuSubButton>
                         </Link>
                     </SidebarMenuSubItem>
@@ -185,7 +185,7 @@ export default function DashboardLayout({
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
                         <Link href="/dashboard/proyectos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/proyectos')}>
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/proyectos')} tooltip="Proyectos">
                                 <Briefcase/>
                                 <span>Proyectos</span>
                             </SidebarMenuSubButton>
@@ -193,7 +193,7 @@ export default function DashboardLayout({
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                         <Link href="/dashboard/contactos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/contactos')}>
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/contactos')} tooltip="Contactos">
                                 <Users/>
                                 <span>Contactos</span>
                             </SidebarMenuSubButton>
@@ -201,7 +201,7 @@ export default function DashboardLayout({
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
                         <Link href="/dashboard/tareas">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')}>
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')} tooltip="Tareas">
                                 <CheckSquare/>
                                 <span>Tareas</span>
                             </SidebarMenuSubButton>
@@ -209,7 +209,7 @@ export default function DashboardLayout({
                     </SidebarMenuSubItem>
                      <SidebarMenuSubItem>
                         <Link href="/dashboard/informes">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/informes')}>
+                            <SidebarMenuSubButton isActive={isActive('/dashboard/informes')} tooltip="Informes">
                                 <PieChart/>
                                 <span>Informes</span>
                             </SidebarMenuSubButton>
@@ -231,7 +231,7 @@ export default function DashboardLayout({
                  <SidebarMenuSub>
                     <SidebarMenuSubItem>
                         <Link href="/dashboard/perspectivas-ia">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/perspectivas-ia')}>
+                             <SidebarMenuSubButton isActive={isActive('/dashboard/perspectivas-ia')}>
                                 <BrainCircuit/>
                                 <span>Perspectivas IA</span>
                             </SidebarMenuSubButton>
@@ -239,7 +239,7 @@ export default function DashboardLayout({
                     </SidebarMenuSubItem>
                     <Collapsible defaultOpen={isGroupActive(['/dashboard/gestor-ia'])}>
                         <CollapsibleTrigger asChild>
-                             <SidebarMenuButton isActive={isGroupActive(['/dashboard/gestor-ia'])}>
+                             <SidebarMenuButton isActive={isGroupActive(['/dashboard/gestor-ia'])} className="group w-full justify-start">
                                 <Bot />
                                 <span>Gestor IA</span>
                                 <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
@@ -369,10 +369,10 @@ export default function DashboardLayout({
             <SidebarTrigger />
           </div>
           <div className="flex-1 text-right">
-            <Button variant="ghost" size="icon" asChild>
-             <Link href="/dashboard/configuracion">
+             <Button variant="ghost" size="icon" asChild>
+               <Link href="/dashboard/configuracion">
                 <Settings className="h-5 w-5"/>
-             </Link>
+               </Link>
             </Button>
           </div>
         </header>
