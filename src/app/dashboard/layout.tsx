@@ -6,11 +6,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
@@ -18,12 +13,8 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarInset,
   SidebarTrigger,
   SidebarFooter,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -40,31 +31,18 @@ import {
   LogOut,
   Shield,
   Home,
-  AreaChart,
-  FileText,
-  Banknote,
-  Blocks,
-  Briefcase,
-  Users,
-  CheckSquare,
-  FlaskConical,
-  BrainCircuit,
-  Bot,
-  Sparkles,
-  Palette,
-  Wrench,
-  Link2,
-  UserCog,
-  ChevronRight,
   Wallet,
-  Repeat,
-  Landmark,
-  PieChart,
-  Scale,
+  Blocks,
+  FlaskConical,
+  UserCog,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function DashboardLayout({
   children,
@@ -84,300 +62,125 @@ export default function DashboardLayout({
   }
   
   const isActive = (href: string) => {
-    if (href === '/dashboard') {
-        return pathname === href;
-    }
     return pathname.startsWith(href);
   };
 
-  const financePaths = ['/dashboard/finanzas', '/dashboard/facturas', '/dashboard/gastos', '/dashboard/bancos'];
-  const operationsPaths = ['/dashboard/proyectos', '/dashboard/contactos', '/dashboard/tareas', '/dashboard/informes'];
-  const aiToolsPaths = ['/dashboard/perspectivas-ia', '/dashboard/gestor-ia', '/dashboard/marketing-ia', '/dashboard/web-ia'];
-  const settingsPaths = ['/dashboard/configuracion', '/dashboard/conexiones', '/dashboard/mi-perfil'];
-
-  const isGroupActive = (paths: string[]) => {
-    return paths.some(path => pathname.startsWith(path));
-  };
+  const getPageTitle = () => {
+    if (pathname.startsWith('/dashboard/finanzas')) return 'Finanzas';
+    if (pathname.startsWith('/dashboard/operaciones')) return 'Operaciones';
+    if (pathname.startsWith('/dashboard/herramientas-ia')) return 'Herramientas IA';
+    if (pathname.startsWith('/dashboard/admin')) return 'Administración';
+    return 'Dashboard';
+  }
 
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <Logo className="size-7 text-primary" />
-            <span className="text-lg font-semibold">Emprende Total</span>
-          </div>
+        <SidebarHeader className="p-4">
+          <Logo />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
              <SidebarMenuItem>
                 <Link href="/dashboard">
-                    <SidebarMenuButton isActive={isActive('/dashboard')} tooltip="Panel de Control">
+                    <SidebarMenuButton isActive={isActive('/dashboard') && pathname === '/dashboard'} tooltip="Panel de Control">
                         <Home />
-                        <span>Panel de Control</span>
+                        <span>Dashboard</span>
                     </SidebarMenuButton>
                 </Link>
             </SidebarMenuItem>
-
-            <Collapsible defaultOpen={isGroupActive(financePaths)}>
-              <CollapsibleTrigger asChild>
-                 <SidebarMenuButton isActive={isGroupActive(financePaths)} className="group w-full justify-start">
-                  <Wallet />
-                  <span>Finanzas</span>
-                  <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                 <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/finanzas/vision-general">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/vision-general')} tooltip="Visión General">
-                                <AreaChart/>
-                                <span>Visión General</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/facturas">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/facturas')} tooltip="Facturas">
-                                <FileText/>
-                                <span>Facturas</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/gastos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')} tooltip="Gastos">
-                                <Banknote/>
-                                <span>Gastos</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/finanzas/prevision-impuestos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas/prevision-impuestos')} tooltip="Previsión Impuestos">
-                                <Scale/>
-                                <span>Impuestos</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/bancos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/bancos')} tooltip="Conexión Bancaria">
-                                <Landmark/>
-                                <span>Bancos</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                 </SidebarMenuSub>
-              </CollapsibleContent>
-            </Collapsible>
-
-            <Collapsible defaultOpen={isGroupActive(operationsPaths)}>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton isActive={isGroupActive(operationsPaths)} className="group w-full justify-start">
-                  <Blocks />
-                  <span>Operaciones</span>
-                  <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                 <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/proyectos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/proyectos')} tooltip="Proyectos">
-                                <Briefcase/>
-                                <span>Proyectos</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/contactos">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/contactos')} tooltip="Contactos">
-                                <Users/>
-                                <span>Contactos</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/tareas">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')} tooltip="Tareas">
-                                <CheckSquare/>
-                                <span>Tareas</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/informes">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/informes')} tooltip="Informes">
-                                <PieChart/>
-                                <span>Informes</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                 </SidebarMenuSub>
-              </CollapsibleContent>
-            </Collapsible>
-            
-            <Collapsible defaultOpen={isGroupActive(aiToolsPaths)}>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton isActive={isGroupActive(aiToolsPaths)} className="group w-full justify-start">
-                  <FlaskConical />
-                  <span>Herramientas IA</span>
-                  <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                 <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/perspectivas-ia">
-                             <SidebarMenuSubButton isActive={isActive('/dashboard/perspectivas-ia')}>
-                                <BrainCircuit/>
-                                <span>Perspectivas IA</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                    <Collapsible defaultOpen={isGroupActive(['/dashboard/gestor-ia'])}>
-                        <CollapsibleTrigger asChild>
-                             <SidebarMenuButton isActive={isGroupActive(['/dashboard/gestor-ia'])} className="group w-full justify-start">
-                                <Bot />
-                                <span>Gestor IA</span>
-                                <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                            </SidebarMenuButton>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                             <SidebarMenuSub>
-                                <SidebarMenuSubItem>
-                                    <Link href="/dashboard/gestor-ia/ayudas">
-                                        <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia/ayudas')}>
-                                            <span>Buscador de Ayudas</span>
-                                        </SidebarMenuSubButton>
-                                    </Link>
-                                </SidebarMenuSubItem>
-                                 <SidebarMenuSubItem>
-                                    <Link href="/dashboard/gestor-ia/asistente-fiscal">
-                                        <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia/asistente-fiscal')}>
-                                            <span>Asistente Fiscal</span>
-                                        </SidebarMenuSubButton>
-                                    </Link>
-                                </SidebarMenuSubItem>
-                             </SidebarMenuSub>
-                        </CollapsibleContent>
-                    </Collapsible>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/marketing-ia">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/marketing-ia')}>
-                                <Sparkles/>
-                                <span>Marketing IA</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/web-ia">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/web-ia')}>
-                                <Palette/>
-                                <span>Web IA</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                 </SidebarMenuSub>
-              </CollapsibleContent>
-            </Collapsible>
-
-             <Collapsible defaultOpen={isGroupActive(settingsPaths)}>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton isActive={isGroupActive(settingsPaths)} className="group w-full justify-start">
-                  <Wrench />
-                  <span>Ajustes</span>
-                  <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                 <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/configuracion">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/configuracion')}>
-                                <Settings/>
-                                <span>Generales</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                        <Link href="/dashboard/conexiones">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/conexiones')}>
-                                <Link2/>
-                                <span>Conexiones</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                     <SidebarMenuSubItem>
-                        <Link href="/dashboard/mi-perfil">
-                            <SidebarMenuSubButton isActive={isActive('/dashboard/mi-perfil')}>
-                                <UserCog/>
-                                <span>Mi Perfil</span>
-                            </SidebarMenuSubButton>
-                        </Link>
-                    </SidebarMenuSubItem>
-                 </SidebarMenuSub>
-              </CollapsibleContent>
-            </Collapsible>
+            <SidebarMenuItem>
+                <Link href="/dashboard/finanzas">
+                    <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
+                        <Wallet />
+                        <span>Finanzas</span>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/dashboard/operaciones">
+                    <SidebarMenuButton isActive={isActive('/dashboard/operaciones')} tooltip="Operaciones">
+                        <Blocks />
+                        <span>Operaciones</span>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/dashboard/herramientas-ia">
+                    <SidebarMenuButton isActive={isActive('/dashboard/herramientas-ia')} tooltip="Herramientas IA">
+                        <FlaskConical />
+                        <span>Herramientas IA</span>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
             
              {isAdmin && (
                 <SidebarMenuItem>
                     <Link href="/admin/dashboard">
                     <SidebarMenuButton isActive={pathname.startsWith('/admin')} tooltip="Panel de Admin">
-                        <Shield />
-                        <span>Panel de Admin</span>
+                        <UserCog />
+                        <span>Administración</span>
                     </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
             )}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
-           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 p-2 rounded-md hover:bg-sidebar-accent cursor-pointer w-full text-left">
-                    <UserAvatar user={user} />
-                    <div className="flex flex-col overflow-hidden">
-                        <span className="font-medium truncate">{user.displayName || 'Usuario'}</span>
-                        <span className="text-xs text-muted-foreground truncate">{user.email}</span>
-                    </div>
-                </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
-              <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <Link href="/dashboard/configuracion">
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Configuración</span>
-                </DropdownMenuItem>
-              </Link>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Cerrar sesión</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <SidebarFooter className='p-4 space-y-4'>
+          <div className='p-4 bg-secondary rounded-lg text-center'>
+            <p className='font-bold'>Upgrade a Pro</p>
+            <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
+            <Button size="sm" className="w-full">Ver Planes</Button>
+          </div>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset>
-        <header className="flex h-14 items-center justify-between border-b bg-background/95 px-4 lg:px-6">
-          <div className="md:hidden">
-            <SidebarTrigger />
-          </div>
-          <div className="flex-1 text-right">
-             <Button variant="ghost" size="icon" asChild>
-               <Link href="/dashboard/configuracion">
-                <Settings className="h-5 w-5"/>
-               </Link>
-            </Button>
-          </div>
+      <div className="flex-1 flex flex-col">
+        <header className="flex h-20 items-center justify-between border-b bg-background px-4 lg:px-8">
+            <div className="md:hidden">
+                <SidebarTrigger />
+            </div>
+            <h2 className="text-2xl font-bold hidden md:block">{getPageTitle()}</h2>
+            <div className="flex-1 flex justify-end items-center gap-4">
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Buscar proyectos, facturas..." className="pl-10" />
+                </div>
+                <Badge variant="outline" className='border-yellow-400 text-yellow-400'>PRO</Badge>
+                <Button variant="ghost" size="icon">
+                    <Bell />
+                </Button>
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <div className="flex items-center gap-3 cursor-pointer">
+                            <UserAvatar user={user} />
+                            <div className="hidden sm:flex flex-col items-start">
+                                <span className="font-medium text-sm">{user.displayName || 'Usuario'}</span>
+                                <span className="text-xs text-muted-foreground">Autónomo</span>
+                            </div>
+                        </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
+                        <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <Link href="/dashboard/configuracion">
+                            <DropdownMenuItem>
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Configuración</span>
+                            </DropdownMenuItem>
+                        </Link>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Cerrar sesión</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
-      </SidebarInset>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-background">
+          {children}
+        </main>
+      </div>
     </SidebarProvider>
   );
 }

@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/auth-context';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Emprende Total',
+  title: 'GestorL',
   description: 'Tu centro de operaciones para autónomos y pequeñas empresas.',
 };
 
@@ -23,12 +23,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
       </head>
       <body className={cn("font-body antialiased", "min-h-screen bg-background font-sans")}>
-        {/* El AuthProvider debe envolver a todo lo demás */}
         <AuthProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="dark"
+            enableSystem={false}
             disableTransitionOnChange
           >
             {children}
