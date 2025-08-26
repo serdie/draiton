@@ -229,17 +229,21 @@ export default function FinanzasPage() {
 
         <Tabs defaultValue="facturacion" className="w-full">
           <TabsList className="border-b border-border/50 rounded-none p-0 bg-transparent justify-start gap-4">
+            <TabsTrigger value="vision-general" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Visión General</TabsTrigger>
             <TabsTrigger value="facturacion" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Facturación</TabsTrigger>
             <TabsTrigger value="gastos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Gastos</TabsTrigger>
             <TabsTrigger value="impuestos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Impuestos</TabsTrigger>
             <TabsTrigger value="bancos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Conexión Bancaria</TabsTrigger>
           </TabsList>
+          <TabsContent value="vision-general" className="mt-6">
+            <p>Próximamente: Visión General Financiera.</p>
+          </TabsContent>
           <TabsContent value="facturacion" className="mt-6">
             {renderFacturasContent()}
           </TabsContent>
-          <TabsContent value="gastos"><p>Próximamente: Gestión de gastos.</p></TabsContent>
-          <TabsContent value="impuestos"><p>Próximamente: Previsión de impuestos.</p></TabsContent>
-          <TabsContent value="bancos"><p>Próximamente: Conexión bancaria.</p></TabsContent>
+          <TabsContent value="gastos"  className="mt-6"><p>Próximamente: Gestión de gastos.</p></TabsContent>
+          <TabsContent value="impuestos"  className="mt-6"><p>Próximamente: Previsión de impuestos.</p></TabsContent>
+          <TabsContent value="bancos"  className="mt-6"><p>Próximamente: Conexión bancaria.</p></TabsContent>
         </Tabs>
       </div>
     </>
