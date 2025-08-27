@@ -73,7 +73,6 @@ export default function DashboardLayout({
     if (isActive('/dashboard/proyectos')) return 'Operaciones';
     if (isActive('/dashboard/gestor-ia')) return 'Herramientas IA';
     if (isActive('/dashboard/automatizaciones')) return 'Automatizaciones';
-    if (isActive('/dashboard/marketing')) return 'Marketing';
     if (isActive('/dashboard/conexiones')) return 'Conexiones';
     if (isActive('/dashboard/configuracion')) return 'Configuración';
     if (isActive('/admin/dashboard')) return 'Administración';
@@ -127,15 +126,6 @@ export default function DashboardLayout({
                 <SidebarMenuButton isActive={isActive('/dashboard/automatizaciones')} tooltip="Automatizaciones">
                   <Zap />
                   <span>Automatizaciones</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-
-             <SidebarMenuItem>
-              <Link href="/dashboard/marketing">
-                <SidebarMenuButton isActive={isActive('/dashboard/marketing')} tooltip="Marketing">
-                  <Mail />
-                  <span>Marketing</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>

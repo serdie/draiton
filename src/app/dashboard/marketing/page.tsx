@@ -34,8 +34,7 @@ export default function MarketingIAPage() {
 
   return (
     <div className="relative">
-      {!isPro && <ProFeatureLock />}
-      <div className={cn("space-y-6", !isPro && "opacity-50 pointer-events-none")}>
+      <div className={cn("space-y-6")}>
         <div>
           <h1 className="text-3xl font-bold">Centro de Marketing IA</h1>
           <p className="text-muted-foreground">
