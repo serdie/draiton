@@ -72,9 +72,9 @@ export function AsistenteFiscalForm({ action }: { action: (currentState: FormSta
       )}
 
       {state.output && (
-        <Card className="mt-6 border-primary">
+        <Card className="mt-6 border-primary/50">
           <CardHeader>
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 bg-primary/10 text-primary p-3 rounded-lg">
                     <FileText className="h-6 w-6"/>
                 </div>
@@ -84,26 +84,26 @@ export function AsistenteFiscalForm({ action }: { action: (currentState: FormSta
                 </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div>
               <h3 className="font-semibold text-lg mb-2">Instrucciones Clave</h3>
               <div className="space-y-3">
                 {state.output.instructions.map((step, index) => (
-                    <div key={index} className="p-3 border rounded-md bg-muted/50">
+                    <div key={index} className="p-4 border rounded-md bg-background/50">
                         <p className="font-semibold">Casilla {step.field}</p>
-                        <p className="text-primary font-bold text-lg">{step.value}</p>
+                        <p className="text-primary font-bold text-xl">{step.value}</p>
                         <p className="text-sm text-muted-foreground mt-1">{step.explanation}</p>
                     </div>
                 ))}
               </div>
             </div>
-            <div className="p-4 border-l-4 border-yellow-400 bg-yellow-50 rounded-md">
-                <p className="font-bold text-yellow-800">Resultado Final: {state.output.finalResult}</p>
+            <div className="p-4 border-l-4 border-yellow-500 bg-yellow-400/10 rounded-r-md">
+                <p className="font-bold text-yellow-300">Resultado Final: {state.output.finalResult}</p>
             </div>
              <div>
               <h3 className="font-semibold text-lg mb-2">Notas Importantes</h3>
-              <div className="flex items-start gap-3 p-3 border rounded-md text-sm">
-                <Info className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-start gap-3 p-4 border rounded-md text-sm bg-background/50">
+                <Info className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
                 <p className="text-muted-foreground whitespace-pre-wrap">{state.output.importantNotes}</p>
               </div>
             </div>

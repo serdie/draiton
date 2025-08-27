@@ -2,13 +2,14 @@
 'use client';
 
 import { useState, useMemo, useEffect, useContext } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { FilePlus, MoreHorizontal, Loader2, Trash2, Pencil, Eye, Download, Sparkles, Upload, Plus } from 'lucide-react';
+import { FilePlus, MoreHorizontal, Loader2, Trash2, Pencil, Eye, Download, Sparkles, Upload, Plus, Send } from 'lucide-react';
 import { ImportInvoiceModal } from '../documentos/import-invoice-modal';
 import { CreateDocumentModal } from '../documentos/create-document-modal';
 import { EditDocumentModal } from '../documentos/edit-document-modal';
@@ -24,6 +25,7 @@ import { AuthContext } from '@/context/auth-context';
 import { deleteDocument } from '@/lib/firebase/document-actions';
 import type { Document, DocumentStatus } from '../documentos/page';
 import { RegisterExpenseModal } from '../gastos/register-expense-modal';
+import { Input } from '@/components/ui/input';
 
 const getBadgeClass = (estado: string) => {
   switch (estado?.toLowerCase()) {
@@ -267,6 +269,88 @@ export default function FinanzasPage() {
     )
   }
 
+  const renderImpuestosContent = () => {
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+                <Card className="bg-secondary/50 border-border/30">
+                    <CardHeader>
+                        <CardTitle className="text-base">Previsión 3er Trimestre</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-lg">
+                        <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">IVA a pagar</span>
+                            <span className="font-semibold">1.845,20€</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">IRPF a cuenta</span>
+                            <span className="font-semibold">975,50€</span>
+                        </div>
+                         <div className="flex justify-between items-center border-t border-border/50 pt-4 mt-4">
+                            <span className="font-bold">Total a liquidar</span>
+                            <span className="font-bold text-primary text-xl">2.820,70€</span>
+                        </div>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-secondary/50 border-border/30">
+                    <CardHeader>
+                        <CardTitle className="text-base">Modelos Tributarios</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="space-y-3">
+                            <li className="flex justify-between items-center p-2 rounded-md hover:bg-background/50">
+                                <span>Modelo 303 (IVA Trimestral)</span>
+                                <Link href="/dashboard/gestor-ia/asistente-fiscal" className="text-sm font-semibold text-primary hover:underline">Preparar</Link>
+                            </li>
+                             <li className="flex justify-between items-center p-2 rounded-md hover:bg-background/50">
+                                <span>Modelo 130 (IRPF Trimestral)</span>
+                                <Link href="/dashboard/gestor-ia/asistente-fiscal" className="text-sm font-semibold text-primary hover:underline">Preparar</Link>
+                            </li>
+                             <li className="flex justify-between items-center p-2 rounded-md hover:bg-background/50">
+                                <span>Modelo 111 (Retenciones)</span>
+                                <Link href="/dashboard/gestor-ia/asistente-fiscal" className="text-sm font-semibold text-primary hover:underline">Preparar</Link>
+                            </li>
+                             <li className="flex justify-between items-center p-2 rounded-md hover:bg-background/50">
+                                <span>Modelo 115 (Alquileres)</span>
+                                <Link href="/dashboard/gestor-ia/asistente-fiscal" className="text-sm font-semibold text-primary hover:underline">Preparar</Link>
+                            </li>
+                             <li className="flex justify-between items-center p-2 rounded-md text-muted-foreground">
+                                <span>Modelo 390 (Resumen Anual IVA)</span>
+                                <span className="text-sm">Próximamente</span>
+                            </li>
+                             <li className="flex justify-between items-center p-2 rounded-md text-muted-foreground">
+                                <span>Modelo 347 (Operac. con terceros)</span>
+                                <span className="text-sm">Próximamente</span>
+                            </li>
+                        </ul>
+                    </CardContent>
+                </Card>
+            </div>
+             <Card className="bg-secondary/50 border-border/30 lg:col-span-1 flex flex-col">
+                <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        Asistente IA
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow flex flex-col space-y-4">
+                   <div className="p-3 rounded-lg bg-background text-sm">
+                     ¡Hola! Soy GestorIA. Pregúntame sobre impuestos, facturas, o cómo optimizar tu negocio.
+                   </div>
+                </CardContent>
+                <CardFooter>
+                    <div className="relative w-full">
+                        <Input placeholder="Escribe tu consulta..." className="pr-10"/>
+                        <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8">
+                            <Send className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </CardFooter>
+            </Card>
+        </div>
+    )
+  }
+
   return (
     <>
       <ImportInvoiceModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onDataExtracted={handleDataExtracted} />
@@ -305,7 +389,9 @@ export default function FinanzasPage() {
           <TabsContent value="gastos"  className="mt-6">
             {renderGastosContent()}
           </TabsContent>
-          <TabsContent value="impuestos"  className="mt-6"><p>Próximamente: Gestión de impuestos.</p></TabsContent>
+          <TabsContent value="impuestos"  className="mt-6">
+            {renderImpuestosContent()}
+          </TabsContent>
           <TabsContent value="bancos"  className="mt-6"><p>Próximamente: Conexión bancaria.</p></TabsContent>
         </Tabs>
       </div>
