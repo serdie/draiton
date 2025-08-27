@@ -18,7 +18,7 @@ import { getGrantsAndNewsAction } from './ayudas/actions';
 import { WebIAPageContent } from '../web-ia/web-ia-page-content';
 import { getWebsiteConceptAction } from '../web-ia/actions';
 import { ExtractorForm } from '../extractor-facturas/extractor-form';
-import { getInvoiceData } from '../extractor-facturas/page';
+import { getInvoiceData } from '../extractor-facturas/actions';
 
 
 function ProFeatureLock() {
