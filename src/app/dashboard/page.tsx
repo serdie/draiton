@@ -11,6 +11,7 @@ import {
   TrendingUp,
   UserPlus,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,271 +36,153 @@ import type { Document } from './documentos/page';
 import type { Expense } from './gastos/page';
 import type { Contact } from './contactos/page';
 import type { Project, ProjectStatus } from './proyectos/page';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 type ActivityItem = {
     id: string;
-    type: 'Gasto' | 'Ingreso' | 'Contacto' | 'Proyecto';
+    type: 'Gasto' | 'Ingreso' | 'Contacto' | 'Proyecto' | 'Tarea';
     text: string;
-    date: Date;
-    user: string;
-    avatar: string;
+    time: string;
 };
 
+const recentActivitiesData: ActivityItem[] = [
+    { id: '1', type: 'Ingreso', text: "Factura #2023-015 enviada a 'Tech Solutions'", time: 'hace 15m' },
+    { id: '2', type: 'Gasto', text: "Nuevo gasto 'Suscripción a Figma' añadido", time: 'hace 1h' },
+    { id: '3', type: 'Tarea', text: "Tarea 'Preparar reunión' completada", time: 'hace 3h' },
+    { id: '4', type: 'Proyecto', text: "Proyecto 'Rediseño Web' actualizado", time: 'hace 5h' },
+];
+
+const financialChartData = [
+  { month: 'Ene', total: 0 },
+  { month: 'Feb', total: 0 },
+  { month: 'Mar', total: 0 },
+  { month: 'Abr', total: 0 },
+  { month: 'May', total: 0 },
+  { month: 'Jun', total: 0 },
+];
 
 export default function DashboardPage() {
     const { user } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
-    const [income, setIncome] = useState(0);
-    const [expenses, setExpenses] = useState(0);
-    const [activeProjects, setActiveProjects] = useState(0);
-    const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
+    const [income, setIncome] = useState(12450);
+    const [expenses, setExpenses] = useState(5820);
+    const [activeProjects, setActiveProjects] = useState(3);
+    const [pendingTasks, setPendingTasks] = useState(8);
+    const [recentActivities, setRecentActivities] = useState<ActivityItem[]>(recentActivitiesData);
 
-    useEffect(() => {
-        if (!user || !db) {
-            setLoading(false);
-            return;
-        }
+    const netProfit = income - expenses;
 
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                // --- Financial Data ---
-                // Income (Paid Invoices)
-                const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
-                const invoicesSnapshot = await getDocs(invoicesQuery);
-                const totalIncome = invoicesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Document).importe, 0);
-                setIncome(totalIncome);
-
-                // Expenses
-                const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
-                const expensesSnapshot = await getDocs(expensesQuery);
-                const totalExpenses = expensesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Expense).importe, 0);
-                setExpenses(totalExpenses);
-
-                // --- Active Projects ---
-                const activeStatuses: ProjectStatus[] = ['Planificación', 'En Progreso', 'En Espera'];
-                const projectsQuery = query(
-                    collection(db, 'projects'), 
-                    where('ownerId', '==', user.uid), 
-                    where('status', 'in', activeStatuses)
-                );
-                const projectsSnapshot = await getDocs(projectsQuery);
-                setActiveProjects(projectsSnapshot.size);
-
-
-                // --- Recent Activity ---
-                const activities: ActivityItem[] = [];
-
-                // Paid Invoices
-                const paidInvoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'), orderBy('fechaEmision', 'desc'), limit(4));
-                const paidInvoicesSnapshot = await getDocs(paidInvoicesQuery);
-                paidInvoicesSnapshot.forEach(doc => {
-                    const invoice = doc.data() as Document;
-                    activities.push({
-                        id: doc.id,
-                        type: 'Ingreso',
-                        text: `La factura ${invoice.numero} ha sido pagada.`,
-                        date: invoice.fechaEmision instanceof Timestamp ? invoice.fechaEmision.toDate() : new Date(invoice.fechaEmision),
-                        user: invoice.cliente,
-                        avatar: '/other-avatar.png'
-                    });
-                });
-
-                // New Expenses
-                const newExpensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(4));
-                const newExpensesSnapshot = await getDocs(newExpensesQuery);
-                newExpensesSnapshot.forEach(doc => {
-                    const expense = doc.data() as Expense;
-                    activities.push({
-                        id: doc.id,
-                        type: 'Gasto',
-                        text: `Has añadido un nuevo gasto de ${expense.importe.toFixed(2)}€ de ${expense.proveedor}.`,
-                        date: expense.fecha instanceof Timestamp ? expense.fecha.toDate() : new Date(expense.fecha),
-                        user: 'Tú',
-                        avatar: '/user-avatar.png'
-                    });
-                });
-
-                // New Contacts
-                const newContactsQuery = query(collection(db, 'contacts'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(4));
-                const newContactsSnapshot = await getDocs(newContactsQuery);
-                newContactsSnapshot.forEach(doc => {
-                    const contact = doc.data() as Contact;
-                    activities.push({
-                        id: doc.id,
-                        type: 'Contacto',
-                        text: `Has añadido a ${contact.name} como nuevo ${contact.type}.`,
-                        date: contact.createdAt instanceof Timestamp ? contact.createdAt.toDate() : new Date(contact.createdAt),
-                        user: 'Tú',
-                        avatar: '/user-avatar.png'
-                    });
-                });
-                
-                // Sort all activities by date and take the last 4
-                const sortedActivities = activities.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 4);
-                setRecentActivities(sortedActivities);
-
-            } catch (error) {
-                console.error("Error fetching dashboard data:", error);
-                setIncome(0);
-                setExpenses(0);
-                setActiveProjects(0);
-                setRecentActivities([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [user]);
-
+    // TODO: Re-enable data fetching when backend is ready
+    // useEffect(() => {
+    //     if (!user || !db) {
+    //         setLoading(false);
+    //         return;
+    //     }
+    //     // ... data fetching logic
+    // }, [user]);
+    
     const formatCurrency = (amount: number) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
 
   return (
     <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          Panel de Control
+          Bienvenida, {user?.displayName?.split(' ')[0] || 'Elena'}
         </h1>
         <p className="text-muted-foreground">
-          Aquí tienes un resumen de la actividad de tu negocio.
+          Aquí tienes un resumen de tu negocio de hoy.
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <CardTitle className="text-base font-medium">
-              Resumen Financiero
-            </CardTitle>
-            <Landmark className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-           <CardContent className="flex justify-around gap-4">
-            {loading ? (
-                 <div className="flex justify-center items-center w-full h-24">
-                     <Loader2 className="h-6 w-6 animate-spin" />
-                 </div>
-            ) : (
-                <>
-                <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Ingresos (Pagados)</p>
-                    <p className="text-2xl font-bold text-green-600">{formatCurrency(income)}</p>
-                    <p className="text-xs text-muted-foreground">Este Mes</p>
-                </div>
-                <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Gastos</p>
-                    <p className="text-2xl font-bold text-red-600">{formatCurrency(expenses)}</p>
-                    <p className="text-xs text-muted-foreground">Este Mes</p>
-                </div>
-                </>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <CardTitle className="text-base font-medium">
-              Proyectos Activos
-            </CardTitle>
-            <Briefcase className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-             <div>
-                <p className="text-3xl font-bold">{loading ? <Loader2 className="h-6 w-6 animate-spin" /> : activeProjects}</p>
-                <p className="text-sm text-muted-foreground">Proyectos en curso</p>
-            </div>
-            <Button variant="outline" className="w-full" asChild>
-                <Link href="/dashboard/proyectos">Ver Proyectos</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <CardTitle className="text-base font-medium">
-              Perspectivas con IA
-            </CardTitle>
-            <TrendingUp className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-                Obtén sugerencias de IA para tu negocio.
-            </p>
-            <Button variant="outline" className="w-full" asChild>
-                <Link href="/dashboard/perspectivas-ia">Explorar Perspectivas</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-         <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base font-medium">Actividad Reciente</CardTitle>
-                <Activity className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-               {loading ? (
-                    <div className="flex justify-center items-center w-full h-40">
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                    {recentActivities.length > 0 ? (
-                        recentActivities.map((activity) => (
-                        <div key={activity.id} className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                            <AvatarImage src={activity.avatar} alt="Avatar" />
-                            <AvatarFallback>{activity.user.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <p className="text-sm text-muted-foreground">
-                            <span className="font-medium text-foreground">{activity.user}</span> {activity.text}
-                            </p>
+     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <main className="lg:col-span-2 space-y-6">
+            <Card className="bg-secondary/50 border-border/50">
+                <CardHeader>
+                    <CardTitle>Visión Financiera (Últ. 6 meses)</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="p-4 bg-background rounded-lg">
+                            <p className="text-sm text-muted-foreground">Ingresos</p>
+                            <p className="text-2xl font-bold text-green-400">{formatCurrency(income)}</p>
                         </div>
-                        ))
-                    ) : (
-                         <p className="text-sm text-muted-foreground text-center py-10">No hay actividad reciente.</p>
-                    )}
+                        <div className="p-4 bg-background rounded-lg">
+                            <p className="text-sm text-muted-foreground">Gastos</p>
+                            <p className="text-2xl font-bold text-red-400">{formatCurrency(expenses)}</p>
+                        </div>
+                        <div className="p-4 bg-background rounded-lg">
+                            <p className="text-sm text-muted-foreground">Beneficio Neto</p>
+                            <p className="text-2xl font-bold">{formatCurrency(netProfit)}</p>
+                        </div>
                     </div>
-                )}
-            </CardContent>
-             <CardFooter>
-              <Button variant="link" asChild className="w-full">
-                <Link href="#">Ver toda la actividad <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
-            </CardFooter>
-         </Card>
-         <Card>
-            <CardHeader>
-                <CardTitle>Acciones Rápidas</CardTitle>
-                <CardDescription>Accede a las funciones más comunes.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
-              <Button asChild>
-                <Link href="/dashboard/documentos">
-                  <FileText className="mr-2" />
-                  Crear Factura
-                </Link>
-              </Button>
-              <Button variant="secondary" asChild>
-                <Link href="/dashboard/contactos">
-                  <UserPlus className="mr-2" />
-                  Añadir Contacto
-                </Link>
-              </Button>
-              <Button variant="secondary" asChild>
-                <Link href="/dashboard/gastos">
-                  <Landmark className="mr-2" />
-                  Registrar Gasto
-                </Link>
-              </Button>
-              <Button variant="secondary" asChild>
-                <Link href="/dashboard/proyectos">
-                  <Plus className="mr-2" />
-                  Nuevo Proyecto
-                </Link>
-              </Button>
-            </CardContent>
-         </Card>
-      </div>
+                    <div className="h-[200px] w-full">
+                       <ChartContainer config={{}} className="h-full w-full">
+                            <BarChart data={financialChartData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
+                                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                                <YAxis tickLine={false} axisLine={false} width={80} tickFormatter={(value) => formatCurrency(value)} />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="total" fill="hsl(var(--primary))" radius={4} />
+                            </BarChart>
+                        </ChartContainer>
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button variant="outline">
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Generar Previsión con IA
+                    </Button>
+                </CardFooter>
+            </Card>
+
+            <Card className="bg-secondary/50 border-border/50">
+                <CardHeader>
+                    <CardTitle>Asistente IA</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="p-4 bg-background rounded-lg flex items-center justify-between">
+                         <p className="text-muted-foreground">¡Hola! Soy GestorIA. Pregúntame sobre impuestos, facturas, o cómo optimizar tu negocio.</p>
+                         <Button variant="ghost" size="icon">
+                            <Sparkles className="text-primary" />
+                         </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </main>
+        <aside className="space-y-6">
+            <Card className="bg-secondary/50 border-border/50">
+                <CardHeader>
+                    <CardTitle>Operaciones</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-background rounded-lg text-center">
+                        <p className="text-3xl font-bold text-primary">{activeProjects}</p>
+                        <p className="text-sm text-muted-foreground">Proyectos Activos</p>
+                    </div>
+                    <div className="p-4 bg-background rounded-lg text-center">
+                        <p className="text-3xl font-bold text-yellow-400">{pendingTasks}</p>
+                        <p className="text-sm text-muted-foreground">Tareas Pendientes</p>
+                    </div>
+                </CardContent>
+            </Card>
+             <Card className="bg-secondary/50 border-border/50">
+                <CardHeader>
+                    <CardTitle>Actividad Reciente</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ul className="space-y-4">
+                        {recentActivities.map(item => (
+                             <li key={item.id} className="text-sm flex justify-between">
+                                <span className="text-foreground/90">{item.text}</span>
+                                <span className="text-muted-foreground shrink-0">{item.time}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+            </Card>
+        </aside>
+     </div>
     </div>
   );
 }
