@@ -7,3 +7,4 @@ import '@/ai/flows/generate-business-ideas.ts';
 import '@/ai/flows/extract-receipt-data.ts';
 import '@/ai/flows/find-grants-and-news.ts';
 import '@/ai/flows/fiscal-assistant.ts';
+import '@/ai/flows/find-potential-clients.ts';

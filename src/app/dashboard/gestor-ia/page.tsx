@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, ArrowRight, Sparkles, Lightbulb, MonitorCog, ScanLine, LineChart, Zap } from 'lucide-react';
+import { Lock, ArrowRight, Sparkles, Lightbulb, MonitorCog, ScanLine, LineChart, Zap, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AsistenteForm } from '@/app/dashboard/asistente-ia/asistente-form';
@@ -17,6 +17,8 @@ import { WebIAPageContent } from '../web-ia/web-ia-page-content';
 import { getWebsiteConceptAction } from '../web-ia/actions';
 import MarketingIAPage from '../marketing-ia/page';
 import AutomatizacionesPage from '../automatizaciones/page';
+import { BuscarClientesForm } from './buscar-clientes/buscar-clientes-form';
+import { findPotentialClientsAction } from './buscar-clientes/actions';
 
 
 function ProFeatureLock() {
@@ -53,8 +55,9 @@ export default function GestorIAPage() {
         </div>
         
         <Tabs defaultValue="perspectivas" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4">
-                <TabsTrigger value="perspectivas"><Lightbulb className="mr-2 h-4 w-4" />Perspectivas y Ayudas</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-5">
+                <TabsTrigger value="perspectivas"><Lightbulb className="mr-2 h-4 w-4" />Perspectivas</TabsTrigger>
+                 <TabsTrigger value="buscar-clientes"><Search className="mr-2 h-4 w-4" />Buscar Clientes</TabsTrigger>
                 <TabsTrigger value="marketing-ia"><LineChart className="mr-2 h-4 w-4" />Marketing IA</TabsTrigger>
                 <TabsTrigger value="web-ia"><MonitorCog className="mr-2 h-4 w-4" />Web IA</TabsTrigger>
                 <TabsTrigger value="automatizaciones"><Zap className="mr-2 h-4 w-4" />Automatización</TabsTrigger>
@@ -89,6 +92,17 @@ export default function GestorIAPage() {
                             </Card>
                         </TabsContent>
                     </Tabs>
+                </TabsContent>
+                <TabsContent value="buscar-clientes">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Buscador de Clientes Potenciales</CardTitle>
+                            <CardDescription>Describe tus productos y tu cliente ideal para que la IA encuentre nuevas oportunidades de negocio.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <BuscarClientesForm action={findPotentialClientsAction} />
+                        </CardContent>
+                    </Card>
                 </TabsContent>
                 <TabsContent value="marketing-ia">
                     <MarketingIAPage />
