@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useContext, useEffect } from 'react';
+import { useContext, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,15 +18,18 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Document, DocumentType, DocumentStatus } from './page';
 import { cn } from '@/lib/utils';
-import { Printer, QrCode } from 'lucide-react';
+import { Printer, QrCode, Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import React from 'react';
+
 
 interface ViewDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   document: Document | null;
-  triggerPrint?: boolean;
 }
 
 const getBadgeClass = (estado?: DocumentStatus) => {
@@ -55,25 +58,72 @@ const getDocumentTypeLabel = (type?: DocumentType) => {
     }
 }
 
-export function ViewDocumentModal({ isOpen, onClose, document, triggerPrint = false }: ViewDocumentModalProps) {
+export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentModalProps) {
   const { toast } = useToast();
   const { user } = useContext(AuthContext);
   const companyData = user?.company;
+  const printableAreaRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = React.useState(false);
 
-  const handlePrint = () => {
-    toast({
-      title: 'Imprimiendo documento...',
-      description: 'Se ha abierto el diálogo de impresión de tu navegador.',
-    });
-    setTimeout(() => window.print(), 100);
+
+  const handleDownloadPdf = async () => {
+    if (!printableAreaRef.current || !document) return;
+    setIsDownloading(true);
+
+    try {
+        const canvas = await html2canvas(printableAreaRef.current, {
+            scale: 2, // Aumentar la escala para mejorar la resolución
+            useCORS: true,
+            backgroundColor: null,
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'mm',
+            format: 'a4',
+        });
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        
+        let imgWidth = pdfWidth;
+        let imgHeight = pdfWidth / ratio;
+        
+        // Si la altura de la imagen es mayor que la del PDF, ajustamos por altura
+        if (imgHeight > pdfHeight) {
+            imgHeight = pdfHeight;
+            imgWidth = pdfHeight * ratio;
+        }
+
+        const x = (pdfWidth - imgWidth) / 2;
+        const y = 0; // Se puede añadir un margen si se desea
+
+        pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+        
+        const docTypeLabel = getDocumentTypeLabel(document.tipo) || 'Documento';
+        pdf.save(`${docTypeLabel}-${document.numero}.pdf`);
+        
+        toast({
+            title: 'Descarga Iniciada',
+            description: 'Tu documento se está descargando como PDF.',
+        });
+
+    } catch (error) {
+        console.error("Error al generar el PDF:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error en la Descarga',
+            description: 'No se pudo generar el PDF. Inténtalo de nuevo.',
+        });
+    } finally {
+        setIsDownloading(false);
+    }
   };
   
-  useEffect(() => {
-    if (isOpen && triggerPrint) {
-        handlePrint();
-    }
-  }, [isOpen, triggerPrint]);
-
   if (!isOpen || !document) return null;
 
 
@@ -99,7 +149,7 @@ export function ViewDocumentModal({ isOpen, onClose, document, triggerPrint = fa
                  <Badge variant="outline" className={cn('text-base', getBadgeClass(document.estado))}>{document.estado}</Badge>
             </div>
         </DialogHeader>
-        <div id="printable-area" className="flex-1 overflow-y-auto pr-6 -mr-6 py-4 space-y-6 text-sm">
+        <div ref={printableAreaRef} id="printable-area" className="flex-1 overflow-y-auto pr-6 -mr-6 py-4 px-6 space-y-6 text-sm bg-background">
             
             <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
                  <div className="space-y-1">
@@ -174,32 +224,13 @@ export function ViewDocumentModal({ isOpen, onClose, document, triggerPrint = fa
 
         </div>
         <DialogFooter className="print:hidden">
-            <Button variant="outline" onClick={handlePrint}>
-                <Printer className="mr-2 h-4 w-4"/>
-                Imprimir / Guardar PDF
+            <Button variant="outline" onClick={handleDownloadPdf} disabled={isDownloading}>
+                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4"/>}
+                {isDownloading ? 'Generando...' : 'Descargar PDF'}
             </Button>
             <Button onClick={onClose}>Cerrar</Button>
         </DialogFooter>
       </DialogContent>
-      <style jsx global>{`
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #printable-area, #printable-area * {
-                visibility: visible;
-            }
-            #printable-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            .print\\:hidden {
-                display: none;
-            }
-        }
-      `}</style>
     </Dialog>
   );
 }

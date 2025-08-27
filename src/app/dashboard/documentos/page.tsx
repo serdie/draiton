@@ -87,8 +87,6 @@ export default function DocumentosPage() {
   const [docToEdit, setDocToEdit] = useState<Document | null>(null);
   const [docToView, setDocToView] = useState<Document | null>(null);
   const [docToDelete, setDocToDelete] = useState<Document | null>(null);
-  const [triggerPrintOnOpen, setTriggerPrintOnOpen] = useState(false);
-
 
   const [initialDataForForm, setInitialDataForForm] = useState<ExtractInvoiceDataOutput | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<DocumentType>('factura');
@@ -212,12 +210,10 @@ export default function DocumentosPage() {
 
   const handleDownload = (doc: Document) => {
     setDocToView(doc);
-    setTriggerPrintOnOpen(true);
   }
   
   const handleCloseViewModal = () => {
     setDocToView(null);
-    setTriggerPrintOnOpen(false);
   }
 
   const renderContent = () => {
@@ -380,7 +376,6 @@ export default function DocumentosPage() {
             isOpen={!!docToView}
             onClose={handleCloseViewModal}
             document={docToView}
-            triggerPrint={triggerPrintOnOpen}
         />
       )}
 
