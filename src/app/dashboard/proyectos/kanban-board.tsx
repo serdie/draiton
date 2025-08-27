@@ -69,7 +69,7 @@ function ProjectCard({ project }: { project: Project }) {
 }
 
 function KanbanColumn({ status, projects }: { status: ProjectStatus; projects: Project[] }) {
-    const { setNodeRef } = useSortable({ id: status });
+    const { setNodeRef } = useSortable({ id: status, data: {type: 'column'} });
 
     return (
         <div ref={setNodeRef} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 shrink-0">
@@ -82,7 +82,7 @@ function KanbanColumn({ status, projects }: { status: ProjectStatus; projects: P
                         <span className="text-sm text-muted-foreground">{projects.length}</span>
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
+                <CardContent className="p-4 pt-0 min-h-[100px]">
                     <SortableContext items={projects.map(p => p.id)} strategy={verticalListSortingStrategy}>
                         {projects.map((project) => (
                             <ProjectCard key={project.id} project={project} />
@@ -125,29 +125,36 @@ export function KanbanBoard({ projects, loading }: { projects: Project[]; loadin
     const { active, over } = event;
     setActiveProject(null);
 
-    if (!over || active.id === over.id) {
-        return;
-    }
+    if (!over) return;
     
-    // Si se suelta sobre una columna
-    const newStatus = over.id as ProjectStatus;
-    const project = projects.find(p => p.id === active.id);
+    const activeId = active.id;
+    const overId = over.id;
 
-    if (project && project.status !== newStatus && projectStatuses.includes(newStatus)) {
-        const projectRef = doc(db, 'projects', project.id);
-        try {
-            await updateDoc(projectRef, { status: newStatus });
-            toast({
-                title: 'Proyecto actualizado',
-                description: `El estado de "${project.name}" se cambió a "${newStatus}".`
-            });
-        } catch (error) {
-            console.error("Error al actualizar el estado del proyecto:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'No se pudo actualizar el estado del proyecto.'
-            });
+    if (activeId === overId) return;
+
+    const isActiveAProjectCard = active.data.current?.type !== 'column';
+    const isOverAColumn = over.data.current?.type === 'column';
+    
+    if (isActiveAProjectCard && isOverAColumn) {
+        const newStatus = overId as ProjectStatus;
+        const project = projects.find(p => p.id === activeId);
+
+        if (project && project.status !== newStatus) {
+             const projectRef = doc(db, 'projects', project.id);
+             try {
+                await updateDoc(projectRef, { status: newStatus });
+                toast({
+                    title: 'Proyecto actualizado',
+                    description: `El estado de "${project.name}" se cambió a "${newStatus}".`
+                });
+            } catch (error) {
+                console.error("Error al actualizar el estado del proyecto:", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'No se pudo actualizar el estado del proyecto.'
+                });
+            }
         }
     }
   };
@@ -168,11 +175,9 @@ export function KanbanBoard({ projects, loading }: { projects: Project[]; loadin
       onDragEnd={handleDragEnd}
     >
         <div className="flex gap-4 overflow-x-auto p-2 -m-2">
-            <SortableContext items={projectStatuses} >
             {projectStatuses.map(status => (
                 <KanbanColumn key={status} status={status} projects={columns[status] || []} />
             ))}
-            </SortableContext>
         </div>
         <DragOverlay>
             {activeProject ? <ProjectCard project={activeProject} /> : null}
