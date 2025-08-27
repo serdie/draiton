@@ -173,12 +173,12 @@ export default function ContactosPage() {
                     <TableRow>
                     <TableHead className="w-12">Avatar</TableHead>
                     <TableHead>Nombre</TableHead>
-                    <TableHead>Correo Electrónico</TableHead>
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>CIF/NIF</TableHead>
-                    <TableHead>Teléfono</TableHead>
+                    <TableHead className="hidden sm:table-cell">Correo Electrónico</TableHead>
+                    <TableHead className="hidden md:table-cell">Empresa</TableHead>
+                    <TableHead className="hidden lg:table-cell">CIF/NIF</TableHead>
+                    <TableHead className="hidden xl:table-cell">Teléfono</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead>Fecha de Alta</TableHead>
+                    <TableHead className="hidden lg:table-cell">Fecha de Alta</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -193,16 +193,16 @@ export default function ContactosPage() {
                                 </Avatar>
                             </TableCell>
                             <TableCell className="font-medium">{contact.name}</TableCell>
-                            <TableCell className="text-muted-foreground">{contact.email}</TableCell>
-                            <TableCell className="text-muted-foreground">{contact.company || '-'}</TableCell>
-                            <TableCell className="text-muted-foreground">{contact.cif || '-'}</TableCell>
-                            <TableCell className="text-muted-foreground">{contact.phone || '-'}</TableCell>
+                            <TableCell className="text-muted-foreground hidden sm:table-cell">{contact.email}</TableCell>
+                            <TableCell className="text-muted-foreground hidden md:table-cell">{contact.company || '-'}</TableCell>
+                            <TableCell className="text-muted-foreground hidden lg:table-cell">{contact.cif || '-'}</TableCell>
+                            <TableCell className="text-muted-foreground hidden xl:table-cell">{contact.phone || '-'}</TableCell>
                             <TableCell>
                                 <Badge variant="outline" className={cn('font-semibold', getBadgeClassForType(contact.type))}>
                                     {contact.type}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="text-muted-foreground">{contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('es-ES') : '-'}</TableCell>
+                            <TableCell className="text-muted-foreground hidden lg:table-cell">{contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('es-ES') : '-'}</TableCell>
                             <TableCell className="text-right">
                                 <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -302,7 +302,7 @@ export default function ContactosPage() {
         <CardContent className="pt-6">
             {renderContent()}
         </CardContent>
-        <CardFooter className="flex items-center justify-between">
+        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Resultados por página:</span>
             <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
