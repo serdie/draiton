@@ -6,8 +6,13 @@ import Link from 'next/link';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Newspaper, FileEdit, Bot, Lock, ArrowRight } from 'lucide-react';
+import { Newspaper, FileEdit, Bot, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PerspectivasIAPage from '../perspectivas-ia/page';
+import MarketingIAPage from '../marketing-ia/page';
+import WebIAPage from '../web-ia/page';
+
 
 function ProFeatureLock() {
   return (
@@ -28,6 +33,23 @@ function ProFeatureLock() {
   );
 }
 
+const PerspectiveCard = ({ title, icon, children, actionText, actionLink }: { title: string, icon: React.ReactNode, children: React.ReactNode, actionText: string, actionLink: string }) => (
+    <Card className="bg-secondary/50 border-border/30">
+        <CardHeader className="flex flex-row justify-between items-start">
+            <h3 className="font-semibold">{title}</h3>
+            <div className="text-primary">{icon}</div>
+        </CardHeader>
+        <CardContent>
+            <p className="text-muted-foreground text-sm">{children}</p>
+        </CardContent>
+        <CardFooter>
+            <Button variant="link" asChild className="p-0">
+                <Link href={actionLink}>{actionText}</Link>
+            </Button>
+        </CardFooter>
+    </Card>
+)
+
 export default function GestorIAPage() {
   const { isPro } = useContext(AuthContext);
 
@@ -36,81 +58,36 @@ export default function GestorIAPage() {
       {!isPro && <ProFeatureLock />}
       <div className={cn("space-y-8", !isPro && "opacity-50 pointer-events-none")}>
         <div>
-          <h1 className="text-3xl font-bold">Gestor IA Personalizado</h1>
+          <h1 className="text-3xl font-bold">Herramientas de Inteligencia Artificial</h1>
           <p className="text-muted-foreground">
-            Tu asistente inteligente para navegar el panorama empresarial y fiscal español.
+            Potencia tu negocio con herramientas diseñadas para crecer.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="flex flex-col">
-            <CardHeader>
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <Newspaper className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>Noticias y Ayudas Relevantes</CardTitle>
-                  <CardDescription>
-                    Encuentra subvenciones, ayudas y noticias importantes para tu sector.
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <p className="text-sm text-muted-foreground">
-                Introduce el perfil de tu empresa y la IA buscará las oportunidades más relevantes para ti.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button asChild>
-                <Link href="/dashboard/gestor-ia/ayudas">
-                    Acceder a la Herramienta <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card className="flex flex-col">
-            <CardHeader>
-               <div className="flex items-start gap-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <FileEdit className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>Asistente de Formularios Fiscales</CardTitle>
-                  <CardDescription>
-                    Simplifica la cumplimentación de modelos para la Agencia Tributaria.
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <p className="text-sm text-muted-foreground">
-                Reduce errores y ahorra tiempo en tus trámites. Selecciona un modelo y recibe instrucciones claras.
-              </p>
-            </CardContent>
-            <CardFooter>
-               <Button asChild>
-                <Link href="/dashboard/gestor-ia/asistente-fiscal">
-                    Iniciar Asistente Fiscal <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-
-        <Card className="bg-muted/50 border-dashed">
-          <CardContent className="p-6 text-center">
-              <div className="inline-flex items-center justify-center bg-background p-3 rounded-full mb-4">
-                  <Bot className="h-8 w-8 text-primary"/>
-              </div>
-            <h3 className="text-xl font-semibold mb-2">¿Cómo funciona el Gestor IA?</h3>
-            <p className="text-muted-foreground max-w-3xl mx-auto">
-              El Gestor IA aprenderá sobre tu negocio (actividad, ubicación, tamaño) para ofrecerte información proactiva y relevante. Desde alertarte sobre una nueva subvención a la que podrías optar, hasta guiarte en los campos de los formularios fiscales más comunes, el Gestor IA será tu aliado.
-            </p>
-          </CardContent>
-        </Card>
+        
+        <Tabs defaultValue="perspectivas" className="w-full">
+            <TabsList className="border-b border-border/50 rounded-none p-0 bg-transparent justify-start gap-4">
+                <TabsTrigger value="perspectivas" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Perspectivas</TabsTrigger>
+                <TabsTrigger value="marketing" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Marketing IA</TabsTrigger>
+                <TabsTrigger value="web" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Web IA</TabsTrigger>
+            </TabsList>
+            <TabsContent value="perspectivas" className="mt-6 space-y-6">
+                <PerspectiveCard title="Aumento de Gastos en Software" icon={<Sparkles />} actionText="Analizar Alternativas" actionLink="/dashboard/gastos">
+                    Detectamos un aumento del 20% en gastos de software este trimestre, principalmente en herramientas de diseño. ¿Quieres que la IA analice alternativas más económicas con funcionalidades similares?
+                </PerspectiveCard>
+                <PerspectiveCard title="Oportunidad de Subvención" icon={<Newspaper />} actionText="Ver Requisitos" actionLink="/dashboard/gestor-ia/ayudas">
+                    Hemos encontrado una nueva subvención ('InnoCámaras 2024') para digitalización a la que tu empresa podría aplicar. La fecha límite para la solicitud es el 30/09/2024.
+                </PerspectiveCard>
+                <PerspectiveCard title="Cliente con Mayor Rentabilidad" icon={<Sparkles />} actionText="Ver Ficha de Cliente" actionLink="/dashboard/contactos">
+                    El cliente 'Innovate LLC' ha generado el mayor margen de beneficio este año. Podría ser un buen momento para proponerles un nuevo proyecto o un contrato de mantenimiento.
+                </PerspectiveCard>
+            </TabsContent>
+            <TabsContent value="marketing" className="mt-6">
+                 <MarketingIAPage />
+            </TabsContent>
+            <TabsContent value="web" className="mt-6">
+                 <WebIAPage />
+            </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

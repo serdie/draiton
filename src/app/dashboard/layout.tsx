@@ -66,7 +66,7 @@ export default function DashboardLayout({
   const getPageTitle = () => {
     if (pathname.startsWith('/dashboard/finanzas')) return 'Finanzas';
     if (pathname.startsWith('/dashboard/proyectos')) return 'Operaciones';
-    if (pathname.startsWith('/dashboard/gestor-ia')) return 'Gestor IA';
+    if (pathname.startsWith('/dashboard/gestor-ia')) return 'Herramientas IA';
     if (pathname.startsWith('/dashboard/configuracion')) return 'Configuración';
     if (pathname.startsWith('/admin/dashboard')) return 'Administración';
     return 'Dashboard';

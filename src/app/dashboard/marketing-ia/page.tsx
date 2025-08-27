@@ -10,39 +10,11 @@ import { Mail, Users, Zap, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-function ProFeatureLock() {
-  return (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-sm">
-      <Card className="max-w-md text-center">
-        <CardContent className="p-8">
-          <Lock className="mx-auto h-12 w-12 text-primary" />
-          <h3 className="mt-4 text-2xl font-semibold">Función Exclusiva del Plan Pro</h3>
-          <p className="mt-2 text-muted-foreground">
-            Desbloquea las herramientas de marketing para automatizar campañas y gestionar redes sociales.
-          </p>
-          <Button asChild className="mt-4">
-            <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
 export default function MarketingIAPage() {
   const { isPro } = useContext(AuthContext);
 
   return (
-    <div className="relative">
-      {!isPro && <ProFeatureLock />}
-      <div className={cn("space-y-6", !isPro && "opacity-50 pointer-events-none")}>
-        <div>
-          <h1 className="text-3xl font-bold">Centro de Marketing IA</h1>
-          <p className="text-muted-foreground">
-            Gestiona tus campañas de correo electrónico, boletines y presencia en redes sociales con ayuda de la IA.
-          </p>
-        </div>
-
+      <div className={cn("space-y-6")}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="flex flex-col">
             <CardHeader>
@@ -112,6 +84,5 @@ export default function MarketingIAPage() {
           </Card>
         </div>
       </div>
-    </div>
   );
 }
