@@ -8,6 +8,8 @@ import { Plus, MoreHorizontal, Trash2, Pencil, Eye } from 'lucide-react';
 import { ConnectBankModal } from './connect-bank-modal';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const BankLogo = ({ bankName }: { bankName: string }) => {
     switch (bankName.toLowerCase()) {
@@ -22,8 +24,14 @@ const BankLogo = ({ bankName }: { bankName: string }) => {
     }
 };
 
+type ConnectedBank = {
+    name: string;
+    account: string;
+    status: string;
+    statusColor: string;
+};
 
-const connectedBanks = [
+const initialBanks: ConnectedBank[] = [
     { name: 'BBVA Cuenta Negocios', account: 'ES...**** 1234', status: 'Sincronizado hace 5m', statusColor: 'text-green-600' },
     { name: 'CaixaBank Cuenta Corriente', account: 'ES...**** 5678', status: 'Sincronizado hace 8m', statusColor: 'text-green-600' },
     { name: 'Revolut Business', account: 'GB...**** 4321', status: 'Requiere atención', statusColor: 'text-yellow-600' },
@@ -31,10 +39,50 @@ const connectedBanks = [
 
 export function BancosTab() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [connectedBanks, setConnectedBanks] = useState<ConnectedBank[]>(initialBanks);
+  const [bankToDelete, setBankToDelete] = useState<ConnectedBank | null>(null);
+  const { toast } = useToast();
+
+  const handleComingSoon = () => {
+    toast({
+      title: 'Función en desarrollo',
+      description: 'Esta acción estará disponible pronto.',
+    });
+  };
+
+  const handleDeleteBank = () => {
+    if (!bankToDelete) return;
+
+    setConnectedBanks(connectedBanks.filter(bank => bank.name !== bankToDelete.name));
+
+    toast({
+        title: 'Cuenta Eliminada (Simulación)',
+        description: `Se ha eliminado la conexión con ${bankToDelete.name}.`,
+    });
+    setBankToDelete(null);
+  };
+
 
   return (
     <>
       <ConnectBankModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+       <AlertDialog open={!!bankToDelete} onOpenChange={(open) => !open && setBankToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Esta acción desvinculará la cuenta <strong>{bankToDelete?.name}</strong>. Dejarás de recibir transacciones de este banco. Podrás volver a conectarla más tarde.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setBankToDelete(null)}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteBank} className="bg-destructive hover:bg-destructive/90">
+                        Sí, desvincular
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="space-y-1">
@@ -69,15 +117,15 @@ export function BancosTab() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleComingSoon}>
                       <Eye className="mr-2 h-4 w-4" />
                       Ver cuenta
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleComingSoon}>
                       <Pencil className="mr-2 h-4 w-4" />
                       Editar mi cuenta
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                    <DropdownMenuItem onClick={() => setBankToDelete(bank)} className="text-destructive focus:text-destructive">
                       <Trash2 className="mr-2 h-4 w-4" />
                       Borrar la cuenta
                     </DropdownMenuItem>
