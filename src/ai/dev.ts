@@ -9,3 +9,4 @@ import '@/ai/flows/find-grants-and-news.ts';
 import '@/ai/flows/fiscal-assistant.ts';
 import '@/ai/flows/find-potential-clients.ts';
 import '@/ai/flows/generate-grant-tutorial.ts';
+import '@/ai/flows/generate-email-campaign.ts';

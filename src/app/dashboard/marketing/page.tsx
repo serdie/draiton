@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useContext } from 'react';
@@ -57,10 +58,11 @@ export default function MarketingIAPage() {
               <p className="text-sm text-muted-foreground">
                 Crea, programa y haz seguimiento de potentes campañas de correo electrónico.
               </p>
-               <Badge variant="outline">Función próximamente</Badge>
             </CardContent>
             <CardFooter>
-              <Button variant="outline">Crear Campaña de Correo</Button>
+              <Button asChild>
+                <Link href="/dashboard/marketing/campanas">Gestionar Campañas</Link>
+              </Button>
             </CardFooter>
           </Card>
 
