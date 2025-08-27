@@ -13,7 +13,7 @@ const navItems = [
     { href: '/dashboard/finanzas', label: 'Finanzas', icon: Wallet },
     { href: '/dashboard/proyectos', label: 'Operaciones', icon: Blocks },
     { href: '/dashboard/gestor-ia', label: 'Herram. IA', icon: FlaskConical },
-    { href: '/dashboard/configuracion', label: 'Ajustes', icon: Settings, adminOnly: false },
+    { href: '/dashboard/configuracion', label: 'Perfil', icon: User, adminOnly: false },
     { href: '/admin/dashboard', label: 'Admin', icon: UserCog, adminOnly: true },
 ]
 
@@ -23,14 +23,6 @@ export function MobileNav() {
 
     const visibleNavItems = navItems.filter(item => {
         if (item.adminOnly === true && !isAdmin) return false;
-        // This logic is a bit tricky. If the user is an admin, we don't want to show the regular profile link.
-        // Let's adjust it to hide the admin link if the user is not an admin.
-        // The current logic is fine for hiding admin link.
-        // But what about hiding the profile link for admins?
-        // Let's show both if they are admin, but the user said "que no sean el administrador".
-        // This means the new icon is only for non-admins.
-        // The current logic handles this with `adminOnly: false`. Let's verify.
-        // Wait, the filter logic is flawed.
         if (item.adminOnly === false && isAdmin) return false;
         return true;
     });
