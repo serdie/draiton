@@ -55,9 +55,8 @@ export default function GestorIAPage() {
         </div>
         
         <Tabs defaultValue="perspectivas" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-5">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4">
                 <TabsTrigger value="perspectivas"><Lightbulb className="mr-2 h-4 w-4" />Perspectivas</TabsTrigger>
-                 <TabsTrigger value="buscar-clientes"><Search className="mr-2 h-4 w-4" />Buscar Clientes</TabsTrigger>
                 <TabsTrigger value="marketing-ia"><LineChart className="mr-2 h-4 w-4" />Marketing IA</TabsTrigger>
                 <TabsTrigger value="web-ia"><MonitorCog className="mr-2 h-4 w-4" />Web IA</TabsTrigger>
                 <TabsTrigger value="automatizaciones"><Zap className="mr-2 h-4 w-4" />Automatización</TabsTrigger>
@@ -68,6 +67,7 @@ export default function GestorIAPage() {
                         <TabsList>
                              <TabsTrigger value="ideas">Ideas de Negocio</TabsTrigger>
                              <TabsTrigger value="ayudas">Buscador de Ayudas</TabsTrigger>
+                             <TabsTrigger value="buscar-clientes">Buscar Clientes</TabsTrigger>
                         </TabsList>
                         <TabsContent value="ideas" className="mt-4">
                             <Card>
@@ -91,18 +91,18 @@ export default function GestorIAPage() {
                                 </CardContent>
                             </Card>
                         </TabsContent>
+                         <TabsContent value="buscar-clientes" className="mt-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Buscador de Clientes Potenciales</CardTitle>
+                                    <CardDescription>Describe tus productos y tu cliente ideal para que la IA encuentre nuevas oportunidades de negocio.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <BuscarClientesForm action={findPotentialClientsAction} />
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
                     </Tabs>
-                </TabsContent>
-                <TabsContent value="buscar-clientes">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Buscador de Clientes Potenciales</CardTitle>
-                            <CardDescription>Describe tus productos y tu cliente ideal para que la IA encuentre nuevas oportunidades de negocio.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <BuscarClientesForm action={findPotentialClientsAction} />
-                        </CardContent>
-                    </Card>
                 </TabsContent>
                 <TabsContent value="marketing-ia">
                     <MarketingIAPage />
