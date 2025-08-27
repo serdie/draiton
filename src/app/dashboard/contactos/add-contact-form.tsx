@@ -25,9 +25,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
-import { Loader2 } from 'lucide-react';
+import { Loader2, PlusCircle } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 
 const contactFormSchema = z.object({
   name: z.string().min(1, { message: 'El nombre es obligatorio.' }),
@@ -45,6 +46,10 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
   const { user } = useContext(AuthContext);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contactTypes, setContactTypes] = useState(['Cliente', 'Proveedor', 'Lead', 'Colaborador']);
+  const [newTypeName, setNewTypeName] = useState('');
+  const [isAddTypeDialogOpen, setIsAddTypeDialogOpen] = useState(false);
+
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -58,6 +63,14 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
       notes: '',
     },
   });
+
+  const handleAddContactType = () => {
+    if (newTypeName && !contactTypes.includes(newTypeName)) {
+        setContactTypes([...contactTypes, newTypeName]);
+    }
+    setNewTypeName('');
+    setIsAddTypeDialogOpen(false);
+  }
 
   async function onSubmit(data: ContactFormValues) {
     setIsSubmitting(true);
@@ -167,19 +180,48 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tipo</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un tipo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Cliente">Cliente</SelectItem>
-                  <SelectItem value="Proveedor">Proveedor</SelectItem>
-                  <SelectItem value="Lead">Lead</SelectItem>
-                  <SelectItem value="Colaborador">Colaborador</SelectItem>
-                </SelectContent>
-              </Select>
+                <div className="flex items-center gap-2">
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Selecciona un tipo" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {contactTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                    </Select>
+                    <Dialog open={isAddTypeDialogOpen} onOpenChange={setIsAddTypeDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button type="button" variant="outline" size="icon">
+                                <PlusCircle className="h-4 w-4" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Añadir Nuevo Tipo de Contacto</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="new-type-name" className="text-right">
+                                    Nombre
+                                    </Label>
+                                    <Input
+                                    id="new-type-name"
+                                    value={newTypeName}
+                                    onChange={(e) => setNewTypeName(e.target.value)}
+                                    className="col-span-3"
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button onClick={handleAddContactType}>Añadir Tipo</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </FormItem>
           )}
         />
