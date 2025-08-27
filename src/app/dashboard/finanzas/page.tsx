@@ -350,6 +350,65 @@ export default function FinanzasPage() {
         </div>
     )
   }
+  
+  const renderBancosContent = () => {
+    const bankAccounts = [
+      {
+        id: '1',
+        name: 'BBVA Cuenta Negocios',
+        number: 'ES...**** 1234',
+        status: 'Sincronizado hace 5m',
+        statusColor: 'text-green-400',
+        logo: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8"><path d="M4.14,11.3,4.14,11.3c2.78-4.88,8.25-6.52,13.13-3.74,4.88,2.78,6.52,8.25,3.74,13.13C16.13,25.57,5.55,25.5,4.14,11.3Z" fill="#004481"></path><path d="M2.9,13.23,2.9,13.23c-2.78,4.88-.14,10.35,4.74,13.13,4.88,2.78,10.35.14,13.13-4.74,4.88-8.62-2.18-18.2-10.8-13.13C.1,13.37-1.54,8.35,2.9,13.23Z" fill="#004481"></path></svg>
+      },
+      {
+        id: '2',
+        name: 'CaixaBank Cuenta Corriente',
+        number: 'ES...**** 5678',
+        status: 'Sincronizado hace 8m',
+        statusColor: 'text-green-400',
+        logo: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8"><circle cx="12" cy="12" r="10" fill="#000"></circle><path d="M12,12a5.3,5.3,0,0,0-5.3,5.3,1.4,1.4,0,0,0,1.4,1.4H15.9a1.4,1.4,0,0,0,1.4-1.4A5.3,5.3,0,0,0,12,12Z" fill="#fff"></path><path d="M13.4,5.4a2.9,2.9,0,1,0-2.8,0,5.7,5.7,0,0,0-2,4.5H15.3A5.7,5.7,0,0,0,13.4,5.4Z" fill="#ffc107"></path></svg>
+      },
+      {
+        id: '3',
+        name: 'Revolut Business',
+        number: 'GB...**** 4321',
+        status: 'Requiere atención',
+        statusColor: 'text-yellow-400',
+        logo: <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center text-white font-bold text-lg">R</div>
+      },
+    ]
+
+    return (
+      <Card className="bg-secondary/50 border-border/30">
+        <CardHeader>
+           <div className="flex justify-between items-center">
+            <CardTitle className="text-base">Bancos Sincronizados</CardTitle>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Conectar Banco
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {bankAccounts.map(account => (
+              <div key={account.id} className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
+                <div className="flex items-center gap-4">
+                  <div>{account.logo}</div>
+                  <div>
+                    <p className="font-semibold">{account.name}</p>
+                    <p className="text-sm text-muted-foreground">{account.number}</p>
+                  </div>
+                </div>
+                <p className={cn("text-sm font-medium", account.statusColor)}>{account.status}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <>
@@ -392,7 +451,7 @@ export default function FinanzasPage() {
           <TabsContent value="impuestos"  className="mt-6">
             {renderImpuestosContent()}
           </TabsContent>
-          <TabsContent value="bancos"  className="mt-6"><p>Próximamente: Conexión bancaria.</p></TabsContent>
+          <TabsContent value="bancos"  className="mt-6">{renderBancosContent()}</TabsContent>
         </Tabs>
       </div>
     </>
