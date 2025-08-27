@@ -1,30 +1,30 @@
+
 import { extractInvoiceData, ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { ExtractorForm } from './extractor-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function ExtractorFacturasPage() {
+export async function getInvoiceData(
+  currentState: { output: ExtractInvoiceDataOutput | null; error: string | null },
+  formData: FormData
+): Promise<{ output: ExtractInvoiceDataOutput | null; error: string | null }> {
+  "use server";
   
-  async function getInvoiceData(
-    currentState: { output: ExtractInvoiceDataOutput | null; error: string | null },
-    formData: FormData
-  ): Promise<{ output: ExtractInvoiceDataOutput | null; error: string | null }> {
-    "use server";
-    
-    const invoiceDataUri = formData.get('invoiceDataUri') as string;
+  const invoiceDataUri = formData.get('invoiceDataUri') as string;
 
-    if (!invoiceDataUri) {
-      return { output: null, error: "Por favor, sube una imagen de la factura." };
-    }
-
-    try {
-      const result = await extractInvoiceData({ invoiceDataUri });
-      return { output: result, error: null };
-    } catch (e: any) {
-      console.error(e);
-      return { output: null, error: "No se pudo extraer la información. Asegúrate de que la imagen sea clara y vuelve a intentarlo." };
-    }
+  if (!invoiceDataUri) {
+    return { output: null, error: "Por favor, sube una imagen de la factura." };
   }
 
+  try {
+    const result = await extractInvoiceData({ invoiceDataUri });
+    return { output: result, error: null };
+  } catch (e: any) {
+    console.error(e);
+    return { output: null, error: "No se pudo extraer la información. Asegúrate de que la imagen sea clara y vuelve a intentarlo." };
+  }
+}
+
+export default function ExtractorFacturasPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">

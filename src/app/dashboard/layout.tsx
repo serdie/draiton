@@ -39,9 +39,6 @@ import {
   Zap,
   Mail,
   Network,
-  ScanLine,
-  Lightbulb,
-  MonitorCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -74,9 +71,7 @@ export default function DashboardLayout({
   const getPageTitle = () => {
     if (isActive('/dashboard/finanzas')) return 'Finanzas';
     if (isActive('/dashboard/proyectos')) return 'Operaciones';
-    if (isActive('/dashboard/asistente-ia')) return 'Asistente IA';
-    if (isActive('/dashboard/gestor-web-ia')) return 'Gestor Web IA';
-    if (isActive('/dashboard/extractor-facturas')) return 'Extractor de Facturas';
+    if (isActive('/dashboard/gestor-ia')) return 'Herramientas IA';
     if (isActive('/dashboard/automatizaciones')) return 'Automatizaciones';
     if (isActive('/dashboard/marketing')) return 'Marketing';
     if (isActive('/dashboard/conexiones')) return 'Conexiones';
@@ -118,33 +113,14 @@ export default function DashboardLayout({
               </Link>
             </SidebarMenuItem>
             
-            <SidebarGroup>
-                <SidebarGroupLabel>Herramientas IA</SidebarGroupLabel>
-                <SidebarMenuItem>
-                <Link href="/dashboard/asistente-ia">
-                    <SidebarMenuButton isActive={isActive('/dashboard/asistente-ia')} tooltip="Asistente IA">
-                    <Lightbulb />
-                    <span>Asistente IA</span>
-                    </SidebarMenuButton>
-                </Link>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                <Link href="/dashboard/gestor-web-ia">
-                    <SidebarMenuButton isActive={isActive('/dashboard/gestor-web-ia')} tooltip="Gestor Web IA">
-                    <MonitorCog />
-                    <span>Gestor Web IA</span>
-                    </SidebarMenuButton>
-                </Link>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                <Link href="/dashboard/extractor-facturas">
-                    <SidebarMenuButton isActive={isActive('/dashboard/extractor-facturas')} tooltip="Extractor Facturas">
-                    <ScanLine />
-                    <span>Extractor Facturas</span>
-                    </SidebarMenuButton>
-                </Link>
-                </SidebarMenuItem>
-            </SidebarGroup>
+            <SidebarMenuItem>
+              <Link href="/dashboard/gestor-ia">
+                  <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
+                  <FlaskConical />
+                  <span>Herramientas IA</span>
+                  </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
 
             <SidebarMenuItem>
               <Link href="/dashboard/automatizaciones">

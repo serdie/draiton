@@ -6,8 +6,20 @@ import Link from 'next/link';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Newspaper, FileEdit, Bot, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Newspaper, FileEdit, Bot, Lock, ArrowRight, Sparkles, Lightbulb, MonitorCog, ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AsistenteForm } from '@/app/dashboard/asistente-ia/asistente-form';
+import { getBusinessIdeasAction } from '@/app/dashboard/perspectivas-ia/actions';
+import { AsistenteFiscalForm } from './asistente-fiscal/asistente-fiscal-form';
+import { getFiscalAdviceAction } from './asistente-fiscal/actions';
+import { AyudasForm } from './ayudas/ayudas-form';
+import { getGrantsAndNewsAction } from './ayudas/actions';
+import { WebIAPageContent } from '../web-ia/web-ia-page-content';
+import { getWebsiteConceptAction } from '../web-ia/actions';
+import { ExtractorForm } from '../extractor-facturas/extractor-form';
+import { getInvoiceData } from '../extractor-facturas/page';
+
 
 function ProFeatureLock() {
   return (
@@ -36,73 +48,70 @@ export default function GestorIAPage() {
       {!isPro && <ProFeatureLock />}
       <div className={cn("space-y-8", !isPro && "opacity-50 pointer-events-none")}>
         <div>
-          <h1 className="text-3xl font-bold">Gestor Inteligente de Negocio</h1>
+          <h1 className="text-3xl font-bold">Herramientas de Inteligencia Artificial</h1>
           <p className="text-muted-foreground">
             Tu copiloto de IA para tomar mejores decisiones, automatizar tareas y hacer crecer tu negocio.
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="flex flex-col">
-                <CardHeader>
-                     <div className="flex items-center gap-4">
-                        <div className="bg-primary/10 p-3 rounded-full">
-                            <Sparkles className="h-6 w-6 text-primary" />
-                        </div>
-                        <CardTitle>Ideas de Negocio</CardTitle>
-                    </div>
-                    <CardDescription className="pt-2">Analiza tu empresa y recibe sugerencias para mejorar tu oferta y comercialización.</CardDescription>
-                </CardHeader>
-                 <CardContent className="flex-grow">
-                    <p className="text-sm text-muted-foreground">Introduce los datos de tu compañía y deja que la IA te inspire.</p>
-                </CardContent>
-                <CardFooter>
-                    <Button asChild className="w-full">
-                        <Link href="/dashboard/asistente-ia">Analizar mi Negocio <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                </CardFooter>
-            </Card>
-
-             <Card className="flex flex-col">
-                <CardHeader>
-                     <div className="flex items-center gap-4">
-                        <div className="bg-primary/10 p-3 rounded-full">
-                            <FileEdit className="h-6 w-6 text-primary" />
-                        </div>
-                        <CardTitle>Asistente Fiscal</CardTitle>
-                    </div>
-                    <CardDescription className="pt-2">Recibe instrucciones claras y precisas para rellenar tus modelos de impuestos.</CardDescription>
-                </CardHeader>
-                 <CardContent className="flex-grow">
-                     <p className="text-sm text-muted-foreground">Simplifica tus obligaciones tributarias con la ayuda de la IA.</p>
-                </CardContent>
-                <CardFooter>
-                     <Button asChild className="w-full">
-                        <Link href="/dashboard/gestor-ia/asistente-fiscal">Preparar Impuestos <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                </CardFooter>
-            </Card>
-
-             <Card className="flex flex-col">
-                <CardHeader>
-                    <div className="flex items-center gap-4">
-                        <div className="bg-primary/10 p-3 rounded-full">
-                            <Newspaper className="h-6 w-6 text-primary" />
-                        </div>
-                        <CardTitle>Buscador de Ayudas</CardTitle>
-                    </div>
-                    <CardDescription className="pt-2">Encuentra subvenciones y noticias relevantes para tu sector y localización.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                    <p className="text-sm text-muted-foreground">La IA busca oportunidades para ti en el BOE y otras fuentes oficiales.</p>
-                </CardContent>
-                <CardFooter>
-                     <Button asChild className="w-full">
-                        <Link href="/dashboard/gestor-ia/ayudas">Buscar Oportunidades <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
+        <Tabs defaultValue="perspectivas" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
+                <TabsTrigger value="perspectivas"><Lightbulb className="mr-2 h-4 w-4" />Perspectivas</TabsTrigger>
+                <TabsTrigger value="asistente-fiscal"><FileEdit className="mr-2 h-4 w-4" />Asistente Fiscal</TabsTrigger>
+                <TabsTrigger value="buscador-ayudas"><Newspaper className="mr-2 h-4 w-4" />Buscador Ayudas</TabsTrigger>
+                <TabsTrigger value="web-ia"><MonitorCog className="mr-2 h-4 w-4" />Web IA</TabsTrigger>
+                <TabsTrigger value="extractor"><ScanLine className="mr-2 h-4 w-4" />Extractor</TabsTrigger>
+            </TabsList>
+            <div className="mt-6">
+                <TabsContent value="perspectivas">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Perspectivas de Negocio</CardTitle>
+                            <CardDescription>Describe tu empresa, productos, servicios y mercado. Nuestra IA analizará los datos y te dará ideas para mejorar tu comercialización y oferta.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <AsistenteForm action={getBusinessIdeasAction} />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="asistente-fiscal">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Asistente de Formularios Fiscales</CardTitle>
+                            <CardDescription>Selecciona el modelo e introduce los datos de tu trimestre para recibir una guía detallada de la IA.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <AsistenteFiscalForm action={getFiscalAdviceAction} />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="buscador-ayudas">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Buscador de Ayudas y Noticias</CardTitle>
+                            <CardDescription>Cuantos más detalles proporciones, más precisa será la búsqueda de la IA en fuentes oficiales y medios de comunicación.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <AyudasForm action={getGrantsAndNewsAction} />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                 <TabsContent value="web-ia">
+                    <WebIAPageContent getWebsiteConceptAction={getWebsiteConceptAction} />
+                </TabsContent>
+                 <TabsContent value="extractor">
+                     <Card>
+                        <CardHeader>
+                        <CardTitle>Extractor de Facturas y Tickets con IA</CardTitle>
+                        <CardDescription>Sube una imagen o PDF y la IA extraerá automáticamente toda la información relevante.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                        <ExtractorForm action={getInvoiceData} />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </div>
+        </Tabs>
       </div>
     </div>
   );
