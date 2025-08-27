@@ -14,6 +14,7 @@ import { ImportInvoiceModal } from '../documentos/import-invoice-modal';
 import { CreateDocumentModal } from '../documentos/create-document-modal';
 import { EditDocumentModal } from '../documentos/edit-document-modal';
 import { ViewDocumentModal } from '../documentos/view-document-modal';
+import { ConnectBankModal } from './connect-bank-modal';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
@@ -58,9 +59,11 @@ export default function FinanzasPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isConnectBankModalOpen, setIsConnectBankModalOpen] = useState(false);
   const [docToEdit, setDocToEdit] = useState<Document | null>(null);
   const [docToView, setDocToView] = useState<Document | null>(null);
   const [docToDelete, setDocToDelete] = useState<Document | null>(null);
+  const [bankConnectionToDelete, setBankConnectionToDelete] = useState<any | null>(null);
 
   const [initialDataForForm, setInitialDataForForm] = useState<ExtractInvoiceDataOutput | undefined>(undefined);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -115,6 +118,15 @@ export default function FinanzasPage() {
   };
 
   const handleDelete = async () => {
+    if (!docToDelete) return;
+    toast({ title: 'Simulación: Documento eliminado', description: `El documento ${docToDelete.numero} ha sido eliminado.` });
+    setDocToDelete(null);
+  };
+
+  const handleDeleteBankConnection = () => {
+    if (!bankConnectionToDelete) return;
+    toast({ title: 'Simulación: Conexión eliminada', description: `Se ha eliminado la conexión con ${bankConnectionToDelete.name}.` });
+    setBankConnectionToDelete(null);
   };
 
   const handleDownload = () => {
@@ -384,7 +396,7 @@ export default function FinanzasPage() {
         <CardHeader>
            <div className="flex justify-between items-center">
             <CardTitle className="text-base">Bancos Sincronizados</CardTitle>
-            <Button>
+            <Button onClick={() => setIsConnectBankModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Conectar Banco
             </Button>
@@ -401,7 +413,26 @@ export default function FinanzasPage() {
                     <p className="text-sm text-muted-foreground">{account.number}</p>
                   </div>
                 </div>
-                <p className={cn("text-sm font-medium", account.statusColor)}>{account.status}</p>
+                <div className="flex items-center gap-4">
+                  <p className={cn("text-sm font-medium", account.statusColor)}>{account.status}</p>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => toast({title: "Función en desarrollo"})}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setBankConnectionToDelete(account)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             ))}
           </div>
@@ -420,12 +451,29 @@ export default function FinanzasPage() {
         onOpenModal={(data) => handleOpenExpenseModal(data)} 
         initialData={initialDataForForm}
       />
+      <ConnectBankModal isOpen={isConnectBankModalOpen} onClose={() => setIsConnectBankModalOpen(false)} />
       {docToEdit && <EditDocumentModal isOpen={!!docToEdit} onClose={() => setDocToEdit(null)} document={docToEdit} />}
       {docToView && <ViewDocumentModal isOpen={!!docToView} onClose={() => setDocToView(null)} document={docToView} />}
+      
       <AlertDialog open={!!docToDelete} onOpenChange={(open) => !open && setDocToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>¿Estás seguro?</AlertDialogTitle><AlertDialogDescription>El documento <strong>{docToDelete?.numero}</strong> será eliminado permanentemente.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Sí, eliminar</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+       <AlertDialog open={!!bankConnectionToDelete} onOpenChange={(open) => !open && setBankConnectionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar Conexión?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se desconectará la cuenta de <strong>{bankConnectionToDelete?.name}</strong>. Tendrás que volver a sincronizarla para ver las transacciones.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteBankConnection} className="bg-destructive hover:bg-destructive/90">Sí, eliminar</AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
