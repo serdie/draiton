@@ -2,14 +2,13 @@
 'use client';
 
 import { useState, useMemo, useEffect, useContext } from 'react';
-import type { DateRange } from "react-day-picker"
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { FilePlus, MoreHorizontal, Loader2, Trash2, Pencil, Eye, Download, Sparkles } from 'lucide-react';
+import { FilePlus, MoreHorizontal, Loader2, Trash2, Pencil, Eye, Download, Sparkles, Upload, Plus } from 'lucide-react';
 import { ImportInvoiceModal } from '../documentos/import-invoice-modal';
 import { CreateDocumentModal } from '../documentos/create-document-modal';
 import { EditDocumentModal } from '../documentos/edit-document-modal';
@@ -24,7 +23,7 @@ import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
 import { deleteDocument } from '@/lib/firebase/document-actions';
 import type { Document, DocumentStatus } from '../documentos/page';
-
+import { RegisterExpenseModal } from '../gastos/register-expense-modal';
 
 const getBadgeClass = (estado: string) => {
   switch (estado?.toLowerCase()) {
@@ -34,7 +33,7 @@ const getBadgeClass = (estado: string) => {
       return 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30';
     case 'vencida':
       return 'bg-red-600/20 text-red-400 border-red-500/30';
-    default: // Borrador o cualquier otro estado
+    default:
       return 'bg-gray-600/20 text-gray-400 border-gray-500/30';
   }
 };
@@ -43,6 +42,7 @@ export default function FinanzasPage() {
   const { user } = useContext(AuthContext);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [docToEdit, setDocToEdit] = useState<Document | null>(null);
   const [docToView, setDocToView] = useState<Document | null>(null);
   const [docToDelete, setDocToDelete] = useState<Document | null>(null);
@@ -60,7 +60,6 @@ export default function FinanzasPage() {
   ];
 
   useEffect(() => {
-    // Simulando carga de datos
     setLoading(true);
     setTimeout(() => {
         setDocuments(facturasDeEjemplo);
@@ -72,9 +71,19 @@ export default function FinanzasPage() {
     setInitialDataForForm(initialData);
     setIsCreateModalOpen(true);
   };
+  
+  const handleOpenExpenseModal = (data?: ExtractInvoiceDataOutput) => {
+    setInitialDataForForm(data);
+    setIsExpenseModalOpen(true);
+  };
 
   const handleCloseCreateModal = () => {
     setIsCreateModalOpen(false);
+    setInitialDataForForm(undefined);
+  };
+  
+  const handleCloseExpenseModal = () => {
+    setIsExpenseModalOpen(false);
     setInitialDataForForm(undefined);
   };
 
@@ -84,7 +93,6 @@ export default function FinanzasPage() {
   };
 
   const handleDelete = async () => {
-    // Logica de borrado
   };
 
   const handleDownload = () => {
@@ -164,11 +172,60 @@ export default function FinanzasPage() {
       </Card>
     )
   }
+  
+  const renderGastosContent = () => {
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2 bg-transparent border-none shadow-none">
+                 <CardHeader className="px-0">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold">Listado de Gastos</h3>
+                        <Button onClick={() => handleOpenExpenseModal()}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Añadir Gasto
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                     <div className="text-center py-16 border-2 border-dashed border-border/30 rounded-lg">
+                        <p className="text-muted-foreground">Aquí aparecerán tus gastos registrados.</p>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card className="bg-secondary/50 border-border/30">
+                 <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-base">Digitalizar Ticket con IA</CardTitle>
+                        <Sparkles className="h-4 w-4 text-primary"/>
+                    </div>
+                </CardHeader>
+                <CardContent className="text-center flex flex-col items-center justify-center h-full py-10">
+                     <div className="p-4 bg-background rounded-full mb-4">
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h4 className="font-semibold mb-1">Extrae datos al instante</h4>
+                    <p className="text-sm text-muted-foreground mb-6">
+                        Usa tu cámara o sube un archivo para que nuestra IA rellene el gasto por ti.
+                    </p>
+                    <Button className="w-full" onClick={() => handleOpenExpenseModal()}>
+                        Empezar a Digitalizar
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+    )
+  }
 
   return (
     <>
       <ImportInvoiceModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onDataExtracted={handleDataExtracted} />
       {isCreateModalOpen && <CreateDocumentModal isOpen={isCreateModalOpen} onClose={handleCloseCreateModal} documentType={'factura'} initialData={initialDataForForm} />}
+      <RegisterExpenseModal 
+        isOpen={isExpenseModalOpen} 
+        onClose={handleCloseExpenseModal} 
+        onOpenModal={(data) => handleOpenExpenseModal(data)} 
+        initialData={initialDataForForm}
+      />
       {docToEdit && <EditDocumentModal isOpen={!!docToEdit} onClose={() => setDocToEdit(null)} document={docToEdit} />}
       {docToView && <ViewDocumentModal isOpen={!!docToView} onClose={() => setDocToView(null)} document={docToView} />}
       <AlertDialog open={!!docToDelete} onOpenChange={(open) => !open && setDocToDelete(null)}>
@@ -194,8 +251,10 @@ export default function FinanzasPage() {
           <TabsContent value="facturacion" className="mt-6">
             {renderFacturasContent()}
           </TabsContent>
-          <TabsContent value="gastos"  className="mt-6"><p>Próximamente: Gestión de gastos.</p></TabsContent>
-          <TabsContent value="impuestos"  className="mt-6"><p>Próximamente: Previsión de impuestos.</p></TabsContent>
+          <TabsContent value="gastos"  className="mt-6">
+            {renderGastosContent()}
+          </TabsContent>
+          <TabsContent value="impuestos"  className="mt-6"><p>Próximamente: Gestión de impuestos.</p></TabsContent>
           <TabsContent value="bancos"  className="mt-6"><p>Próximamente: Conexión bancaria.</p></TabsContent>
         </Tabs>
       </div>
