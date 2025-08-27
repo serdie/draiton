@@ -70,27 +70,43 @@ export default function FinanzasPage() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const facturasDeEjemplo: Document[] = [
-    { id: '1', numero: '#2024-035', cliente: 'Creative Inc.', fechaEmision: new Date('2024-07-28'), importe: 1250, estado: 'Pagado' } as Document,
-    { id: '2', numero: '#2024-034', cliente: 'Innovate LLC', fechaEmision: new Date('2024-07-22'), importe: 850.50, estado: 'Pendiente' } as Document,
-    { id: '3', numero: '#2024-033', cliente: 'Tech Solutions', fechaEmision: new Date('2024-07-15'), importe: 2500, estado: 'Vencido' } as Document,
-    { id: '4', numero: '#2024-032', cliente: 'Marketing Guru', fechaEmision: new Date('2024-07-10'), importe: 450, estado: 'Pagado' } as Document,
-  ];
-
   const gastosDeEjemplo = [
     { id: '1', proveedor: 'Amazon Web Services', fecha: new Date('2024-07-25'), importe: 75.50, categoria: 'Software' },
     { id: '2', proveedor: 'Material de Oficina S.L.', fecha: new Date('2024-07-22'), importe: 120.00, categoria: 'Oficina' },
     { id: '3', proveedor: 'Facebook Ads', fecha: new Date('2024-07-20'), importe: 250.00, categoria: 'Marketing' },
     { id: '4', proveedor: 'Renfe Viajes', fecha: new Date('2024-07-18'), importe: 85.40, categoria: 'Viajes' },
   ];
-
+  
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-        setDocuments(facturasDeEjemplo);
+    if (!db || !user) {
         setLoading(false);
-    }, 500);
-  }, []);
+        return;
+    }
+    setLoading(true);
+
+    const q = query(collection(db, "invoices"), where('tipo', '==', 'factura'), where('ownerId', '==', user.uid));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const docsList = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                fechaEmision: data.fechaEmision instanceof Timestamp ? data.fechaEmision.toDate() : new Date(),
+                fechaVto: data.fechaVto instanceof Timestamp ? data.fechaVto.toDate() : null,
+            } as Document;
+        });
+        setDocuments(docsList.sort((a,b) => b.fechaEmision.getTime() - a.fechaEmision.getTime()));
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching documents:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los documentos.' });
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, toast]);
+
 
   const handleCreateNew = (initialData?: ExtractInvoiceDataOutput) => {
     setInitialDataForForm(initialData);
@@ -119,8 +135,21 @@ export default function FinanzasPage() {
 
   const handleDelete = async () => {
     if (!docToDelete) return;
-    toast({ title: 'Simulación: Documento eliminado', description: `El documento ${docToDelete.numero} ha sido eliminado.` });
-    setDocToDelete(null);
+    try {
+        await deleteDocument(docToDelete.id);
+        toast({
+            title: 'Documento Eliminado',
+            description: `El documento ${docToDelete.numero} ha sido eliminado.`,
+        });
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Error al eliminar',
+            description: 'No se pudo eliminar el documento. Revisa la consola para más detalles.',
+        });
+    } finally {
+        setDocToDelete(null);
+    }
   };
 
   const handleDeleteBankConnection = () => {
