@@ -12,7 +12,7 @@ const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home },
     { href: '/dashboard/finanzas', label: 'Finanzas', icon: Wallet },
     { href: '/dashboard/proyectos', label: 'Operaciones', icon: Blocks },
-    { href: '/dashboard/gestor-ia', label: 'Herramientas IA', icon: FlaskConical },
+    { href: '/dashboard/gestor-ia', label: 'Herram. IA', icon: FlaskConical },
     { href: '/dashboard/configuracion', label: 'Ajustes', icon: Settings, adminOnly: false },
     { href: '/admin/dashboard', label: 'Admin', icon: UserCog, adminOnly: true },
 ]
