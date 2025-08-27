@@ -32,14 +32,14 @@ const getBadgeClass = (estado: string) => {
   switch (estado?.toLowerCase()) {
     case 'pagado':
     case 'pagada':
-      return 'bg-green-100 dark:bg-green-600/20 text-green-800 dark:text-green-400 border-green-200 dark:border-green-500/30';
+      return 'bg-green-100 dark:bg-green-600/20 text-green-700 dark:text-green-400 border-transparent';
     case 'pendiente':
-      return 'bg-yellow-100 dark:bg-yellow-600/20 text-yellow-800 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/30';
+      return 'bg-yellow-100 dark:bg-yellow-600/20 text-yellow-700 dark:text-yellow-400 border-transparent';
     case 'vencido':
     case 'vencida':
-      return 'bg-red-100 dark:bg-red-600/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-500/30';
+      return 'bg-red-100 dark:bg-red-600/20 text-red-700 dark:text-red-400 border-transparent';
     default:
-      return 'bg-gray-100 dark:bg-gray-600/20 text-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-500/30';
+      return 'bg-gray-100 dark:bg-gray-600/20 text-gray-700 dark:text-gray-400 border-transparent';
   }
 };
 
@@ -471,8 +471,7 @@ export default function FinanzasPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteBankConnection} className="bg-destructive hover:bg-destructive/90">Sí, eliminar</AlertDialogAction>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDeleteBankConnection} className="bg-destructive hover:bg-destructive/90">Sí, eliminar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -484,11 +483,11 @@ export default function FinanzasPage() {
         </div>
 
         <Tabs defaultValue="facturacion" className="w-full">
-          <TabsList className="border-b bg-transparent p-0 justify-start gap-4">
-            <TabsTrigger value="facturacion" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Facturación</TabsTrigger>
-            <TabsTrigger value="gastos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Gastos</TabsTrigger>
-            <TabsTrigger value="impuestos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Impuestos</TabsTrigger>
-            <TabsTrigger value="bancos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Conexión Bancaria</TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="facturacion">Facturación</TabsTrigger>
+            <TabsTrigger value="gastos">Gastos</TabsTrigger>
+            <TabsTrigger value="impuestos">Impuestos</TabsTrigger>
+            <TabsTrigger value="bancos">Conexión Bancaria</TabsTrigger>
           </TabsList>
           <TabsContent value="facturacion" className="mt-6">
             {renderFacturasContent()}

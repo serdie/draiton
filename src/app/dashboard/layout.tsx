@@ -81,7 +81,7 @@ export default function DashboardLayout({
     return (
       <div className="flex flex-col h-screen">
           <MobileHeader title={getPageTitle()} />
-          <main className="flex-1 overflow-y-auto bg-secondary/30 dark:bg-secondary/50 p-4">
+          <main className="flex-1 overflow-y-auto bg-background p-4">
               {children}
           </main>
           <MobileNav />
@@ -93,7 +93,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-4">
-          <Logo />
+          <Logo className="h-8 w-8" />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
@@ -131,16 +131,6 @@ export default function DashboardLayout({
               </Link>
             </SidebarMenuItem>
 
-             <SidebarMenuItem>
-              <Link href="/dashboard/conexiones">
-                <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
-                  <Network />
-                  <span>Conexiones</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-
-
              {isAdmin && (
                 <SidebarMenuItem>
                     <Link href="/admin/dashboard">
@@ -173,9 +163,9 @@ export default function DashboardLayout({
             <div className="flex-1 flex justify-end items-center gap-4">
                 <div className="relative w-full max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Buscar proyectos, facturas..." className="pl-10" />
+                    <Input placeholder="Buscar proyectos, facturas..." className="pl-10 bg-muted border-muted focus:bg-background" />
                 </div>
-                {isPro && <Badge variant="outline" className='border-yellow-400 text-yellow-400 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
+                {isPro && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
                  <Button asChild variant="ghost" size="icon">
                   <Link href="/dashboard/configuracion">
                     <Settings className="h-5 w-5"/>
@@ -217,7 +207,7 @@ export default function DashboardLayout({
                 </DropdownMenu>
             </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-secondary/30 dark:bg-secondary/50">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/50">
           {children}
         </main>
       </div>
