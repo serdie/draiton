@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Newspaper, FileEdit, Bot, Lock, ArrowRight, Sparkles, Lightbulb, MonitorCog, ScanLine, LineChart } from 'lucide-react';
+import { Lock, ArrowRight, Sparkles, Lightbulb, MonitorCog, ScanLine, LineChart, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AsistenteForm } from '@/app/dashboard/asistente-ia/asistente-form';
@@ -15,9 +15,8 @@ import { AyudasForm } from './ayudas/ayudas-form';
 import { getGrantsAndNewsAction } from './ayudas/actions';
 import { WebIAPageContent } from '../web-ia/web-ia-page-content';
 import { getWebsiteConceptAction } from '../web-ia/actions';
-import { ExtractorForm } from '../extractor-facturas/extractor-form';
-import { getInvoiceData } from '../extractor-facturas/actions';
 import MarketingIAPage from '../marketing-ia/page';
+import AutomatizacionesPage from '../automatizaciones/page';
 
 
 function ProFeatureLock() {
@@ -58,7 +57,7 @@ export default function GestorIAPage() {
                 <TabsTrigger value="perspectivas"><Lightbulb className="mr-2 h-4 w-4" />Perspectivas y Ayudas</TabsTrigger>
                 <TabsTrigger value="marketing-ia"><LineChart className="mr-2 h-4 w-4" />Marketing IA</TabsTrigger>
                 <TabsTrigger value="web-ia"><MonitorCog className="mr-2 h-4 w-4" />Web IA</TabsTrigger>
-                <TabsTrigger value="extractor"><ScanLine className="mr-2 h-4 w-4" />Extractor</TabsTrigger>
+                <TabsTrigger value="automatizaciones"><Zap className="mr-2 h-4 w-4" />Automatización</TabsTrigger>
             </TabsList>
             <div className="mt-6">
                 <TabsContent value="perspectivas">
@@ -97,16 +96,8 @@ export default function GestorIAPage() {
                  <TabsContent value="web-ia">
                     <WebIAPageContent getWebsiteConceptAction={getWebsiteConceptAction} />
                 </TabsContent>
-                 <TabsContent value="extractor">
-                     <Card>
-                        <CardHeader>
-                        <CardTitle>Extractor de Facturas y Tickets con IA</CardTitle>
-                        <CardDescription>Sube una imagen o PDF y la IA extraerá automáticamente toda la información relevante.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                        <ExtractorForm action={getInvoiceData} />
-                        </CardContent>
-                    </Card>
+                 <TabsContent value="automatizaciones">
+                     <AutomatizacionesPage />
                 </TabsContent>
             </div>
         </Tabs>
