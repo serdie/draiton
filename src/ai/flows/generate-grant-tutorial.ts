@@ -11,7 +11,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const GenerateGrantTutorialInputSchema = z.object({
+const GenerateGrantTutorialInputSchema = z.object({
   grantTitle: z.string().describe('The title of the grant or subsidy.'),
   sourceLink: z.string().url().describe('The URL to the official source of the grant.'),
 });
@@ -22,7 +22,7 @@ const TutorialStepSchema = z.object({
     description: z.string().describe('A detailed explanation of the actions to take in this step.'),
 });
 
-export const GenerateGrantTutorialOutputSchema = z.object({
+const GenerateGrantTutorialOutputSchema = z.object({
   tutorial: z.array(TutorialStepSchema).describe('A list of steps to follow to apply for the grant.'),
 });
 export type GenerateGrantTutorialOutput = z.infer<typeof GenerateGrantTutorialOutputSchema>;
