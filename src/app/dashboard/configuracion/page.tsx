@@ -8,8 +8,11 @@ import { NotificacionesSettings } from "./notificaciones-settings";
 import { AparienciaSettings } from "./apariencia-settings";
 import { SuscripcionSettings } from "./suscripcion-settings";
 import { User, Building, Bell, Palette, CreditCard } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ConfiguracionPage() {
+  const isMobile = useIsMobile();
+
   return (
     <div className="space-y-6">
       <div>
@@ -18,30 +21,30 @@ export default function ConfiguracionPage() {
           Personaliza tu perfil, los datos de tu empresa y la apariencia de la aplicación.
         </p>
       </div>
-      <Tabs defaultValue="perfil" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
-          <TabsTrigger value="perfil">
+      <Tabs defaultValue="perfil" orientation={isMobile ? 'vertical' : 'horizontal'} className="w-full">
+        <TabsList className="w-full md:w-auto md:grid md:grid-cols-5">
+          <TabsTrigger value="perfil" className="w-full justify-start md:justify-center">
             <User className="mr-2 h-4 w-4" />
             Perfil
           </TabsTrigger>
-          <TabsTrigger value="empresa">
+          <TabsTrigger value="empresa" className="w-full justify-start md:justify-center">
             <Building className="mr-2 h-4 w-4" />
             Empresa
           </TabsTrigger>
-          <TabsTrigger value="suscripcion">
+          <TabsTrigger value="suscripcion" className="w-full justify-start md:justify-center">
             <CreditCard className="mr-2 h-4 w-4" />
             Suscripción
           </TabsTrigger>
-          <TabsTrigger value="notificaciones">
+          <TabsTrigger value="notificaciones" className="w-full justify-start md:justify-center">
             <Bell className="mr-2 h-4 w-4" />
             Notificaciones
           </TabsTrigger>
-           <TabsTrigger value="apariencia">
+           <TabsTrigger value="apariencia" className="w-full justify-start md:justify-center">
             <Palette className="mr-2 h-4 w-4" />
             Apariencia
           </TabsTrigger>
         </TabsList>
-        <div className="mt-6">
+        <div className="mt-6 md:mt-4">
             <TabsContent value="perfil"><PerfilSettings /></TabsContent>
             <TabsContent value="empresa"><EmpresaSettings /></TabsContent>
             <TabsContent value="suscripcion"><SuscripcionSettings /></TabsContent>
