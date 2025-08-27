@@ -29,6 +29,8 @@ import { Loader2, PlusCircle } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+
 
 const contactFormSchema = z.object({
   name: z.string().min(1, { message: 'El nombre es obligatorio.' }),

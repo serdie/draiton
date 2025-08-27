@@ -29,6 +29,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Contact } from './page';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 
 const contactFormSchema = z.object({
