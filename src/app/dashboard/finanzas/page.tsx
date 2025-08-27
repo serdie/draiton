@@ -4,8 +4,8 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Coins, Landmark, Receipt } from 'lucide-react';
-import DocumentosPage from '../documentos/page';
-import GastosPage from '../gastos/page';
+import { DocumentosContent } from '../documentos/documentos-content';
+import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
 import { BancosTab } from './bancos-tab';
 
@@ -34,10 +34,10 @@ export default function FinanzasPage() {
             <TabsTrigger value="bancos"><Landmark className="mr-2 h-4 w-4" />Conexión Bancaria</TabsTrigger>
           </TabsList>
           <TabsContent value="documentos" className="mt-6">
-            <DocumentosPage />
+            <DocumentosContent />
           </TabsContent>
           <TabsContent value="gastos"  className="mt-6">
-            <GastosPage />
+            <GastosContent />
           </TabsContent>
           <TabsContent value="impuestos"  className="mt-6">
             <ImpuestosTab />
