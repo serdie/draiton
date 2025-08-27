@@ -4,9 +4,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { Plus, MoreHorizontal, Trash2, Pencil, Eye } from 'lucide-react';
 import { ConnectBankModal } from './connect-bank-modal';
 import { cn } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const BankLogo = ({ bankName }: { bankName: string }) => {
     switch (bankName.toLowerCase()) {
@@ -58,9 +59,30 @@ export function BancosTab() {
                   <p className="font-semibold">{bank.name}</p>
                   <p className="text-sm text-muted-foreground">{bank.account}</p>
                 </div>
-                <div className={cn("text-sm font-medium", bank.statusColor)}>
+                <div className={cn("text-sm font-medium mr-4", bank.statusColor)}>
                   {bank.status}
                 </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Ver cuenta
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Editar mi cuenta
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Borrar la cuenta
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ))}
           </div>
