@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition, useActionState } from 'react';
+import { useState, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -99,6 +99,7 @@ const GrantItem = ({ grant }: { grant: FindGrantsAndNewsOutput['grants'][0] }) =
 export function AyudasForm({ action }: { action: (currentState: FormState, formData: FormData) => Promise<FormState> }) {
   const initialState: FormState = { output: null, error: null };
   const [state, formAction] = useActionState(action, initialState);
+  const { pending } = useFormStatus();
 
   return (
     <form action={formAction} className="space-y-6">
@@ -123,6 +124,13 @@ export function AyudasForm({ action }: { action: (currentState: FormState, formD
       
       <SubmitButton />
 
+      {pending && (
+        <div className="flex items-center justify-center gap-2 text-muted-foreground mt-4">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Buscando nueva información...</span>
+        </div>
+      )}
+
       {state.error && (
         <Alert variant="destructive" className="mt-4">
           <Terminal className="h-4 w-4" />
@@ -131,7 +139,7 @@ export function AyudasForm({ action }: { action: (currentState: FormState, formD
         </Alert>
       )}
 
-      {state.output && (
+      {!pending && state.output && (
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
                 <CardHeader>
