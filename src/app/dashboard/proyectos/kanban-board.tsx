@@ -72,7 +72,7 @@ function KanbanColumn({ status, projects }: { status: ProjectStatus; projects: P
     const { setNodeRef } = useSortable({ id: status, data: {type: 'column'} });
 
     return (
-        <div ref={setNodeRef} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 shrink-0">
+        <div ref={setNodeRef} className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 2xl:w-1/5 flex flex-col gap-4">
             <Card className="bg-muted/50 h-full">
                 <CardHeader className="p-4">
                     <CardTitle className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export function KanbanBoard({ projects, loading }: { projects: Project[]; loadin
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-        <div className="flex gap-4 overflow-x-auto p-2 -m-2">
+        <div className="flex flex-wrap gap-4 p-2 -m-2">
             {projectStatuses.map(status => (
                 <KanbanColumn key={status} status={status} projects={columns[status] || []} />
             ))}
