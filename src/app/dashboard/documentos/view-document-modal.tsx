@@ -55,6 +55,7 @@ const getDocumentTypeLabel = (type?: DocumentType) => {
         case 'factura': return 'Factura';
         case 'presupuesto': return 'Presupuesto';
         case 'nota-credito': return 'Nota de Crédito';
+        case 'recurrente': return 'Factura Recurrente';
     }
 }
 
@@ -71,10 +72,13 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
     setIsDownloading(true);
 
     try {
-        const canvas = await html2canvas(printableAreaRef.current, {
-            scale: 2, // Aumentar la escala para mejorar la resolución
+        const element = printableAreaRef.current;
+        const canvas = await html2canvas(element, {
+            scale: 2,
             useCORS: true,
             backgroundColor: null,
+            height: element.scrollHeight,
+            width: element.scrollWidth
         });
 
         const imgData = canvas.toDataURL('image/png');
@@ -93,14 +97,13 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
         let imgWidth = pdfWidth;
         let imgHeight = pdfWidth / ratio;
         
-        // Si la altura de la imagen es mayor que la del PDF, ajustamos por altura
         if (imgHeight > pdfHeight) {
             imgHeight = pdfHeight;
             imgWidth = pdfHeight * ratio;
         }
 
         const x = (pdfWidth - imgWidth) / 2;
-        const y = 0; // Se puede añadir un margen si se desea
+        const y = 5; // Add some top margin
 
         pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
         
@@ -130,7 +133,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col @container">
-        <DialogHeader>
+        <DialogHeader className="px-6 pt-6">
             <div className="flex justify-between items-start">
                 <div className="space-y-1">
                     <DialogTitle>
@@ -149,81 +152,81 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                  <Badge variant="outline" className={cn('text-base', getBadgeClass(document.estado))}>{document.estado}</Badge>
             </div>
         </DialogHeader>
-        <div ref={printableAreaRef} id="printable-area" className="flex-1 overflow-y-auto pr-6 -mr-6 py-4 px-6 space-y-6 text-sm bg-background">
-            
-            <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
-                 <div className="space-y-1">
-                    <h3 className="font-semibold text-base">Emisor</h3>
-                    <p className="font-bold">{companyData?.name || 'Tu Empresa S.L.'}</p>
-                    <p>{companyData?.cif || 'Y12345672'}</p>
-                    <p>{companyData?.address || 'Tu Dirección, Ciudad, País'}</p>
+        <div ref={printableAreaRef} id="printable-area" className="flex-1 overflow-y-auto pr-6 -mr-6 py-4 space-y-6 text-sm bg-background">
+            <div className="px-6 space-y-6">
+                 <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
+                    <div className="space-y-1">
+                        <h3 className="font-semibold text-base">Emisor</h3>
+                        <p className="font-bold">{companyData?.name || 'Tu Empresa S.L.'}</p>
+                        <p>{companyData?.cif || 'Y12345672'}</p>
+                        <p>{companyData?.address || 'Tu Dirección, Ciudad, País'}</p>
+                    </div>
+                    <div className="space-y-1 @lg:text-right">
+                        <h3 className="font-semibold text-base">Cliente</h3>
+                        <p className="font-bold">{document.cliente}</p>
+                        <p>{document.clienteCif}</p>
+                        <p>{document.clienteDireccion}</p>
+                    </div>
                 </div>
-                 <div className="space-y-1 @lg:text-right">
-                    <h3 className="font-semibold text-base">Cliente</h3>
-                    <p className="font-bold">{document.cliente}</p>
-                    <p>{document.clienteCif}</p>
-                    <p>{document.clienteDireccion}</p>
-                </div>
-            </div>
 
-            <div className="grid grid-cols-2 @md:grid-cols-4 gap-4 rounded-lg border p-4">
-                 <div>
-                    <p className="text-muted-foreground">Nº Documento</p>
-                    <p className="font-semibold">{document.numero}</p>
+                <div className="grid grid-cols-2 @md:grid-cols-4 gap-4 rounded-lg border p-4">
+                    <div>
+                        <p className="text-muted-foreground">Nº Documento</p>
+                        <p className="font-semibold">{document.numero}</p>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground">Fecha Emisión</p>
+                        <p className="font-semibold">{format(document.fechaEmision, "dd/MM/yyyy", { locale: es })}</p>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground">Fecha Vencimiento</p>
+                        <p className="font-semibold">{document.fechaVto ? format(document.fechaVto, "dd/MM/yyyy", { locale: es }) : 'N/A'}</p>
+                    </div>
                 </div>
-                 <div>
-                    <p className="text-muted-foreground">Fecha Emisión</p>
-                    <p className="font-semibold">{format(document.fechaEmision, "dd/MM/yyyy", { locale: es })}</p>
-                </div>
-                 <div>
-                    <p className="text-muted-foreground">Fecha Vencimiento</p>
-                    <p className="font-semibold">{document.fechaVto ? format(document.fechaVto, "dd/MM/yyyy", { locale: es }) : 'N/A'}</p>
-                </div>
-            </div>
 
-            <div>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Descripción</TableHead>
-                            <TableHead className="text-center">Cant.</TableHead>
-                            <TableHead className="text-right">P. Unitario</TableHead>
-                            <TableHead className="text-right">Total</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {document.lineas && document.lineas.map((line, index) => (
-                            <TableRow key={index}>
-                                <TableCell className="font-medium">{line.description}</TableCell>
-                                <TableCell className="text-center">{line.quantity}</TableCell>
-                                <TableCell className="text-right">{line.unitPrice.toFixed(2)} {document.moneda}</TableCell>
-                                <TableCell className="text-right">{line.total.toFixed(2)} {document.moneda}</TableCell>
+                <div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Descripción</TableHead>
+                                <TableHead className="text-center">Cant.</TableHead>
+                                <TableHead className="text-right">P. Unitario</TableHead>
+                                <TableHead className="text-right">Total</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
-            
-            <div className="flex justify-end items-end pt-8">
-                <div className="w-full max-w-sm space-y-2">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Subtotal</span>
-                        <span>{document.subtotal.toFixed(2)} {document.moneda}</span>
-                    </div>
-                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Impuestos</span>
-                        <span>{document.impuestos.toFixed(2)} {document.moneda}</span>
-                    </div>
-                     <Separator />
-                     <div className="flex justify-between text-base font-bold">
-                        <span>Total</span>
-                        <span>{document.importe.toFixed(2)} {document.moneda}</span>
+                        </TableHeader>
+                        <TableBody>
+                            {document.lineas && document.lineas.map((line, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="font-medium">{line.description}</TableCell>
+                                    <TableCell className="text-center">{line.quantity}</TableCell>
+                                    <TableCell className="text-right">{line.unitPrice.toFixed(2)} {document.moneda}</TableCell>
+                                    <TableCell className="text-right">{line.total.toFixed(2)} {document.moneda}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                
+                <div className="flex justify-end items-end pt-8">
+                    <div className="w-full max-w-sm space-y-2">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span>{document.subtotal.toFixed(2)} {document.moneda}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Impuestos</span>
+                            <span>{document.impuestos.toFixed(2)} {document.moneda}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between text-base font-bold">
+                            <span>Total</span>
+                            <span>{document.importe.toFixed(2)} {document.moneda}</span>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
-        <DialogFooter className="print:hidden">
+        <DialogFooter className="print:hidden p-6 border-t">
             <Button variant="outline" onClick={handleDownloadPdf} disabled={isDownloading}>
                 {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4"/>}
                 {isDownloading ? 'Generando...' : 'Descargar PDF'}
