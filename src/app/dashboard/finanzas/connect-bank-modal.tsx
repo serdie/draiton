@@ -18,27 +18,29 @@ interface ConnectBankModalProps {
   onClose: () => void;
 }
 
+const BankLogo = ({ bankName }: { bankName: string }) => {
+    switch (bankName.toLowerCase()) {
+        case 'bbva':
+            return <div className="h-8 w-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold text-lg">BBVA</div>;
+        case 'caixabank':
+            return <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center text-white font-bold text-lg"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 100 100" fill="#fecb00"><path d="M50 3C23.9 3 3 23.9 3 50s20.9 47 47 47 47-20.9 47-47S76.1 3 50 3zm0 88.5C27.1 91.5 8.5 72.9 8.5 50S27.1 8.5 50 8.5 91.5 27.1 91.5 50 72.9 91.5 50 91.5z"/><path d="M50 25c-8.3 0-15 6.7-15 15v1.5h30V40c0-8.3-6.7-15-15-15zm-2.5 30h5v15h-5z" fill="#fff"/></svg></div>;
+        case 'santander':
+             return <div className="h-8 w-8 rounded-full bg-[#EC0000] flex items-center justify-center text-white font-bold text-lg italic">S</div>
+        case 'revolut':
+            return <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center text-white font-bold text-lg">R</div>;
+        case 'n26':
+            return <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold text-lg">N</div>;
+        default:
+            return <div className="h-8 w-8 rounded-full bg-gray-300" />;
+    }
+};
+
 const availableBanks = [
-  {
-    name: 'BBVA',
-    logo: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8"><path d="M4.14,11.3,4.14,11.3c2.78-4.88,8.25-6.52,13.13-3.74,4.88,2.78,6.52,8.25,3.74,13.13C16.13,25.57,5.55,25.5,4.14,11.3Z" fill="#004481"></path><path d="M2.9,13.23,2.9,13.23c-2.78,4.88-.14,10.35,4.74,13.13,4.88,2.78,10.35.14,13.13-4.74,4.88-8.62-2.18-18.2-10.8-13.13C.1,13.37-1.54,8.35,2.9,13.23Z" fill="#004481"></path></svg>
-  },
-  {
-    name: 'CaixaBank',
-    logo: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8"><circle cx="12" cy="12" r="10" fill="#000"></circle><path d="M12,12a5.3,5.3,0,0,0-5.3,5.3,1.4,1.4,0,0,0,1.4,1.4H15.9a1.4,1.4,0,0,0,1.4-1.4A5.3,5.3,0,0,0,12,12Z" fill="#fff"></path><path d="M13.4,5.4a2.9,2.9,0,1,0-2.8,0,5.7,5.7,0,0,0-2,4.5H15.3A5.7,5.7,0,0,0,13.4,5.4Z" fill="#ffc107"></path></svg>
-  },
-  {
-    name: 'Santander',
-    logo: <div className="h-8 w-8 rounded-full bg-[#EC0000] flex items-center justify-center text-white font-bold text-lg italic">S</div>
-  },
-  {
-    name: 'Revolut',
-    logo: <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center text-white font-bold text-lg">R</div>
-  },
-  {
-    name: 'N26',
-    logo: <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold text-lg">N</div>
-  }
+  { name: 'BBVA' },
+  { name: 'CaixaBank' },
+  { name: 'Santander' },
+  { name: 'Revolut' },
+  { name: 'N26' }
 ];
 
 export function ConnectBankModal({ isOpen, onClose }: ConnectBankModalProps) {
@@ -64,7 +66,7 @@ export function ConnectBankModal({ isOpen, onClose }: ConnectBankModalProps) {
           {availableBanks.map(bank => (
             <div key={bank.name} className="flex items-center justify-between p-3 rounded-lg border">
               <div className="flex items-center gap-4">
-                {bank.logo}
+                <BankLogo bankName={bank.name} />
                 <span className="font-semibold">{bank.name}</span>
               </div>
               <Button variant="outline" size="sm" onClick={() => handleConnect(bank.name)}>

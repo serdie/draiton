@@ -7,6 +7,7 @@ import { FileText, Coins, Landmark, Receipt } from 'lucide-react';
 import DocumentosPage from '../documentos/page';
 import GastosPage from '../gastos/page';
 import { ImpuestosTab } from './impuestos-tab';
+import { BancosTab } from './bancos-tab';
 
 
 const ComingSoon = ({ title }: { title: string }) => (
@@ -42,7 +43,7 @@ export default function FinanzasPage() {
             <ImpuestosTab />
           </TabsContent>
           <TabsContent value="bancos"  className="mt-6">
-             <ComingSoon title="Módulo de Conexión Bancaria" />
+             <BancosTab />
           </TabsContent>
         </Tabs>
       </div>
