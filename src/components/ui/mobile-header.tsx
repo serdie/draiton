@@ -19,7 +19,10 @@ export function MobileHeader({ title }: { title: string }) {
     return (
         <header className="sticky top-0 z-50 w-full bg-background border-b">
             <div className="container flex items-center justify-between h-14">
-                <Logo className="h-6 w-6"/>
+                <Link href="/dashboard" className="flex items-center gap-2">
+                    <Logo className="h-6 w-6" />
+                    <span className="font-bold">GestorIA</span>
+                </Link>
                 <div className="flex items-center gap-4">
                      <div className="flex items-center gap-3">
                         {isPro && <Badge variant="outline" className='border-yellow-400 text-yellow-400'>PRO</Badge>}
