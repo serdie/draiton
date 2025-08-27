@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ interface ViewDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   document: Document | null;
+  triggerPrint?: boolean;
 }
 
 const getBadgeClass = (estado?: DocumentStatus) => {
@@ -54,12 +55,10 @@ const getDocumentTypeLabel = (type?: DocumentType) => {
     }
 }
 
-export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentModalProps) {
+export function ViewDocumentModal({ isOpen, onClose, document, triggerPrint = false }: ViewDocumentModalProps) {
   const { toast } = useToast();
   const { user } = useContext(AuthContext);
   const companyData = user?.company;
-
-  if (!isOpen || !document) return null;
 
   const handlePrint = () => {
     toast({
@@ -68,6 +67,15 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
     });
     setTimeout(() => window.print(), 100);
   };
+  
+  useEffect(() => {
+    if (isOpen && triggerPrint) {
+        handlePrint();
+    }
+  }, [isOpen, triggerPrint]);
+
+  if (!isOpen || !document) return null;
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

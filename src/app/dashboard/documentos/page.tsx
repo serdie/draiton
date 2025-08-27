@@ -87,6 +87,8 @@ export default function DocumentosPage() {
   const [docToEdit, setDocToEdit] = useState<Document | null>(null);
   const [docToView, setDocToView] = useState<Document | null>(null);
   const [docToDelete, setDocToDelete] = useState<Document | null>(null);
+  const [triggerPrintOnOpen, setTriggerPrintOnOpen] = useState(false);
+
 
   const [initialDataForForm, setInitialDataForForm] = useState<ExtractInvoiceDataOutput | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<DocumentType>('factura');
@@ -208,13 +210,15 @@ export default function DocumentosPage() {
     }
   };
 
-  const handleDownload = () => {
-    toast({
-      title: 'Función en desarrollo',
-      description: 'La descarga de PDF estará disponible próximamente.',
-    });
+  const handleDownload = (doc: Document) => {
+    setDocToView(doc);
+    setTriggerPrintOnOpen(true);
   }
-
+  
+  const handleCloseViewModal = () => {
+    setDocToView(null);
+    setTriggerPrintOnOpen(false);
+  }
 
   const renderContent = () => {
     if (loading) {
@@ -293,7 +297,7 @@ export default function DocumentosPage() {
                             <Pencil className="mr-2 h-4 w-4" />
                             Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleDownload}>
+                        <DropdownMenuItem onClick={() => handleDownload(doc)}>
                             <Download className="mr-2 h-4 w-4" />
                             Descargar
                         </DropdownMenuItem>
@@ -374,8 +378,9 @@ export default function DocumentosPage() {
       {docToView && (
         <ViewDocumentModal
             isOpen={!!docToView}
-            onClose={() => setDocToView(null)}
+            onClose={handleCloseViewModal}
             document={docToView}
+            triggerPrint={triggerPrintOnOpen}
         />
       )}
 
