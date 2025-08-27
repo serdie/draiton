@@ -4,17 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function TareasPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Gestor de Tareas</h1>
-      <p className="text-muted-foreground">
-        Organiza tu día a día y no te olvides de nada importante.
-      </p>
        <Card>
         <CardHeader>
-          <CardTitle>Próximamente</CardTitle>
-          <CardDescription>Esta sección está en desarrollo.</CardDescription>
+          <CardTitle>Gestor de Tareas</CardTitle>
+          <CardDescription>Esta sección está en desarrollo. Aquí podrás organizar tu día a día y no olvidarte de nada importante, con tareas integradas a tus proyectos.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Un gestor de tareas simple y potente, integrado con tus proyectos.</p>
+          <p>Próximamente...</p>
         </CardContent>
       </Card>
     </div>

@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { AddContactModal } from './add-contact-modal';
 import { EditContactModal } from './edit-contact-modal';
 import { AuthContext } from '@/context/auth-context';
-import { collection, onSnapshot, query, where, Timestamp, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -86,10 +86,10 @@ export default function ContactosPage() {
         const q = query(collection(db, 'contacts'), where('ownerId', '==', user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const docsList = snapshot.docs.map(doc => {
-                const data = doc.data();
+            const docsList = snapshot.docs.map(docSnap => {
+                const data = docSnap.data();
                 return {
-                    id: doc.id,
+                    id: docSnap.id,
                     ...data,
                     createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
                 } as Contact;
@@ -202,7 +202,7 @@ export default function ContactosPage() {
                                     {contact.type}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="text-muted-foreground">{new Date(contact.createdAt).toLocaleDateString('es-ES')}</TableCell>
+                            <TableCell className="text-muted-foreground">{contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('es-ES') : '-'}</TableCell>
                             <TableCell className="text-right">
                                 <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -267,7 +267,7 @@ export default function ContactosPage() {
     <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 className="text-3xl font-bold">Gestionar Contactos</h1>
+                <h1 className="text-2xl font-bold">Gestionar Contactos (CRM)</h1>
                 <p className="text-muted-foreground">
                     Mantén un registro de tus clientes, proveedores, leads y colaboradores.
                 </p>

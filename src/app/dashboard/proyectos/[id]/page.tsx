@@ -12,10 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { EditProjectModal } from '../edit-project-modal';
 
 const getStatusBadgeClass = (status: ProjectStatus) => {
   switch (status) {
@@ -76,6 +77,7 @@ export default function ProjectDetailPage() {
 
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user || !projectId) return;
@@ -131,6 +133,14 @@ export default function ProjectDetailPage() {
 
 
   return (
+    <>
+    {project && (
+        <EditProjectModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            project={project}
+        />
+    )}
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -145,7 +155,7 @@ export default function ProjectDetailPage() {
                 <p className="text-muted-foreground">Proyecto para <span className="font-semibold">{project.client}</span></p>
             </div>
         </div>
-         <Button>Editar Proyecto</Button>
+         <Button onClick={() => setIsEditModalOpen(true)}>Editar Proyecto</Button>
       </div>
       
       <Card>
@@ -166,8 +176,8 @@ export default function ProjectDetailPage() {
                 <p className="text-lg font-semibold">{project.endDate ? format(project.endDate, "dd MMM, yyyy", {locale: es}) : 'N/A'}</p>
             </div>
              <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Creado hace</p>
-                <p className="text-lg font-semibold">{formatDistanceToNow(project.createdAt, {locale: es, addSuffix: true})}</p>
+                <p className="text-sm font-medium text-muted-foreground">Creado</p>
+                <p className="text-lg font-semibold">{project.createdAt ? formatDistanceToNow(project.createdAt, {locale: es, addSuffix: true}) : 'N/A'}</p>
             </div>
         </CardContent>
         {project.status === 'En Progreso' && (
@@ -207,7 +217,7 @@ export default function ProjectDetailPage() {
                 </TabsContent>
             </div>
         </Tabs>
-
     </div>
+    </>
   );
 }

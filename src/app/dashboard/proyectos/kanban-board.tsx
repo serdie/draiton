@@ -16,10 +16,9 @@ import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -29,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 function getStatusBadgeClass(status: ProjectStatus) {
   switch (status) {
@@ -51,18 +51,20 @@ function ProjectCard({ project }: { project: Project }) {
   };
 
   return (
-    <Card ref={setNodeRef} style={style} {...attributes} {...listeners} className="mb-4 bg-card touch-none">
-      <CardHeader className="p-4">
-        <CardTitle className="text-base">{project.name}</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <p className="text-sm text-muted-foreground">{project.client}</p>
-        <div className="flex justify-between text-xs text-muted-foreground mt-2">
-            <span>{project.startDate ? format(project.startDate, "dd MMM yyyy", { locale: es }) : ''}</span>
-            <span>{project.budget ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(project.budget) : ''}</span>
-        </div>
-      </CardContent>
-    </Card>
+    <Link href={`/dashboard/proyectos/${project.id}`}>
+        <Card ref={setNodeRef} style={style} {...attributes} {...listeners} className="mb-4 bg-card touch-none hover:border-primary">
+        <CardHeader className="p-4">
+            <CardTitle className="text-base">{project.name}</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+            <p className="text-sm text-muted-foreground">{project.client}</p>
+            <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                <span>{project.startDate ? format(project.startDate, "dd MMM yyyy", { locale: es }) : ''}</span>
+                <span>{project.budget ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(project.budget) : ''}</span>
+            </div>
+        </CardContent>
+        </Card>
+    </Link>
   );
 }
 

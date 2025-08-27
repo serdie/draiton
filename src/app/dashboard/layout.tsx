@@ -60,8 +60,17 @@ export default function DashboardLayout({
   }
   
   const isActive = (href: string) => {
-    return pathname === href;
+    return pathname.startsWith(href);
   };
+
+  const getPageTitle = () => {
+    if (pathname.startsWith('/dashboard/finanzas')) return 'Finanzas';
+    if (pathname.startsWith('/dashboard/proyectos')) return 'Operaciones';
+    if (pathname.startsWith('/dashboard/gestor-ia')) return 'Gestor IA';
+    if (pathname.startsWith('/dashboard/configuracion')) return 'Configuración';
+    if (pathname.startsWith('/admin/dashboard')) return 'Administración';
+    return 'Dashboard';
+  }
 
   return (
     <SidebarProvider>
@@ -73,7 +82,7 @@ export default function DashboardLayout({
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/dashboard">
-                <SidebarMenuButton isActive={isActive('/dashboard')} tooltip="Dashboard">
+                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Dashboard">
                   <Home />
                   <span>Dashboard</span>
                 </SidebarMenuButton>
@@ -130,11 +139,7 @@ export default function DashboardLayout({
                 <SidebarTrigger />
             </div>
             <div className="text-xl font-semibold">
-              { pathname.includes('/finanzas') ? 'Finanzas' :
-                pathname.includes('/proyectos') ? 'Proyectos' :
-                pathname.includes('/gestor-ia') ? 'Gestor IA' :
-                'Dashboard'
-              }
+              {getPageTitle()}
             </div>
             <div className="flex-1 flex justify-end items-center gap-4">
                 <div className="relative w-full max-w-sm">
