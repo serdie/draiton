@@ -32,22 +32,21 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 197 65% 50%;
 
-    --radius: 0.5rem;
-
     --chart-1: 197 65% 60%;
     --chart-2: 266 53% 55%;
     --chart-3: 30 80% 55%;
     --chart-4: 160 60% 45%;
     --chart-5: 340 75% 55%;
 
-     --sidebar-background: 223 38% 10%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 197 65% 70%;
-    --sidebar-primary-foreground: 224 71% 4%;
-    --sidebar-accent: 222 39% 18%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 39% 20%;
-    --sidebar-ring: 197 65% 70%;
+    /* Light Theme Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 224 71% 4%;
+    --sidebar-primary: 197 65% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 224 71% 4%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 197 65% 50%;
   }
 
   .dark {
