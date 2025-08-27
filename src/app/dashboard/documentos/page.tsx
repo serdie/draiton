@@ -227,11 +227,20 @@ export default function DocumentosPage() {
       )
     }
 
-    if (paginatedDocs.length === 0) {
+    if (paginatedDocs.length === 0 && (filtroCliente || filtroEstado !== 'all' || dateRange)) {
       return (
         <CardContent>
           <div className="text-center text-muted-foreground py-12">
             No hay documentos para mostrar con los filtros aplicados.
+          </div>
+        </CardContent>
+      );
+    }
+     if (documents.length === 0) {
+      return (
+        <CardContent>
+          <div className="text-center text-muted-foreground py-12">
+            Aún no has creado ningún documento de este tipo.
           </div>
         </CardContent>
       );
@@ -407,7 +416,14 @@ export default function DocumentosPage() {
           </div>
         </div>
 
-        <Card>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="factura">Facturas</TabsTrigger>
+            <TabsTrigger value="presupuesto">Presupuestos</TabsTrigger>
+            <TabsTrigger value="nota-credito">Notas de Crédito</TabsTrigger>
+          </TabsList>
+          
+          <Card className="mt-4">
             <CardHeader>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <Popover>
@@ -432,21 +448,13 @@ export default function DocumentosPage() {
                     <Button variant="outline" onClick={resetFilters}><FilterX className="mr-2 h-4 w-4" />Limpiar Filtros</Button>
                 </div>
             </CardHeader>
-        </Card>
 
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList>
-            <TabsTrigger value="factura">Facturas</TabsTrigger>
-            <TabsTrigger value="presupuesto">Presupuestos</TabsTrigger>
-            <TabsTrigger value="nota-credito">Notas de Crédito</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="factura"><Card>{renderContent()}</Card></TabsContent>
-          <TabsContent value="presupuesto"><Card>{renderContent()}</Card></TabsContent>
-          <TabsContent value="nota-credito"><Card>{renderContent()}</Card></TabsContent>
+             <TabsContent value="factura">{renderContent()}</TabsContent>
+             <TabsContent value="presupuesto">{renderContent()}</TabsContent>
+             <TabsContent value="nota-credito">{renderContent()}</TabsContent>
+          </Card>
         </Tabs>
       </div>
     </>
   );
 }
-
