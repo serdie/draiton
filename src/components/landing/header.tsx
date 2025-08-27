@@ -37,7 +37,7 @@ export function Header() {
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Logo className="h-6 w-6" />
             <span className="font-bold sm:inline-block">
-              Emprende Total
+              GestorIA
             </span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm md:flex">

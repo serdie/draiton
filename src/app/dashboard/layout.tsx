@@ -95,7 +95,7 @@ export default function DashboardLayout({
       <Sidebar>
         <SidebarHeader className="p-4 flex items-center gap-2">
             <Logo className="h-8 w-8" />
-            <span className="font-bold text-lg">Emprende Total</span>
+            <span className="font-bold text-lg">GestorIA</span>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
