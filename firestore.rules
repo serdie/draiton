@@ -2,54 +2,67 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+  
+    // --- Funciones de Ayuda ---
+    
+    // Devuelve verdadero si el usuario que hace la petición es el dueño del recurso
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
 
-    // Regla global para permitir a los administradores leer cualquier dato
+    // Devuelve verdadero si el usuario es el dueño del proyecto
+    // al que pertenece un documento (ej. una tarea)
+    function isProjectOwner(projectId) {
+      return isOwner(get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId);
+    }
+
+    // Devuelve verdadero si el usuario tiene el rol de 'admin'
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Los usuarios pueden leer y escribir en su propio documento de usuario.
+    // --- Reglas para Colecciones ---
+
+    // Colección de Usuarios
     match /users/{userId} {
-      allow read, update: if request.auth.uid == userId || isAdmin();
-      allow create: if request.auth.uid == userId;
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
     }
-
-    // Los usuarios pueden gestionar sus propios proyectos.
+    
+    // Colección de Proyectos
     match /projects/{projectId} {
-      allow get, update, delete: if resource.data.ownerId == request.auth.uid || isAdmin();
-      allow list: if request.auth.uid == request.query.resource.data.ownerId || isAdmin();
-      allow create: if request.resource.data.ownerId == request.auth.uid;
+      allow get, update, delete: if isOwner(resource.data.ownerId);
+      allow list: if isOwner(request.resource.data.ownerId) || isAdmin();
+      allow create: if isOwner(request.resource.data.ownerId);
     }
     
-    // Los usuarios pueden gestionar sus propias tareas.
-    // La lectura/listado también se permite si el usuario es el 'assigneeId'.
+    // Colección de Tareas (vinculadas a un proyecto)
     match /tasks/{taskId} {
-      allow get: if resource.data.ownerId == request.auth.uid || resource.data.assigneeId == request.auth.uid || isAdmin();
-      allow list: if request.auth.uid == request.query.resource.data.ownerId || isAdmin();
-      allow create: if request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if resource.data.ownerId == request.auth.uid || isAdmin();
+      allow get, update, delete: if isProjectOwner(resource.data.projectId);
+      allow list: if isProjectOwner(request.resource.data.projectId);
+      allow create: if isProjectOwner(request.resource.data.projectId);
     }
 
-    // Los usuarios pueden gestionar sus propios documentos (facturas, presupuestos, etc).
+    // Colección de Documentos (Facturas, Presupuestos, etc.)
     match /invoices/{invoiceId} {
-      allow get, update, delete: if resource.data.ownerId == request.auth.uid || isAdmin();
-      allow list: if request.auth.uid == request.query.resource.data.ownerId || isAdmin();
-      allow create: if request.resource.data.ownerId == request.auth.uid;
-    }
-    
-    // Los usuarios pueden gestionar sus propios gastos.
-    match /expenses/{expenseId} {
-        allow get, update, delete: if resource.data.ownerId == request.auth.uid || isAdmin();
-        allow list: if request.auth.uid == request.query.resource.data.ownerId || isAdmin();
-        allow create: if request.resource.data.ownerId == request.auth.uid;
-    }
-    
-    // Los usuarios pueden gestionar sus propios contactos.
-    match /contacts/{contactId} {
-        allow get, update, delete: if resource.data.ownerId == request.auth.uid || isAdmin();
-        allow list: if request.auth.uid == request.query.resource.data.ownerId || isAdmin();
-        allow create: if request.resource.data.ownerId == request.auth.uid;
+      allow get, update, delete: if isOwner(resource.data.ownerId);
+      allow list: if isOwner(request.resource.data.ownerId);
+      allow create: if isOwner(request.resource.data.ownerId);
     }
 
+    // Colección de Gastos
+    match /expenses/{expenseId} {
+      allow get, update, delete: if isOwner(resource.data.ownerId);
+      allow list: if isOwner(request.resource.data.ownerId);
+      allow create: if isOwner(request.resource.data.ownerId);
+    }
+
+    // Colección de Contactos
+    match /contacts/{contactId} {
+      allow get, update, delete: if isOwner(resource.data.ownerId);
+      allow list: if isOwner(request.resource.data.ownerId);
+      allow create: if isOwner(request.resource.data.ownerId);
+    }
   }
 }
