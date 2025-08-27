@@ -15,6 +15,8 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -34,6 +36,12 @@ import {
   Wallet,
   Blocks,
   FlaskConical,
+  Zap,
+  Mail,
+  Network,
+  ScanLine,
+  Lightbulb,
+  MonitorCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -48,7 +56,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isAdmin } = useContext(AuthContext);
+  const { user, isAdmin, isPro } = useContext(AuthContext);
   const pathname = usePathname();
   
   const handleLogout = async () => {
@@ -60,15 +68,20 @@ export default function DashboardLayout({
   }
   
   const isActive = (href: string) => {
-    return pathname.startsWith(href);
+    return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
   };
 
   const getPageTitle = () => {
-    if (pathname.startsWith('/dashboard/finanzas')) return 'Finanzas';
-    if (pathname.startsWith('/dashboard/proyectos')) return 'Operaciones';
-    if (pathname.startsWith('/dashboard/gestor-ia')) return 'Herramientas IA';
-    if (pathname.startsWith('/dashboard/configuracion')) return 'Configuración';
-    if (pathname.startsWith('/admin/dashboard')) return 'Administración';
+    if (isActive('/dashboard/finanzas')) return 'Finanzas';
+    if (isActive('/dashboard/proyectos')) return 'Operaciones';
+    if (isActive('/dashboard/asistente-ia')) return 'Asistente IA';
+    if (isActive('/dashboard/gestor-web-ia')) return 'Gestor Web IA';
+    if (isActive('/dashboard/extractor-facturas')) return 'Extractor de Facturas';
+    if (isActive('/dashboard/automatizaciones')) return 'Automatizaciones';
+    if (isActive('/dashboard/marketing')) return 'Marketing';
+    if (isActive('/dashboard/conexiones')) return 'Conexiones';
+    if (isActive('/dashboard/configuracion')) return 'Configuración';
+    if (isActive('/admin/dashboard')) return 'Administración';
     return 'Dashboard';
   }
 
@@ -104,19 +117,67 @@ export default function DashboardLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+            
+            <SidebarGroup>
+                <SidebarGroupLabel>Herramientas IA</SidebarGroupLabel>
+                <SidebarMenuItem>
+                <Link href="/dashboard/asistente-ia">
+                    <SidebarMenuButton isActive={isActive('/dashboard/asistente-ia')} tooltip="Asistente IA">
+                    <Lightbulb />
+                    <span>Asistente IA</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                <Link href="/dashboard/gestor-web-ia">
+                    <SidebarMenuButton isActive={isActive('/dashboard/gestor-web-ia')} tooltip="Gestor Web IA">
+                    <MonitorCog />
+                    <span>Gestor Web IA</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                <Link href="/dashboard/extractor-facturas">
+                    <SidebarMenuButton isActive={isActive('/dashboard/extractor-facturas')} tooltip="Extractor Facturas">
+                    <ScanLine />
+                    <span>Extractor Facturas</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+            </SidebarGroup>
+
             <SidebarMenuItem>
-              <Link href="/dashboard/gestor-ia">
-                <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
-                  <FlaskConical />
-                  <span>Herramientas IA</span>
+              <Link href="/dashboard/automatizaciones">
+                <SidebarMenuButton isActive={isActive('/dashboard/automatizaciones')} tooltip="Automatizaciones">
+                  <Zap />
+                  <span>Automatizaciones</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
 
+             <SidebarMenuItem>
+              <Link href="/dashboard/marketing">
+                <SidebarMenuButton isActive={isActive('/dashboard/marketing')} tooltip="Marketing">
+                  <Mail />
+                  <span>Marketing</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+
+             <SidebarMenuItem>
+              <Link href="/dashboard/conexiones">
+                <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
+                  <Network />
+                  <span>Conexiones</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+
+
              {isAdmin && (
                 <SidebarMenuItem>
                     <Link href="/admin/dashboard">
-                    <SidebarMenuButton isActive={pathname.startsWith('/admin')} tooltip="Admin Panel">
+                    <SidebarMenuButton isActive={isActive('/admin/dashboard')} tooltip="Admin Panel">
                         <UserCog />
                         <span>Administración</span>
                     </SidebarMenuButton>
@@ -126,11 +187,15 @@ export default function DashboardLayout({
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className='p-4 space-y-4'>
-          <div className='p-4 bg-secondary rounded-lg text-center'>
-            <p className='font-bold'>Upgrade a Pro</p>
-            <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
-            <Button size="sm" className="w-full">Ver Planes</Button>
-          </div>
+          {!isPro && (
+            <div className='p-4 bg-secondary rounded-lg text-center'>
+              <p className='font-bold'>Upgrade a Pro</p>
+              <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
+              <Button asChild size="sm" className="w-full">
+                 <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+              </Button>
+            </div>
+          )}
         </SidebarFooter>
       </Sidebar>
       <div className="flex-1 flex flex-col">
@@ -146,7 +211,7 @@ export default function DashboardLayout({
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Buscar proyectos, facturas..." className="pl-10" />
                 </div>
-                <Badge variant="outline" className='border-yellow-400 text-yellow-400'>PRO</Badge>
+                {isPro && <Badge variant="outline" className='border-yellow-400 text-yellow-400'>PRO</Badge>}
                  <Button asChild variant="ghost" size="icon">
                   <Link href="/dashboard/configuracion">
                     <Settings className="h-5 w-5"/>

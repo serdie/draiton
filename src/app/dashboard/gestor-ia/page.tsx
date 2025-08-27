@@ -8,11 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Newspaper, FileEdit, Bot, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import PerspectivasIAPage from '../perspectivas-ia/page';
-import MarketingIAPage from '../marketing-ia/page';
-import WebIAPage from '../web-ia/page';
-
 
 function ProFeatureLock() {
   return (
@@ -33,23 +28,6 @@ function ProFeatureLock() {
   );
 }
 
-const PerspectiveCard = ({ title, icon, children, actionText, actionLink }: { title: string, icon: React.ReactNode, children: React.ReactNode, actionText: string, actionLink: string }) => (
-    <Card className="bg-secondary/50 border-border/30">
-        <CardHeader className="flex flex-row justify-between items-start">
-            <h3 className="font-semibold">{title}</h3>
-            <div className="text-primary">{icon}</div>
-        </CardHeader>
-        <CardContent>
-            <p className="text-muted-foreground text-sm">{children}</p>
-        </CardContent>
-        <CardFooter>
-            <Button variant="link" asChild className="p-0">
-                <Link href={actionLink}>{actionText}</Link>
-            </Button>
-        </CardFooter>
-    </Card>
-)
-
 export default function GestorIAPage() {
   const { isPro } = useContext(AuthContext);
 
@@ -58,36 +36,73 @@ export default function GestorIAPage() {
       {!isPro && <ProFeatureLock />}
       <div className={cn("space-y-8", !isPro && "opacity-50 pointer-events-none")}>
         <div>
-          <h1 className="text-3xl font-bold">Herramientas de Inteligencia Artificial</h1>
+          <h1 className="text-3xl font-bold">Gestor Inteligente de Negocio</h1>
           <p className="text-muted-foreground">
-            Potencia tu negocio con herramientas diseñadas para crecer.
+            Tu copiloto de IA para tomar mejores decisiones, automatizar tareas y hacer crecer tu negocio.
           </p>
         </div>
         
-        <Tabs defaultValue="perspectivas" className="w-full">
-            <TabsList className="border-b border-border/50 rounded-none p-0 bg-transparent justify-start gap-4">
-                <TabsTrigger value="perspectivas" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Perspectivas</TabsTrigger>
-                <TabsTrigger value="marketing" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Marketing IA</TabsTrigger>
-                <TabsTrigger value="web" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Web IA</TabsTrigger>
-            </TabsList>
-            <TabsContent value="perspectivas" className="mt-6 space-y-6">
-                <PerspectiveCard title="Aumento de Gastos en Software" icon={<Sparkles />} actionText="Analizar Alternativas" actionLink="/dashboard/gastos">
-                    Detectamos un aumento del 20% en gastos de software este trimestre, principalmente en herramientas de diseño. ¿Quieres que la IA analice alternativas más económicas con funcionalidades similares?
-                </PerspectiveCard>
-                <PerspectiveCard title="Oportunidad de Subvención" icon={<Newspaper />} actionText="Ver Requisitos" actionLink="/dashboard/gestor-ia/ayudas">
-                    Hemos encontrado una nueva subvención ('InnoCámaras 2024') para digitalización a la que tu empresa podría aplicar. La fecha límite para la solicitud es el 30/09/2024.
-                </PerspectiveCard>
-                <PerspectiveCard title="Cliente con Mayor Rentabilidad" icon={<Sparkles />} actionText="Ver Ficha de Cliente" actionLink="/dashboard/contactos">
-                    El cliente 'Innovate LLC' ha generado el mayor margen de beneficio este año. Podría ser un buen momento para proponerles un nuevo proyecto o un contrato de mantenimiento.
-                </PerspectiveCard>
-            </TabsContent>
-            <TabsContent value="marketing" className="mt-6">
-                 <MarketingIAPage />
-            </TabsContent>
-            <TabsContent value="web" className="mt-6">
-                 <WebIAPage />
-            </TabsContent>
-        </Tabs>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="flex flex-col">
+                <CardHeader>
+                     <div className="flex items-center gap-4">
+                        <div className="bg-primary/10 p-3 rounded-full">
+                            <Sparkles className="h-6 w-6 text-primary" />
+                        </div>
+                        <CardTitle>Ideas de Negocio</CardTitle>
+                    </div>
+                    <CardDescription className="pt-2">Analiza tu empresa y recibe sugerencias para mejorar tu oferta y comercialización.</CardDescription>
+                </CardHeader>
+                 <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground">Introduce los datos de tu compañía y deja que la IA te inspire.</p>
+                </CardContent>
+                <CardFooter>
+                    <Button asChild className="w-full">
+                        <Link href="/dashboard/asistente-ia">Analizar mi Negocio <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+
+             <Card className="flex flex-col">
+                <CardHeader>
+                     <div className="flex items-center gap-4">
+                        <div className="bg-primary/10 p-3 rounded-full">
+                            <FileEdit className="h-6 w-6 text-primary" />
+                        </div>
+                        <CardTitle>Asistente Fiscal</CardTitle>
+                    </div>
+                    <CardDescription className="pt-2">Recibe instrucciones claras y precisas para rellenar tus modelos de impuestos.</CardDescription>
+                </CardHeader>
+                 <CardContent className="flex-grow">
+                     <p className="text-sm text-muted-foreground">Simplifica tus obligaciones tributarias con la ayuda de la IA.</p>
+                </CardContent>
+                <CardFooter>
+                     <Button asChild className="w-full">
+                        <Link href="/dashboard/gestor-ia/asistente-fiscal">Preparar Impuestos <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+
+             <Card className="flex flex-col">
+                <CardHeader>
+                    <div className="flex items-center gap-4">
+                        <div className="bg-primary/10 p-3 rounded-full">
+                            <Newspaper className="h-6 w-6 text-primary" />
+                        </div>
+                        <CardTitle>Buscador de Ayudas</CardTitle>
+                    </div>
+                    <CardDescription className="pt-2">Encuentra subvenciones y noticias relevantes para tu sector y localización.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground">La IA busca oportunidades para ti en el BOE y otras fuentes oficiales.</p>
+                </CardContent>
+                <CardFooter>
+                     <Button asChild className="w-full">
+                        <Link href="/dashboard/gestor-ia/ayudas">Buscar Oportunidades <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
       </div>
     </div>
   );
