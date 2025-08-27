@@ -32,25 +32,25 @@ const getBadgeClass = (estado: string) => {
   switch (estado?.toLowerCase()) {
     case 'pagado':
     case 'pagada':
-      return 'bg-green-600/20 text-green-400 border-green-500/30';
+      return 'bg-green-100 dark:bg-green-600/20 text-green-800 dark:text-green-400 border-green-200 dark:border-green-500/30';
     case 'pendiente':
-      return 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30';
+      return 'bg-yellow-100 dark:bg-yellow-600/20 text-yellow-800 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/30';
     case 'vencido':
     case 'vencida':
-      return 'bg-red-600/20 text-red-400 border-red-500/30';
+      return 'bg-red-100 dark:bg-red-600/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-500/30';
     default:
-      return 'bg-gray-600/20 text-gray-400 border-gray-500/30';
+      return 'bg-gray-100 dark:bg-gray-600/20 text-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-500/30';
   }
 };
 
 const getCategoryBadgeClass = (category: string) => {
     switch (category) {
-        case 'Software': return 'bg-blue-600/20 text-blue-400 border-blue-500/30';
-        case 'Oficina': return 'bg-purple-600/20 text-purple-400 border-purple-500/30';
-        case 'Marketing': return 'bg-pink-600/20 text-pink-400 border-pink-500/30';
-        case 'Viajes': return 'bg-orange-600/20 text-orange-400 border-orange-500/30';
-        case 'Suministros': return 'bg-teal-600/20 text-teal-400 border-teal-500/30';
-        default: return 'bg-gray-600/20 text-gray-400 border-gray-500/30';
+        case 'Software': return 'bg-blue-100 dark:bg-blue-600/20 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-500/30';
+        case 'Oficina': return 'bg-purple-100 dark:bg-purple-600/20 text-purple-800 dark:text-purple-400 border-purple-200 dark:border-purple-500/30';
+        case 'Marketing': return 'bg-pink-100 dark:bg-pink-600/20 text-pink-800 dark:text-pink-400 border-pink-200 dark:border-pink-500/30';
+        case 'Viajes': return 'bg-orange-100 dark:bg-orange-600/20 text-orange-800 dark:text-orange-400 border-orange-200 dark:border-orange-500/30';
+        case 'Suministros': return 'bg-teal-100 dark:bg-teal-600/20 text-teal-800 dark:text-teal-400 border-teal-200 dark:border-teal-500/30';
+        default: return 'bg-gray-100 dark:bg-gray-600/20 text-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-500/30';
     }
 }
 
@@ -141,9 +141,9 @@ export default function FinanzasPage() {
       return <div className="flex justify-center items-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div>
     }
     return (
-      <Card className="bg-transparent border-none shadow-none">
-        <CardHeader className="px-0">
-          <div className="flex justify-between items-center">
+      <Card className="bg-card">
+        <CardHeader className="px-4 pt-4 md:px-6 md:pt-6">
+          <div className="flex flex-wrap justify-between items-center gap-2">
             <h3 className="text-lg font-semibold">Listado de Facturas</h3>
             <div className='flex items-center gap-2'>
               <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
@@ -160,7 +160,7 @@ export default function FinanzasPage() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-border/50 hover:bg-transparent">
+              <TableRow className="border-border/50 hover:bg-transparent dark:border-border/50 dark:hover:bg-transparent">
                 <TableHead>Nº FACTURA</TableHead>
                 <TableHead>CLIENTE</TableHead>
                 <TableHead>FECHA</TableHead>
@@ -171,7 +171,7 @@ export default function FinanzasPage() {
             </TableHeader>
             <TableBody>
               {documents.map((doc) => (
-                <TableRow key={doc.id} className="border-border/20 hover:bg-border/20">
+                <TableRow key={doc.id} className="border-border/20 hover:bg-muted/50 dark:border-border/20 dark:hover:bg-border/20">
                   <TableCell className="font-medium text-primary">{doc.numero}</TableCell>
                   <TableCell>{doc.cliente}</TableCell>
                   <TableCell>{format(new Date(doc.fechaEmision), "yyyy-MM-dd")}</TableCell>
@@ -210,8 +210,8 @@ export default function FinanzasPage() {
   const renderGastosContent = () => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2 bg-transparent border-none shadow-none">
-                 <CardHeader className="px-0">
+            <Card className="lg:col-span-2">
+                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <h3 className="text-lg font-semibold">Listado de Gastos</h3>
                         <Button onClick={() => handleOpenExpenseModal()}>
@@ -223,7 +223,7 @@ export default function FinanzasPage() {
                 <CardContent className="p-0">
                     <Table>
                         <TableHeader>
-                            <TableRow className="border-border/50 hover:bg-transparent">
+                            <TableRow className="border-border/50 hover:bg-transparent dark:border-border/50 dark:hover:bg-transparent">
                                 <TableHead>PROVEEDOR</TableHead>
                                 <TableHead>FECHA</TableHead>
                                 <TableHead>CATEGORÍA</TableHead>
@@ -233,7 +233,7 @@ export default function FinanzasPage() {
                         </TableHeader>
                         <TableBody>
                             {gastosDeEjemplo.map((gasto) => (
-                                <TableRow key={gasto.id} className="border-border/20 hover:bg-border/20">
+                                <TableRow key={gasto.id} className="border-border/20 hover:bg-muted/50 dark:border-border/20 dark:hover:bg-border/20">
                                     <TableCell className="font-medium">{gasto.proveedor}</TableCell>
                                     <TableCell>{format(gasto.fecha, "yyyy-MM-dd")}</TableCell>
                                     <TableCell>
@@ -257,7 +257,7 @@ export default function FinanzasPage() {
                     </Table>
                 </CardContent>
             </Card>
-            <Card className="bg-secondary/50 border-border/30">
+            <Card className="bg-secondary/50">
                  <CardHeader>
                     <div className="flex justify-between items-center">
                         <CardTitle className="text-base">Digitalizar Ticket con IA</CardTitle>
@@ -285,7 +285,7 @@ export default function FinanzasPage() {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-                <Card className="bg-secondary/50 border-border/30">
+                <Card className="bg-secondary/50">
                     <CardHeader>
                         <CardTitle className="text-base">Previsión 3er Trimestre</CardTitle>
                     </CardHeader>
@@ -304,7 +304,7 @@ export default function FinanzasPage() {
                         </div>
                     </CardContent>
                 </Card>
-                 <Card className="bg-secondary/50 border-border/30">
+                 <Card className="bg-secondary/50">
                     <CardHeader>
                         <CardTitle className="text-base">Modelos Tributarios</CardTitle>
                     </CardHeader>
@@ -338,7 +338,7 @@ export default function FinanzasPage() {
                     </CardContent>
                 </Card>
             </div>
-             <Card className="bg-secondary/50 border-border/30 lg:col-span-1 flex flex-col">
+             <Card className="bg-secondary/50 lg:col-span-1 flex flex-col">
                 <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
                         <Sparkles className="h-4 w-4 text-primary" />
@@ -370,7 +370,7 @@ export default function FinanzasPage() {
         name: 'BBVA Cuenta Negocios',
         number: 'ES...**** 1234',
         status: 'Sincronizado hace 5m',
-        statusColor: 'text-green-400',
+        statusColor: 'text-green-500',
         logo: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8"><path d="M4.14,11.3,4.14,11.3c2.78-4.88,8.25-6.52,13.13-3.74,4.88,2.78,6.52,8.25,3.74,13.13C16.13,25.57,5.55,25.5,4.14,11.3Z" fill="#004481"></path><path d="M2.9,13.23,2.9,13.23c-2.78,4.88-.14,10.35,4.74,13.13,4.88,2.78,10.35.14,13.13-4.74,4.88-8.62-2.18-18.2-10.8-13.13C.1,13.37-1.54,8.35,2.9,13.23Z" fill="#004481"></path></svg>
       },
       {
@@ -378,7 +378,7 @@ export default function FinanzasPage() {
         name: 'CaixaBank Cuenta Corriente',
         number: 'ES...**** 5678',
         status: 'Sincronizado hace 8m',
-        statusColor: 'text-green-400',
+        statusColor: 'text-green-500',
         logo: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8"><circle cx="12" cy="12" r="10" fill="#000"></circle><path d="M12,12a5.3,5.3,0,0,0-5.3,5.3,1.4,1.4,0,0,0,1.4,1.4H15.9a1.4,1.4,0,0,0,1.4-1.4A5.3,5.3,0,0,0,12,12Z" fill="#fff"></path><path d="M13.4,5.4a2.9,2.9,0,1,0-2.8,0,5.7,5.7,0,0,0-2,4.5H15.3A5.7,5.7,0,0,0,13.4,5.4Z" fill="#ffc107"></path></svg>
       },
       {
@@ -386,13 +386,13 @@ export default function FinanzasPage() {
         name: 'Revolut Business',
         number: 'GB...**** 4321',
         status: 'Requiere atención',
-        statusColor: 'text-yellow-400',
+        statusColor: 'text-yellow-500',
         logo: <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center text-white font-bold text-lg">R</div>
       },
     ]
 
     return (
-      <Card className="bg-secondary/50 border-border/30">
+      <Card>
         <CardHeader>
            <div className="flex justify-between items-center">
             <CardTitle className="text-base">Bancos Sincronizados</CardTitle>
@@ -405,7 +405,7 @@ export default function FinanzasPage() {
         <CardContent>
           <div className="space-y-4">
             {bankAccounts.map(account => (
-              <div key={account.id} className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
+              <div key={account.id} className="flex justify-between items-center p-3 bg-background/50 dark:bg-background/50 rounded-lg border">
                 <div className="flex items-center gap-4">
                   <div>{account.logo}</div>
                   <div>
@@ -484,7 +484,7 @@ export default function FinanzasPage() {
         </div>
 
         <Tabs defaultValue="facturacion" className="w-full">
-          <TabsList className="border-b border-border/50 rounded-none p-0 bg-transparent justify-start gap-4">
+          <TabsList className="border-b bg-transparent p-0 justify-start gap-4">
             <TabsTrigger value="facturacion" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Facturación</TabsTrigger>
             <TabsTrigger value="gastos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Gastos</TabsTrigger>
             <TabsTrigger value="impuestos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Impuestos</TabsTrigger>

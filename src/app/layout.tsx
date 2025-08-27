@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/auth-context';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GestorL',
+  title: 'Emprende Total',
   description: 'Tu centro de operaciones para autónomos y pequeñas empresas.',
 };
 
@@ -26,8 +26,8 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
+            defaultTheme="system"
+            enableSystem
             disableTransitionOnChange
           >
             {children}

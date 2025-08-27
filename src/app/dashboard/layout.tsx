@@ -167,7 +167,7 @@ export default function DashboardLayout({
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Buscar proyectos, facturas..." className="pl-10" />
                 </div>
-                {isPro && <Badge variant="outline" className='border-yellow-400 text-yellow-400'>PRO</Badge>}
+                {isPro && <Badge variant="outline" className='border-yellow-400 text-yellow-400 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
                  <Button asChild variant="ghost" size="icon">
                   <Link href="/dashboard/configuracion">
                     <Settings className="h-5 w-5"/>
@@ -209,7 +209,7 @@ export default function DashboardLayout({
                 </DropdownMenu>
             </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-secondary/50">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-secondary/30 dark:bg-secondary/50">
           {children}
         </main>
       </div>

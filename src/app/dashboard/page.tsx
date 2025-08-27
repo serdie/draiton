@@ -97,21 +97,21 @@ export default function DashboardPage() {
 
      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <main className="lg:col-span-2 space-y-6">
-            <Card className="bg-secondary/50 border-border/50">
+            <Card>
                 <CardHeader>
                     <CardTitle>Visión Financiera (Últ. 6 meses)</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="p-4 bg-background rounded-lg">
+                        <div className="p-4 bg-secondary rounded-lg">
                             <p className="text-sm text-muted-foreground">Ingresos</p>
-                            <p className="text-2xl font-bold text-green-400">{formatCurrency(income)}</p>
+                            <p className="text-2xl font-bold text-green-500 dark:text-green-400">{formatCurrency(income)}</p>
                         </div>
-                        <div className="p-4 bg-background rounded-lg">
+                        <div className="p-4 bg-secondary rounded-lg">
                             <p className="text-sm text-muted-foreground">Gastos</p>
-                            <p className="text-2xl font-bold text-red-400">{formatCurrency(expenses)}</p>
+                            <p className="text-2xl font-bold text-red-500 dark:text-red-400">{formatCurrency(expenses)}</p>
                         </div>
-                        <div className="p-4 bg-background rounded-lg">
+                        <div className="p-4 bg-secondary rounded-lg">
                             <p className="text-sm text-muted-foreground">Beneficio Neto</p>
                             <p className="text-2xl font-bold">{formatCurrency(netProfit)}</p>
                         </div>
@@ -136,12 +136,12 @@ export default function DashboardPage() {
                 </CardFooter>
             </Card>
 
-            <Card className="bg-secondary/50 border-border/50">
+            <Card>
                 <CardHeader>
                     <CardTitle>Asistente IA</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="p-4 bg-background rounded-lg flex items-center justify-between">
+                    <div className="p-4 bg-secondary rounded-lg flex items-center justify-between">
                          <p className="text-muted-foreground">¡Hola! Soy GestorIA. Pregúntame sobre impuestos, facturas, o cómo optimizar tu negocio.</p>
                          <Button variant="ghost" size="icon">
                             <Sparkles className="text-primary" />
@@ -151,22 +151,22 @@ export default function DashboardPage() {
             </Card>
         </main>
         <aside className="space-y-6">
-            <Card className="bg-secondary/50 border-border/50">
+            <Card>
                 <CardHeader>
                     <CardTitle>Operaciones</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-background rounded-lg text-center">
+                    <div className="p-4 bg-secondary rounded-lg text-center">
                         <p className="text-3xl font-bold text-primary">{activeProjects}</p>
                         <p className="text-sm text-muted-foreground">Proyectos Activos</p>
                     </div>
-                    <div className="p-4 bg-background rounded-lg text-center">
-                        <p className="text-3xl font-bold text-yellow-400">{pendingTasks}</p>
+                    <div className="p-4 bg-secondary rounded-lg text-center">
+                        <p className="text-3xl font-bold text-yellow-500 dark:text-yellow-400">{pendingTasks}</p>
                         <p className="text-sm text-muted-foreground">Tareas Pendientes</p>
                     </div>
                 </CardContent>
             </Card>
-             <Card className="bg-secondary/50 border-border/50">
+             <Card>
                 <CardHeader>
                     <CardTitle>Actividad Reciente</CardTitle>
                 </CardHeader>
