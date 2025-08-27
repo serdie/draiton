@@ -68,52 +68,42 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
 
 
   const handleDownloadPdf = async () => {
-    if (!printableAreaRef.current || !document) return;
+    const element = printableAreaRef.current;
+    if (!element || !document) return;
     setIsDownloading(true);
 
     try {
-        const element = printableAreaRef.current;
         const canvas = await html2canvas(element, {
             scale: 2,
             useCORS: true,
             backgroundColor: null,
-            height: element.scrollHeight,
-            width: element.scrollWidth
         });
 
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: 'a4',
-        });
+        const pdf = new jsPDF('p', 'mm', 'a4');
         
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const ratio = canvasWidth / canvasHeight;
         
-        let imgWidth = pdfWidth;
-        let imgHeight = pdfWidth / ratio;
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgWidth = pdfWidth;
+        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
         
-        if (imgHeight > pdfHeight) {
-            imgHeight = pdfHeight;
-            imgWidth = pdfHeight * ratio;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
         }
-
-        const x = (pdfWidth - imgWidth) / 2;
-        const y = 5; // Add some top margin
-
-        pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
         
         const docTypeLabel = getDocumentTypeLabel(document.tipo) || 'Documento';
         pdf.save(`${docTypeLabel}-${document.numero}.pdf`);
-        
-        toast({
-            title: 'Descarga Iniciada',
-            description: 'Tu documento se está descargando como PDF.',
-        });
 
     } catch (error) {
         console.error("Error al generar el PDF:", error);
@@ -152,8 +142,8 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                  <Badge variant="outline" className={cn('text-base', getBadgeClass(document.estado))}>{document.estado}</Badge>
             </div>
         </DialogHeader>
-        <div ref={printableAreaRef} id="printable-area" className="flex-1 overflow-y-auto pr-6 -mr-6 py-4 space-y-6 text-sm bg-background">
-            <div className="px-6 space-y-6">
+        <div className="flex-1 overflow-y-auto pr-2 -mr-6 py-4 space-y-6 text-sm bg-background">
+             <div ref={printableAreaRef} id="printable-area" className="p-6">
                  <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
                     <div className="space-y-1">
                         <h3 className="font-semibold text-base">Emisor</h3>
@@ -169,7 +159,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 @md:grid-cols-4 gap-4 rounded-lg border p-4">
+                <div className="grid grid-cols-2 @md:grid-cols-4 gap-4 rounded-lg border p-4 my-6">
                     <div>
                         <p className="text-muted-foreground">Nº Documento</p>
                         <p className="font-semibold">{document.numero}</p>
