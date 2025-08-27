@@ -4,7 +4,7 @@
 import { useState, useEffect, useContext, useMemo } from 'react';
 import { AuthContext } from '@/context/auth-context';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -37,7 +37,7 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     
     useEffect(() => {
         if (!user) return;
-        const q = query(collection(db, 'tasks'), where('projectId', '==', projectId));
+        const q = query(collection(db, 'tasks'), where('projectId', '==', projectId), orderBy('createdAt', 'asc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
             setTasks(fetchedTasks);
@@ -46,23 +46,30 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     }, [projectId, user]);
 
     useEffect(() => {
+        if (tasks.length === 0) {
+            if(progress !== 0) {
+              onProgressChange(0);
+            }
+            return;
+        }
         const completedTasks = tasks.filter(t => t.isCompleted).length;
         const totalTasks = tasks.length;
-        if (totalTasks > 0) {
-            const newProgress = Math.round((completedTasks / totalTasks) * 100);
-            if (newProgress !== progress) {
-                setProgress(newProgress);
-                onProgressChange(newProgress);
-            }
+        const newProgress = Math.round((completedTasks / totalTasks) * 100);
+
+        if (newProgress !== progress) {
+            setProgress(newProgress);
+            onProgressChange(newProgress);
         }
-    }, [tasks, progress, onProgressChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tasks]);
     
-    const handleToggleTask = async (taskId: string, isCompleted: boolean) => {
+    const handleToggleTask = async (taskId: string, currentStatus: boolean) => {
         const taskRef = doc(db, 'tasks', taskId);
-        await updateDoc(taskRef, { isCompleted: !isCompleted });
+        await updateDoc(taskRef, { isCompleted: !currentStatus });
     };
 
-    const handleAddTask = async () => {
+    const handleAddTask = async (e: React.FormEvent) => {
+        e.preventDefault();
         if (!newTaskTitle.trim() || !user) return;
         await addDoc(collection(db, 'tasks'), {
             title: newTaskTitle,
@@ -122,20 +129,18 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
                             </div>
                         ))}
                     </div>
-                     <div className="mt-6 flex gap-2">
+                     <form onSubmit={handleAddTask} className="mt-6 flex gap-2">
                         <Input
                             placeholder="Añadir nueva tarea..."
                             value={newTaskTitle}
                             onChange={(e) => setNewTaskTitle(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
                         />
-                        <Button onClick={handleAddTask}>
+                        <Button type="submit">
                             <Plus className="h-4 w-4" />
                         </Button>
-                    </div>
+                    </form>
                 </CardContent>
             </Card>
         </div>
     );
 }
-
