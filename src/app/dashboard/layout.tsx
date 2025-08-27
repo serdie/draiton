@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
 import {
   SidebarProvider,
@@ -15,9 +15,6 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
   SidebarFooter,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -37,19 +34,6 @@ import {
   Wallet,
   Blocks,
   FlaskConical,
-  FileText,
-  CreditCard,
-  Receipt,
-  ArrowRightLeft,
-  Briefcase,
-  Users,
-  Calendar,
-  Zap,
-  Mail,
-  BrainCircuit,
-  Newspaper,
-  BookUser,
-  LayoutGrid,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -57,8 +41,6 @@ import { auth } from '@/lib/firebase/config';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
 
 
 export default function DashboardLayout({
@@ -80,14 +62,6 @@ export default function DashboardLayout({
   const isActive = (href: string) => {
     return pathname === href;
   };
-  
-  const financePaths = ['/dashboard/finanzas/vision-general', '/dashboard/facturas', '/dashboard/gastos', '/dashboard/impuestos', '/dashboard/bancos'];
-  const operationsPaths = ['/dashboard/proyectos', '/dashboard/contactos', '/dashboard/tareas'];
-  const iaToolsPaths = ['/dashboard/gestor-ia/ayudas', '/dashboard/gestor-ia/asistente-fiscal'];
-
-  const isGroupActive = (paths: string[]) => {
-    return paths.some(path => pathname.startsWith(path));
-  }
 
   return (
     <SidebarProvider>
@@ -105,117 +79,30 @@ export default function DashboardLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-
-            <Collapsible defaultOpen={isGroupActive(financePaths)}>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton variant="ghost" className="w-full justify-start">
+             <SidebarMenuItem>
+              <Link href="/dashboard/finanzas">
+                <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
                   <Wallet />
                   <span>Finanzas</span>
                 </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <Link href="/dashboard/finanzas">
-                      <SidebarMenuSubButton isActive={isActive('/dashboard/finanzas')}>
-                        <LayoutGrid/>
-                        <span>Visión General</span>
-                      </SidebarMenuSubButton>
-                    </Link>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <Link href="/dashboard/facturacion">
-                      <SidebarMenuSubButton isActive={isActive('/dashboard/facturacion')}>
-                        <FileText/>
-                        <span>Facturas</span>
-                      </SidebarMenuSubButton>
-                    </Link>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <Link href="/dashboard/gastos">
-                       <SidebarMenuSubButton isActive={isActive('/dashboard/gastos')}>
-                        <Receipt/>
-                        <span>Gastos</span>
-                      </SidebarMenuSubButton>
-                    </Link>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </Collapsible>
-            
-            <Collapsible defaultOpen={isGroupActive(operationsPaths)}>
-                <CollapsibleTrigger asChild>
-                    <SidebarMenuButton variant="ghost" className="w-full justify-start">
-                        <Blocks />
-                        <span>Operaciones</span>
-                    </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                    <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                            <Link href="/dashboard/proyectos">
-                                <SidebarMenuSubButton isActive={isActive('/dashboard/proyectos')}>
-                                    <Briefcase/>
-                                    <span>Proyectos</span>
-                                </SidebarMenuSubButton>
-                            </Link>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                             <Link href="/dashboard/contactos">
-                                <SidebarMenuSubButton isActive={isActive('/dashboard/contactos')}>
-                                    <BookUser/>
-                                    <span>Contactos</span>
-                                </SidebarMenuSubButton>
-                            </Link>
-                        </SidebarMenuSubItem>
-                         <SidebarMenuSubItem>
-                             <Link href="/dashboard/tareas">
-                                <SidebarMenuSubButton isActive={isActive('/dashboard/tareas')}>
-                                    <Calendar/>
-                                    <span>Tareas</span>
-                                </SidebarMenuSubButton>
-                            </Link>
-                        </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                </CollapsibleContent>
-            </Collapsible>
-
-            <Collapsible defaultOpen={isGroupActive(iaToolsPaths)}>
-                <CollapsibleTrigger asChild>
-                     <SidebarMenuButton variant="ghost" className="w-full justify-start">
-                        <FlaskConical />
-                        <span>Herramientas IA</span>
-                    </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                     <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                            <Link href="/dashboard/gestor-ia">
-                                <SidebarMenuSubButton isActive={isActive('/dashboard/gestor-ia')}>
-                                    <BrainCircuit/>
-                                    <span>Gestor IA</span>
-                                </SidebarMenuSubButton>
-                            </Link>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                            <Link href="/dashboard/marketing-ia">
-                                <SidebarMenuSubButton isActive={isActive('/dashboard/marketing-ia')}>
-                                    <Mail/>
-                                    <span>Marketing IA</span>
-                                </SidebarMenuSubButton>
-                            </Link>
-                        </SidebarMenuSubItem>
-                         <SidebarMenuSubItem>
-                             <Link href="/dashboard/web-ia">
-                                <SidebarMenuSubButton isActive={isActive('/dashboard/web-ia')}>
-                                    <Newspaper/>
-                                    <span>Web IA</span>
-                                </SidebarMenuSubButton>
-                            </Link>
-                        </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                </CollapsibleContent>
-            </Collapsible>
+              </Link>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <Link href="/dashboard/proyectos">
+                <SidebarMenuButton isActive={isActive('/dashboard/proyectos')} tooltip="Operaciones">
+                  <Blocks />
+                  <span>Operaciones</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href="/dashboard/gestor-ia">
+                <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
+                  <FlaskConical />
+                  <span>Herramientas IA</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
 
              {isAdmin && (
                 <SidebarMenuItem>
@@ -242,6 +129,13 @@ export default function DashboardLayout({
             <div className="md:hidden">
                 <SidebarTrigger />
             </div>
+            <div className="text-xl font-semibold">
+              { pathname.includes('/finanzas') ? 'Finanzas' :
+                pathname.includes('/proyectos') ? 'Proyectos' :
+                pathname.includes('/gestor-ia') ? 'Gestor IA' :
+                'Dashboard'
+              }
+            </div>
             <div className="flex-1 flex justify-end items-center gap-4">
                 <div className="relative w-full max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -255,9 +149,13 @@ export default function DashboardLayout({
                 </Button>
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <div className="flex items-center gap-3 cursor-pointer">
-                            <UserAvatar user={user} />
+                      <div className='flex items-center gap-3 cursor-pointer'>
+                        <UserAvatar user={user} />
+                        <div className="hidden md:flex flex-col items-start">
+                          <span className="font-semibold text-sm">{user?.displayName || 'Usuario'}</span>
+                          <span className="text-xs text-muted-foreground">Autónomo</span>
                         </div>
+                      </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
                         <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>

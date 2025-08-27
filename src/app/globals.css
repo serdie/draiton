@@ -4,65 +4,54 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%; /* Dark Blue-Gray */
-    --foreground: 210 40% 98%; /* Light Gray */
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --background: 223 38% 15%; /* main-bg */
+    --foreground: 210 40% 98%; /* text-primary */
+    --card: 222 39% 18%; /* card-bg */
+    --card-foreground: 210 40% 98%; /* text-primary */
+    --popover: 222 39% 18%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%; /* Light Gray for primary text */
-    --primary-foreground: 222.2 47.4% 11.2%; /* Dark Blue-Gray for text on primary buttons */
-    --secondary: 217.2 32.6% 17.5%; /* Lighter Blue-Gray */
+    --primary: 212 92% 59%; /* button-primary-bg */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 222 39% 23%; /* Slightly lighter card bg for secondary elements */
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%; /* Gray for muted text */
-    --accent: 262.1 83.3% 57.8%; /* Violet */
+    --muted: 222 39% 23%;
+    --muted-foreground: 215 20% 65%; /* text-secondary */
+    --accent: 212 92% 59%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 215 20.2% 65.1%;
+    --input: 222 39% 23%;
+    --ring: 212 92% 59%;
     --radius: 0.5rem;
 
-    /* Custom Colors from new design */
-    --sidebar-bg: hsl(223, 38%, 12%);
-    --main-bg: hsl(223, 38%, 15%);
-    --card-bg: hsl(222, 39%, 18%);
-    --button-primary-bg: hsl(212, 92%, 59%);
-    --text-primary: hsl(210, 40%, 98%);
-    --text-secondary: hsl(215, 20%, 65%);
-    --accent-pro: hsl(197, 72%, 58%); /* Pro badge color */
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 
   .dark {
-    --background: 223, 38%, 15%; /* main-bg */
-    --foreground: 210, 40%, 98%; /* text-primary */
-    
-    --card: 222, 39%, 18%; /* card-bg */
-    --card-foreground: 210, 40%, 98%; /* text-primary */
-    
-    --popover: 222, 39%, 18%; /* card-bg */
-    --popover-foreground: 210, 40%, 98%; /* text-primary */
-    
-    --primary: 212, 92%, 59%; /* button-primary-bg */
-    --primary-foreground: 210, 40%, 98%;
-    
-    --secondary: 222, 39%, 23%; /* Slightly lighter card bg for secondary elements */
-    --secondary-foreground: 210, 40%, 98%;
-    
-    --muted: 222, 39%, 23%;
-    --muted-foreground: 215, 20%, 65%; /* text-secondary */
-    
-    --accent: 212, 92%, 59%;
-    --accent-foreground: 210, 40%, 98%;
-    
+    --background: 223 38% 15%; /* main-bg */
+    --foreground: 210 40% 98%; /* text-primary */
+    --card: 222 39% 18%; /* card-bg */
+    --card-foreground: 210 40% 98%; /* text-primary */
+    --popover: 222 39% 18%; /* card-bg */
+    --popover-foreground: 210 40% 98%; /* text-primary */
+    --primary: 212 92% 59%; /* button-primary-bg */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 222 39% 23%; /* Slightly lighter card bg for secondary elements */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 39% 23%;
+    --muted-foreground: 215 20% 65%; /* text-secondary */
+    --accent: 212 92% 59%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 222, 39%, 23%;
-    --ring: 212, 92%, 59%;
+    --border: 222 39% 28%;
+    --input: 222 39% 23%;
+    --ring: 212 92% 59%;
 
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;

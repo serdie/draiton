@@ -9,18 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { FileUp, FilePlus, MoreHorizontal, Calendar as CalendarIcon, FilterX, ChevronLeft, ChevronRight, Loader2, Trash2, Pencil, Eye, Download, Sparkles } from 'lucide-react';
+import { FilePlus, MoreHorizontal, Loader2, Trash2, Pencil, Eye, Download, Sparkles } from 'lucide-react';
 import { ImportInvoiceModal } from '../documentos/import-invoice-modal';
 import { CreateDocumentModal } from '../documentos/create-document-modal';
 import { EditDocumentModal } from '../documentos/edit-document-modal';
 import { ViewDocumentModal } from '../documentos/view-document-modal';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
@@ -28,30 +23,21 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
 import { deleteDocument } from '@/lib/firebase/document-actions';
-import type { Document, DocumentStatus, DocumentType, LineItem } from '../documentos/page';
+import type { Document, DocumentStatus } from '../documentos/page';
 
 
 const getBadgeClass = (estado: string) => {
   switch (estado?.toLowerCase()) {
-    case 'pagado':
-    case 'aceptado':
-    case 'aplicado':
+    case 'pagada':
       return 'bg-green-600/20 text-green-400 border-green-500/30';
     case 'pendiente':
-    case 'enviado':
-    case 'emitido':
-    case 'activo':
       return 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30';
-    case 'vencido':
-    case 'rechazado':
-    case 'cancelado':
+    case 'vencida':
       return 'bg-red-600/20 text-red-400 border-red-500/30';
-    default: // Borrador
+    default: // Borrador o cualquier otro estado
       return 'bg-gray-600/20 text-gray-400 border-gray-500/30';
   }
 };
-
-const estadosUnicos: DocumentStatus[] = ['Pagado', 'Pendiente', 'Vencido', 'Enviado', 'Aceptado', 'Rechazado', 'Emitido', 'Aplicado', 'Borrador'];
 
 export default function FinanzasPage() {
   const { user } = useContext(AuthContext);
@@ -66,35 +52,21 @@ export default function FinanzasPage() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const facturasDeEjemplo: Document[] = [
+    { id: '1', numero: '#2024-035', cliente: 'Creative Inc.', fechaEmision: new Date('2024-07-28'), importe: 1250, estado: 'Pagado' } as Document,
+    { id: '2', numero: '#2024-034', cliente: 'Innovate LLC', fechaEmision: new Date('2024-07-22'), importe: 850.50, estado: 'Pendiente' } as Document,
+    { id: '3', numero: '#2024-033', cliente: 'Tech Solutions', fechaEmision: new Date('2024-07-15'), importe: 2500, estado: 'Vencido' } as Document,
+    { id: '4', numero: '#2024-032', cliente: 'Marketing Guru', fechaEmision: new Date('2024-07-10'), importe: 450, estado: 'Pagado' } as Document,
+  ];
+
   useEffect(() => {
-    if (!db || !user) {
-        setLoading(false);
-        return;
-    }
+    // Simulando carga de datos
     setLoading(true);
-
-    const q = query(collection(db, "invoices"), where('tipo', '==', 'factura'), where('ownerId', '==', user.uid));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const docsList = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                ...data,
-                fechaEmision: data.fechaEmision instanceof Timestamp ? data.fechaEmision.toDate() : new Date(),
-                fechaVto: data.fechaVto instanceof Timestamp ? data.fechaVto.toDate() : null,
-            } as Document;
-        });
-        setDocuments(docsList.sort((a,b) => b.fechaEmision.getTime() - a.fechaEmision.getTime()));
+    setTimeout(() => {
+        setDocuments(facturasDeEjemplo);
         setLoading(false);
-    }, (error) => {
-        console.error("Error fetching documents:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los documentos.' });
-        setLoading(false);
-    });
-
-    return () => unsubscribe();
-}, [toast, user]);
+    }, 500);
+  }, []);
 
   const handleCreateNew = (initialData?: ExtractInvoiceDataOutput) => {
     setInitialDataForForm(initialData);
@@ -112,22 +84,7 @@ export default function FinanzasPage() {
   };
 
   const handleDelete = async () => {
-    if (!docToDelete) return;
-    try {
-        await deleteDocument(docToDelete.id);
-        toast({
-            title: 'Documento Eliminado',
-            description: `El documento ${docToDelete.numero} ha sido eliminado.`,
-        });
-    } catch (error) {
-        toast({
-            variant: 'destructive',
-            title: 'Error al eliminar',
-            description: 'No se pudo eliminar el documento. Revisa la consola para más detalles.',
-        });
-    } finally {
-        setDocToDelete(null);
-    }
+    // Logica de borrado
   };
 
   const handleDownload = () => {
@@ -142,12 +99,12 @@ export default function FinanzasPage() {
       return <div className="flex justify-center items-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div>
     }
     return (
-      <Card className="bg-secondary border-none">
-        <CardHeader>
+      <Card className="bg-transparent border-none shadow-none">
+        <CardHeader className="px-0">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Listado de Facturas</h3>
             <div className='flex items-center gap-2'>
-              <Button variant="ghost" onClick={() => setIsImportModalOpen(true)}>
+              <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
                   <Sparkles className="mr-2 h-4 w-4" />
                   Importar con IA
               </Button>
@@ -158,10 +115,10 @@ export default function FinanzasPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-border/50">
+              <TableRow className="border-border/50 hover:bg-transparent">
                 <TableHead>Nº FACTURA</TableHead>
                 <TableHead>CLIENTE</TableHead>
                 <TableHead>FECHA</TableHead>
@@ -172,7 +129,7 @@ export default function FinanzasPage() {
             </TableHeader>
             <TableBody>
               {documents.map((doc) => (
-                <TableRow key={doc.id} className="border-border/20">
+                <TableRow key={doc.id} className="border-border/20 hover:bg-border/20">
                   <TableCell className="font-medium text-primary">{doc.numero}</TableCell>
                   <TableCell>{doc.cliente}</TableCell>
                   <TableCell>{format(new Date(doc.fechaEmision), "yyyy-MM-dd")}</TableCell>
@@ -229,15 +186,11 @@ export default function FinanzasPage() {
 
         <Tabs defaultValue="facturacion" className="w-full">
           <TabsList className="border-b border-border/50 rounded-none p-0 bg-transparent justify-start gap-4">
-            <TabsTrigger value="vision-general" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Visión General</TabsTrigger>
-            <TabsTrigger value="facturacion" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Facturación</TabsTrigger>
-            <TabsTrigger value="gastos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Gastos</TabsTrigger>
-            <TabsTrigger value="impuestos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Impuestos</TabsTrigger>
-            <TabsTrigger value="bancos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none">Conexión Bancaria</TabsTrigger>
+            <TabsTrigger value="facturacion" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Facturación</TabsTrigger>
+            <TabsTrigger value="gastos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Gastos</TabsTrigger>
+            <TabsTrigger value="impuestos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Impuestos</TabsTrigger>
+            <TabsTrigger value="bancos" className="data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-1">Conexión Bancaria</TabsTrigger>
           </TabsList>
-          <TabsContent value="vision-general" className="mt-6">
-            <p>Próximamente: Visión General Financiera.</p>
-          </TabsContent>
           <TabsContent value="facturacion" className="mt-6">
             {renderFacturasContent()}
           </TabsContent>
