@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useContext } from 'react';
@@ -30,6 +31,7 @@ export type Project = {
   endDate: Date | null;
   budget: number | null;
   status: ProjectStatus;
+  progress?: number;
   createdAt: Date;
 };
 
@@ -101,9 +103,7 @@ export default function OperacionesPage() {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {activeProjects.map(project => {
-                    const progress = project.endDate && project.startDate && project.status === 'En Progreso' 
-                        ? Math.min(100, ((new Date().getTime() - project.startDate.getTime()) / (project.endDate.getTime() - project.startDate.getTime())) * 100)
-                        : (project.status === 'Completado' ? 100 : 0);
+                    const progress = project.progress || 0;
 
                     return (
                         <Link href={`/dashboard/proyectos/${project.id}`} key={project.id}>

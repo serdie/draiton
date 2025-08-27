@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { type Project, type ProjectStatus } from './page';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { Slider } from '@/components/ui/slider';
 
 interface EditProjectFormProps {
   project: Project;
@@ -34,6 +35,7 @@ export function EditProjectForm({ project, onClose }: EditProjectFormProps) {
   const [endDate, setEndDate] = useState<Date | undefined>(project.endDate || undefined);
   const [budget, setBudget] = useState(project.budget?.toString() || '');
   const [status, setStatus] = useState<ProjectStatus>(project.status);
+  const [progress, setProgress] = useState(project.progress || 0);
   
   const handleUpdateProject = async () => {
     if (!name || !client) {
@@ -55,6 +57,7 @@ export function EditProjectForm({ project, onClose }: EditProjectFormProps) {
         endDate: endDate || null,
         budget: budget ? parseFloat(budget) : null,
         status,
+        progress,
     };
 
     try {
@@ -141,6 +144,19 @@ export function EditProjectForm({ project, onClose }: EditProjectFormProps) {
             </Select>
         </div>
         </div>
+         <div className="space-y-2">
+            <div className="flex justify-between items-center">
+                <Label htmlFor="progress-slider">Progreso Manual</Label>
+                <span className="text-sm font-medium text-primary">{progress}%</span>
+            </div>
+            <Slider
+                id="progress-slider"
+                value={[progress]}
+                onValueChange={(value) => setProgress(value[0])}
+                max={100}
+                step={1}
+            />
+        </div>
         <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
             <Button onClick={handleUpdateProject} disabled={isLoading}>
@@ -151,5 +167,3 @@ export function EditProjectForm({ project, onClose }: EditProjectFormProps) {
     </div>
   );
 }
-
-    

@@ -82,6 +82,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
       endDate: endDate || null,
       budget: budget ? parseFloat(budget) : null,
       status,
+      progress: 0,
       createdAt: serverTimestamp(),
     };
 
@@ -190,5 +191,3 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
     </Dialog>
   );
 }
-
-    

@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useContext } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { type Project, type ProjectStatus } from '../page';
@@ -13,10 +13,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EditProjectModal } from '../edit-project-modal';
+import { ProjectTaskList } from './project-task-list';
 
 const getStatusBadgeClass = (status: ProjectStatus) => {
   switch (status) {
@@ -95,11 +95,9 @@ export default function ProjectDetailPage() {
             createdAt: data.createdAt?.toDate(),
           } as Project);
         } else {
-          // No tiene permiso para ver este proyecto
           router.push('/dashboard/proyectos');
         }
       } else {
-        // El proyecto no existe
          router.push('/dashboard/proyectos');
       }
       setLoading(false);
@@ -107,6 +105,18 @@ export default function ProjectDetailPage() {
 
     return () => unsubscribe();
   }, [user, projectId, router]);
+
+   const handleProgressChange = async (newProgress: number) => {
+    if (!project) return;
+    try {
+        const projectRef = doc(db, 'projects', project.id);
+        await updateDoc(projectRef, { progress: newProgress });
+        // El estado local se actualizará a través del listener onSnapshot
+    } catch (error) {
+        console.error("Error al actualizar el progreso del proyecto:", error);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -126,11 +136,6 @@ export default function ProjectDetailPage() {
         </div>
     )
   }
-
-  const projectDuration = project.endDate && project.startDate ? project.endDate.getTime() - project.startDate.getTime() : 0;
-  const timeElapsed = project.startDate ? new Date().getTime() - project.startDate.getTime() : 0;
-  const progress = projectDuration > 0 ? Math.min(100, (timeElapsed / projectDuration) * 100) : 0;
-
 
   return (
     <>
@@ -180,13 +185,6 @@ export default function ProjectDetailPage() {
                 <p className="text-lg font-semibold">{project.createdAt ? formatDistanceToNow(project.createdAt, {locale: es, addSuffix: true}) : 'N/A'}</p>
             </div>
         </CardContent>
-        {project.status === 'En Progreso' && (
-             <CardFooter className="flex flex-col items-start gap-2">
-                <Label>Progreso</Label>
-                <Progress value={progress} className="w-full" />
-                <p className="text-xs text-muted-foreground">{Math.round(progress)}% completado</p>
-            </CardFooter>
-        )}
       </Card>
 
       <Tabs defaultValue="tasks" className="w-full">
@@ -198,10 +196,11 @@ export default function ProjectDetailPage() {
             </TabsList>
             <div className="mt-4">
                 <TabsContent value="tasks">
-                    <Card>
-                        <CardHeader><CardTitle>Lista de Tareas</CardTitle></CardHeader>
-                        <CardContent><p>La gestión de tareas para proyectos estará disponible aquí.</p></CardContent>
-                    </Card>
+                    <ProjectTaskList 
+                        projectId={project.id} 
+                        initialProgress={project.progress || 0}
+                        onProgressChange={handleProgressChange}
+                    />
                 </TabsContent>
                  <TabsContent value="time">
                     <TimeTrackingCard />
