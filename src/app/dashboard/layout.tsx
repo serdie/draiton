@@ -93,9 +93,11 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="p-4 flex items-center justify-center gap-2">
-            <Logo className="h-6 w-auto" />
-            <span className="font-bold text-lg tracking-tight">GestorIA</span>
+        <SidebarHeader className="p-4">
+            <Link href="/dashboard" className="flex items-center gap-2">
+                <Logo className="h-6 w-auto" />
+                <span className="font-bold text-lg tracking-tight">GestorIA</span>
+            </Link>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
