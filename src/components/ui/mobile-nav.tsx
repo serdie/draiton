@@ -25,7 +25,7 @@ export function MobileNav() {
       return item.adminOnly ? isAdmin : true;
     });
 
-    const gridColsClass = `grid-cols-${visibleNavItems.length}`;
+    const gridColsClass = isAdmin ? 'grid-cols-6' : 'grid-cols-5';
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50 md:hidden">
