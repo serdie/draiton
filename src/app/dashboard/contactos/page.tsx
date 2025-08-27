@@ -171,14 +171,14 @@ export default function ContactosPage() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                    <TableHead className="w-12">Avatar</TableHead>
+                    <TableHead className="hidden sm:table-cell w-12">Avatar</TableHead>
                     <TableHead>Nombre</TableHead>
-                    <TableHead className="hidden sm:table-cell">Correo Electrónico</TableHead>
-                    <TableHead className="hidden md:table-cell">Empresa</TableHead>
-                    <TableHead className="hidden lg:table-cell">CIF/NIF</TableHead>
+                    <TableHead className="hidden md:table-cell">Correo</TableHead>
+                    <TableHead className="hidden lg:table-cell">Empresa</TableHead>
+                    <TableHead className="hidden xl:table-cell">CIF/NIF</TableHead>
                     <TableHead className="hidden xl:table-cell">Teléfono</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead className="hidden lg:table-cell">Fecha de Alta</TableHead>
+                    <TableHead className="hidden lg:table-cell">Alta</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -186,16 +186,16 @@ export default function ContactosPage() {
                     {paginatedContacts.length > 0 ? (
                         paginatedContacts.map((contact) => (
                         <TableRow key={contact.id}>
-                            <TableCell>
+                            <TableCell className="hidden sm:table-cell">
                                 <Avatar className="h-9 w-9">
                                     <AvatarImage src={contact.avatar} alt={contact.name} />
                                     <AvatarFallback>{getInitials(contact.name)}</AvatarFallback>
                                 </Avatar>
                             </TableCell>
                             <TableCell className="font-medium">{contact.name}</TableCell>
-                            <TableCell className="text-muted-foreground hidden sm:table-cell">{contact.email}</TableCell>
-                            <TableCell className="text-muted-foreground hidden md:table-cell">{contact.company || '-'}</TableCell>
-                            <TableCell className="text-muted-foreground hidden lg:table-cell">{contact.cif || '-'}</TableCell>
+                            <TableCell className="text-muted-foreground hidden md:table-cell">{contact.email}</TableCell>
+                            <TableCell className="text-muted-foreground hidden lg:table-cell">{contact.company || '-'}</TableCell>
+                            <TableCell className="text-muted-foreground hidden xl:table-cell">{contact.cif || '-'}</TableCell>
                             <TableCell className="text-muted-foreground hidden xl:table-cell">{contact.phone || '-'}</TableCell>
                             <TableCell>
                                 <Badge variant="outline" className={cn('font-semibold', getBadgeClassForType(contact.type))}>
@@ -342,3 +342,4 @@ export default function ContactosPage() {
     </>
   );
 }
+
