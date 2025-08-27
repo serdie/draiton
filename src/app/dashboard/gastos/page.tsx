@@ -46,6 +46,8 @@ const getCategoryBadgeClass = (category: string) => {
     }
 }
 
+const expenseCategories = ['Software', 'Oficina', 'Marketing', 'Viajes', 'Suministros', 'Otros'];
+
 export default function GastosPage() {
     const { user } = useContext(AuthContext);
     const { toast } = useToast();
@@ -94,6 +96,38 @@ export default function GastosPage() {
         return () => unsubscribe();
     }, [user, toast]);
     
+    const filteredExpenses = useMemo(() => {
+        return expenses.filter(expense => {
+            const porTexto = !filtroTexto || 
+                expense.proveedor.toLowerCase().includes(filtroTexto.toLowerCase()) ||
+                expense.descripcion.toLowerCase().includes(filtroTexto.toLowerCase());
+
+            const porCategoria = filtroCategoria === 'all' || expense.categoria === filtroCategoria;
+            
+            return porTexto && porCategoria;
+        });
+    }, [expenses, filtroTexto, filtroCategoria]);
+
+    const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
+
+    const paginatedExpenses = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredExpenses.slice(startIndex, endIndex);
+    }, [filteredExpenses, currentPage, itemsPerPage]);
+
+    const resetFilters = () => {
+        setFiltroTexto('');
+        setFiltroCategoria('all');
+        setCurrentPage(1);
+    };
+
+    const handleItemsPerPageChange = (value: string) => {
+        setItemsPerPage(Number(value));
+        setCurrentPage(1);
+    };
+
+
     const handleOpenModal = (data?: ExtractReceiptDataOutput) => {
         setInitialData(data);
         setIsModalOpen(true);
@@ -170,24 +204,115 @@ export default function GastosPage() {
                             <SelectTrigger><SelectValue placeholder="Filtrar por categoría" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todas las categorías</SelectItem>
-                                <SelectItem value="Software">Software</SelectItem>
-                                <SelectItem value="Oficina">Oficina</SelectItem>
-                                <SelectItem value="Marketing">Marketing</SelectItem>
-                                <SelectItem value="Viajes">Viajes</SelectItem>
-                                <SelectItem value="Suministros">Suministros</SelectItem>
-                                <SelectItem value="Otros">Otros</SelectItem>
+                                {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                             </SelectContent>
                         </Select>
-                         <Button variant="outline" onClick={() => { setFiltroTexto(''); setFiltroCategoria('all'); }}>
+                         <Button variant="outline" onClick={resetFilters}>
                             <FilterX className="mr-2 h-4 w-4" />Limpiar Filtros
                         </Button>
                     </div>
                 </CardHeader>
             </Card>
 
-            {/* TODO: Add content here */}
+            <Card>
+                <CardContent className="pt-6">
+                    {loading ? (
+                         <div className="flex justify-center items-center py-12">
+                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </div>
+                    ) : (
+                         <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Fecha</TableHead>
+                                    <TableHead>Proveedor</TableHead>
+                                    <TableHead>Categoría</TableHead>
+                                    <TableHead className="hidden md:table-cell">Descripción</TableHead>
+                                    <TableHead className="hidden lg:table-cell">Método de Pago</TableHead>
+                                    <TableHead className="text-right">Importe</TableHead>
+                                    <TableHead className="text-right">Acciones</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {paginatedExpenses.length > 0 ? (
+                                    paginatedExpenses.map(expense => (
+                                        <TableRow key={expense.id}>
+                                            <TableCell>{format(expense.fecha, "dd MMM yyyy", { locale: es })}</TableCell>
+                                            <TableCell className="font-medium">{expense.proveedor}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className={cn('text-xs', getCategoryBadgeClass(expense.categoria))}>
+                                                    {expense.categoria}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="hidden md:table-cell text-muted-foreground truncate max-w-xs">{expense.descripcion}</TableCell>
+                                            <TableCell className="hidden lg:table-cell text-muted-foreground">{expense.metodoPago}</TableCell>
+                                            <TableCell className="text-right font-semibold">{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(expense.importe)}</TableCell>
+                                            <TableCell className="text-right">
+                                                 <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem>
+                                                            <Pencil className="mr-2 h-4 w-4" />
+                                                            Editar
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => setExpenseToDelete(expense)} className="text-destructive focus:text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Eliminar
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={7} className="h-24 text-center">
+                                            No se encontraron gastos.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+                <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Resultados por página:</span>
+                        <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+                        <SelectTrigger className="w-20 h-8">
+                            <SelectValue placeholder={itemsPerPage} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="20">20</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                        <span>Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
+                        <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline" size="icon" className="h-8 w-8"
+                            onClick={() => setCurrentPage(p => p - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline" size="icon" className="h-8 w-8"
+                            onClick={() => setCurrentPage(p => p + 1)}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        </div>
+                    </div>
+                </CardFooter>
+            </Card>
         </div>
         </>
     );
 }
-
