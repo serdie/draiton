@@ -252,19 +252,19 @@ export default function DocumentosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nº Documento</TableHead>
+                <TableHead className="hidden sm:table-cell">Nº</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead className="text-right">Importe</TableHead>
                 <TableHead className="text-center">Estado</TableHead>
-                <TableHead>Fecha Emisión</TableHead>
-                <TableHead>Fecha Vto.</TableHead>
+                <TableHead className="hidden md:table-cell">Fecha Emisión</TableHead>
+                <TableHead className="hidden lg:table-cell">Fecha Vto.</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedDocs.map((doc) => (
                 <TableRow key={doc.id}>
-                  <TableCell className="font-medium">{doc.numero}</TableCell>
+                  <TableCell className="font-medium hidden sm:table-cell">{doc.numero}</TableCell>
                   <TableCell>{doc.cliente}</TableCell>
                   <TableCell className="text-right">
                     {new Intl.NumberFormat('es-ES', { style: 'currency', currency: doc.moneda || 'EUR' }).format(doc.importe)}
@@ -274,8 +274,8 @@ export default function DocumentosPage() {
                       {doc.estado}
                     </Badge>
                   </TableCell>
-                  <TableCell>{format(new Date(doc.fechaEmision), "dd MMM yyyy", { locale: es })}</TableCell>
-                  <TableCell>{doc.fechaVto ? format(new Date(doc.fechaVto), "dd MMM yyyy", { locale: es }) : '-'}</TableCell>
+                  <TableCell className="hidden md:table-cell">{format(new Date(doc.fechaEmision), "dd MMM yyyy", { locale: es })}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{doc.fechaVto ? format(new Date(doc.fechaVto), "dd MMM yyyy", { locale: es }) : '-'}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -310,7 +310,7 @@ export default function DocumentosPage() {
             </TableBody>
           </Table>
         </CardContent>
-        <CardFooter className="flex items-center justify-between">
+        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Resultados por página:</span>
             <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
