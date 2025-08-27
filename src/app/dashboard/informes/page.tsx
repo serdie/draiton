@@ -1,110 +1,160 @@
 
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { useState, useMemo, useEffect, useContext } from 'react';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, BarChart, Users, Euro } from 'lucide-react';
-
-const profitAndLossData = [
-    { item: 'Ingresos por Proyectos', amount: 12500, type: 'income' },
-    { item: 'Venta de Productos', amount: 3400, type: 'income' },
-    { item: 'Total Ingresos', amount: 15900, type: 'total-income' },
-    { item: 'Coste de Software', amount: -450, type: 'expense' },
-    { item: 'Gastos de Oficina', amount: -800, type: 'expense' },
-    { item: 'Marketing y Publicidad', amount: -1200, type: 'expense' },
-    { item: 'Total Gastos', amount: -2450, type: 'total-expense' },
-    { item: 'Beneficio Neto', amount: 13450, type: 'net' },
-]
-
-const topClientsData = [
-    { client: 'Innovate Corp', revenue: 7500 },
-    { client: 'Digital Solutions', revenue: 4000 },
-    { client: 'Marketing Pro', revenue: 1000 },
-]
+import { Sparkles, FileText, Copy, Download, Mail } from 'lucide-react';
+import { AuthContext } from '@/context/auth-context';
+import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { useToast } from '@/hooks/use-toast';
+import type { Project } from '../proyectos/page';
 
 export default function InformesPage() {
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Informes y Analíticas</h1>
-            <p className="text-muted-foreground">
-              Visualiza el rendimiento de tu negocio con informes detallados.
-            </p>
-          </div>
-           <div className="flex items-center gap-2">
-                <Select defaultValue="this-quarter">
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Selecciona un periodo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="this-month">Este Mes</SelectItem>
-                        <SelectItem value="this-quarter">Este Trimestre</SelectItem>
-                        <SelectItem value="this-year">Este Año</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Button variant="outline">
-                    <Download className="mr-2 h-4 w-4"/>
-                    Exportar
-                </Button>
-           </div>
+    const { user } = useContext(AuthContext);
+    const { toast } = useToast();
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [generatedReport, setGeneratedReport] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!db || !user) {
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        const q = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const docsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+            setProjects(docsList);
+            setLoading(false);
+        }, (error) => {
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los proyectos.' });
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, [user, toast]);
+
+    const handleGenerateReport = () => {
+        setGeneratedReport(`**Informe de Progreso - Resumen Interno (Q3 2024)**
+
+**1. Resumen Ejecutivo:**
+El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo planeado, con un 75% de las tareas completadas. El equipo ha mostrado un rendimiento excelente, superando los hitos clave de diseño y desarrollo inicial. El presupuesto se mantiene dentro de los límites establecidos, con un gasto actual del 60%.
+
+**2. Hitos Clave Completados:**
+-   **Diseño UI/UX Aprobado:** 15 de Julio, 2024
+-   **Desarrollo del Frontend (Componentes Principales):** 1 de Agosto, 2024
+-   **Configuración del Backend y Base de Datos:** 10 de Agosto, 2024
+
+**3. Próximos Pasos:**
+-   Integración del CMS y funcionalidades del blog.
+-   Fase de Pruebas y QA.
+-   Lanzamiento y despliegue final.
+
+**4. Riesgos y Mitigaciones:**
+-   **Riesgo:** Posible retraso en la entrega de contenido por parte del cliente.
+-   **Mitigación:** Se ha establecido un calendario de contenido compartido y recordatorios automáticos.
+`);
+    }
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+                <Card className="bg-secondary/50 border-border/30">
+                    <CardHeader>
+                        <CardTitle>Generador de Informes IA</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="report-project">Seleccionar Proyecto (Opcional)</Label>
+                             <Select>
+                                <SelectTrigger id="report-project">
+                                    <SelectValue placeholder="Todos los proyectos" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="todos">Todos los proyectos</SelectItem>
+                                    {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="report-type">Tipo de Informe</Label>
+                            <Select>
+                                <SelectTrigger id="report-type">
+                                    <SelectValue placeholder="Seleccionar tipo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="progreso">Informe de Progreso</SelectItem>
+                                    <SelectItem value="financiero">Resumen Financiero</SelectItem>
+                                    <SelectItem value="tareas">Detalle de Tareas</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="report-audience">Destinatario del Informe</Label>
+                            <Select>
+                                <SelectTrigger id="report-audience">
+                                    <SelectValue placeholder="Seleccionar destinatario" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="interno">Resumen Interno (Jefe de Proyecto)</SelectItem>
+                                    <SelectItem value="cliente">Reporte para el Cliente</SelectItem>
+                                    <SelectItem value="equipo">Feedback para el Equipo</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="report-period">Periodo</Label>
+                            <Select>
+                                <SelectTrigger id="report-period">
+                                    <SelectValue placeholder="Seleccionar periodo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="semana">Última Semana</SelectItem>
+                                    <SelectItem value="mes">Último Mes</SelectItem>
+                                    <SelectItem value="trimestre">Último Trimestre</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                         <Button className="w-full" onClick={handleGenerateReport}>
+                            <Sparkles className="mr-2 h-4 w-4"/>
+                            Generar con IA
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+            <div className="lg:col-span-2">
+                 <Card className="bg-secondary/50 border-border/30 min-h-[500px] flex flex-col">
+                    <CardHeader className="flex flex-row justify-between items-center">
+                        <CardTitle>Informe Generado</CardTitle>
+                         {generatedReport && (
+                            <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8"><Copy className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8"><Download className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8"><Mail className="h-4 w-4" /></Button>
+                            </div>
+                        )}
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                        {generatedReport ? (
+                            <div className="prose prose-sm prose-invert max-w-none whitespace-pre-wrap">
+                                {generatedReport}
+                            </div>
+                        ) : (
+                             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                                <FileText className="h-12 w-12 mb-4"/>
+                                <p>El informe generado por la IA aparecerá aquí.</p>
+                            </div>
+                        )}
+                       
+                    </CardContent>
+                </Card>
+            </div>
         </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-            <CardHeader>
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-md"><Euro className="h-6 w-6 text-primary"/></div>
-                    <CardTitle>Pérdidas y Ganancias (P&G)</CardTitle>
-                </div>
-                <CardDescription>Resumen de tus ingresos y gastos para el periodo seleccionado.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableBody>
-                        {profitAndLossData.map((row, i) => (
-                            <TableRow key={i} className={row.type.startsWith('total') ? 'font-bold' : ''}>
-                                <TableCell className={row.type === 'net' ? 'text-lg font-bold' : ''}>{row.item}</TableCell>
-                                <TableCell className={`text-right ${row.type === 'net' ? 'text-lg font-bold' : ''} ${row.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(row.amount)}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-        <Card>
-             <CardHeader>
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-md"><Users className="h-6 w-6 text-primary"/></div>
-                    <CardTitle>Clientes Más Rentables</CardTitle>
-                </div>
-                <CardDescription>Clientes que más ingresos han generado en el periodo.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Cliente</TableHead>
-                            <TableHead className="text-right">Ingresos</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {topClientsData.map((client, i) => (
-                            <TableRow key={i}>
-                                <TableCell className="font-medium">{client.client}</TableCell>
-                                <TableCell className="text-right">{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(client.revenue)}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-      </div>
-
-    </div>
-  );
+    );
 }
