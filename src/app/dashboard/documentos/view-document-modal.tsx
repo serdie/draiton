@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import React from 'react';
+import { useState } from 'react';
 
 
 interface ViewDocumentModalProps {
@@ -64,7 +64,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
   const { user } = useContext(AuthContext);
   const companyData = user?.company;
   const printableAreaRef = useRef<HTMLDivElement>(null);
-  const [isDownloading, setIsDownloading] = React.useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
 
   const handleDownloadPdf = async () => {
@@ -77,29 +77,28 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
             scale: 2,
             useCORS: true,
             backgroundColor: null,
+            height: element.scrollHeight,
+            windowHeight: element.scrollHeight
         });
 
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        
         const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = pdfWidth;
-        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
         
-        let heightLeft = imgHeight;
+        let heightLeft = pdfHeight;
         let position = 0;
 
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pdf.internal.pageSize.getHeight();
 
         while (heightLeft > 0) {
-            position = heightLeft - imgHeight;
+            position = heightLeft - pdfHeight;
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pdfHeight;
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+            heightLeft -= pdf.internal.pageSize.getHeight();
         }
         
         const docTypeLabel = getDocumentTypeLabel(document.tipo) || 'Documento';
@@ -133,29 +132,31 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                         Vista previa del documento emitido para <span className="font-semibold">{document.cliente}</span>.
                     </DialogDescription>
                 </div>
-                 <div className="text-center text-muted-foreground">
-                    <QrCode className="h-20 w-20 mx-auto text-foreground" />
-                    <p className="text-xs font-semibold mt-1">Factura Electronica</p>
+                 <div className="flex justify-start pt-2">
+                     <Badge variant="outline" className={cn('text-base', getBadgeClass(document.estado))}>{document.estado}</Badge>
                 </div>
             </div>
-             <div className="flex justify-start pt-2">
-                 <Badge variant="outline" className={cn('text-base', getBadgeClass(document.estado))}>{document.estado}</Badge>
-            </div>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto pr-2 -mr-6 py-4 space-y-6 text-sm bg-background">
+        <div className="flex-1 overflow-y-auto pr-2 -mr-6 py-4 space-y-6 bg-background">
              <div ref={printableAreaRef} id="printable-area" className="p-6">
-                 <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6">
+                 <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6 mb-8">
                     <div className="space-y-1">
                         <h3 className="font-semibold text-base">Emisor</h3>
                         <p className="font-bold">{companyData?.name || 'Tu Empresa S.L.'}</p>
                         <p>{companyData?.cif || 'Y12345672'}</p>
                         <p>{companyData?.address || 'Tu Dirección, Ciudad, País'}</p>
                     </div>
-                    <div className="space-y-1 @lg:text-right">
-                        <h3 className="font-semibold text-base">Cliente</h3>
-                        <p className="font-bold">{document.cliente}</p>
-                        <p>{document.clienteCif}</p>
-                        <p>{document.clienteDireccion}</p>
+                    <div className="flex flex-col items-start @lg:items-end gap-4">
+                        <div className="text-center text-muted-foreground">
+                            <QrCode className="h-20 w-20 mx-auto text-foreground" />
+                            <p className="text-xs font-semibold mt-1">Factura Electronica</p>
+                        </div>
+                         <div className="space-y-1 @lg:text-right">
+                            <h3 className="font-semibold text-base">Cliente</h3>
+                            <p className="font-bold">{document.cliente}</p>
+                            <p>{document.clienteCif}</p>
+                            <p>{document.clienteDireccion}</p>
+                        </div>
                     </div>
                 </div>
 
