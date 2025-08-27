@@ -13,10 +13,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { UserAvatar } from '@/components/ui/user-avatar';
@@ -36,8 +32,6 @@ import {
   Wallet,
   Blocks,
   FlaskConical,
-  Zap,
-  Mail,
   Network,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -46,6 +40,9 @@ import { auth } from '@/lib/firebase/config';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileNav } from '@/components/ui/mobile-nav';
+import { MobileHeader } from '@/components/ui/mobile-header';
 
 
 export default function DashboardLayout({
@@ -55,6 +52,7 @@ export default function DashboardLayout({
 }) {
   const { user, isAdmin, isPro } = useContext(AuthContext);
   const pathname = usePathname();
+  const isMobile = useIsMobile();
   
   const handleLogout = async () => {
     await signOut(auth);
@@ -76,6 +74,18 @@ export default function DashboardLayout({
     if (isActive('/dashboard/configuracion')) return 'Configuración';
     if (isActive('/admin/dashboard')) return 'Administración';
     return 'Dashboard';
+  }
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-screen">
+          <MobileHeader title={getPageTitle()} />
+          <main className="flex-1 overflow-y-auto bg-secondary/30 dark:bg-secondary/50 p-4">
+              {children}
+          </main>
+          <MobileNav />
+      </div>
+    );
   }
 
   return (
@@ -156,9 +166,6 @@ export default function DashboardLayout({
       </Sidebar>
       <div className="flex-1 flex flex-col">
         <header className="flex h-20 items-center justify-between border-b bg-background px-4 lg:px-8">
-            <div className="md:hidden">
-                <SidebarTrigger />
-            </div>
             <div className="text-xl font-semibold">
               {getPageTitle()}
             </div>

@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 210 100% 98%; /* Very Light Blue */
+    --background: 210 100% 98%; /* Very Light Blue -> AliceBlue */
     --foreground: 224 71% 4%; /* Dark Blue-Black for text */
 
     --card: 0 0% 100%;
@@ -13,8 +13,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
 
-    --primary: 197 65% 70%; /* Light Blue */
-    --primary-foreground: 224 71% 4%;
+    --primary: 197 65% 50%; /* SteelBlue -> Adjusted for more saturation */
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 224 71% 4%;
@@ -30,7 +30,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 197 65% 70%;
+    --ring: 197 65% 50%;
 
     --radius: 0.5rem;
 
@@ -39,27 +39,36 @@
     --chart-3: 30 80% 55%;
     --chart-4: 160 60% 45%;
     --chart-5: 340 75% 55%;
+
+     --sidebar-background: 223 38% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 197 65% 70%;
+    --sidebar-primary-foreground: 224 71% 4%;
+    --sidebar-accent: 222 39% 18%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 39% 20%;
+    --sidebar-ring: 197 65% 70%;
   }
 
   .dark {
-    --background: 223 38% 15%; /* main-bg */
+    --background: 223 38% 10%; /* main-bg */
     --foreground: 210 40% 98%; /* text-primary */
-    --card: 222 39% 18%; /* card-bg */
+    --card: 222 39% 13%; /* card-bg */
     --card-foreground: 210 40% 98%; /* text-primary */
-    --popover: 222 39% 18%; /* card-bg */
+    --popover: 222 39% 13%; /* card-bg */
     --popover-foreground: 210 40% 98%; /* text-primary */
     --primary: 197 65% 70%; /* Light Blue */
     --primary-foreground: 224 71% 4%;
-    --secondary: 222 39% 23%; /* Slightly lighter card bg for secondary elements */
+    --secondary: 222 39% 18%; /* Slightly lighter card bg for secondary elements */
     --secondary-foreground: 210 40% 98%;
-    --muted: 222 39% 23%;
+    --muted: 222 39% 18%;
     --muted-foreground: 215 20% 65%; /* text-secondary */
     --accent: 266 53% 65%; /* Violet */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 222 39% 28%;
-    --input: 222 39% 23%;
+    --border: 222 39% 23%;
+    --input: 222 39% 18%;
     --ring: 197 65% 70%;
 
     --chart-1: 197 65% 60%;
@@ -67,6 +76,15 @@
     --chart-3: 30 80% 55%;
     --chart-4: 160 60% 45%;
     --chart-5: 340 75% 55%;
+
+    --sidebar-background: 223 38% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 197 65% 70%;
+    --sidebar-primary-foreground: 224 71% 4%;
+    --sidebar-accent: 222 39% 18%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 39% 20%;
+    --sidebar-ring: 197 65% 70%;
   }
 }
 
@@ -77,5 +95,12 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+  }
+  
+  /* Add padding-bottom to the body on mobile to account for the fixed bottom nav */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: 4rem; /* Height of the bottom nav */
+    }
   }
 }
