@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Coins, Landmark, Receipt } from 'lucide-react';
 import DocumentosPage from '../documentos/page';
 import GastosPage from '../gastos/page';
+import { ImpuestosTab } from './impuestos-tab';
+
 
 const ComingSoon = ({ title }: { title: string }) => (
     <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-secondary/30 rounded-lg">
@@ -37,7 +39,7 @@ export default function FinanzasPage() {
             <GastosPage />
           </TabsContent>
           <TabsContent value="impuestos"  className="mt-6">
-            <ComingSoon title="Módulo de Impuestos" />
+            <ImpuestosTab />
           </TabsContent>
           <TabsContent value="bancos"  className="mt-6">
              <ComingSoon title="Módulo de Conexión Bancaria" />
