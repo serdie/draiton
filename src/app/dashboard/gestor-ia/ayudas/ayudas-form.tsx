@@ -1,7 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState, useTransition } from 'react';
+import { useForm, useActionState } from 'react-hook-form';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Search, Terminal, Newspaper, Handshake } from 'lucide-react';
+import { Loader2, Search, Terminal, Newspaper, Handshake, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import type { FindGrantsAndNewsOutput } from '@/ai/flows/find-grants-and-news';
+import type { GenerateGrantTutorialOutput } from '@/ai/flows/generate-grant-tutorial';
+import { getGrantTutorialAction, getGrantsAndNewsAction } from './actions';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Separator } from '@/components/ui/separator';
 
 type FormState = {
   output: FindGrantsAndNewsOutput | null;
@@ -24,6 +28,71 @@ function SubmitButton() {
       {pending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Información</>}
     </Button>
   );
+}
+
+const GrantItem = ({ grant }: { grant: FindGrantsAndNewsOutput['grants'][0] }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [tutorialState, setTutorialState] = useState<{ data: GenerateGrantTutorialOutput | null; error: string | null; loading: boolean }>({ data: null, error: null, loading: false });
+
+    const handleGetTutorial = async () => {
+        if (tutorialState.data) { // If tutorial is already loaded, just toggle visibility
+            setIsOpen(!isOpen);
+            return;
+        }
+
+        setIsOpen(true);
+        setTutorialState({ data: null, error: null, loading: true });
+        const result = await getGrantTutorialAction({
+            grantTitle: grant.title,
+            sourceLink: grant.sourceLink
+        });
+        setTutorialState({ data: result.data, error: result.error, loading: false });
+    };
+
+    return (
+         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <div className="p-3 border rounded-md">
+                <h4 className="font-semibold">{grant.title}</h4>
+                <p className="text-sm text-muted-foreground my-1">{grant.summary}</p>
+                 <div className="flex items-center justify-between mt-2">
+                    <Button variant="link" asChild className="p-0 h-auto">
+                        <Link href={grant.sourceLink} target="_blank" rel="noopener noreferrer">Ver fuente</Link>
+                    </Button>
+                    <CollapsibleTrigger asChild>
+                         <Button variant="secondary" size="sm" onClick={handleGetTutorial} disabled={tutorialState.loading}>
+                            {tutorialState.loading ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Sparkles className="mr-2 h-4 w-4" />
+                            )}
+                            Comencemos
+                        </Button>
+                    </CollapsibleTrigger>
+                </div>
+            </div>
+            <CollapsibleContent className="px-3 pt-3">
+                 <Separator className="mb-3"/>
+                 {tutorialState.loading && <div className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Generando guía personalizada...</div>}
+                 {tutorialState.error && <Alert variant="destructive"><Terminal className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{tutorialState.error}</AlertDescription></Alert>}
+                 {tutorialState.data && (
+                    <div className="space-y-4">
+                        {tutorialState.data.tutorial.map((step, index) => (
+                            <div key={index} className="flex items-start gap-4">
+                                <div className="flex-shrink-0 flex flex-col items-center">
+                                    <div className="bg-primary text-primary-foreground rounded-full size-6 flex items-center justify-center font-bold text-xs">{index + 1}</div>
+                                    {index < tutorialState.data.tutorial.length - 1 && <div className="w-px h-full bg-border mt-1"></div>}
+                                </div>
+                                <div>
+                                    <p className="font-semibold">{step.step}</p>
+                                    <p className="text-sm text-muted-foreground">{step.description}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                 )}
+            </CollapsibleContent>
+        </Collapsible>
+    )
 }
 
 export function AyudasForm({ action }: { action: (currentState: FormState, formData: FormData) => Promise<FormState> }) {
@@ -72,13 +141,7 @@ export function AyudasForm({ action }: { action: (currentState: FormState, formD
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {state.output.grants.length > 0 ? state.output.grants.map((item, index) => (
-                        <div key={`grant-${index}`} className="p-3 border rounded-md">
-                            <h4 className="font-semibold">{item.title}</h4>
-                            <p className="text-sm text-muted-foreground my-1">{item.summary}</p>
-                            <Button variant="link" asChild className="p-0 h-auto">
-                                <Link href={item.sourceLink} target="_blank" rel="noopener noreferrer">Ver fuente</Link>
-                            </Button>
-                        </div>
+                       <GrantItem key={`grant-${index}`} grant={item} />
                     )) : <p className="text-sm text-muted-foreground">No se encontraron ayudas relevantes.</p>}
                 </CardContent>
             </Card>

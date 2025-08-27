@@ -8,3 +8,4 @@ import '@/ai/flows/extract-receipt-data.ts';
 import '@/ai/flows/find-grants-and-news.ts';
 import '@/ai/flows/fiscal-assistant.ts';
 import '@/ai/flows/find-potential-clients.ts';
+import '@/ai/flows/generate-grant-tutorial.ts';
