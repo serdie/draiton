@@ -10,6 +10,7 @@ import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { type Project } from '../proyectos/page';
 import { KanbanBoard } from '../proyectos/kanban-board';
+import { CreateTaskModal } from './create-task-modal';
 
 
 export default function TareasPage() {
@@ -17,6 +18,7 @@ export default function TareasPage() {
     const { toast } = useToast();
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     useEffect(() => {
         if (!db || !user) {
@@ -49,24 +51,25 @@ export default function TareasPage() {
         return () => unsubscribe();
     }, [user, toast]);
 
-    const handleCreateTask = () => {
-        toast({
-            title: 'Función en desarrollo',
-            description: 'La creación de tareas individuales estará disponible pronto.',
-        });
-    }
-
   return (
+    <>
+    <CreateTaskModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        projects={projects}
+    />
     <div className="space-y-6">
         <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold">Tablero de Tareas y Proyectos</h2>
-            <Button onClick={handleCreateTask}>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Crear Tarea
             </Button>
         </div>
       <KanbanBoard projects={projects} loading={loading} />
     </div>
+    </>
   );
 }
+
 
