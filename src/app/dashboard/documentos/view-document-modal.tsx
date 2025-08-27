@@ -18,7 +18,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Document, DocumentType, DocumentStatus } from './page';
 import { cn } from '@/lib/utils';
-import { Printer } from 'lucide-react';
+import { Printer, QrCode } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 
@@ -136,7 +136,11 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                 </Table>
             </div>
             
-            <div className="flex justify-end">
+            <div className="flex justify-between items-end pt-8">
+                <div className="text-center text-muted-foreground">
+                    <QrCode className="h-24 w-24 mx-auto text-foreground" />
+                    <p className="text-xs font-semibold mt-1">Factura Electronica</p>
+                </div>
                 <div className="w-full max-w-sm space-y-2">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
