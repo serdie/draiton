@@ -27,16 +27,29 @@ import { RegisterExpenseModal } from '../gastos/register-expense-modal';
 
 const getBadgeClass = (estado: string) => {
   switch (estado?.toLowerCase()) {
+    case 'pagado':
     case 'pagada':
       return 'bg-green-600/20 text-green-400 border-green-500/30';
     case 'pendiente':
       return 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30';
+    case 'vencido':
     case 'vencida':
       return 'bg-red-600/20 text-red-400 border-red-500/30';
     default:
       return 'bg-gray-600/20 text-gray-400 border-gray-500/30';
   }
 };
+
+const getCategoryBadgeClass = (category: string) => {
+    switch (category) {
+        case 'Software': return 'bg-blue-600/20 text-blue-400 border-blue-500/30';
+        case 'Oficina': return 'bg-purple-600/20 text-purple-400 border-purple-500/30';
+        case 'Marketing': return 'bg-pink-600/20 text-pink-400 border-pink-500/30';
+        case 'Viajes': return 'bg-orange-600/20 text-orange-400 border-orange-500/30';
+        case 'Suministros': return 'bg-teal-600/20 text-teal-400 border-teal-500/30';
+        default: return 'bg-gray-600/20 text-gray-400 border-gray-500/30';
+    }
+}
 
 export default function FinanzasPage() {
   const { user } = useContext(AuthContext);
@@ -57,6 +70,13 @@ export default function FinanzasPage() {
     { id: '2', numero: '#2024-034', cliente: 'Innovate LLC', fechaEmision: new Date('2024-07-22'), importe: 850.50, estado: 'Pendiente' } as Document,
     { id: '3', numero: '#2024-033', cliente: 'Tech Solutions', fechaEmision: new Date('2024-07-15'), importe: 2500, estado: 'Vencido' } as Document,
     { id: '4', numero: '#2024-032', cliente: 'Marketing Guru', fechaEmision: new Date('2024-07-10'), importe: 450, estado: 'Pagado' } as Document,
+  ];
+
+  const gastosDeEjemplo = [
+    { id: '1', proveedor: 'Amazon Web Services', fecha: new Date('2024-07-25'), importe: 75.50, categoria: 'Software' },
+    { id: '2', proveedor: 'Material de Oficina S.L.', fecha: new Date('2024-07-22'), importe: 120.00, categoria: 'Oficina' },
+    { id: '3', proveedor: 'Facebook Ads', fecha: new Date('2024-07-20'), importe: 250.00, categoria: 'Marketing' },
+    { id: '4', proveedor: 'Renfe Viajes', fecha: new Date('2024-07-18'), importe: 85.40, categoria: 'Viajes' },
   ];
 
   useEffect(() => {
@@ -187,9 +207,40 @@ export default function FinanzasPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                     <div className="text-center py-16 border-2 border-dashed border-border/30 rounded-lg">
-                        <p className="text-muted-foreground">Aquí aparecerán tus gastos registrados.</p>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="border-border/50 hover:bg-transparent">
+                                <TableHead>PROVEEDOR</TableHead>
+                                <TableHead>FECHA</TableHead>
+                                <TableHead>CATEGORÍA</TableHead>
+                                <TableHead className="text-right">IMPORTE</TableHead>
+                                <TableHead className="text-right"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {gastosDeEjemplo.map((gasto) => (
+                                <TableRow key={gasto.id} className="border-border/20 hover:bg-border/20">
+                                    <TableCell className="font-medium">{gasto.proveedor}</TableCell>
+                                    <TableCell>{format(gasto.fecha, "yyyy-MM-dd")}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className={cn('font-semibold', getCategoryBadgeClass(gasto.categoria))}>
+                                            {gasto.categoria}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right font-semibold">{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(gasto.importe)}</TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem><Pencil className="mr-2 h-4 w-4"/> Editar</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4"/> Eliminar</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
             <Card className="bg-secondary/50 border-border/30">
