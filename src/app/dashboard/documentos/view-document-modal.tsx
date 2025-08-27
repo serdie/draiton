@@ -124,7 +124,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {document.lineas.map((line, index) => (
+                        {document.lineas && document.lineas.map((line, index) => (
                             <TableRow key={index}>
                                 <TableCell className="font-medium">{line.description}</TableCell>
                                 <TableCell className="text-center">{line.quantity}</TableCell>
