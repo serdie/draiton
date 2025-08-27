@@ -73,13 +73,23 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col @container">
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
-            <span>{getDocumentTypeLabel(document.tipo)}: {document.numero}</span>
-            <Badge variant="outline" className={cn('text-base', getBadgeClass(document.estado))}>{document.estado}</Badge>
-          </DialogTitle>
-          <DialogDescription>
-            Vista previa del documento emitido para <span className="font-semibold">{document.cliente}</span>.
-          </DialogDescription>
+            <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                    <DialogTitle>
+                        {getDocumentTypeLabel(document.tipo)}: {document.numero}
+                    </DialogTitle>
+                     <DialogDescription>
+                        Vista previa del documento emitido para <span className="font-semibold">{document.cliente}</span>.
+                    </DialogDescription>
+                </div>
+                 <div className="text-center text-muted-foreground">
+                    <QrCode className="h-20 w-20 mx-auto text-foreground" />
+                    <p className="text-xs font-semibold mt-1">Factura Electronica</p>
+                </div>
+            </div>
+             <div className="flex justify-start pt-2">
+                 <Badge variant="outline" className={cn('text-base', getBadgeClass(document.estado))}>{document.estado}</Badge>
+            </div>
         </DialogHeader>
         <div id="printable-area" className="flex-1 overflow-y-auto pr-6 -mr-6 py-4 space-y-6 text-sm">
             
@@ -136,11 +146,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                 </Table>
             </div>
             
-            <div className="flex justify-between items-end pt-8">
-                <div className="text-center text-muted-foreground">
-                    <QrCode className="h-24 w-24 mx-auto text-foreground" />
-                    <p className="text-xs font-semibold mt-1">Factura Electronica</p>
-                </div>
+            <div className="flex justify-end items-end pt-8">
                 <div className="w-full max-w-sm space-y-2">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
