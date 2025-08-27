@@ -21,19 +21,14 @@ export function MobileHeader({ title }: { title: string }) {
             <div className="container flex items-center justify-between h-14">
                 <Logo className="h-6 w-6"/>
                 <div className="flex items-center gap-4">
-                    <RefreshCw className="h-5 w-5 text-muted-foreground" />
-                    <Expand className="h-5 w-5 text-muted-foreground" />
+                     <div className="flex items-center gap-3">
+                        {isPro && <Badge variant="outline" className='border-yellow-400 text-yellow-400'>PRO</Badge>}
+                        <Bell className="h-5 w-5 text-muted-foreground"/>
+                        <Link href="/dashboard/configuracion">
+                            <UserAvatar user={user} />
+                        </Link>
+                     </div>
                 </div>
-            </div>
-            <div className="container flex items-center justify-between h-14">
-                 <h1 className="text-2xl font-bold">{title}</h1>
-                 <div className="flex items-center gap-3">
-                    {isPro && <Badge variant="outline" className='border-yellow-400 text-yellow-400'>PRO</Badge>}
-                    <Bell className="h-5 w-5 text-muted-foreground"/>
-                    <Link href="/dashboard/configuracion">
-                        <UserAvatar user={user} />
-                    </Link>
-                 </div>
             </div>
         </header>
     )

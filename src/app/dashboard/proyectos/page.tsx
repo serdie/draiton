@@ -143,7 +143,7 @@ export default function OperacionesPage() {
         <div>
           <h1 className="text-3xl font-bold">Operaciones y Proyectos</h1>
           <p className="text-muted-foreground">
-            Gestiona proyectos, clientes, tareas e informes desde un único lugar.
+            Organiza tu trabajo, gestiona tus contactos y sigue el pulso de tu negocio.
           </p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>

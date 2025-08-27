@@ -29,6 +29,9 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 function getStatusBadgeClass(status: ProjectStatus) {
   switch (status) {
@@ -40,6 +43,12 @@ function getStatusBadgeClass(status: ProjectStatus) {
     default: return 'bg-secondary text-secondary-foreground';
   }
 }
+
+const getInitials = (name: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+}
+
 
 function ProjectCard({ project }: { project: Project }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -53,16 +62,16 @@ function ProjectCard({ project }: { project: Project }) {
   return (
     <Link href={`/dashboard/proyectos/${project.id}`}>
         <Card ref={setNodeRef} style={style} {...attributes} {...listeners} className="mb-4 bg-card touch-none hover:border-primary">
-        <CardHeader className="p-4">
-            <CardTitle className="text-base">{project.name}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-            <p className="text-sm text-muted-foreground">{project.client}</p>
-            <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                <span>{project.startDate ? format(project.startDate, "dd MMM yyyy", { locale: es }) : ''}</span>
-                <span>{project.budget ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(project.budget) : ''}</span>
-            </div>
-        </CardContent>
+            <CardContent className="p-4">
+                <p className="font-semibold text-base mb-2">{project.name}</p>
+                <p className="text-sm text-primary mb-3">{project.client}</p>
+                <div className="flex justify-end">
+                    <Avatar className="h-6 w-6">
+                        <AvatarImage src={`https://i.pravatar.cc/32?u=${project.client}`} />
+                        <AvatarFallback>{getInitials(project.client)}</AvatarFallback>
+                    </Avatar>
+                </div>
+            </CardContent>
         </Card>
     </Link>
   );
@@ -72,24 +81,15 @@ function KanbanColumn({ status, projects }: { status: ProjectStatus; projects: P
     const { setNodeRef } = useSortable({ id: status, data: {type: 'column'} });
 
     return (
-        <div ref={setNodeRef} className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 2xl:w-1/5 flex flex-col gap-4">
-            <Card className="bg-muted/50 h-full">
-                <CardHeader className="p-4">
-                    <CardTitle className="flex items-center gap-2">
-                         <Badge variant="outline" className={cn('font-semibold text-sm', getStatusBadgeClass(status))}>
-                            {status}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">{projects.length}</span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0 min-h-[100px]">
-                    <SortableContext items={projects.map(p => p.id)} strategy={verticalListSortingStrategy}>
-                        {projects.map((project) => (
-                            <ProjectCard key={project.id} project={project} />
-                        ))}
-                    </SortableContext>
-                </CardContent>
-            </Card>
+        <div ref={setNodeRef} className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 2xl:w-1/5 flex flex-col gap-2">
+            <h3 className="font-semibold">{status} ({projects.length})</h3>
+            <div className="bg-secondary p-2 rounded-lg min-h-[100px]">
+                 <SortableContext items={projects.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                    {projects.map((project) => (
+                        <ProjectCard key={project.id} project={project} />
+                    ))}
+                </SortableContext>
+            </div>
         </div>
     )
 }
@@ -97,6 +97,7 @@ function KanbanColumn({ status, projects }: { status: ProjectStatus; projects: P
 export function KanbanBoard({ projects, loading }: { projects: Project[]; loading: boolean }) {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -131,30 +132,26 @@ export function KanbanBoard({ projects, loading }: { projects: Project[]; loadin
     const overId = over.id;
 
     if (activeId === overId) return;
-
-    const isActiveAProjectCard = active.data.current?.type !== 'column';
-    const isOverAColumn = over.data.current?.type === 'column';
     
-    if (isActiveAProjectCard && isOverAColumn) {
-        const newStatus = overId as ProjectStatus;
-        const project = projects.find(p => p.id === activeId);
+    // This logic covers dragging card over a column, or over another card in a column
+    const overStatus = over.data.current?.status || (over.data.current?.type === 'column' ? over.id : null);
+    const project = projects.find(p => p.id === activeId);
 
-        if (project && project.status !== newStatus) {
-             const projectRef = doc(db, 'projects', project.id);
-             try {
-                await updateDoc(projectRef, { status: newStatus });
-                toast({
-                    title: 'Proyecto actualizado',
-                    description: `El estado de "${project.name}" se cambió a "${newStatus}".`
-                });
-            } catch (error) {
-                console.error("Error al actualizar el estado del proyecto:", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: 'No se pudo actualizar el estado del proyecto.'
-                });
-            }
+    if (project && overStatus && project.status !== overStatus) {
+         const projectRef = doc(db, 'projects', project.id);
+         try {
+            await updateDoc(projectRef, { status: overStatus });
+            toast({
+                title: 'Proyecto actualizado',
+                description: `El estado de "${project.name}" se cambió a "${overStatus}".`
+            });
+        } catch (error) {
+            console.error("Error al actualizar el estado del proyecto:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'No se pudo actualizar el estado del proyecto.'
+            });
         }
     }
   };
@@ -174,10 +171,12 @@ export function KanbanBoard({ projects, loading }: { projects: Project[]; loadin
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-        <div className="flex flex-wrap gap-4 p-2 -m-2">
-            {projectStatuses.map(status => (
-                <KanbanColumn key={status} status={status} projects={columns[status] || []} />
-            ))}
+        <div className={cn("flex gap-4 p-2 -m-2", isMobile ? "flex-col" : "flex-row flex-wrap")}>
+            {projectStatuses.map(status => {
+                const projectsInColumn = columns[status] || [];
+                if(isMobile && projectsInColumn.length === 0) return null; // Don't show empty columns on mobile
+                return <KanbanColumn key={status} status={status} projects={projectsInColumn} />
+            })}
         </div>
         <DragOverlay>
             {activeProject ? <ProjectCard project={activeProject} /> : null}
