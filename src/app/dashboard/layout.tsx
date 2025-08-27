@@ -34,6 +34,7 @@ import {
   Blocks,
   FlaskConical,
   Network,
+  User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -72,7 +73,7 @@ export default function DashboardLayout({
     if (isActive('/dashboard/proyectos')) return 'Operaciones';
     if (isActive('/dashboard/gestor-ia')) return 'Herramientas IA';
     if (isActive('/dashboard/conexiones')) return 'Conexiones';
-    if (isActive('/dashboard/configuracion')) return 'Configuración';
+    if (isActive('/dashboard/configuracion') || isActive('/dashboard/mi-perfil')) return 'Configuración';
     if (isActive('/admin/dashboard')) return 'Administración';
     return 'Dashboard';
   }
@@ -92,8 +93,9 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="p-4">
-          <Logo className="h-8 w-8" />
+        <SidebarHeader className="p-4 flex items-center gap-2">
+            <Logo className="h-8 w-8" />
+            <span className="font-bold text-lg">Emprende Total</span>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
@@ -128,6 +130,15 @@ export default function DashboardLayout({
                   <FlaskConical />
                   <span>Herramientas IA</span>
                   </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <Link href="/dashboard/configuracion">
+                <SidebarMenuButton isActive={isActive('/dashboard/configuracion')} tooltip="Configuración">
+                  <Settings />
+                  <span>Configuración</span>
+                </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
 
@@ -207,7 +218,7 @@ export default function DashboardLayout({
                 </DropdownMenu>
             </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/50">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/50 overflow-y-auto">
           {children}
         </main>
       </div>
