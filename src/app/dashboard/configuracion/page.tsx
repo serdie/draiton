@@ -22,7 +22,7 @@ export default function ConfiguracionPage() {
         </p>
       </div>
       <Tabs defaultValue="perfil" orientation={isMobile ? 'vertical' : 'horizontal'} className="w-full">
-        <TabsList className="w-full md:w-auto md:grid md:grid-cols-5">
+        <TabsList className="w-full md:w-auto">
           <TabsTrigger value="perfil" className="w-full justify-start md:justify-center">
             <User className="mr-2 h-4 w-4" />
             Perfil
@@ -44,7 +44,7 @@ export default function ConfiguracionPage() {
             Apariencia
           </TabsTrigger>
         </TabsList>
-        <div className="mt-6 md:mt-4">
+        <div className="mt-6 md:mt-0 md:pl-4 w-full">
             <TabsContent value="perfil"><PerfilSettings /></TabsContent>
             <TabsContent value="empresa"><EmpresaSettings /></TabsContent>
             <TabsContent value="suscripcion"><SuscripcionSettings /></TabsContent>
