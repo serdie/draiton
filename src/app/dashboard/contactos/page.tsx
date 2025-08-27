@@ -19,6 +19,7 @@ import { collection, onSnapshot, query, where, Timestamp, deleteDoc, doc } from 
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AddContactOptionsModal } from './add-contact-options-modal';
 
 
 export type ContactType = 'Cliente' | 'Proveedor' | 'Lead' | 'Colaborador';
@@ -66,8 +67,9 @@ export default function ContactosPage() {
     const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
     const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
 
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    
+    const [isAddOptionsModalOpen, setIsAddOptionsModalOpen] = useState(false);
+    const [isAddManualModalOpen, setIsAddManualModalOpen] = useState(false);
+
     // Filter states
     const [filtroTexto, setFiltroTexto] = useState('');
     const [filtroTipo, setFiltroTipo] = useState<ContactType | 'all'>('all');
@@ -159,6 +161,11 @@ export default function ContactosPage() {
         }
     };
     
+    const openManualAddModal = () => {
+        setIsAddOptionsModalOpen(false);
+        setIsAddManualModalOpen(true);
+    }
+    
     const renderContent = () => {
         if (loading) {
             return (
@@ -239,7 +246,12 @@ export default function ContactosPage() {
 
   return (
     <>
-    <AddContactModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
+    <AddContactOptionsModal 
+        isOpen={isAddOptionsModalOpen} 
+        onClose={() => setIsAddOptionsModalOpen(false)}
+        onAddManual={openManualAddModal}
+    />
+    <AddContactModal isOpen={isAddManualModalOpen} onClose={() => setIsAddManualModalOpen(false)} />
     {contactToEdit && (
         <EditContactModal
             isOpen={!!contactToEdit}
@@ -272,7 +284,7 @@ export default function ContactosPage() {
                     Mantén un registro de tus clientes, proveedores, leads y colaboradores.
                 </p>
             </div>
-            <Button onClick={() => setIsAddModalOpen(true)}>
+            <Button onClick={() => setIsAddOptionsModalOpen(true)}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Añadir Nuevo Contacto
             </Button>
@@ -342,4 +354,3 @@ export default function ContactosPage() {
     </>
   );
 }
-
