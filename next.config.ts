@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
         hostname: 's0.wordpress.com',
         port: '',
         pathname: '/mshots/v1/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
