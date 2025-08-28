@@ -26,6 +26,8 @@ import { GoogleIcon } from './google-icon';
 import { AuthContext } from '@/context/auth-context';
 import { auth } from '@/lib/firebase/config';
 import { GoogleAuthProvider, FacebookAuthProvider, linkWithPopup, unlink } from "firebase/auth";
+import { SmtpConnectionModal } from './smtp-connection-modal';
+
 
 type Connection = {
   id: string;
@@ -37,12 +39,12 @@ type Connection = {
 const allAvailableConnections = [
   { id: 'google.com', name: 'Google', description: 'Gmail, Drive, Calendar...', icon: <GoogleIcon /> },
   { id: 'facebook.com', name: 'Facebook', description: 'Facebook Pages, Messenger...', icon: <Facebook /> },
-  { name: 'Instagram', description: 'Instagram for Business', icon: <Instagram /> },
-  { name: 'LinkedIn', description: 'Perfiles y páginas de empresa', icon: <Linkedin /> },
-  { name: 'Mailchimp', description: 'Listas y campañas', icon: <Mail /> },
-  { name: 'Stripe', description: 'Pagos y clientes', icon: <CreditCard /> },
-  { name: 'WhatsApp', description: 'WhatsApp Business API', icon: <MessageSquare /> },
-  { name: 'SMTP', description: 'Envío de correo personalizado', icon: <Server /> },
+  { id: 'instagram.com', name: 'Instagram', description: 'Instagram for Business', icon: <Instagram /> },
+  { id: 'linkedin.com', name: 'LinkedIn', description: 'Perfiles y páginas de empresa', icon: <Linkedin /> },
+  { id: 'mailchimp.com', name: 'Mailchimp', description: 'Listas y campañas', icon: <Mail /> },
+  { id: 'stripe.com', name: 'Stripe', description: 'Pagos y clientes', icon: <CreditCard /> },
+  { id: 'whatsapp.com', name: 'WhatsApp', description: 'WhatsApp Business API', icon: <MessageSquare /> },
+  { id: 'smtp', name: 'SMTP', description: 'Envío de correo personalizado', icon: <Server /> },
 ];
 
 const getStatusBadgeClass = (status: string) => {
@@ -61,6 +63,7 @@ export default function ConexionesPage() {
   
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
   const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
+  const [isSmtpModalOpen, setIsSmtpModalOpen] = useState(false);
 
   const connectedProviders = user?.providerData.map(p => p.providerId) || [];
 
@@ -88,11 +91,15 @@ export default function ConexionesPage() {
         provider = new GoogleAuthProvider();
     } else if (providerId === 'facebook.com') {
         provider = new FacebookAuthProvider();
-        // Solicitar permisos específicos para gestionar páginas de Facebook
         provider.addScope('pages_show_list');
         provider.addScope('pages_manage_posts');
         provider.addScope('pages_read_engagement');
-    } else {
+    } else if (providerId === 'smtp') {
+        setIsSmtpModalOpen(true);
+        setConnectingProvider(null);
+        return;
+    }
+    else {
         toast({
             title: `Conexión con ${providerId} (Simulación)`,
             description: 'Esta conexión se habilitará en el futuro.',
@@ -141,7 +148,6 @@ export default function ConexionesPage() {
   const handleDelete = async () => {
     if (!accountToDelete || !auth.currentUser) return;
 
-    // Cannot unlink the primary sign-in method
     if (auth.currentUser.providerData.length <= 1) {
         toast({
             variant: 'destructive',
@@ -172,6 +178,7 @@ export default function ConexionesPage() {
 
   return (
     <>
+    <SmtpConnectionModal isOpen={isSmtpModalOpen} onClose={() => setIsSmtpModalOpen(false)} />
     <AlertDialog open={!!accountToDelete} onOpenChange={(open) => !open && setAccountToDelete(null)}>
         <AlertDialogContent>
             <AlertDialogHeader>
