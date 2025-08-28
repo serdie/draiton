@@ -88,6 +88,10 @@ export default function ConexionesPage() {
         provider = new GoogleAuthProvider();
     } else if (providerId === 'facebook.com') {
         provider = new FacebookAuthProvider();
+        // Solicitar permisos específicos para gestionar páginas de Facebook
+        provider.addScope('pages_show_list');
+        provider.addScope('pages_manage_posts');
+        provider.addScope('pages_read_engagement');
     } else {
         toast({
             title: `Conexión con ${providerId} (Simulación)`,
