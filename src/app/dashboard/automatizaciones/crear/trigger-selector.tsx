@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -11,11 +12,11 @@ import {
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Clock, Mail, Rss, Settings, Webhook, Zap } from 'lucide-react';
+import { Clock, Mail, Rss, Settings, Webhook, Zap, FileText, Receipt, UserPlus, CreditCard, ClipboardList } from 'lucide-react';
 
 export type Trigger = {
   id: string;
-  type: 'schedule' | 'webhook' | 'gmail' | 'blog';
+  type: 'schedule' | 'webhook' | 'gmail' | 'blog' | 'invoice' | 'expense' | 'client' | 'payment' | 'form';
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -26,6 +27,11 @@ const availableTriggers: Trigger[] = [
   { id: 'webhook', type: 'webhook', title: 'Webhook', description: 'Iniciar cuando se recibe una petición HTTP.', icon: <Webhook /> },
   { id: 'gmail', type: 'gmail', title: 'Nuevo Email en Gmail', description: 'Se activa cuando llega un nuevo correo.', icon: <Mail /> },
   { id: 'blog', type: 'blog', title: 'Nuevo Post de Blog', description: 'Se activa al publicar una nueva entrada.', icon: <Rss /> },
+  { id: 'invoice', type: 'invoice', title: 'Nueva Factura Creada', description: 'Se activa al crear una nueva factura en el sistema.', icon: <FileText /> },
+  { id: 'expense', type: 'expense', title: 'Nuevo Gasto Registrado', description: 'Se activa cuando se registra un nuevo gasto.', icon: <Receipt /> },
+  { id: 'client', type: 'client', title: 'Nuevo Cliente Añadido', description: 'Se activa al añadir un nuevo cliente al CRM.', icon: <UserPlus /> },
+  { id: 'payment', type: 'payment', title: 'Pago Recibido', description: 'Se activa cuando se registra el pago de una factura.', icon: <CreditCard /> },
+  { id: 'form', type: 'form', title: 'Formulario Web Recibido', description: 'Se activa con un nuevo envío desde tu web IA.', icon: <ClipboardList /> },
 ];
 
 interface TriggerSelectorProps {
