@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sparkles, ImagePlus, Facebook, Instagram, Linkedin, Send } from 'lucide-react';
 import { generateSocialPost } from '@/ai/flows/generate-social-post';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 interface CreatePostModalProps {
   isOpen: boolean;
