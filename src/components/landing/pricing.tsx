@@ -30,7 +30,7 @@ const enterpriseFeatures = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="container py-20 md:py-24">
+    <section id="pricing" className="container py-20 md:py-24 mx-auto">
       <div className="mx-auto mb-12 max-w-2xl text-center">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Un plan para cada etapa de tu negocio</h2>
         <p className="mt-4 text-muted-foreground">

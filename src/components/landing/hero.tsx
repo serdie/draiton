@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 
 export function Hero() {
   return (
-    <section className="container flex flex-col items-center justify-center py-20 text-center md:py-32">
+    <section className="container flex flex-col items-center justify-center py-20 text-center md:py-32 mx-auto">
       <h1 className="text-4xl font-bold tracking-tighter md:text-6xl/tight">
         Transforma la gestión de tu negocio
       </h1>
