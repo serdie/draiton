@@ -1,46 +1,36 @@
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileText, Mail, Share2, Users, Wand2, Sparkles, MonitorCog, ScanLine } from 'lucide-react';
+import { FileText, Users, Sparkles, MonitorCog, Blocks, Zap } from 'lucide-react';
 
 const features = [
   {
     icon: <FileText className="h-8 w-8 text-primary" />,
-    title: 'Gestión Financiera',
-    description: 'Crea facturas, presupuestos y lleva tu contabilidad de forma sencilla e integrada.',
+    title: 'Finanzas Inteligentes',
+    description: 'Gestiona facturas, gastos y presupuestos. Digitaliza tickets con una foto y obtén previsiones de impuestos al instante.',
   },
   {
-    icon: <Mail className="h-8 w-8 text-primary" />,
-    title: 'Marketing Automatizado',
-    description: 'Automatiza tus campañas de email, newsletters y extrae contactos para tus envíos.',
-  },
-  {
-    icon: <Share2 className="h-8 w-8 text-primary" />,
-    title: 'Gestión de Redes Sociales',
-    description: 'Administra todos tus perfiles sociales desde un único lugar sin salir de la app.',
+    icon: <Blocks className="h-8 w-8 text-primary" />,
+    title: 'Operaciones Centralizadas',
+    description: 'Controla tus proyectos, tareas y clientes desde un único lugar. Colabora con tu equipo y mantén todo organizado.',
   },
   {
     icon: <Users className="h-8 w-8 text-primary" />,
-    title: 'Clientes y Proveedores',
-    description: 'Gestiona tus contactos de forma avanzada y optimiza tus relaciones comerciales.',
-  },
-  {
-    icon: <Wand2 className="h-8 w-8 text-primary" />,
-    title: 'Automatizaciones',
-    description: 'Conecta tus aplicaciones externas y automatiza flujos de trabajo en todas las áreas.',
-  },
-  {
-    icon: <Sparkles className="h-8 w-8 text-primary" />,
-    title: 'Asistente IA de Negocio',
-    description: 'Recibe ideas para mejorar tu comercialización y productos gracias a nuestra IA.',
+    title: 'Marketing y Clientes (CRM)',
+    description: 'Crea campañas de email con IA, gestiona tus contactos y encuentra nuevos clientes potenciales para tu negocio.',
   },
   {
     icon: <MonitorCog className="h-8 w-8 text-primary" />,
-    title: 'Gestor Web con IA',
-    description: 'Crea y gestiona tu página web, tienda online o landing page con el poder de la IA.',
+    title: 'Presencia Web con IA',
+    description: 'Genera y gestiona tu página web o tienda online. La IA te ayuda a crear un sitio profesional sin saber programar.',
   },
   {
-    icon: <ScanLine className="h-8 w-8 text-primary" />,
-    title: 'Importación Inteligente',
-    description: 'Importa facturas desde PDF, Excel o simplemente con una foto.',
+    icon: <Zap className="h-8 w-8 text-primary" />,
+    title: 'Automatización Total',
+    description: 'Conecta tus apps favoritas (Google, redes sociales, etc.) y crea flujos de trabajo que ahorran tiempo y eliminan tareas repetitivas.',
+  },
+  {
+    icon: <Sparkles className="h-8 w-8 text-primary" />,
+    title: 'Asistente IA Proactivo',
+    description: 'Tu socio estratégico que te ofrece ideas para crecer, busca subvenciones y te ayuda a redactar cualquier documento.',
   },
 ];
 
@@ -48,12 +38,12 @@ export function Features() {
   return (
     <section id="features" className="container py-20 md:py-24">
       <div className="mx-auto mb-12 max-w-2xl text-center">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Todo lo que necesitas, en un solo lugar</h2>
+        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">La navaja suiza para tu negocio</h2>
         <p className="mt-4 text-muted-foreground">
-          Emprende Total está diseñado para que los autónomos y pequeñas empresas puedan masificar su producción con el mínimo esfuerzo.
+          Emprende Total integra todas las herramientas que necesitas para optimizar cada área de tu empresa.
         </p>
       </div>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature, i) => (
           <Card key={i} className="transform-gpu transition-all duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg">
             <CardHeader>

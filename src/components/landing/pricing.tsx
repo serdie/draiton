@@ -2,20 +2,30 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const freeFeatures = [
   'Gestión de hasta 10 clientes',
   'Creación de 5 facturas/mes',
+  'Gestión de proyectos (1 proyecto)',
   'Asistente IA (Básico)',
 ];
 
 const proFeatures = [
-  'Todas las funciones del plan Gratis',
+  'Todo lo del plan Gratis',
   'Clientes y facturas ilimitados',
-  'Marketing y redes sociales',
-  'Automatizaciones completas',
-  'Gestor Web y Extractor de Facturas con IA',
-  'Soporte prioritario',
+  'Gestión de proyectos ilimitados',
+  'Marketing y Redes Sociales',
+  'Automatizaciones y Conexiones',
+  'Gestor Web y Extractor de Facturas IA',
+];
+
+const enterpriseFeatures = [
+    'Todo lo del plan Pro',
+    'Soporte prioritario 24/7',
+    'Hasta 5 usuarios de equipo',
+    'Analíticas avanzadas e informes',
+    'API de acceso y webhooks',
 ];
 
 export function Pricing() {
@@ -27,13 +37,14 @@ export function Pricing() {
           Comienza gratis y escala cuando lo necesites. Sin compromisos, cancela cuando quieras.
         </p>
       </div>
-      <div className="grid max-w-4xl mx-auto gap-8 md:grid-cols-2">
-        <Card>
+      <div className="grid max-w-7xl mx-auto gap-8 md:grid-cols-1 lg:grid-cols-3">
+        {/* Plan Gratis */}
+        <Card className="flex flex-col">
           <CardHeader>
             <CardTitle>Gratis</CardTitle>
             <CardDescription>Para empezar a organizar tu negocio y probar la plataforma.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 flex-grow">
             <div className="text-4xl font-bold">0€<span className="text-xl font-normal text-muted-foreground">/mes</span></div>
             <ul className="space-y-2">
               {freeFeatures.map((feature, i) => (
@@ -50,12 +61,15 @@ export function Pricing() {
             </Button>
           </CardFooter>
         </Card>
-        <Card className="border-accent shadow-lg">
+
+        {/* Plan Pro */}
+        <Card className="border-accent shadow-lg flex flex-col relative">
+          <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Más Popular</Badge>
           <CardHeader>
             <CardTitle>Pro</CardTitle>
             <CardDescription>Para profesionales que quieren llevar su negocio al siguiente nivel.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 flex-grow">
             <div className="text-4xl font-bold">4.95€<span className="text-xl font-normal text-muted-foreground">/mes</span></div>
             <ul className="space-y-2">
               {proFeatures.map((feature, i) => (
@@ -69,6 +83,30 @@ export function Pricing() {
           <CardFooter>
             <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
               <Link href="/dashboard">Elegir Plan Pro</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
+         {/* Plan Empresa */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle>Empresa</CardTitle>
+            <CardDescription>Para negocios en crecimiento que necesitan más potencia y colaboración.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 flex-grow">
+            <div className="text-4xl font-bold">29€<span className="text-xl font-normal text-muted-foreground">/mes</span></div>
+            <ul className="space-y-2">
+              {enterpriseFeatures.map((feature, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" className="w-full" asChild>
+              <Link href="/dashboard">Elegir Plan Empresa</Link>
             </Button>
           </CardFooter>
         </Card>

@@ -5,17 +5,17 @@ export function Hero() {
   return (
     <section className="container flex flex-col items-center justify-center py-20 text-center md:py-32">
       <h1 className="text-4xl font-bold tracking-tighter md:text-6xl/tight">
-        La plataforma todo en uno para tu negocio
+        Transforma la gestión de tu negocio
       </h1>
       <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-        Desde facturación y marketing hasta gestión de redes sociales y clientes. Emprende Total centraliza todas tus herramientas para que puedas enfocarte en crecer.
+        Centraliza tus finanzas, marketing y operaciones con el poder de la IA. Emprende Total es la herramienta definitiva para autónomos y pymes que buscan crecer.
       </p>
       <div className="mt-8 flex gap-4">
         <Button size="lg" asChild>
-          <Link href="/dashboard">Comienza Gratis</Link>
+          <Link href="/dashboard">Empezar Ahora</Link>
         </Button>
         <Button size="lg" variant="outline">
-          <Link href="#features">Ver Características</Link>
+          <Link href="#pricing">Ver Planes</Link>
         </Button>
       </div>
     </section>
