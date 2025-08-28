@@ -1,17 +1,15 @@
 
 'use client';
 
+import { useState } from 'react';
 import { GestorWebForm } from './gestor-web-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Pencil, Eye, MonitorCog } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+import { MonitorCog, PlusCircle } from 'lucide-react';
 import type { AIPoweredWebManagementOutput } from '@/ai/flows/ai-powered-web-management';
+import { ConnectSiteModal } from './connect-site-modal';
+
 
 type GetWebsiteConceptAction = (
     currentState: { output: AIPoweredWebManagementOutput | null; error: string | null },
@@ -20,8 +18,11 @@ type GetWebsiteConceptAction = (
 
 
 export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConceptAction: GetWebsiteConceptAction }) {
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
 
   return (
+    <>
+    <ConnectSiteModal isOpen={isConnectModalOpen} onClose={() => setIsConnectModalOpen(false)} />
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Gestor Web con IA</h1>
@@ -49,19 +50,26 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
         <TabsContent value="gestionar" className="mt-6">
            <div className="space-y-6">
                 <Card className="min-h-[400px]">
-                  <CardHeader>
-                    <CardTitle>Mis Sitios Web Generados</CardTitle>
-                    <CardDescription>Los sitios que crees aparecerán aquí.</CardDescription>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle>Mis Sitios Web</CardTitle>
+                      <CardDescription>Gestiona tus sitios generados y externos.</CardDescription>
+                    </div>
+                     <Button variant="outline" onClick={() => setIsConnectModalOpen(true)}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Conectar Sitio Externo
+                    </Button>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center justify-center text-center text-muted-foreground h-full">
                       <MonitorCog className="h-16 w-16 mb-4" />
-                      <p>Aún no has generado ningún sitio web.</p>
-                      <p className="text-sm">Ve a la pestaña "Crear Nuevo Sitio" para empezar.</p>
+                      <p>Aún no has generado ni conectado ningún sitio web.</p>
+                      <p className="text-sm">Usa los botones de arriba para empezar.</p>
                   </CardContent>
                 </Card>
            </div>
         </TabsContent>
       </Tabs>
     </div>
+    </>
   );
 }
