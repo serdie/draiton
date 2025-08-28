@@ -12,3 +12,4 @@ import '@/ai/flows/find-potential-clients.ts';
 import '@/ai/flows/generate-grant-tutorial.ts';
 import '@/ai/flows/generate-email-campaign.ts';
 import '@/ai/flows/generate-social-post.ts';
+import '@/ai/flows/generate-image-for-post.ts';
