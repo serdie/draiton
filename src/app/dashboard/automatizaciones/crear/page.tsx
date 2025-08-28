@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -11,6 +12,7 @@ import { ArrowLeft, GripVertical, Plus, Save, Trash2, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TriggerSelector, type Trigger } from './trigger-selector';
 import { ActionCard, type Action } from './action-card';
+import { ActionSelector } from './action-selector';
 
 export default function CrearAutomatizacionPage() {
   const [name, setName] = useState('');
@@ -18,18 +20,11 @@ export default function CrearAutomatizacionPage() {
   const [trigger, setTrigger] = useState<Trigger | null>(null);
   const [actions, setActions] = useState<Action[]>([]);
   const { toast } = useToast();
+  const [isActionModalOpen, setIsActionModalOpen] = useState(false);
 
-  const addAction = () => {
-    // In a real app, a modal would open to select an action type.
-    // For now, we add a placeholder.
-    const newAction: Action = {
-      id: `action-${Date.now()}`,
-      type: 'gmail', // Placeholder type
-      title: 'Enviar un email',
-      description: 'Configura los detalles del correo a enviar.',
-      icon: <Zap className="h-5 w-5 text-gray-500" />,
-    };
-    setActions([...actions, newAction]);
+  const addAction = (action: Action) => {
+    setActions([...actions, { ...action, id: `action-${Date.now()}` }]);
+    setIsActionModalOpen(false);
   };
 
   const removeAction = (id: string) => {
@@ -72,6 +67,12 @@ export default function CrearAutomatizacionPage() {
   }
 
   return (
+    <>
+    <ActionSelector
+        isOpen={isActionModalOpen}
+        onClose={() => setIsActionModalOpen(false)}
+        onSelectAction={addAction}
+    />
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" asChild>
@@ -115,7 +116,7 @@ export default function CrearAutomatizacionPage() {
                     />
                 </div>
               ))}
-              <Button variant="outline" onClick={addAction}>
+              <Button variant="outline" onClick={() => setIsActionModalOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Añadir Acción
               </Button>
@@ -158,5 +159,6 @@ export default function CrearAutomatizacionPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
