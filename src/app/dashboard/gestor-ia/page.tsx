@@ -13,8 +13,7 @@ import { AsistenteForm } from '@/app/dashboard/asistente-ia/asistente-form';
 import { getBusinessIdeasAction } from '@/app/dashboard/perspectivas-ia/actions';
 import { AyudasForm } from './ayudas/ayudas-form';
 import { getGrantsAndNewsAction } from './ayudas/actions';
-import { WebIAPageContent } from '../web-ia/web-ia-page-content';
-import { getWebsiteConceptAction } from '../web-ia/actions';
+import WebIAPage from '../web-ia/page';
 import MarketingIAPage from '../marketing-ia/page';
 import AutomatizacionesPage from '../automatizaciones/page';
 import { BuscarClientesForm } from './buscar-clientes/buscar-clientes-form';
@@ -108,7 +107,7 @@ export default function GestorIAPage() {
                     <MarketingIAPage />
                 </TabsContent>
                  <TabsContent value="web-ia">
-                    <WebIAPageContent getWebsiteConceptAction={getWebsiteConceptAction} />
+                    <WebIAPage />
                 </TabsContent>
                  <TabsContent value="automatizaciones">
                      <AutomatizacionesPage />
