@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { PlusCircle, Facebook, Instagram, Linkedin, MessageSquare } from 'lucide-react';
@@ -114,33 +115,16 @@ export default function RedesSocialesPage() {
                  <Card>
                     <CardHeader>
                         <CardTitle>Cuentas Conectadas</CardTitle>
+                         <CardDescription>
+                            Las cuentas que conectes aparecerán aquí.
+                        </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                         <div className="flex items-center justify-between p-3 rounded-lg border">
-                            <div className="flex items-center gap-3">
-                                <Facebook className="h-6 w-6 text-blue-600"/>
-                                <span className="font-semibold">Mi Página de Facebook</span>
-                            </div>
-                            <Badge variant="outline" className="text-green-600 border-green-300">Activa</Badge>
-                         </div>
-                         <div className="flex items-center justify-between p-3 rounded-lg border">
-                            <div className="flex items-center gap-3">
-                                <Instagram className="h-6 w-6 text-pink-500"/>
-                                <span className="font-semibold">@MiEmpresa</span>
-                            </div>
-                             <Badge variant="outline" className="text-green-600 border-green-300">Activa</Badge>
-                         </div>
-                         <div className="flex items-center justify-between p-3 rounded-lg border">
-                            <div className="flex items-center gap-3">
-                                <Linkedin className="h-6 w-6 text-blue-800"/>
-                                <span className="font-semibold">Mi Empresa S.L.</span>
-                            </div>
-                             <Badge variant="outline" className="text-gray-500 border-gray-300">Inactiva</Badge>
-                         </div>
+                    <CardContent>
+                       <p className="text-sm text-muted-foreground">Aún no has conectado ninguna cuenta.</p>
                     </CardContent>
                     <CardFooter>
-                        <Button variant="outline" className="w-full">
-                            Gestionar Conexiones
+                        <Button variant="outline" className="w-full" asChild>
+                            <Link href="/dashboard/conexiones">Gestionar Conexiones</Link>
                         </Button>
                     </CardFooter>
                 </Card>

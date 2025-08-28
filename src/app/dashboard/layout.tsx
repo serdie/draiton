@@ -134,6 +134,15 @@ export default function DashboardLayout({
                   </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+
+             <SidebarMenuItem>
+              <Link href="/dashboard/conexiones">
+                <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
+                  <Network />
+                  <span>Conexiones</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
             
             <SidebarMenuItem>
               <Link href="/dashboard/configuracion">
