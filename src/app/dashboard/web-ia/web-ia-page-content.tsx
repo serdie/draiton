@@ -93,7 +93,7 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
       <Tabs defaultValue="crear" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="crear">Crear Nuevo Sitio</TabsTrigger>
-            {connectedSites.length > 0 && <TabsTrigger value="gestionar">Gestionar Sitios</TabsTrigger>}
+            <TabsTrigger value="gestionar">Gestionar Sitios</TabsTrigger>
         </TabsList>
         <TabsContent value="crear" className="mt-6">
           <Card>
@@ -109,39 +109,37 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
             </CardContent>
           </Card>
         </TabsContent>
-        {connectedSites.length > 0 && (
-            <TabsContent value="gestionar" className="mt-6">
-                <div className="space-y-6">
-                        <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                            <CardTitle>Mis Sitios Web</CardTitle>
-                            <CardDescription>Gestiona tus sitios generados y externos.</CardDescription>
+        <TabsContent value="gestionar" className="mt-6">
+            <div className="space-y-6">
+                    <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                        <CardTitle>Mis Sitios Web</CardTitle>
+                        <CardDescription>Gestiona tus sitios generados y externos.</CardDescription>
+                        </div>
+                        <Button variant="outline" onClick={() => setIsConnectModalOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Conectar Sitio Externo
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        {connectedSites.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {connectedSites.map(site => (
+                                    <SiteCard key={site.id} site={site} />
+                                ))}
+                        </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[300px]">
+                                <MonitorCog className="h-16 w-16 mb-4" />
+                                <p>Aún no has generado ni conectado ningún sitio web.</p>
+                                <p className="text-sm">Usa los botones de arriba para empezar.</p>
                             </div>
-                            <Button variant="outline" onClick={() => setIsConnectModalOpen(true)}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Conectar Sitio Externo
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            {connectedSites.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {connectedSites.map(site => (
-                                        <SiteCard key={site.id} site={site} />
-                                    ))}
-                            </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[300px]">
-                                    <MonitorCog className="h-16 w-16 mb-4" />
-                                    <p>Aún no has generado ni conectado ningún sitio web.</p>
-                                    <p className="text-sm">Usa los botones de arriba para empezar.</p>
-                                </div>
-                            )}
-                        </CardContent>
-                        </Card>
-                </div>
-            </TabsContent>
-        )}
+                        )}
+                    </CardContent>
+                    </Card>
+            </div>
+        </TabsContent>
       </Tabs>
     </div>
     </>
