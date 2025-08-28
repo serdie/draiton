@@ -1,54 +1,45 @@
-import { aiPoweredWebManagement, AIPoweredWebManagementOutput } from '@/ai/flows/ai-powered-web-management';
-import { GestorWebForm } from './gestor-web-form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function GestorWebIAPage() {
-  
-  async function getWebsiteConcept(
-    currentState: { output: AIPoweredWebManagementOutput | null; error: string | null },
-    formData: FormData
-  ): Promise<{ output: AIPoweredWebManagementOutput | null; error: string | null }> {
-    "use server";
-    
-    try {
-      const input = {
-        businessDescription: formData.get('businessDescription') as string,
-        websiteType: formData.get('websiteType') as 'website' | 'online store' | 'landing page',
-        designPreferences: formData.get('designPreferences') as string,
-        exampleWebsites: formData.get('exampleWebsites') as string,
-        additionalFeatures: formData.get('additionalFeatures') as string,
-      };
+'use client';
 
-      if (!input.businessDescription || !input.websiteType) {
-        return { output: null, error: "La descripción del negocio y el tipo de sitio son obligatorios." };
-      }
+import { useContext } from 'react';
+import Link from 'next/link';
+import { AuthContext } from '@/context/auth-context';
+import { WebIAPageContent } from './web-ia-page-content';
+import { getWebsiteConceptAction } from './actions';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Lock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-      const result = await aiPoweredWebManagement(input);
-      return { output: result, error: null };
-    } catch (e: any) {
-      console.error(e);
-      return { output: null, error: "Ha ocurrido un error al generar el concepto. Inténtalo de nuevo." };
-    }
-  }
-
+function ProFeatureLock() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Gestor Web con IA</h1>
-        <p className="text-muted-foreground">
-          Crea y gestiona tu página web, tienda online o landing page con IA. Describe tu negocio y preferencias, y deja que la IA haga el resto.
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Crear mi sitio web</CardTitle>
-          <CardDescription>Proporciona los detalles para que la IA pueda generar un concepto a tu medida.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <GestorWebForm action={getWebsiteConcept} />
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-sm">
+      <Card className="max-w-md text-center">
+        <CardContent className="p-8">
+          <Lock className="mx-auto h-12 w-12 text-primary" />
+          <h3 className="mt-4 text-2xl font-semibold">Función Exclusiva del Plan Pro</h3>
+          <p className="mt-2 text-muted-foreground">
+            Accede al gestor web IA para crear y administrar tu presencia online sin esfuerzo.
+          </p>
+          <Button asChild className="mt-4">
+            <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+          </Button>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+
+export default function WebIAPage() {
+  const { isPro } = useContext(AuthContext);
+
+  return (
+    <div className="relative">
+      {!isPro && <ProFeatureLock />}
+      <div className={cn("space-y-6", !isPro && "opacity-50 pointer-events-none")}>
+        <WebIAPageContent getWebsiteConceptAction={getWebsiteConceptAction} />
+      </div>
     </div>
   );
 }

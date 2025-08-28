@@ -6,7 +6,7 @@ import { GestorWebForm } from './gestor-web-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MonitorCog, PlusCircle, ExternalLink, Settings } from 'lucide-react';
+import { MonitorCog, PlusCircle, ExternalLink, Settings, Sparkles, Wand2 } from 'lucide-react';
 import type { AIPoweredWebManagementOutput } from '@/ai/flows/ai-powered-web-management';
 import { ConnectSiteModal } from './connect-site-modal';
 import Image from 'next/image';
@@ -63,6 +63,7 @@ const SiteCard = ({ site }: { site: Site }) => {
 export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConceptAction: GetWebsiteConceptAction }) {
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [connectedSites, setConnectedSites] = useState<Site[]>([]);
+  const [generatedSite, setGeneratedSite] = useState<AIPoweredWebManagementOutput | null>(null);
 
   const handleConnectSite = (newSite: Omit<Site, 'id'>) => {
     setConnectedSites(prevSites => [
@@ -92,50 +93,55 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
       <Tabs defaultValue="crear" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="crear">Crear Nuevo Sitio</TabsTrigger>
-            <TabsTrigger value="gestionar">Gestionar Sitios</TabsTrigger>
+            {connectedSites.length > 0 && <TabsTrigger value="gestionar">Gestionar Sitios</TabsTrigger>}
         </TabsList>
         <TabsContent value="crear" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Crear un nuevo sitio web</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Wand2 className="h-6 w-6 text-primary" />
+                Crear un nuevo sitio web
+              </CardTitle>
               <CardDescription>Proporciona los detalles para que la IA pueda generar un concepto a tu medida.</CardDescription>
             </CardHeader>
             <CardContent>
-              <GestorWebForm action={getWebsiteConceptAction} />
+              <GestorWebForm action={getWebsiteConceptAction} setGeneratedSite={setGeneratedSite} />
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="gestionar" className="mt-6">
-           <div className="space-y-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle>Mis Sitios Web</CardTitle>
-                      <CardDescription>Gestiona tus sitios generados y externos.</CardDescription>
-                    </div>
-                     <Button variant="outline" onClick={() => setIsConnectModalOpen(true)}>
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Conectar Sitio Externo
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    {connectedSites.length > 0 ? (
-                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {connectedSites.map(site => (
-                                <SiteCard key={site.id} site={site} />
-                            ))}
-                       </div>
-                    ) : (
-                         <div className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[300px]">
-                            <MonitorCog className="h-16 w-16 mb-4" />
-                            <p>Aún no has generado ni conectado ningún sitio web.</p>
-                            <p className="text-sm">Usa los botones de arriba para empezar.</p>
-                        </div>
-                    )}
-                  </CardContent>
-                </Card>
-           </div>
-        </TabsContent>
+        {connectedSites.length > 0 && (
+            <TabsContent value="gestionar" className="mt-6">
+                <div className="space-y-6">
+                        <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                            <CardTitle>Mis Sitios Web</CardTitle>
+                            <CardDescription>Gestiona tus sitios generados y externos.</CardDescription>
+                            </div>
+                            <Button variant="outline" onClick={() => setIsConnectModalOpen(true)}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Conectar Sitio Externo
+                            </Button>
+                        </CardHeader>
+                        <CardContent>
+                            {connectedSites.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {connectedSites.map(site => (
+                                        <SiteCard key={site.id} site={site} />
+                                    ))}
+                            </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[300px]">
+                                    <MonitorCog className="h-16 w-16 mb-4" />
+                                    <p>Aún no has generado ni conectado ningún sitio web.</p>
+                                    <p className="text-sm">Usa los botones de arriba para empezar.</p>
+                                </div>
+                            )}
+                        </CardContent>
+                        </Card>
+                </div>
+            </TabsContent>
+        )}
       </Tabs>
     </div>
     </>
