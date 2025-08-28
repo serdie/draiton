@@ -53,7 +53,6 @@ export default function MarketingIAPage() {
                <p className="text-sm text-muted-foreground">
                 Un centro para tus actividades en redes sociales.
               </p>
-               <Badge variant="outline">Función próximamente</Badge>
             </CardContent>
             <CardFooter>
               <Button asChild>
