@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -19,10 +19,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Trash2, Mail, Facebook, Linkedin, Instagram, CreditCard, MessageSquare, Server } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Mail, Facebook, Linkedin, Instagram, CreditCard, MessageSquare, Server, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { GoogleIcon } from './google-icon';
+import { AuthContext } from '@/context/auth-context';
+import { auth } from '@/lib/firebase/config';
+import { GoogleAuthProvider, FacebookAuthProvider, linkWithPopup, unlink } from "firebase/auth";
 
 type Connection = {
   id: string;
@@ -32,8 +35,8 @@ type Connection = {
 };
 
 const allAvailableConnections = [
-  { name: 'Google', description: 'Gmail, Drive, Calendar...', icon: <GoogleIcon /> },
-  { name: 'Facebook', description: 'Facebook Pages, Messenger...', icon: <Facebook /> },
+  { id: 'google.com', name: 'Google', description: 'Gmail, Drive, Calendar...', icon: <GoogleIcon /> },
+  { id: 'facebook.com', name: 'Facebook', description: 'Facebook Pages, Messenger...', icon: <Facebook /> },
   { name: 'Instagram', description: 'Instagram for Business', icon: <Instagram /> },
   { name: 'LinkedIn', description: 'Perfiles y páginas de empresa', icon: <Linkedin /> },
   { name: 'Mailchimp', description: 'Listas y campañas', icon: <Mail /> },
@@ -42,64 +45,125 @@ const allAvailableConnections = [
   { name: 'SMTP', description: 'Envío de correo personalizado', icon: <Server /> },
 ];
 
-const initialConnectedAccounts: Connection[] = [
-  { id: '1', provider: 'Google', name: 'miempresa@gmail.com', status: 'Activa' },
-  { id: '2', provider: 'Stripe', name: 'Cuenta de Producción', status: 'Activa' },
-];
-
 const getStatusBadgeClass = (status: string) => {
   if (status === 'Activa') return 'bg-green-100 text-green-800 border-green-200';
   return 'bg-yellow-100 text-yellow-800 border-yellow-200';
 };
 
 const getProviderIcon = (provider: string) => {
-    const conn = allAvailableConnections.find(c => c.name.toLowerCase() === provider.toLowerCase());
+    const conn = allAvailableConnections.find(c => c.name.toLowerCase() === provider.toLowerCase() || c.id === provider);
     return conn ? conn.icon : <Server />;
 }
 
 export default function ConexionesPage() {
+  const { user } = useContext(AuthContext);
   const { toast } = useToast();
-  const [connectedAccounts, setConnectedAccounts] = useState<Connection[]>(initialConnectedAccounts);
-  const [accountToDelete, setAccountToDelete] = useState<Connection | null>(null);
+  
+  const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
+
+  const connectedProviders = user?.providerData.map(p => p.providerId) || [];
 
   const availableConnections = allAvailableConnections.filter(
-    conn => !connectedAccounts.some(acc => acc.provider === conn.name)
+    conn => !connectedProviders.includes(conn.id)
   );
 
-  const handleConnect = (name: string, description: string) => {
-    // Simulate connection
-    toast({
-      title: `Conectando con ${name}...`,
-      description: 'Simulando el proceso de autorización.',
-    });
-    
-    setTimeout(() => {
-        const newConnection: Connection = {
-            id: String(Date.now()),
-            provider: name,
-            name: description.split(',')[0], // Use a part of description as name
-            status: 'Activa'
-        };
-        setConnectedAccounts(prev => [...prev, newConnection]);
+  const connectedAccounts = user?.providerData.map(p => {
+    const providerInfo = allAvailableConnections.find(c => c.id === p.providerId);
+    return {
+        id: p.providerId,
+        provider: providerInfo?.name || p.providerId,
+        name: p.displayName || p.email || 'Cuenta Conectada',
+        status: 'Activa'
+    }
+  }) || [];
+
+
+  const handleConnect = async (providerId: string) => {
+    if (!auth.currentUser) return;
+    setConnectingProvider(providerId);
+
+    let provider;
+    if (providerId === 'google.com') {
+        provider = new GoogleAuthProvider();
+    } else if (providerId === 'facebook.com') {
+        provider = new FacebookAuthProvider();
+    } else {
         toast({
-            title: `¡Conexión con ${name} establecida!`,
-            description: 'La nueva cuenta aparece en tu lista de conexiones.',
+            title: `Conexión con ${providerId} (Simulación)`,
+            description: 'Esta conexión se habilitará en el futuro.',
         });
-    }, 1500);
+        setConnectingProvider(null);
+        return;
+    }
+
+    try {
+        await linkWithPopup(auth.currentUser, provider);
+        toast({
+            title: `¡Conexión con ${providerId.split('.')[0]} establecida!`,
+            description: 'La nueva cuenta ha sido vinculada.',
+        });
+    } catch (error: any) {
+        if (error.code === 'auth/credential-already-in-use') {
+             toast({
+                variant: 'destructive',
+                title: 'Cuenta ya en uso',
+                description: 'Esta cuenta ya está vinculada a otro usuario.',
+            });
+        } else if(error.code === 'auth/popup-closed-by-user') {
+            toast({
+                variant: 'destructive',
+                title: 'Conexión cancelada',
+                description: 'Has cerrado la ventana de conexión.',
+            });
+        }
+        else {
+            toast({
+                variant: 'destructive',
+                title: 'Error de Conexión',
+                description: 'No se pudo vincular la cuenta. Inténtalo de nuevo.',
+            });
+        }
+        console.error("Error linking account:", error);
+    } finally {
+        setConnectingProvider(null);
+    }
   };
   
-  const handleDeleteConfirmation = (account: Connection) => {
-    setAccountToDelete(account);
+  const handleDeleteConfirmation = (providerId: string) => {
+    setAccountToDelete(providerId);
   };
 
-  const handleDelete = () => {
-    if (!accountToDelete) return;
-    setConnectedAccounts(prev => prev.filter(acc => acc.id !== accountToDelete.id));
-    toast({
-        title: 'Conexión Eliminada',
-        description: `Se ha eliminado la conexión con ${accountToDelete.provider}.`
-    });
-    setAccountToDelete(null);
+  const handleDelete = async () => {
+    if (!accountToDelete || !auth.currentUser) return;
+
+    // Cannot unlink the primary sign-in method
+    if (auth.currentUser.providerData.length <= 1) {
+        toast({
+            variant: 'destructive',
+            title: 'No se puede desvincular',
+            description: 'No puedes eliminar tu único método de inicio de sesión.',
+        });
+        setAccountToDelete(null);
+        return;
+    }
+
+    try {
+        await unlink(auth.currentUser, accountToDelete);
+        toast({
+            title: 'Conexión Eliminada',
+            description: `Se ha eliminado la conexión con ${accountToDelete.split('.')[0]}.`
+        });
+    } catch(error) {
+        console.error("Error unlinking account:", error);
+         toast({
+            variant: 'destructive',
+            title: 'Error al desvincular',
+            description: 'No se pudo eliminar la conexión. Inténtalo de nuevo.',
+        });
+    } finally {
+        setAccountToDelete(null);
+    }
   }
 
   return (
@@ -107,9 +171,9 @@ export default function ConexionesPage() {
     <AlertDialog open={!!accountToDelete} onOpenChange={(open) => !open && setAccountToDelete(null)}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>¿Desconectar {accountToDelete?.provider}?</AlertDialogTitle>
+                <AlertDialogTitle>¿Desconectar {accountToDelete?.split('.')[0]}?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    Esta acción eliminará la conexión con <strong>{accountToDelete?.name}</strong>. No podrás usarla en tus automatizaciones. Podrás volver a conectarla más tarde.
+                    Esta acción eliminará la conexión. No podrás usarla en tus automatizaciones. Podrás volver a conectarla más tarde.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -142,9 +206,14 @@ export default function ConexionesPage() {
                </div>
               <p className="font-semibold">{conn.name}</p>
               <p className="text-xs text-muted-foreground mb-4">{conn.description}</p>
-              <Button variant="outline" size="sm" onClick={() => handleConnect(conn.name, conn.description)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Conectar
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleConnect(conn.id || conn.name)}
+                disabled={connectingProvider === (conn.id || conn.name)}
+              >
+                {connectingProvider === (conn.id || conn.name) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                {connectingProvider === (conn.id || conn.name) ? 'Conectando...' : 'Conectar'}
               </Button>
             </Card>
           ))}
@@ -174,7 +243,7 @@ export default function ConexionesPage() {
               {connectedAccounts.length > 0 ? connectedAccounts.map((acc) => (
                 <TableRow key={acc.id}>
                   <TableCell className="text-muted-foreground">
-                     {React.cloneElement(getProviderIcon(acc.provider), { className: "h-5 w-5" })}
+                     {React.cloneElement(getProviderIcon(acc.id), { className: "h-5 w-5" })}
                   </TableCell>
                   <TableCell className="font-medium">{acc.provider}</TableCell>
                   <TableCell className="text-muted-foreground">{acc.name}</TableCell>
@@ -184,7 +253,7 @@ export default function ConexionesPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirmation(acc)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirmation(acc.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </TableCell>
