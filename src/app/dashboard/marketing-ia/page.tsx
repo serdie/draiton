@@ -75,7 +75,6 @@ export default function MarketingIAPage() {
               <p className="text-sm text-muted-foreground">
                 Automatiza la nutrición de leads, extracción de correos y envíos masivos.
               </p>
-              <Badge variant="outline">Funciones avanzadas planeadas</Badge>
             </CardContent>
             <CardFooter>
                <Button asChild>
