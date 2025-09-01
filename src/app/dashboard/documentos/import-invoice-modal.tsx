@@ -18,8 +18,13 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info, UploadCloud, Camera, VideoOff, Loader2, FileSpreadsheet, Sheet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { scanInvoiceAction } from '@/lib/firebase/document-actions';
+import { scanInvoiceAction, processCsvInvoicesAction } from '@/lib/firebase/document-actions';
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
+
 
 export function ImportInvoiceModal({
   isOpen,
@@ -30,10 +35,11 @@ export function ImportInvoiceModal({
   onClose: () => void;
   onDataExtracted: (data: ExtractInvoiceDataOutput) => void;
 }) {
+  const { user } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('upload');
   const [singleFileName, setSingleFileName] = useState('');
   const [singleFileDataUri, setSingleFileDataUri] = useState<string | null>(null);
-  const [multiFileName, setMultiFileName] = useState('');
+  const [multiFile, setMultiFile] = useState<File | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
@@ -58,9 +64,9 @@ export function ImportInvoiceModal({
   const handleMultiFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-        setMultiFileName(file.name);
+      setMultiFile(file);
     } else {
-        setMultiFileName('');
+      setMultiFile(null);
     }
   }
 
@@ -84,18 +90,63 @@ export function ImportInvoiceModal({
     setIsScanning(false);
   };
   
-   const handleMultiImport = () => {
-    if (!multiFileName) return;
+   const handleMultiImport = async () => {
+    if (!multiFile || !user) return;
     setIsUploadingMulti(true);
-    // Simulate background process
-    setTimeout(() => {
-        toast({
-            title: 'Importación iniciada',
-            description: `Se están procesando las facturas de ${multiFileName}. Te notificaremos cuando termine.`,
-        });
+    
+    const reader = new FileReader();
+    reader.readAsText(multiFile);
+    reader.onload = async (e) => {
+        const csvContent = e.target?.result as string;
+        if (!csvContent) {
+            toast({ variant: 'destructive', title: 'Error de Lectura', description: 'No se pudo leer el contenido del archivo.' });
+            setIsUploadingMulti(false);
+            return;
+        }
+
+        const result = await processCsvInvoicesAction(csvContent);
+
+        if (result.error) {
+             toast({ variant: 'destructive', title: 'Error de Procesamiento', description: result.error });
+             setIsUploadingMulti(false);
+             return;
+        }
+
+        if (result.data && result.data.invoices.length > 0) {
+            // Simulate background processing by just adding them.
+            // In a real app, this would be a batch write and maybe a background job for large files.
+            const promises = result.data.invoices.map(invoice => {
+                const docData = {
+                    ownerId: user.uid,
+                    numero: invoice.numero,
+                    tipo: 'factura' as const,
+                    cliente: invoice.cliente,
+                    fechaEmision: new Date(invoice.fechaEmision),
+                    fechaVto: invoice.fechaVto ? new Date(invoice.fechaVto) : null,
+                    lineas: [{ description: 'Importado desde CSV', quantity: 1, unitPrice: invoice.subtotal, total: invoice.subtotal }],
+                    subtotal: invoice.subtotal,
+                    impuestos: invoice.impuestos,
+                    importe: invoice.total,
+                    estado: invoice.estado as any,
+                    moneda: invoice.moneda,
+                    fechaCreacion: serverTimestamp(),
+                };
+                return addDoc(collection(db, 'invoices'), docData);
+            });
+            
+            await Promise.all(promises);
+
+            toast({
+                title: 'Importación Completada',
+                description: `${result.data.invoices.length} facturas han sido importadas con éxito.`,
+            });
+        } else {
+             toast({ title: 'Importación Finalizada', description: 'No se encontraron facturas para importar en el archivo.' });
+        }
+        
         setIsUploadingMulti(false);
         onClose();
-    }, 1500);
+    };
   };
 
 
@@ -201,7 +252,7 @@ export function ImportInvoiceModal({
                 className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
             </div>
-            <Button onClick={handleMultiImport} className="w-full" disabled={!multiFileName || isUploadingMulti}>
+            <Button onClick={handleMultiImport} className="w-full" disabled={!multiFile || isUploadingMulti}>
               {isUploadingMulti ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-2 h-4 w-4" />}
               {isUploadingMulti ? 'Procesando...' : `Iniciar Importación`}
             </Button>
