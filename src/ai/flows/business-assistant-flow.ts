@@ -31,12 +31,17 @@ export async function businessAssistant(input: BusinessAssistantInput): Promise<
 }
 
 
-const systemPrompt = `Eres GestorIA, un asistente experto en negocios, finanzas, operaciones y marketing para autónomos y pymes en España.
+const systemPrompt: MessageData = {
+    role: 'system',
+    content: [{
+        text: `Eres GestorIA, un asistente experto en negocios, finanzas, operaciones y marketing para autónomos y pymes en España.
 Tu objetivo es proporcionar respuestas claras, concisas y accionables.
 Tienes acceso a los datos de la aplicación del usuario, como facturas, gastos, proyectos y clientes.
 Cuando un usuario haga una pregunta, utiliza la información disponible para dar una respuesta informada.
 Si la información no está disponible, indícalo claramente en lugar de inventar una respuesta.
-Mantén un tono profesional pero cercano.`;
+Mantén un tono profesional pero cercano.`
+    }]
+};
 
 
 const businessAssistantFlow = ai.defineFlow(
@@ -48,7 +53,8 @@ const businessAssistantFlow = ai.defineFlow(
   async (input) => {
     
     const llm = ai.model('gemini-pro');
-    const history: MessageData[] = [...input.history];
+    
+    const history: MessageData[] = [systemPrompt, ...input.history];
 
     history.push({
       role: 'user',
@@ -56,10 +62,14 @@ const businessAssistantFlow = ai.defineFlow(
     });
 
     const { content } = await llm.generate({
-      system: systemPrompt,
       history,
     });
     
-    return { response: content[0].text! };
+    const text = content[0]?.text;
+    if (text === undefined) {
+      throw new Error("El asistente de IA no pudo generar una respuesta.");
+    }
+    
+    return { response: text };
   }
 );
