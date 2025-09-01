@@ -37,7 +37,7 @@ type Connection = {
 };
 
 const allAvailableConnections = [
-  { id: 'google.com', name: 'Google', description: 'Gmail, Drive, Calendar...', icon: <GoogleIcon /> },
+  { id: 'google.com', name: 'Google', description: 'Gmail, Drive, Calendar, Contacts...', icon: <GoogleIcon /> },
   { id: 'facebook.com', name: 'Facebook', description: 'Facebook Pages, Messenger...', icon: <Facebook /> },
   { id: 'instagram.com', name: 'Instagram', description: 'Instagram for Business', icon: <Instagram /> },
   { id: 'linkedin.com', name: 'LinkedIn', description: 'Perfiles y páginas de empresa', icon: <Linkedin /> },
@@ -89,6 +89,8 @@ export default function ConexionesPage() {
     let provider;
     if (providerId === 'google.com') {
         provider = new GoogleAuthProvider();
+        // Request access to the user's contacts.
+        provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
     } else if (providerId === 'facebook.com') {
         provider = new FacebookAuthProvider();
         provider.addScope('pages_show_list');

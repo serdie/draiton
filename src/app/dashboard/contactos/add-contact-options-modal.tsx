@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { UserPlus, Mail, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 interface AddContactOptionsModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ const OutlookIcon = () => (
 
 export function AddContactOptionsModal({ isOpen, onClose, onAddManual }: AddContactOptionsModalProps) {
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleComingSoon = () => {
     toast({
@@ -38,6 +40,9 @@ export function AddContactOptionsModal({ isOpen, onClose, onAddManual }: AddCont
     });
   };
 
+  const handleImportFromGoogle = () => {
+    router.push('/dashboard/conexiones');
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,7 +61,7 @@ export function AddContactOptionsModal({ isOpen, onClose, onAddManual }: AddCont
                 <p className="text-sm text-muted-foreground">Introduce los datos de un nuevo contacto.</p>
             </div>
           </button>
-           <button onClick={handleComingSoon} className="w-full text-left p-4 rounded-lg border hover:bg-muted transition-colors flex items-center gap-4">
+           <button onClick={handleImportFromGoogle} className="w-full text-left p-4 rounded-lg border hover:bg-muted transition-colors flex items-center gap-4">
             <GoogleIcon />
             <div>
                 <p className="font-semibold">Importar desde Google</p>
