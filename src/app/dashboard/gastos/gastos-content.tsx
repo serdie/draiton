@@ -77,7 +77,7 @@ export function GastosContent() {
             setLoading(false);
         }, (error) => {
             console.error("Error fetching expenses:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los gastos.' });
+            toast({ variant: 'destructive', title: 'Error de Permisos', description: 'No se pudieron cargar los gastos. Revisa tus reglas de seguridad de Firestore.' });
             setLoading(false);
         });
 
