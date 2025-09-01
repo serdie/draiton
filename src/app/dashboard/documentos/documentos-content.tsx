@@ -43,13 +43,14 @@ const getBadgeClass = (estado: string) => {
       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'vencido':
     case 'rechazado':
+    case 'impagada':
       return 'bg-red-100 text-red-800 border-red-200';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
 
-const estadosUnicos: DocumentStatus[] = ['Pagado', 'Pendiente', 'Vencido', 'Enviado', 'Aceptado', 'Rechazado', 'Emitido', 'Aplicado', 'Borrador', 'Activo', 'Pausado'];
+const estadosUnicos: DocumentStatus[] = ['Pagado', 'Pendiente', 'Vencido', 'Enviado', 'Aceptado', 'Rechazado', 'Emitido', 'Aplicado', 'Borrador', 'Activo', 'Pausado', 'Impagada'];
 
 export function DocumentosContent() {
   const { user } = useContext(AuthContext);

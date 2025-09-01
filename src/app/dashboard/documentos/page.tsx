@@ -4,7 +4,7 @@
 import { DocumentosContent } from './documentos-content';
 
 export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito' | 'recurrente';
-export type DocumentStatus = 'Pagado' | 'Pendiente' | 'Vencido' | 'Enviado' | 'Aceptado' | 'Rechazado' | 'Emitido' | 'Aplicado' | 'Borrador' | 'Activo' | 'Pausado';
+export type DocumentStatus = 'Pagado' | 'Pendiente' | 'Vencido' | 'Enviado' | 'Aceptado' | 'Rechazado' | 'Emitido' | 'Aplicado' | 'Borrador' | 'Activo' | 'Pausado' | 'Impagada';
 
 export type LineItem = {
   description: string;
