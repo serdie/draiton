@@ -38,6 +38,7 @@ import type { Contact } from './contactos/page';
 import type { Project, ProjectStatus } from './proyectos/page';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { AiAssistantChat } from './ai-assistant-chat';
 
 type ActivityItem = {
     id: string;
@@ -136,19 +137,8 @@ export default function DashboardPage() {
                 </CardFooter>
             </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Asistente IA</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="p-4 bg-secondary rounded-lg flex items-center justify-between">
-                         <p className="text-muted-foreground">¡Hola! Soy GestorIA. Pregúntame sobre impuestos, facturas, o cómo optimizar tu negocio.</p>
-                         <Button variant="ghost" size="icon">
-                            <Sparkles className="text-primary" />
-                         </Button>
-                    </div>
-                </CardContent>
-            </Card>
+            <AiAssistantChat />
+
         </main>
         <aside className="space-y-6">
             <Card>
