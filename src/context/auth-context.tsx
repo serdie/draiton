@@ -71,6 +71,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
         setLoading(false);
       }
+    }, (error) => {
+        console.error("Error with onIdTokenChanged:", error);
+        setUser(null);
+        setLoading(false);
     });
 
     return () => unsubscribe();

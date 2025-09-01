@@ -32,7 +32,7 @@ export default function InformesPage() {
             setProjects(docsList);
             setLoading(false);
         }, (error) => {
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los proyectos.' });
+            toast({ variant: 'destructive', title: 'Error de Permisos', description: 'No se pudieron cargar los proyectos. Revisa tus reglas de seguridad de Firestore.' });
             setLoading(false);
         });
         return () => unsubscribe();

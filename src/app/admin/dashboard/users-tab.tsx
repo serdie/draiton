@@ -75,7 +75,7 @@ export function UsersTab() {
             setLoading(false);
         }, (error) => {
             console.error("Error al obtener usuarios con onSnapshot:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los usuarios en tiempo real.' });
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los usuarios en tiempo real. Revisa los permisos de Firestore.' });
             setLoading(false);
         });
 

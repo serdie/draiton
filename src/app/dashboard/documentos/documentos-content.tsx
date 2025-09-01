@@ -97,7 +97,7 @@ export function DocumentosContent() {
         setLoading(false);
     }, (error) => {
         console.error("Error fetching documents:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los documentos.' });
+        toast({ variant: 'destructive', title: 'Error de Permisos', description: 'No se pudieron cargar los documentos. Revisa tus reglas de seguridad de Firestore.' });
         setLoading(false);
     });
 

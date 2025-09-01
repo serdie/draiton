@@ -101,6 +101,9 @@ export default function ProjectDetailPage() {
          router.push('/dashboard/proyectos');
       }
       setLoading(false);
+    }, (error) => {
+        console.error("Error fetching project details:", error);
+        router.push('/dashboard/proyectos');
     });
 
     return () => unsubscribe();

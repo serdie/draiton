@@ -69,7 +69,7 @@ export default function OperacionesPage() {
             setLoading(false);
         }, (error) => {
             console.error("Error fetching projects:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los proyectos.' });
+            toast({ variant: 'destructive', title: 'Error de Permisos', description: 'No se pudieron cargar los proyectos. Revisa tus reglas de seguridad de Firestore.' });
             setLoading(false);
         });
 

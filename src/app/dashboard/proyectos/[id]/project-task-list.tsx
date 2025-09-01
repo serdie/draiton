@@ -12,6 +12,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
 
 type Task = {
     id: string;
@@ -30,6 +32,8 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     const [tasks, setTasks] = useState<Task[]>([]);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [progress, setProgress] = useState(initialProgress);
+    const { toast } = useToast();
+
 
     useEffect(() => {
         setProgress(initialProgress);
@@ -41,9 +45,12 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
             setTasks(fetchedTasks);
+        }, (error) => {
+            console.error("Error fetching tasks:", error);
+            toast({ variant: 'destructive', title: 'Error de Permisos', description: 'No se pudieron cargar las tareas. Revisa tus reglas de seguridad de Firestore.' });
         });
         return () => unsubscribe();
-    }, [projectId, user]);
+    }, [projectId, user, toast]);
 
     useEffect(() => {
         if (tasks.length === 0) {

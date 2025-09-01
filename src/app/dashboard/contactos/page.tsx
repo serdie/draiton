@@ -100,7 +100,7 @@ export default function ContactosPage() {
             setLoading(false);
         }, (error) => {
             console.error("Error fetching contacts:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los contactos.' });
+            toast({ variant: 'destructive', title: 'Error de Permisos', description: 'No se pudieron cargar los contactos. Revisa tus reglas de seguridad de Firestore.' });
             setLoading(false);
         });
 
