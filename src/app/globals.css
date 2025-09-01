@@ -95,6 +95,12 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
   }
+
+  video {
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+  }
   
   /* Add padding-bottom to the body on mobile to account for the fixed bottom nav */
   @media (max-width: 767px) {

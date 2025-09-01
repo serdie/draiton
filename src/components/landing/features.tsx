@@ -1,36 +1,49 @@
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { FileText, Users, Sparkles, MonitorCog, Blocks, Zap } from 'lucide-react';
+import Image from 'next/image';
 
 const features = [
   {
     icon: <FileText className="h-8 w-8 text-primary" />,
     title: 'Finanzas Inteligentes',
     description: 'Gestiona facturas, gastos y presupuestos. Digitaliza tickets con una foto y obtén previsiones de impuestos al instante.',
+    image: 'https://picsum.photos/seed/finanzas/400/250',
+    aiHint: 'finances chart'
   },
   {
     icon: <Blocks className="h-8 w-8 text-primary" />,
     title: 'Operaciones Centralizadas',
     description: 'Controla tus proyectos, tareas y clientes desde un único lugar. Colabora con tu equipo y mantén todo organizado.',
+    image: 'https://picsum.photos/seed/operaciones/400/250',
+    aiHint: 'team collaboration'
   },
   {
     icon: <Users className="h-8 w-8 text-primary" />,
     title: 'Marketing y Clientes (CRM)',
     description: 'Crea campañas de email con IA, gestiona tus contactos y encuentra nuevos clientes potenciales para tu negocio.',
+    image: 'https://picsum.photos/seed/marketing/400/250',
+    aiHint: 'marketing campaign'
   },
   {
     icon: <MonitorCog className="h-8 w-8 text-primary" />,
     title: 'Presencia Web con IA',
     description: 'Genera y gestiona tu página web o tienda online. La IA te ayuda a crear un sitio profesional sin saber programar.',
+    image: 'https://picsum.photos/seed/web/400/250',
+    aiHint: 'website design'
   },
   {
     icon: <Zap className="h-8 w-8 text-primary" />,
     title: 'Automatización Total',
     description: 'Conecta tus apps favoritas (Google, redes sociales, etc.) y crea flujos de trabajo que ahorran tiempo y eliminan tareas repetitivas.',
+    image: 'https://picsum.photos/seed/automatizacion/400/250',
+    aiHint: 'automation workflow'
   },
   {
     icon: <Sparkles className="h-8 w-8 text-primary" />,
     title: 'Asistente IA Proactivo',
     description: 'Tu socio estratégico que te ofrece ideas para crecer, busca subvenciones y te ayuda a redactar cualquier documento.',
+    image: 'https://picsum.photos/seed/asistente/400/250',
+    aiHint: 'ai assistant'
   },
 ];
 
@@ -43,14 +56,19 @@ export function Features() {
           Emprende Total integra todas las herramientas que necesitas para optimizar cada área de tu empresa.
         </p>
       </div>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature, i) => (
-          <Card key={i} className="transform-gpu transition-all duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg">
+          <Card key={i} className="transform-gpu transition-all duration-300 ease-in-out hover:-translate-y-2 hover:shadow-xl overflow-hidden flex flex-col">
+            <div className="relative h-48 w-full">
+                <Image src={feature.image} alt={feature.title} fill className="object-cover" data-ai-hint={feature.aiHint} />
+            </div>
             <CardHeader>
               <div className="mb-4">{feature.icon}</div>
               <CardTitle>{feature.title}</CardTitle>
-              <CardDescription className="pt-2">{feature.description}</CardDescription>
             </CardHeader>
+            <CardContent className="flex-grow">
+                 <CardDescription>{feature.description}</CardDescription>
+            </CardContent>
           </Card>
         ))}
       </div>
