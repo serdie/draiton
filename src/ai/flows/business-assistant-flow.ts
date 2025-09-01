@@ -47,13 +47,8 @@ const businessAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     
-    const llm = ai.model('gemini-2.0-flash');
+    const llm = ai.model('gemini-pro');
     const history: MessageData[] = [...input.history];
-
-     history.unshift({
-      role: 'system',
-      content: [{ text: systemPrompt }],
-    });
 
     history.push({
       role: 'user',
@@ -61,6 +56,7 @@ const businessAssistantFlow = ai.defineFlow(
     });
 
     const { content } = await llm.generate({
+      system: systemPrompt,
       history,
     });
     
