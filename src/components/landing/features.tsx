@@ -21,7 +21,7 @@ const features = [
     icon: <Users className="h-8 w-8 text-primary" />,
     title: 'Marketing y Clientes (CRM)',
     description: 'Crea campañas de email con IA, gestiona tus contactos y encuentra nuevos clientes potenciales para tu negocio.',
-    image: 'https://picsum.photos/seed/marketing/400/250',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_lm931clm931clm93.png',
     aiHint: 'marketing campaign'
   },
   {
