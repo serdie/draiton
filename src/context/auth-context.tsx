@@ -8,7 +8,7 @@ import { auth as clientAuth, db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { sessionLogin, sessionLogout } from '@/lib/firebase/auth-actions';
+import { setSessionCookie, clearSessionCookie } from '@/lib/firebase/auth-actions';
 
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro';
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onIdTokenChanged(clientAuth, async (firebaseUser) => {
       if (firebaseUser) {
         const idToken = await firebaseUser.getIdToken();
-        await sessionLogin(idToken);
+        await setSessionCookie(idToken);
 
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         return () => unsubscribeDoc();
       } else {
-        await sessionLogout();
+        await clearSessionCookie();
         setUser(null);
         setLoading(false);
       }

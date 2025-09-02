@@ -45,6 +45,7 @@ import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileNav } from '@/components/ui/mobile-nav';
 import { MobileHeader } from '@/components/ui/mobile-header';
+import { clearSessionCookie } from '@/lib/firebase/auth-actions';
 
 
 export default function DashboardLayout({
@@ -58,6 +59,7 @@ export default function DashboardLayout({
   
   const handleLogout = async () => {
     await signOut(auth);
+    await clearSessionCookie();
   };
 
   if (!user) {

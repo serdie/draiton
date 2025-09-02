@@ -18,12 +18,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { clearSessionCookie } from '@/lib/firebase/auth-actions';
 
 export function Header() {
   const { user } = useContext(AuthContext);
 
   const handleLogout = async () => {
     await signOut(auth);
+    await clearSessionCookie();
   };
   
   const getInitials = (name: string) => {
