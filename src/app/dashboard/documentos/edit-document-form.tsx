@@ -32,6 +32,7 @@ const getDocumentTypeLabel = (type: DocumentType) => {
         case 'factura': return 'Factura';
         case 'presupuesto': return 'Presupuesto';
         case 'nota-credito': return 'Nota de Crédito';
+        case 'recurrente': return 'Factura Recurrente';
     }
 }
 
@@ -152,6 +153,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                     <SelectItem value="factura">Factura</SelectItem>
                     <SelectItem value="presupuesto">Presupuesto</SelectItem>
                     <SelectItem value="nota-credito">Nota de Crédito</SelectItem>
+                    <SelectItem value="recurrente">Factura Recurrente</SelectItem>
                 </SelectContent>
             </Select>
             <div />
