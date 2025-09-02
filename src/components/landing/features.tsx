@@ -7,7 +7,7 @@ const features = [
     icon: <FileText className="h-8 w-8 text-primary" />,
     title: 'Finanzas Inteligentes',
     description: 'Gestiona facturas, gastos y presupuestos. Digitaliza tickets con una foto y obtén previsiones de impuestos al instante.',
-    image: 'https://storage.googleapis.com/project-spark-348216.appspot.com/c1033620-ab64-42cf-961f-c7c4c3606f7b',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_dsu1hgdsu1hgdsu1.png',
     aiHint: 'finances chart'
   },
   {
