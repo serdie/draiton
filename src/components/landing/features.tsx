@@ -21,7 +21,7 @@ const features = [
     icon: <Users className="h-8 w-8 text-primary" />,
     title: 'Marketing y Clientes (CRM)',
     description: 'Crea campañas de email con IA, gestiona tus contactos y encuentra nuevos clientes potenciales para tu negocio.',
-    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_lm931clm931clm93.png',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_yxm8s6yxm8s6yxm8.png',
     aiHint: 'marketing campaign'
   },
   {
@@ -35,14 +35,14 @@ const features = [
     icon: <Zap className="h-8 w-8 text-primary" />,
     title: 'Automatización Total',
     description: 'Conecta tus apps favoritas (Google, redes sociales, etc.) y crea flujos de trabajo que ahorran tiempo y eliminan tareas repetitivas.',
-    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_xfeidjxfeidjxfei.png',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_lm931clm931clm93.png',
     aiHint: 'automation workflow'
   },
   {
     icon: <Sparkles className="h-8 w-8 text-primary" />,
     title: 'Asistente IA Proactivo',
     description: 'Tu socio estratégico que te ofrece ideas para crecer, busca subvenciones y te ayuda a redactar cualquier documento.',
-    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_yxm8s6yxm8s6yxm8.png',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_xfeidjxfeidjxfei.png',
     aiHint: 'ai assistant'
   },
 ];
