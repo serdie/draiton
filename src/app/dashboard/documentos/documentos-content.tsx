@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useContext } from 'react';
+import { useState, useMemo, useEffect, useContext, useCallback } from 'react';
 import type { DateRange } from "react-day-picker"
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
@@ -21,13 +21,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
-import { deleteDocument } from '@/lib/firebase/document-actions';
 import type { Document, DocumentType, DocumentStatus } from './page';
 
 const getBadgeClass = (estado: string) => {
@@ -159,21 +158,21 @@ export function DocumentosContent() {
     setCurrentPage(1);
   };
 
-  const handleDelete = async () => {
+ const handleDelete = async () => {
     if (!docToDelete) return;
     
     try {
-        await deleteDocument(docToDelete.id);
+        await deleteDoc(doc(db, "invoices", docToDelete.id));
         toast({
             title: 'Documento Eliminado',
             description: `El documento ${docToDelete.numero} ha sido eliminado.`,
         });
-        // La actualización de la UI se maneja con onSnapshot, por lo que no es necesario filtrar el estado localmente.
     } catch (error) {
+        console.error("FALLO AL ELIMINAR DE FIREBASE:", error);
         toast({
             variant: 'destructive',
             title: 'Error al eliminar',
-            description: 'No se pudo eliminar el documento. Revisa la consola para más detalles.',
+            description: 'No se pudo eliminar el documento. Revisa la consola y los permisos.',
         });
     } finally {
         setDocToDelete(null);

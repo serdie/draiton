@@ -7,15 +7,21 @@ import type { Document } from '@/app/dashboard/documentos/page';
 import { extractInvoiceData, type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { processCsvInvoices, type ProcessCsvInvoicesOutput } from '@/ai/flows/process-csv-invoices';
 
-export async function deleteDocument(id: string): Promise<void> {
+export async function deleteDocument(id: string): Promise<{ success: boolean, error?: string }> {
     if (!db) {
-        throw new Error("La base de datos no está inicializada.");
+        return { success: false, error: "La base de datos no está inicializada." };
     }
     if (!id) {
-        throw new Error("Se requiere el ID del documento.");
+        return { success: false, error: "Se requiere el ID del documento." };
     }
-    const docRef = doc(db, "invoices", id);
-    await deleteDoc(docRef);
+    try {
+        const docRef = doc(db, "invoices", id);
+        await deleteDoc(docRef);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error al eliminar documento: ", error);
+        return { success: false, error: error.message };
+    }
 }
 
 export async function updateDocument(id: string, documentData: Partial<Omit<Document, 'id' | 'ownerId' | 'fechaCreacion'>>): Promise<void> {
