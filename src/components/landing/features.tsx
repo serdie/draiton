@@ -35,7 +35,7 @@ const features = [
     icon: <Zap className="h-8 w-8 text-primary" />,
     title: 'Automatización Total',
     description: 'Conecta tus apps favoritas (Google, redes sociales, etc.) y crea flujos de trabajo que ahorran tiempo y eliminan tareas repetitivas.',
-    image: 'https://picsum.photos/seed/automatizacion/400/250',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_yxm8s6yxm8s6yxm8.png',
     aiHint: 'automation workflow'
   },
   {
