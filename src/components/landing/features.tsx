@@ -28,7 +28,7 @@ const features = [
     icon: <MonitorCog className="h-8 w-8 text-primary" />,
     title: 'Presencia Web con IA',
     description: 'Genera y gestiona tu página web o tienda online. La IA te ayuda a crear un sitio profesional sin saber programar.',
-    image: 'https://picsum.photos/seed/web/400/250',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_i76o2ji76o2ji76o.png',
     aiHint: 'website design'
   },
   {
