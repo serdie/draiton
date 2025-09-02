@@ -13,7 +13,7 @@ export function Hero() {
             poster="https://picsum.photos/seed/hero/1920/1080"
             data-ai-hint="abstract background"
         >
-            <source src="https://videos.pexels.com/video-files/3209828/3209828-hd.mp4" type="video/mp4" />
+            <source src="https://www.diemy.es/wp-content/uploads/2025/09/IA_para_Crecimiento_Empresarial-1.mp4" type="video/mp4" />
         </video>
       <div className="absolute z-10 w-full h-full bg-black/50"></div>
       <div className="z-20 container flex flex-col items-center justify-center text-white px-4">
