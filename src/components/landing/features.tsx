@@ -14,7 +14,7 @@ const features = [
     icon: <Blocks className="h-8 w-8 text-primary" />,
     title: 'Operaciones Centralizadas',
     description: 'Controla tus proyectos, tareas y clientes desde un único lugar. Colabora con tu equipo y mantén todo organizado.',
-    image: 'https://picsum.photos/seed/operaciones/400/250',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_kza7z9kza7z9kza7.png',
     aiHint: 'team collaboration'
   },
   {
