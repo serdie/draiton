@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { FileText, Users, Sparkles, MonitorCog, Blocks, Zap } from 'lucide-react';
 import Image from 'next/image';
@@ -21,7 +22,7 @@ const features = [
     icon: <Users className="h-8 w-8 text-primary" />,
     title: 'Marketing y Clientes (CRM)',
     description: 'Crea campañas de email con IA, gestiona tus contactos y encuentra nuevos clientes potenciales para tu negocio.',
-    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_yxm8s6yxm8s6yxm8.png',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_xfeidjxfeidjxfei.png',
     aiHint: 'marketing campaign'
   },
   {
@@ -42,7 +43,7 @@ const features = [
     icon: <Sparkles className="h-8 w-8 text-primary" />,
     title: 'Asistente IA Proactivo',
     description: 'Tu socio estratégico que te ofrece ideas para crecer, busca subvenciones y te ayuda a redactar cualquier documento.',
-    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_xfeidjxfeidjxfei.png',
+    image: 'https://www.diemy.es/wp-content/uploads/2025/09/Gemini_Generated_Image_yxm8s6yxm8s6yxm8.png',
     aiHint: 'ai assistant'
   },
 ];
