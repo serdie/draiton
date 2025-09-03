@@ -59,7 +59,7 @@ export function Hero() {
           Transforma la gestión de tu negocio
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-white/80">
-          Centraliza tus finanzas, marketing y operaciones con el poder de la IA. Emprende Total es la herramienta definitiva para autónomos y pymes que buscan crecer.
+          Centraliza tus finanzas, marketing y operaciones con el poder de la IA. GestorIA es la herramienta definitiva para autónomos y pymes que buscan crecer.
         </p>
         <div className="mt-8 flex gap-4">
           <Button size="lg" asChild>
