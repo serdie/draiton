@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { collection, onSnapshot, query, where, Timestamp, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp, deleteDoc, doc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -81,7 +81,12 @@ export function DocumentosContent() {
     }
     setLoading(true);
 
-    const q = query(collection(db, "invoices"), where('tipo', '==', activeTab), where('ownerId', '==', user.uid));
+    const q = query(
+      collection(db, "invoices"), 
+      where('tipo', '==', activeTab), 
+      where('ownerId', '==', user.uid),
+      orderBy("fechaEmision", "desc")
+    );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const docsList = snapshot.docs.map(doc => {
@@ -93,7 +98,7 @@ export function DocumentosContent() {
                 fechaVto: data.fechaVto instanceof Timestamp ? data.fechaVto.toDate() : null,
             } as Document;
         });
-        setDocuments(docsList.sort((a,b) => b.fechaEmision.getTime() - a.fechaEmision.getTime()));
+        setDocuments(docsList);
         setLoading(false);
     }, (error) => {
         console.error("Error fetching documents:", error);
