@@ -54,7 +54,7 @@ export function Features() {
       <div className="mx-auto mb-12 max-w-2xl text-center">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">La navaja suiza para tu negocio</h2>
         <p className="mt-4 text-muted-foreground">
-          Emprende Total integra todas las herramientas que necesitas para optimizar cada área de tu empresa.
+          GestorIA integra todas las herramientas que necesitas para optimizar cada área de tu empresa.
         </p>
       </div>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">

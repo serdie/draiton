@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/auth-context';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Emprende Total',
+  title: 'GestorIA',
   description: 'Tu centro de operaciones para autónomos y pequeñas empresas.',
 };
 
