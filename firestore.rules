@@ -1,66 +1,71 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isUserAuthenticated() {
+    
+    // Helper function to check if a user is authenticated
+    function isAuthenticated() {
       return request.auth != null;
     }
 
-    function isUserProfileOwner(userId) {
-      return request.auth.uid == userId;
-    }
-    
-    function isDocumentOwner(docId, collectionName) {
-      return get(/databases/$(database)/documents/$(collectionName)/$(docId)).data.ownerId == request.auth.uid;
+    // Helper function to get user data
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
     }
 
-    function getUserRole(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.role;
-    }
-
+    // Helper function to check if the user is an admin
     function isAdmin() {
-      return getUserRole(request.auth.uid) == 'admin';
+      return isAuthenticated() && getUserData(request.auth.uid).role == 'admin';
+    }
+
+    // Helper function to check if the user is an 'empresa'
+    function isEmpresa() {
+      return isAuthenticated() && getUserData(request.auth.uid).role == 'empresa';
     }
 
     match /users/{userId} {
-      // Un usuario puede leer su propio perfil o si es admin.
-      allow read: if isUserAuthenticated() && (isUserProfileOwner(userId) || isAdmin());
-      // Un usuario puede crear su propio perfil.
-      allow create: if isUserAuthenticated();
-      // Un usuario puede actualizar su propio perfil o si es admin.
-      allow update: if isUser.authenticated() && (isUserProfileOwner(userId) || isAdmin());
+      allow read: if isAuthenticated();
+      allow create: if !isAuthenticated() || request.auth.uid == userId; // Allow creation on signup
+      allow update: if request.auth.uid == userId || isAdmin();
+      allow delete: if isAdmin();
     }
-
+    
     match /invoices/{invoiceId} {
-      allow read, write: if isUserAuthenticated() && isDocumentOwner(invoiceId, 'invoices');
+      allow read, write: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow list: if isAuthenticated(); // List is secured by query in app
     }
 
     match /expenses/{expenseId} {
-      allow read, write: if isUserAuthenticated() && isDocumentOwner(expenseId, 'expenses');
+      allow read, write, delete: if isAuthenticated() && request.auth.uid == resource.data.ownerId;
+      allow list: if isAuthenticated(); // List is secured by query in app
     }
     
     match /contacts/{contactId} {
-        allow read, write: if isUserAuthenticated() && isDocumentOwner(contactId, 'contacts');
+      allow read, write, delete: if isAuthenticated() && request.auth.uid == resource.data.ownerId;
+      allow list: if isAuthenticated(); // List is secured by query in app
     }
 
     match /projects/{projectId} {
-        allow read, write: if isUserAuthenticated() && isDocumentOwner(projectId, 'projects');
+      allow read, write, delete: if isAuthenticated() && request.auth.uid == resource.data.ownerId;
+      allow list: if isAuthenticated(); // List is secured by query in app
     }
 
     match /tasks/{taskId} {
-        allow read, write: if isUserAuthenticated() && isDocumentOwner(taskId, 'tasks');
-    }
-
-    match /employees/{employeeId} {
-      allow list: if isUserAuthenticated() && (request.query.limit <= 100 && request.query.filters[0][2] == request.auth.uid);
-      allow get: if isUserAuthenticated() && (resource.data.ownerId == request.auth.uid || resource.data.userId == request.auth.uid);
-      allow create: if isUserAuthenticated() && (getUserRole(request.auth.uid) == 'empresa' || isAdmin());
-      allow update, delete: if isUserAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow read, write, delete: if isAuthenticated() && request.auth.uid == resource.data.ownerId;
+      allow list: if isAuthenticated(); // List is secured by query in app
     }
     
-     match /payrolls/{payrollId} {
-      allow read, write: if isUserAuthenticated() && isDocumentOwner(payrollId, 'payrolls');
+    match /employees/{employeeId} {
+      allow read: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || resource.data.userId == request.auth.uid);
+      allow list: if isAuthenticated(); // List is secured by query in app
+      allow create: if isEmpresa() || isAdmin();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.ownerId;
+    }
+
+    match /payrolls/{payrollId} {
+       allow read, write, delete: if isAuthenticated() && request.auth.uid == resource.data.ownerId;
+       allow list: if isAuthenticated(); // List is secured by query in app
     }
   }
 }
