@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,13 +14,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Sparkles, AlertTriangle, Download } from 'lucide-react';
+import { Loader2, Sparkles, AlertTriangle, Download, PlusCircle, Trash2, HelpCircle } from 'lucide-react';
 import type { Employee } from './page';
-import { AuthContext } from '@/context/auth-context';
-import { generatePayrollAction } from './actions';
+import { generatePayrollAction, reviewPayrollAction } from './actions';
 import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
+import type { ReviewPayrollOutput } from '@/ai/flows/review-payroll';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { AuthContext } from '@/context/auth-context';
+import { useContext } from 'react';
 
 interface GeneratePayrollModalProps {
   isOpen: boolean;
@@ -33,12 +35,23 @@ const months = [
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
+type AdditionalConcept = {
+    id: number;
+    concept: string;
+    amount: string;
+};
+
 export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayrollModalProps) {
   const { user } = useContext(AuthContext);
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
+  
   const [payrollData, setPayrollData] = useState<GeneratePayrollOutput | null>(null);
+  const [reviewData, setReviewData] = useState<ReviewPayrollOutput | null>(null);
   const [period, setPeriod] = useState(`${months[new Date().getMonth()]} ${new Date().getFullYear()}`);
+  const [additionalConcepts, setAdditionalConcepts] = useState<AdditionalConcept[]>([]);
+
 
   const handleGenerate = async () => {
     if (!user?.company) {
@@ -48,6 +61,7 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
     
     setIsGenerating(true);
     setPayrollData(null);
+    setReviewData(null);
 
     const input = {
         ...employee,
@@ -57,6 +71,9 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         cif: user.company.cif || 'Sin CIF',
         contributionAccountCode: '28/123456789', // Mock data
         professionalGroup: 'Grupo 1', // Mock data
+        additionalConcepts: additionalConcepts
+            .filter(c => c.concept && c.amount)
+            .map(c => ({ concept: c.concept, amount: parseFloat(c.amount) })),
     };
 
     const result = await generatePayrollAction(input);
@@ -71,30 +88,72 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
     setIsGenerating(false);
   };
   
+  const handleReview = async () => {
+    if (!payrollData) return;
+    setIsReviewing(true);
+
+    const result = await reviewPayrollAction({ payrollData });
+
+    if(result.data) {
+        setReviewData(result.data);
+    } else {
+        toast({ variant: 'destructive', title: 'Error en la Revisión', description: result.error });
+    }
+    
+    setIsReviewing(false);
+  }
+
   const handleDownload = () => {
     toast({ title: 'Función no disponible', description: 'La descarga de nóminas en PDF estará disponible pronto.' });
   }
 
+  const addConcept = () => {
+    setAdditionalConcepts(prev => [...prev, { id: Date.now(), concept: '', amount: '' }]);
+  }
+
+  const removeConcept = (id: number) => {
+    setAdditionalConcepts(prev => prev.filter(c => c.id !== id));
+  }
+
+  const updateConcept = (id: number, field: 'concept' | 'amount', value: string) => {
+    setAdditionalConcepts(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+  }
+
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Generar Nómina para {employee.name}</DialogTitle>
           <DialogDescription>
-            Selecciona el periodo y la IA calculará la nómina.
+            Selecciona el periodo, añade conceptos si es necesario, y la IA calculará la nómina.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-4">
-            <div className="flex items-end gap-4">
-                 <div className="space-y-2 flex-grow">
-                    <Label htmlFor="period">Periodo de Liquidación</Label>
-                    <Input id="period" value={period} onChange={e => setPeriod(e.target.value)} placeholder="Ej: Julio 2024" />
-                </div>
-                <Button onClick={handleGenerate} disabled={isGenerating}>
-                    {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                    Generar Nómina
+        <div className="py-4 space-y-4 flex-1 overflow-y-auto pr-6 -mr-6">
+            <div className="space-y-2">
+                <Label htmlFor="period">Periodo de Liquidación</Label>
+                <Input id="period" value={period} onChange={e => setPeriod(e.target.value)} placeholder="Ej: Julio 2024" />
+            </div>
+
+            <div className="space-y-2">
+                <Label>Conceptos Adicionales</Label>
+                {additionalConcepts.map(c => (
+                    <div key={c.id} className="flex items-center gap-2">
+                        <Input placeholder="Concepto (ej. Horas Extra)" value={c.concept} onChange={e => updateConcept(c.id, 'concept', e.target.value)} />
+                        <Input type="number" placeholder="Importe (€)" value={c.amount} onChange={e => updateConcept(c.id, 'amount', e.target.value)} className="w-32"/>
+                        <Button variant="ghost" size="icon" onClick={() => removeConcept(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </div>
+                ))}
+                 <Button variant="outline" size="sm" onClick={addConcept}>
+                    <PlusCircle className="mr-2 h-4 w-4"/>
+                    Añadir Concepto (Horas Extra, Bonus...)
                 </Button>
             </div>
+            
+            <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
+                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                Generar Nómina
+            </Button>
             
             {payrollData && (
                 <div className="p-4 border rounded-lg mt-4 space-y-4">
@@ -141,6 +200,25 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
                         <span>LÍQUIDO TOTAL A PERCIBIR (A - B)</span>
                         <span>{payrollData.netPay.toFixed(2)}€</span>
                     </div>
+
+                    <Separator />
+
+                    <Button variant="secondary" className="w-full" onClick={handleReview} disabled={isReviewing}>
+                        {isReviewing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <HelpCircle className="mr-2 h-4 w-4" />}
+                        {isReviewing ? 'Analizando...' : 'Revisión con IA'}
+                    </Button>
+
+                     {reviewData && (
+                        <div className="space-y-2 pt-2">
+                           <h4 className="font-semibold">Explicación de la IA:</h4>
+                           {reviewData.explanations.map((item, index) => (
+                               <div key={index} className="p-2 bg-muted rounded-md text-sm">
+                                   <p className="font-medium">{item.concept}</p>
+                                   <p className="text-muted-foreground">{item.explanation}</p>
+                               </div>
+                           ))}
+                        </div>
+                    )}
                 </div>
             )}
              <Alert>

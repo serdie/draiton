@@ -1,6 +1,11 @@
 
 import { z } from 'genkit';
 
+const AdditionalConceptSchema = z.object({
+    concept: z.string().describe('The name of the additional concept (e.g., "Horas Extra", "Bonus Productividad").'),
+    amount: z.number().describe('The monetary value of the concept.'),
+});
+
 export const GeneratePayrollInputSchema = z.object({
   employeeName: z.string().describe('Full name of the employee.'),
   nif: z.string().describe('NIF/NIE of the employee.'),
@@ -12,6 +17,7 @@ export const GeneratePayrollInputSchema = z.object({
   companyName: z.string().describe('The legal name of the company.'),
   cif: z.string().describe('The CIF of the company.'),
   contributionAccountCode: z.string().describe('The company\'s Social Security Contribution Account Code (Código de Cuenta de Cotización).'),
+  additionalConcepts: z.array(AdditionalConceptSchema).optional().describe('An optional list of additional concepts to include in the accruals (devengos).'),
 });
 export type GeneratePayrollInput = z.infer<typeof GeneratePayrollInputSchema>;
 

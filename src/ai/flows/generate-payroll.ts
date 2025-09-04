@@ -40,14 +40,25 @@ const prompt = ai.definePrompt({
 
 **Periodo de Liquidación:** {{{paymentPeriod}}}
 
+**Conceptos Adicionales (Devengos):**
+{{#if additionalConcepts}}
+{{#each additionalConcepts}}
+- Concepto: {{{this.concept}}}, Importe: {{{this.amount}}}
+{{/each}}
+{{else}}
+- No hay conceptos adicionales.
+{{/if}}
+
+
 **Instrucciones:**
 1.  **Calcula el salario mensual:** Divide el salario bruto anual entre 12. Asume 12 pagas a menos que se indique lo contrario.
 2.  **Determina los Devengos:**
     -   Salario Base: El salario mensual principal.
     -   Prorrata Pagas Extra: Si el salario es en 14 pagas, calcula la prorrata mensual. Para este ejercicio, asume 12 pagas y ponlo a 0.
+    -   Añade cualquier concepto adicional proporcionado. El total devengado debe incluir estos conceptos.
 3.  **Calcula las Bases de Cotización:**
-    -   Base de Cotización de Contingencias Comunes (BCCC): Salario mensual + prorrata de pagas extra (si aplica).
-    -   Base de Cotización de Contingencias Profesionales (BCCP): Igual que la BCCC, más horas extra (asume 0 si no se indica).
+    -   Base de Cotización de Contingencias Comunes (BCCC): Salario mensual + prorrata de pagas extra + conceptos adicionales que coticen.
+    -   Base de Cotización de Contingencias Profesionales (BCCP): Igual que la BCCC.
     -   Base de IRPF: Generalmente es el total devengado.
 4.  **Calcula las Deducciones (Aportaciones del trabajador):**
     -   Contingencias Comunes: 4.80% de la BCCC (ajustado para 2024).
@@ -70,3 +81,4 @@ const generatePayrollFlow = ai.defineFlow(
     return output!;
   }
 );
+
