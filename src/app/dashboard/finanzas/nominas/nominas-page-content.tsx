@@ -41,6 +41,7 @@ export function NominasPageContent() {
         }
 
         setLoading(true);
+        // Corrected query to fetch from the 'employees' collection based on the company owner's ID
         const q = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {

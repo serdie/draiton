@@ -83,7 +83,7 @@ export async function createEmployeeUser(employeeData: {
   let message;
 
   try {
-    // Check if user already exists
+    // Check if user already exists in Firebase Auth
     userRecord = await auth.getUserByEmail(employeeData.email);
     message = `El usuario ${userRecord.displayName} ya existía y ha sido vinculado a tu empresa.`;
 
@@ -99,39 +99,30 @@ export async function createEmployeeUser(employeeData: {
         disabled: false,
       });
       message = `Se ha creado el usuario para ${employeeData.name}. Contraseña temporal: ${tempPassword}`;
-      
-      // Create the user doc only if the user is new
-      const newUserDocRef = db.collection('users').doc(userRecord.uid);
-      await newUserDocRef.set({
-        uid: userRecord.uid,
-        displayName: employeeData.name,
-        email: employeeData.email,
-        role: 'employee',
-        companyOwnerId: employeeData.ownerId,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        providerData: [{ providerId: 'password' }],
-      });
     } else {
       // Re-throw other errors
       throw error;
     }
   }
 
-  // If user existed, we still need to update their doc to make them an employee
-  // Use set with merge to avoid errors if the doc doesn't exist for some reason
-  if (!tempPassword) {
-      const existingUserDocRef = db.collection('users').doc(userRecord.uid);
-      await existingUserDocRef.set({
-          role: 'employee',
-          companyOwnerId: employeeData.ownerId,
-      }, { merge: true });
-  }
+  // Create or update the user document in 'users' collection.
+  const userDocRef = db.collection('users').doc(userRecord.uid);
+  await userDocRef.set({
+      uid: userRecord.uid,
+      displayName: employeeData.name,
+      email: employeeData.email,
+      role: 'employee',
+      companyOwnerId: employeeData.ownerId,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      providerData: [{ providerId: 'password' }],
+  }, { merge: true });
 
-  // Create the employee profile in 'employees' collection regardless of whether they were new or existing
-  const employeeDocRef = db.collection('employees').doc(userRecord.uid);
+
+  // Create the employee profile in 'employees' collection
+  const employeeDocRef = db.collection('employees').doc();
   await employeeDocRef.set({
     ...employeeData,
-    userId: userRecord.uid,
+    userId: userRecord.uid, // Link to the user in 'users' collection
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
