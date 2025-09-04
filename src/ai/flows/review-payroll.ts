@@ -22,7 +22,7 @@ const prompt = ai.definePrompt({
 
 **Datos de la Nómina a Revisar:**
 \`\`\`json
-{{{jsonStringify payrollData}}}
+{{JSON.stringify payrollData}}
 \`\`\`
 
 **Tu Tarea:**
@@ -43,11 +43,7 @@ const reviewPayrollFlow = ai.defineFlow(
     outputSchema: ReviewPayrollOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt({
-        payrollData: input.payrollData,
-        // Helper to stringify JSON in the prompt
-        jsonStringify: (obj: any) => JSON.stringify(obj, null, 2),
-    });
+    const { output } = await prompt(input);
     return output!;
   }
 );
