@@ -5,7 +5,7 @@ import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,7 +67,7 @@ export default function RegisterPage() {
         })),
       });
       
-      // La redirección la manejará el AuthContext
+      // La redirección y la sincronización de datos la manejará el AuthContext
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
         setError('Este correo electrónico ya está en uso.');
@@ -94,37 +94,8 @@ export default function RegisterPage() {
     }
 
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      const providerData = {
-        providerData: user.providerData.map(p => ({
-            providerId: p.providerId,
-            uid: p.uid,
-            displayName: p.displayName,
-            email: p.email,
-            photoURL: p.photoURL,
-        })),
-      };
-
-      if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          role: 'free', 
-          createdAt: serverTimestamp(),
-          ...providerData,
-        }); 
-      } else {
-         await updateDoc(userDocRef, providerData);
-      }
-      
-      // La redirección la manejará el AuthContext
+      await signInWithPopup(auth, provider);
+      // La redirección y la sincronización de datos la manejará el AuthContext
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
@@ -231,3 +202,5 @@ export default function RegisterPage() {
     </main>
   );
 }
+
+    

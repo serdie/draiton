@@ -48,19 +48,8 @@ export default function LoginPage() {
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-       const userDocRef = doc(db, 'users', user.uid);
-       await updateDoc(userDocRef, {
-        providerData: user.providerData.map(p => ({
-          providerId: p.providerId,
-          uid: p.uid,
-          displayName: p.displayName,
-          email: p.email,
-          photoURL: p.photoURL,
-        })),
-       })
-      // Redirection is now handled by the AuthContext
+      await signInWithEmailAndPassword(auth, email, password);
+      // Redirection is now handled by the AuthContext, which will also sync the provider data
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
@@ -87,36 +76,8 @@ export default function LoginPage() {
     }
 
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      const providerData = {
-            providerData: user.providerData.map(p => ({
-              providerId: p.providerId,
-              uid: p.uid,
-              displayName: p.displayName,
-              email: p.email,
-              photoURL: p.photoURL,
-            })),
-          };
-
-      if (!userDoc.exists()) {
-          await setDoc(userDocRef, {
-            uid: user.uid,
-            displayName: user.displayName,
-            email: user.email,
-            photoURL: user.photoURL,
-            role: 'free', 
-            createdAt: serverTimestamp(),
-            ...providerData,
-          });
-      } else {
-          await updateDoc(userDocRef, providerData);
-      }
-       // Redirection is now handled by the AuthContext
+      await signInWithPopup(auth, provider);
+      // Redirection and data sync is handled by AuthContext
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
@@ -204,3 +165,5 @@ export default function LoginPage() {
     </main>
   );
 }
+
+    

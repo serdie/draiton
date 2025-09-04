@@ -3,7 +3,7 @@
 
 import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore'; 
+import { doc, onSnapshot, setDoc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore'; 
 import { auth as clientAuth, db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
 import { usePathname, useRouter } from 'next/navigation';
@@ -14,6 +14,7 @@ export interface User extends FirebaseUser {
     plan?: 'free' | 'pro' | 'empresa';
     role?: 'free' | 'pro' | 'admin' | 'empresa';
     company?: CompanySettings;
+    providerData?: any;
 }
 
 interface AuthContextType {
@@ -53,6 +54,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await setSessionCookie(idToken);
 
         const userDocRef = doc(db, 'users', firebaseUser.uid);
+        
+        // Sync provider data on login
+        const freshProviderData = firebaseUser.providerData.map(p => ({
+          providerId: p.providerId,
+          uid: p.uid,
+          displayName: p.displayName,
+          email: p.email,
+          photoURL: p.photoURL,
+        }));
+
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+                uid: firebaseUser.uid,
+                displayName: firebaseUser.displayName,
+                email: firebaseUser.email,
+                photoURL: firebaseUser.photoURL,
+                role: 'free',
+                createdAt: serverTimestamp(),
+                providerData: freshProviderData,
+            });
+        } else {
+            await updateDoc(userDocRef, { providerData: freshProviderData });
+        }
+
+
         const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
             const fullUser: User = { ...firebaseUser, ...docSnap.data() };
@@ -120,3 +147,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
+    
