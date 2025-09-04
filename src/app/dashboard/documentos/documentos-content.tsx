@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { collection, onSnapshot, query, where, Timestamp, deleteDoc, doc, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -84,8 +84,7 @@ export function DocumentosContent() {
     const q = query(
       collection(db, "invoices"), 
       where('tipo', '==', activeTab), 
-      where('ownerId', '==', user.uid),
-      orderBy("fechaEmision", "desc")
+      where('ownerId', '==', user.uid)
     );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -98,6 +97,8 @@ export function DocumentosContent() {
                 fechaVto: data.fechaVto instanceof Timestamp ? data.fechaVto.toDate() : null,
             } as Document;
         });
+        // Sort documents by emission date after fetching
+        docsList.sort((a, b) => b.fechaEmision.getTime() - a.fechaEmision.getTime());
         setDocuments(docsList);
         setLoading(false);
     }, (error) => {
