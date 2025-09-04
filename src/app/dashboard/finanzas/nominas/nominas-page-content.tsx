@@ -41,7 +41,6 @@ export function NominasPageContent() {
         }
 
         setLoading(true);
-        // Corrected query to fetch from the 'employees' collection based on the company owner's ID
         const q = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -66,7 +65,12 @@ export function NominasPageContent() {
     const handleDeleteEmployee = async () => {
         if (!employeeToDelete) return;
         try {
+            // Delete from 'employees' collection
             await deleteDoc(doc(db, "employees", employeeToDelete.id));
+
+            // Also delete from 'users' collection
+            await deleteDoc(doc(db, "users", employeeToDelete.id));
+            
             toast({ title: 'Empleado Eliminado', description: `${employeeToDelete.name} ha sido eliminado de la lista.` });
         } catch(error) {
             console.error("Error al eliminar empleado:", error);

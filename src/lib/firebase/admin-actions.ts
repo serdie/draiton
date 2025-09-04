@@ -83,12 +83,9 @@ export async function createEmployeeUser(employeeData: {
   let message;
 
   try {
-    // Check if user already exists in Firebase Auth
     userRecord = await auth.getUserByEmail(employeeData.email);
     message = `El usuario ${userRecord.displayName} ya existía y ha sido vinculado a tu empresa.`;
-
   } catch (error: any) {
-    // If user does not exist, create them
     if (error.code === 'auth/user-not-found') {
       tempPassword = Math.random().toString(36).slice(-8);
       userRecord = await auth.createUser({
@@ -98,9 +95,8 @@ export async function createEmployeeUser(employeeData: {
         displayName: employeeData.name,
         disabled: false,
       });
-      message = `Se ha creado el usuario para ${employeeData.name}. Contraseña temporal: ${tempPassword}`;
+      message = `Se ha creado un usuario para ${employeeData.name}. Contraseña temporal: ${tempPassword}`;
     } else {
-      // Re-throw other errors
       throw error;
     }
   }
@@ -117,14 +113,13 @@ export async function createEmployeeUser(employeeData: {
       providerData: [{ providerId: 'password' }],
   }, { merge: true });
 
-
-  // Create the employee profile in 'employees' collection
-  const employeeDocRef = db.collection('employees').doc();
+  // Use the user's UID as the document ID in the 'employees' collection to prevent duplicates.
+  const employeeDocRef = db.collection('employees').doc(userRecord.uid); 
   await employeeDocRef.set({
     ...employeeData,
     userId: userRecord.uid, // Link to the user in 'users' collection
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
+  }, { merge: true }); // Use merge to create or update
 
   return { uid: userRecord.uid, tempPassword, message };
 }
