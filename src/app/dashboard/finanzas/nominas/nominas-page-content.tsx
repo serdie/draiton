@@ -65,7 +65,7 @@ export function NominasPageContent() {
     const handleDeleteEmployee = async () => {
         if (!employeeToDelete) return;
         try {
-            // Delete from 'employees' collection
+            // Delete from 'employees' collection using the employee's ID (which is the user's UID)
             await deleteDoc(doc(db, "employees", employeeToDelete.id));
 
             // Also delete from 'users' collection
