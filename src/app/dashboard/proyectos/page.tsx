@@ -58,6 +58,7 @@ export default function OperacionesPage() {
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('proyectos');
     
     useEffect(() => {
         if (!db || !user) {
@@ -91,11 +92,24 @@ export default function OperacionesPage() {
     }, [user, toast]);
     
     const handleFichajesClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-        if (!isEmpresa) {
+        if (!isEmpresa && isPro) {
             e.preventDefault();
             setIsUpsellModalOpen(true);
         }
     }
+
+    const handleTabChange = (value: string) => {
+        if (value === 'fichajes' && !isEmpresa && isPro) {
+            setIsUpsellModalOpen(true);
+        } else {
+            setActiveTab(value);
+        }
+    };
+    
+    const closeUpsellModalAndResetTab = () => {
+        setIsUpsellModalOpen(false);
+        setActiveTab('proyectos');
+    };
 
   return (
     <>
@@ -112,7 +126,7 @@ export default function OperacionesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={closeUpsellModalAndResetTab}>Cancelar</AlertDialogCancel>
             <AlertDialogAction asChild>
               <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
             </AlertDialogAction>
@@ -134,7 +148,7 @@ export default function OperacionesPage() {
         </Button>
       </div>
       
-      <Tabs defaultValue="proyectos" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList>
           <TabsTrigger value="proyectos"><HardHat className="mr-2 h-4 w-4" />Proyectos</TabsTrigger>
           <TabsTrigger value="crm"><User className="mr-2 h-4 w-4" />CRM</TabsTrigger>
@@ -156,7 +170,7 @@ export default function OperacionesPage() {
         <TabsContent value="tareas" className="mt-6">
             <TareasPage />
         </TabsContent>
-         {(isPro || isEmpresa) && (
+         {(isPro || isEmpresa) && isEmpresa && (
           <TabsContent value="fichajes" className="mt-6">
               <FichajesTab />
           </TabsContent>
@@ -169,3 +183,4 @@ export default function OperacionesPage() {
     </>
   );
 }
+
