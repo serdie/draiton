@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Sparkles, AlertTriangle, Download, PlusCircle, Trash2, HelpCircle } from 'lucide-react';
+import { Loader2, Sparkles, AlertTriangle, Download, PlusCircle, Trash2, HelpCircle, Save } from 'lucide-react';
 import type { Employee } from './page';
 import { generatePayrollAction, reviewPayrollAction } from './actions';
 import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
@@ -45,6 +45,7 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [payrollData, setPayrollData] = useState<GeneratePayrollOutput | null>(null);
   const [reviewData, setReviewData] = useState<ReviewPayrollOutput | null>(null);
@@ -100,6 +101,17 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
     }
     
     setIsReviewing(false);
+  }
+  
+  const handleSavePayroll = () => {
+    if (!payrollData) return;
+    setIsSaving(true);
+    // Simulate saving to DB and updating the employee's payroll history
+    setTimeout(() => {
+        toast({ title: 'Nómina Guardada', description: `La nómina de ${period} se ha guardado en el historial de ${employee.name}.` });
+        setIsSaving(false);
+        onClose();
+    }, 1000);
   }
 
   const handleDownload = () => {
@@ -224,12 +236,16 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Aviso Importante</AlertTitle>
                 <AlertDescription>
-                    Los cálculos deben ser revisados y validados por un asesor profesional.
+                    Los cálculos deben ser revisados y validados por un asesor profesional. La nómina podrá ser editada una vez guardada.
                 </AlertDescription>
             </Alert>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cerrar</Button>
+          <Button onClick={handleSavePayroll} disabled={!payrollData || isSaving}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />}
+            Guardar Nómina
+          </Button>
           <Button onClick={handleDownload} disabled={!payrollData}>
             <Download className="mr-2 h-4 w-4" />
             Descargar PDF
