@@ -79,6 +79,21 @@ export default function DashboardLayout({
     if (isActive('/admin/dashboard')) return 'Administración';
     return 'Dashboard';
   }
+  
+  const getRoleDisplayName = (role: string | undefined) => {
+    switch (role) {
+      case 'free':
+        return 'Gratis';
+      case 'pro':
+        return 'Autónomo';
+      case 'empresa':
+        return 'Empresa';
+      case 'admin':
+        return 'Admin';
+      default:
+        return 'Usuario';
+    }
+  }
 
   if (isMobile) {
     return (
@@ -201,7 +216,7 @@ export default function DashboardLayout({
                         <UserAvatar user={user} />
                         <div className="hidden md:flex flex-col items-start">
                           <span className="font-semibold text-sm">{user?.displayName || 'Usuario'}</span>
-                          <span className="text-xs text-muted-foreground">Autónomo</span>
+                          <span className="text-xs text-muted-foreground">{getRoleDisplayName(user?.role)}</span>
                         </div>
                       </div>
                     </DropdownMenuTrigger>
