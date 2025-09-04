@@ -120,7 +120,7 @@ export default function DashboardPage() {
                 setActiveProjects(projectsSnapshot.size);
 
                  // Recent Activities
-                const lastInvoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), orderBy('fechaEmision', 'desc'), limit(3));
+                const lastInvoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(3));
                 const lastExpensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(3));
 
                 const [lastInvoicesSnap, lastExpensesSnap] = await Promise.all([
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                     });
                 });
                 
-                setRecentActivities(activities.sort((a, b) => b.time.localeCompare(a.time)).slice(0, 4));
+                setRecentActivities(activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 4));
 
 
             } catch (error) {
