@@ -71,6 +71,11 @@ export default function EmployeeDetailPage() {
         toast({ title: 'Próximamente', description: `La acción de ${action} estará disponible pronto.` });
     };
 
+    const handleDownload = (payroll: GeneratePayrollOutput) => {
+        setPayrollToView(payroll);
+    }
+
+
     return (
         <>
             {isGenerateModalOpen && (
@@ -150,7 +155,7 @@ export default function EmployeeDetailPage() {
                                                         <FileSignature className="mr-2 h-4 w-4" />
                                                         Ver Nómina
                                                     </DropdownMenuItem>
-                                                     <DropdownMenuItem onClick={() => handleComingSoon('Descargar PDF')}>
+                                                     <DropdownMenuItem onClick={() => handleDownload(payroll)}>
                                                         <Download className="mr-2 h-4 w-4" />
                                                         Descargar PDF
                                                     </DropdownMenuItem>
