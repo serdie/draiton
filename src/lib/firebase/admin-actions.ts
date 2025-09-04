@@ -1,6 +1,7 @@
 
 'use server';
 
+import admin from 'firebase-admin';
 import { getFirebaseAuth } from './firebase-admin';
 
 type UserUpdateData = {
