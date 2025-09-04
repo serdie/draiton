@@ -10,7 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { setSessionCookie, clearSessionCookie } from '@/lib/firebase/auth-actions';
 
-export type UserRole = 'free' | 'pro' | 'admin' | 'empresa';
+export type UserRole = 'free' | 'pro' | 'admin' | 'empresa' | 'employee';
 
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro' | 'empresa';
@@ -26,6 +26,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isFree: boolean;
   isEmpresa: boolean;
+  isEmployee: boolean;
   effectiveRole: UserRole | undefined;
   setSimulatedRole: (role: UserRole | null) => void;
 }
@@ -37,6 +38,7 @@ export const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isFree: true,
   isEmpresa: false,
+  isEmployee: false,
   effectiveRole: 'free',
   setSimulatedRole: () => {},
 });
@@ -137,8 +139,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isAdmin = effectiveRole === 'admin';
     const isEmpresa = effectiveRole === 'empresa';
     const isPro = effectiveRole === 'pro' || isAdmin || isEmpresa;
-    const isFree = !isPro && !isAdmin && !isEmpresa;
-    return { isPro, isAdmin, isFree, isEmpresa };
+    const isEmployee = effectiveRole === 'employee';
+    const isFree = !isPro && !isAdmin && !isEmpresa && !isEmployee;
+    return { isPro, isAdmin, isFree, isEmpresa, isEmployee };
   }, [effectiveRole]);
 
   if (loading) {

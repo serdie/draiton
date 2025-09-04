@@ -22,14 +22,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import type { User, UserRole } from './page';
+import type { User, UserRole } from './users-tab';
 import { updateUser } from '@/lib/firebase/admin-actions';
 import { Loader2 } from 'lucide-react';
 
 const userFormSchema = z.object({
   displayName: z.string().min(1, { message: 'El nombre es obligatorio.' }),
   email: z.string().email({ message: 'Introduce un correo electrónico válido.' }),
-  role: z.enum(['free', 'pro', 'admin', 'empresa']),
+  role: z.enum(['free', 'pro', 'admin', 'empresa', 'employee']),
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -108,6 +108,7 @@ export function EditUserForm({ user, onClose }: { user: User, onClose: () => voi
                   <SelectItem value="free">Free</SelectItem>
                   <SelectItem value="pro">Pro</SelectItem>
                   <SelectItem value="empresa">Empresa</SelectItem>
+                  <SelectItem value="employee">Empleado</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>

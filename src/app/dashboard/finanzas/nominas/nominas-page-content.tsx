@@ -28,7 +28,11 @@ export function NominasPageContent() {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const { toast } = useToast();
-    const { user } = useContext(AuthContext);
+    const { user, isEmpresa } = useContext(AuthContext);
+
+    const employeeLimit = 5;
+    const canAddEmployee = isEmpresa ? employees.length < employeeLimit : user?.role === 'admin';
+
 
     useEffect(() => {
         if (!user) {
@@ -72,9 +76,6 @@ export function NominasPageContent() {
     };
 
     const handleViewHistory = (employee: Employee) => {
-        // We can pass the employee data directly to the page component
-        // but for a clean URL, we'll store it in sessionStorage. In a prod app,
-        // the detail page would fetch this by ID.
         sessionStorage.setItem('selectedEmployee', JSON.stringify(employee));
         router.push(`/dashboard/finanzas/nominas/${employee.id}`);
     }
@@ -84,6 +85,7 @@ export function NominasPageContent() {
             <AddEmployeeModal
                 isOpen={isAddEmployeeModalOpen}
                 onClose={() => setIsAddEmployeeModalOpen(false)}
+                onEmployeeAdded={() => { /* Could trigger a refetch if needed */ }}
             />
             {employeeToEdit && (
                 <EditEmployeeModal
@@ -123,10 +125,17 @@ export function NominasPageContent() {
                             Añade a tus empleados y genera sus nóminas con la ayuda de la IA.
                         </p>
                     </div>
-                    <Button onClick={() => setIsAddEmployeeModalOpen(true)}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Añadir Empleado
-                    </Button>
+                    <div className="flex flex-col items-end">
+                        <Button onClick={() => setIsAddEmployeeModalOpen(true)} disabled={!canAddEmployee}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Añadir Empleado
+                        </Button>
+                        {isEmpresa && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {employees.length}/{employeeLimit} empleados creados.
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 <Card>

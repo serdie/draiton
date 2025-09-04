@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GoogleIcon } from "@/app/dashboard/conexiones/google-icon";
 
-export type UserRole = 'free' | 'pro' | 'admin' | 'empresa';
+export type UserRole = 'free' | 'pro' | 'admin' | 'empresa' | 'employee';
 
 export type User = {
   id: string;
@@ -31,7 +31,7 @@ export type User = {
   provider: string;
 };
 
-const userRoles: UserRole[] = ['free', 'pro', 'admin', 'empresa'];
+const userRoles: UserRole[] = ['free', 'pro', 'admin', 'empresa', 'employee'];
 
 const formatProvider = (providerId: string) => {
     if (providerId === 'google.com') return 'Google';
@@ -225,18 +225,11 @@ export function UsersTab() {
                                                             Cambiar Rol
                                                         </DropdownMenuSubTrigger>
                                                         <DropdownMenuSubContent>
-                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'free' })}>
-                                                                <User className="mr-2 h-4 w-4" /> Free
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'pro' })}>
-                                                                <User className="mr-2 h-4 w-4" /> Pro
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'empresa' })}>
-                                                                <UserCog className="mr-2 h-4 w-4" /> Empresa
-                                                            </DropdownMenuItem>
-                                                             <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'admin' })}>
-                                                                <UserCog className="mr-2 h-4 w-4" /> Admin
-                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'free' })}>Free</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'pro' })}>Pro</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'empresa' })}>Empresa</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'employee' })}>Empleado</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'admin' })}>Admin</DropdownMenuItem>
                                                         </DropdownMenuSubContent>
                                                     </DropdownMenuSub>
                                                     <DropdownMenuSeparator />

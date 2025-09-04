@@ -5,7 +5,9 @@ import { NominasPageContent } from './nominas-page-content';
 
 export type Employee = {
     id: string;
+    ownerId: string;
     name: string;
+    email: string;
     position: string;
     nif: string;
     socialSecurityNumber: string;

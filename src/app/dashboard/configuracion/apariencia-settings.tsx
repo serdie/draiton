@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Sun, Moon, Laptop, User, ShieldCheck, Gem, Building } from 'lucide-react';
+import { Sun, Moon, Laptop, User, ShieldCheck, Gem, Building, HardHat } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import type { UserRole } from '@/context/auth-context';
 
@@ -73,7 +73,7 @@ export function AparienciaSettings() {
                 <RadioGroup
                     value={effectiveRole}
                     onValueChange={(value) => setSimulatedRole(value as UserRole)}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                    className="grid grid-cols-2 md:grid-cols-5 gap-4"
                 >
                     <div >
                         <RadioGroupItem value="free" id="sim-free" className="peer sr-only" />
@@ -91,6 +91,12 @@ export function AparienciaSettings() {
                         <RadioGroupItem value="empresa" id="sim-empresa" className="peer sr-only" />
                         <Label htmlFor="sim-empresa" className="flex items-center justify-center gap-3 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
                            <Building className="h-5 w-5" /> Empresa
+                        </Label>
+                    </div>
+                    <div>
+                        <RadioGroupItem value="employee" id="sim-employee" className="peer sr-only" />
+                        <Label htmlFor="sim-employee" className="flex items-center justify-center gap-3 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                           <HardHat className="h-5 w-5" /> Empleado
                         </Label>
                     </div>
                      <div>

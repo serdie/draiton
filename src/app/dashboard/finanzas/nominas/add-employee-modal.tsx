@@ -17,23 +17,26 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { Employee } from './page';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
+import { createEmployeeUser } from '@/lib/firebase/admin-actions';
 
 
 interface AddEmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onEmployeeAdded: () => void;
 }
 
-export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
+export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmployeeModalProps) {
   const { toast } = useToast();
   const { user } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   
   const [name, setName] = useState('');
   const [position, setPosition] = useState('');
+  const [email, setEmail] = useState('');
   const [nif, setNif] = useState('');
   const [socialSecurityNumber, setSocialSecurityNumber] = useState('');
   const [contractType, setContractType] = useState<Employee['contractType']>('Indefinido');
@@ -42,6 +45,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
   const resetForm = () => {
     setName('');
     setPosition('');
+    setEmail('');
     setNif('');
     setSocialSecurityNumber('');
     setContractType('Indefinido');
@@ -49,7 +53,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
   };
 
   const handleAddEmployee = async () => {
-    if (!name || !position || !nif || !socialSecurityNumber || !grossAnnualSalary) {
+    if (!name || !position || !nif || !socialSecurityNumber || !grossAnnualSalary || !email) {
       toast({
         variant: 'destructive',
         title: 'Campos incompletos',
@@ -64,7 +68,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
 
     setIsLoading(true);
     
-    const newEmployee = {
+    const newEmployeeData = {
         ownerId: user.uid,
         name,
         position,
@@ -72,20 +76,24 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
         socialSecurityNumber,
         contractType,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
-        createdAt: serverTimestamp(),
+        email,
     };
 
     try {
-        await addDoc(collection(db, "employees"), newEmployee);
+        const result = await createEmployeeUser(newEmployeeData);
+
         toast({
-            title: 'Empleado Añadido',
-            description: `${name} ha sido añadido a la lista de empleados.`,
+            title: 'Empleado Creado',
+            description: `Se ha creado el usuario para ${name}. Contraseña: ${result.tempPassword}`,
+            duration: 10000,
         });
+
+        onEmployeeAdded();
         resetForm();
         onClose();
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error al añadir empleado:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'No se pudo guardar el empleado.'});
+        toast({ variant: 'destructive', title: 'Error', description: error.message || 'No se pudo guardar el empleado.'});
     } finally {
         setIsLoading(false);
     }
@@ -97,7 +105,7 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
         <DialogHeader>
           <DialogTitle>Añadir Nuevo Empleado</DialogTitle>
           <DialogDescription>
-            Introduce los datos del nuevo empleado para gestionar sus nóminas.
+            Introduce los datos del nuevo empleado para gestionar sus nóminas. Se creará un nuevo usuario para él/ella.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
@@ -111,6 +119,10 @@ export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
                 <Input id="position" value={position} onChange={e => setPosition(e.target.value)} />
             </div>
           </div>
+          <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="nif">NIF / NIE</Label>
