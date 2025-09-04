@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,7 +22,6 @@ import type { ReviewPayrollOutput } from '@/ai/flows/review-payroll';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { AuthContext } from '@/context/auth-context';
-import { useContext } from 'react';
 
 interface GeneratePayrollModalProps {
   isOpen: boolean;
@@ -225,7 +224,7 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Aviso Importante</AlertTitle>
                 <AlertDescription>
-                    Esta es una simulación generada por IA con fines orientativos. Los cálculos deben ser revisados y validados por un asesor profesional.
+                    Los cálculos deben ser revisados y validados por un asesor profesional.
                 </AlertDescription>
             </Alert>
         </div>
