@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, PlusCircle } from 'lucide-react';
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -18,6 +18,7 @@ import { type Project } from '../proyectos/page';
 import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
+import Link from 'next/link';
 
 type TaskStatus = 'Pendiente' | 'En Progreso' | 'Completado';
 type TaskPriority = 'Baja' | 'Media' | 'Alta';
@@ -42,14 +43,14 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
   const [dueDate, setDueDate] = useState<Date | undefined>();
 
   // Set current user as default assignee
-  useState(() => {
+  useEffect(() => {
     if (user) {
         setAssigneeId(user.uid);
     }
-  });
+  }, [user]);
 
   // Fetch all users to populate the assignee dropdown
-  useState(() => {
+  useEffect(() => {
     const fetchUsers = async () => {
         if (!db) return;
         const usersSnapshot = await getDocs(collection(db, 'users'));
@@ -60,7 +61,7 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
         setAllUsers(usersList);
     };
     fetchUsers();
-  });
+  }, []);
 
 
   const handleCreateTask = async () => {
@@ -89,6 +90,7 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
       assigneeId: assigneeId || user.uid,
       dueDate: dueDate || null,
       createdAt: serverTimestamp(),
+      isCompleted: status === 'Completado',
     };
 
     try {
@@ -152,16 +154,27 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="task-assignee">Responsable</Label>
-          <Select value={assigneeId} onValueChange={setAssigneeId}>
-            <SelectTrigger id="task-assignee">
-              <SelectValue placeholder="Asignar a un usuario" />
-            </SelectTrigger>
-            <SelectContent>
-              {allUsers.map(u => (
-                <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {allUsers.length > 0 ? (
+                <Select value={assigneeId} onValueChange={setAssigneeId}>
+                    <SelectTrigger id="task-assignee">
+                    <SelectValue placeholder="Asignar a un usuario" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    {allUsers.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+            ) : (
+                 <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">No hay empleados.</p>
+                     <Button variant="outline" size="sm" asChild>
+                        <Link href="/dashboard/finanzas?tab=nominas">
+                           <PlusCircle className="mr-2 h-4 w-4"/> Añadir
+                        </Link>
+                    </Button>
+                </div>
+            )}
         </div>
          <div className="space-y-2">
           <Label>Fecha de Entrega</Label>
@@ -169,7 +182,7 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
             <PopoverTrigger asChild>
               <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !dueDate && "text-muted-foreground")}>
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {dueDate ? format(dueDate, "dd/MM/yyyy") : <span>dd/mm/aaaa</span>}
+                {dueDate ? format(dueDate, "dd/MM/yyyy", {locale: es}) : <span>dd/mm/aaaa</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">

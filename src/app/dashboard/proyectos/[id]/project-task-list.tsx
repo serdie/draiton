@@ -84,6 +84,9 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
             projectId,
             ownerId: user.uid,
             createdAt: serverTimestamp(),
+            status: 'Pendiente',
+            priority: 'Media',
+            assigneeId: user.uid,
         });
         setNewTaskTitle('');
     };
@@ -135,6 +138,11 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
                                 </Label>
                             </div>
                         ))}
+                         {tasks.length === 0 && (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                                Aún no hay tareas en este proyecto. ¡Añade la primera!
+                            </p>
+                        )}
                     </div>
                      <form onSubmit={handleAddTask} className="mt-6 flex gap-2">
                         <Input
