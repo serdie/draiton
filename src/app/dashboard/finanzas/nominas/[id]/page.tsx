@@ -11,6 +11,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { GeneratePayrollModal } from '../generate-payroll-modal';
 import type { Employee } from '../page';
 import { useToast } from '@/hooks/use-toast';
+import type { GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
+import { ViewPayrollModal } from '../view-payroll-modal';
+
 
 // Mock data, in a real app this would come from a database
 const initialEmployees: Employee[] = [
@@ -19,10 +22,25 @@ const initialEmployees: Employee[] = [
     { id: '3', name: 'Laura Sánchez', position: 'Project Manager Jr.', nif: '45678912C', socialSecurityNumber: '28/1122334455', contractType: 'Temporal', grossAnnualSalary: 31000 },
 ];
 
-const mockPayrolls = [
-    { id: 'pay_1', period: 'Julio 2024', amount: 2450.75, status: 'Pagado' },
-    { id: 'pay_2', period: 'Junio 2024', amount: 2450.75, status: 'Pagado' },
-    { id: 'pay_3', period: 'Mayo 2024', amount: 2450.75, status: 'Pagado' },
+const mockPayrolls: (GeneratePayrollOutput & { id: string, status: string })[] = [
+    { 
+        id: 'pay_1',
+        status: 'Pagado',
+        header: { companyName: 'Emprende Total SL', employeeName: 'Ana García', period: 'Julio 2024' },
+        accruals: { items: [{ concept: 'Salario Base', amount: 3500 }], total: 3500 },
+        deductions: { items: [{ concept: 'Contingencias Comunes', amount: 168 }, { concept: 'Desempleo', amount: 54.25 }, { concept: 'Formación Profesional', amount: 3.5 }, { concept: 'Retención IRPF (18%)', amount: 630 }], total: 855.75 },
+        netPay: 2644.25,
+        contributionBases: { commonContingencies: 3500, professionalContingencies: 3500, irpfWithholding: 3500, irpfPercentage: 18 }
+    },
+    { 
+        id: 'pay_2',
+        status: 'Pagado',
+        header: { companyName: 'Emprende Total SL', employeeName: 'Ana García', period: 'Junio 2024' },
+        accruals: { items: [{ concept: 'Salario Base', amount: 3500 }], total: 3500 },
+        deductions: { items: [{ concept: 'Contingencias Comunes', amount: 168 }, { concept: 'Desempleo', amount: 54.25 }, { concept: 'Formación Profesional', amount: 3.5 }, { concept: 'Retención IRPF (18%)', amount: 630 }], total: 855.75 },
+        netPay: 2644.25,
+        contributionBases: { commonContingencies: 3500, professionalContingencies: 3500, irpfWithholding: 3500, irpfPercentage: 18 }
+    }
 ];
 
 export default function EmployeeDetailPage() {
@@ -35,6 +53,8 @@ export default function EmployeeDetailPage() {
     const employee = initialEmployees.find(e => e.id === employeeId);
     
     const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+    const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
+
 
     if (!employee) {
         return (
@@ -57,6 +77,14 @@ export default function EmployeeDetailPage() {
                  <GeneratePayrollModal
                     isOpen={isGenerateModalOpen}
                     onClose={() => setIsGenerateModalOpen(false)}
+                    employee={employee}
+                />
+            )}
+            {payrollToView && (
+                <ViewPayrollModal
+                    isOpen={!!payrollToView}
+                    onClose={() => setPayrollToView(null)}
+                    payroll={payrollToView}
                     employee={employee}
                 />
             )}
@@ -107,8 +135,8 @@ export default function EmployeeDetailPage() {
                             <TableBody>
                                 {mockPayrolls.map((payroll) => (
                                     <TableRow key={payroll.id}>
-                                        <TableCell className="font-medium">{payroll.period}</TableCell>
-                                        <TableCell>{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(payroll.amount)}</TableCell>
+                                        <TableCell className="font-medium">{payroll.header.period}</TableCell>
+                                        <TableCell>{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(payroll.netPay)}</TableCell>
                                         <TableCell className="text-green-600">{payroll.status}</TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
@@ -118,7 +146,7 @@ export default function EmployeeDetailPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleComingSoon('Ver Nómina')}>
+                                                    <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
                                                         <FileSignature className="mr-2 h-4 w-4" />
                                                         Ver Nómina
                                                     </DropdownMenuItem>
