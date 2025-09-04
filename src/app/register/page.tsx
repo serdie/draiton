@@ -58,6 +58,13 @@ export default function RegisterPage() {
         email: user.email,
         role: 'free', 
         createdAt: serverTimestamp(),
+        providerData: user.providerData.map(p => ({
+          providerId: p.providerId,
+          uid: p.uid,
+          displayName: p.displayName,
+          email: p.email,
+          photoURL: p.photoURL,
+        })),
       });
       
       // La redirección la manejará el AuthContext
@@ -101,6 +108,13 @@ export default function RegisterPage() {
           photoURL: user.photoURL,
           role: 'free', 
           createdAt: serverTimestamp(),
+          providerData: user.providerData.map(p => ({
+              providerId: p.providerId,
+              uid: p.uid,
+              displayName: p.displayName,
+              email: p.email,
+              photoURL: p.photoURL,
+            })),
         }); 
       }
       

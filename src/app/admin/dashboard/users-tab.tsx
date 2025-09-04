@@ -6,7 +6,7 @@ import { AuthContext } from "@/context/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Loader2, User, Trash2, ShieldCheck, UserCog, FilterX, ChevronLeft, ChevronRight } from "lucide-react";
+import { MoreHorizontal, Loader2, User, Trash2, ShieldCheck, UserCog, FilterX, ChevronLeft, ChevronRight, Mail, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import { collection, onSnapshot, Timestamp } from "firebase/firestore";
@@ -18,6 +18,7 @@ import { getRoleBadgeClass } from "@/lib/utils";
 import { EditUserModal } from "./edit-user-modal";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { GoogleIcon } from "@/app/dashboard/conexiones/google-icon";
 
 export type UserRole = 'free' | 'pro' | 'admin' | 'empresa';
 
@@ -27,9 +28,21 @@ export type User = {
   email: string;
   role: UserRole;
   registered: Date;
+  provider: string;
 };
 
 const userRoles: UserRole[] = ['free', 'pro', 'admin', 'empresa'];
+
+const ProviderIcon = ({ providerId }: { providerId: string }) => {
+    if (providerId === 'google.com') {
+        return <GoogleIcon className="h-5 w-5" />;
+    }
+    if (providerId === 'password') {
+        return <KeyRound className="h-5 w-5 text-muted-foreground" />;
+    }
+    return <Mail className="h-5 w-5 text-muted-foreground" />;
+};
+
 
 export function UsersTab() {
     const { user: adminUser } = useContext(AuthContext);
@@ -63,12 +76,17 @@ export function UsersTab() {
                     ? data.createdAt.toDate() 
                     : new Date();
 
+                const provider = (data.providerData && data.providerData.length > 0)
+                    ? data.providerData[0].providerId
+                    : 'password';
+
                 return {
                     id: doc.id,
                     name: data.displayName || 'Sin nombre',
                     email: data.email,
                     role: data.role || 'free',
                     registered: registeredDate,
+                    provider: provider
                 };
             });
             setUsers(userList);
@@ -174,6 +192,7 @@ export function UsersTab() {
                                 <TableRow>
                                     <TableHead>Nombre</TableHead>
                                     <TableHead>Email</TableHead>
+                                    <TableHead>Proveedor</TableHead>
                                     <TableHead>Rol</TableHead>
                                     <TableHead>Fecha de Registro</TableHead>
                                     <TableHead className="text-right">Acciones</TableHead>
@@ -185,6 +204,9 @@ export function UsersTab() {
                                     <TableRow key={user.id}>
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
+                                        <TableCell>
+                                            <ProviderIcon providerId={user.provider} />
+                                        </TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className={getRoleBadgeClass(user.role)}>
                                                 {user.role}
@@ -234,7 +256,7 @@ export function UsersTab() {
                                 ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
+                                        <TableCell colSpan={6} className="h-24 text-center">
                                             No se encontraron usuarios con los filtros aplicados.
                                         </TableCell>
                                     </TableRow>

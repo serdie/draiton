@@ -90,6 +90,13 @@ export default function LoginPage() {
             photoURL: user.photoURL,
             role: 'free', 
             createdAt: serverTimestamp(),
+            providerData: user.providerData.map(p => ({
+              providerId: p.providerId,
+              uid: p.uid,
+              displayName: p.displayName,
+              email: p.email,
+              photoURL: p.photoURL,
+            })),
           });
       }
        // Redirection is now handled by the AuthContext
