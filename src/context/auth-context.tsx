@@ -10,9 +10,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { setSessionCookie, clearSessionCookie } from '@/lib/firebase/auth-actions';
 
+export type UserRole = 'free' | 'pro' | 'admin' | 'empresa';
+
 export interface User extends FirebaseUser {
     plan?: 'free' | 'pro' | 'empresa';
-    role?: 'free' | 'pro' | 'admin' | 'empresa';
+    role?: UserRole;
     company?: CompanySettings;
     providerData?: any;
 }
@@ -24,6 +26,8 @@ interface AuthContextType {
   isAdmin: boolean;
   isFree: boolean;
   isEmpresa: boolean;
+  effectiveRole: UserRole | undefined;
+  setSimulatedRole: (role: UserRole | null) => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -33,11 +37,14 @@ export const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isFree: true,
   isEmpresa: false,
+  effectiveRole: 'free',
+  setSimulatedRole: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [simulatedRole, setSimulatedRole] = useState<UserRole | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -55,7 +62,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         
-        // Sync provider data on login
         const freshProviderData = firebaseUser.providerData.map(p => ({
           providerId: p.providerId,
           uid: p.uid,
@@ -98,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         await clearSessionCookie();
         setUser(null);
+        setSimulatedRole(null);
         setLoading(false);
       }
     }, (error) => {
@@ -124,14 +131,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, loading, pathname, router]);
 
+  const effectiveRole = simulatedRole ?? user?.role;
 
   const roles = useMemo(() => {
-    const isAdmin = user?.role === 'admin';
-    const isEmpresa = user?.role === 'empresa';
-    const isPro = user?.role === 'pro' || isAdmin || isEmpresa;
+    const isAdmin = effectiveRole === 'admin';
+    const isEmpresa = effectiveRole === 'empresa';
+    const isPro = effectiveRole === 'pro' || isAdmin || isEmpresa;
     const isFree = !isPro && !isAdmin && !isEmpresa;
     return { isPro, isAdmin, isFree, isEmpresa };
-  }, [user]);
+  }, [effectiveRole]);
 
   if (loading) {
       return (
@@ -142,10 +150,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, ...roles }}>
+    <AuthContext.Provider value={{ user, loading, ...roles, effectiveRole, setSimulatedRole }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-    
