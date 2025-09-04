@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Loader2, User, HardHat, FileText, BarChart2 } from 'lucide-react';
+import { PlusCircle, Loader2, User, HardHat, FileText, BarChart2, Clock } from 'lucide-react';
 import { CreateProjectModal } from './create-project-modal';
 import { AuthContext } from '@/context/auth-context';
 import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
@@ -18,6 +18,7 @@ import { Progress } from '@/components/ui/progress';
 import ContactosPage from '../contactos/page';
 import TareasPage from '../tareas/page';
 import InformesPage from '../informes/page';
+import { FichajesTab } from './fichajes-tab';
 
 export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
 
@@ -157,6 +158,7 @@ export default function OperacionesPage() {
           <TabsTrigger value="proyectos"><HardHat className="mr-2 h-4 w-4" />Proyectos</TabsTrigger>
           <TabsTrigger value="crm"><User className="mr-2 h-4 w-4" />CRM</TabsTrigger>
           <TabsTrigger value="tareas"><FileText className="mr-2 h-4 w-4" />Tareas</TabsTrigger>
+          <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4" />Fichajes</TabsTrigger>
           <TabsTrigger value="informes"><BarChart2 className="mr-2 h-4 w-4"/>Informes</TabsTrigger>
         </TabsList>
 
@@ -169,6 +171,9 @@ export default function OperacionesPage() {
         </TabsContent>
         <TabsContent value="tareas" className="mt-6">
             <TareasPage />
+        </TabsContent>
+        <TabsContent value="fichajes" className="mt-6">
+            <FichajesTab />
         </TabsContent>
         <TabsContent value="informes" className="mt-6">
             <InformesPage />
