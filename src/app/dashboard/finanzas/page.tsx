@@ -1,12 +1,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Coins, Landmark, Receipt } from 'lucide-react';
+import { FileText, Coins, Receipt, FileSignature } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
 import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
+import { AuthContext } from '@/context/auth-context';
+import { cn } from '@/lib/utils';
 
 
 const ComingSoon = ({ title }: { title: string }) => (
@@ -17,6 +19,7 @@ const ComingSoon = ({ title }: { title: string }) => (
 );
 
 export default function FinanzasPage() {
+  const { isEmpresa } = useContext(AuthContext);
   
   return (
       <div className="space-y-6">
@@ -26,10 +29,13 @@ export default function FinanzasPage() {
         </div>
 
         <Tabs defaultValue="documentos" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={cn("grid w-full", isEmpresa ? "grid-cols-4" : "grid-cols-3")}>
             <TabsTrigger value="documentos"><FileText className="mr-2 h-4 w-4" />Documentos</TabsTrigger>
             <TabsTrigger value="gastos"><Receipt className="mr-2 h-4 w-4" />Gastos</TabsTrigger>
             <TabsTrigger value="impuestos"><Coins className="mr-2 h-4 w-4" />Impuestos</TabsTrigger>
+            {isEmpresa && (
+                 <TabsTrigger value="nominas"><FileSignature className="mr-2 h-4 w-4" />Nóminas</TabsTrigger>
+            )}
           </TabsList>
           <TabsContent value="documentos" className="mt-6">
             <DocumentosContent />
@@ -40,6 +46,11 @@ export default function FinanzasPage() {
           <TabsContent value="impuestos"  className="mt-6">
             <ImpuestosTab />
           </TabsContent>
+           {isEmpresa && (
+                <TabsContent value="nominas"  className="mt-6">
+                    <ComingSoon title="Gestión de Nóminas" />
+                </TabsContent>
+           )}
         </Tabs>
       </div>
   );
