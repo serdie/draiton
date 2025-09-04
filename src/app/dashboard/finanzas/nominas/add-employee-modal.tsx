@@ -83,8 +83,8 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         const result = await createEmployeeUser(newEmployeeData);
 
         toast({
-            title: 'Empleado Creado',
-            description: `Se ha creado el usuario para ${name}. Contraseña: ${result.tempPassword}`,
+            title: 'Empleado Creado/Vinculado',
+            description: result.message,
             duration: 10000,
         });
 

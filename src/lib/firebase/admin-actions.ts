@@ -75,40 +75,64 @@ export async function createEmployeeUser(employeeData: {
   socialSecurityNumber: string;
   contractType: string;
   grossAnnualSalary: number;
-}): Promise<{ uid: string; tempPassword?: string }> {
+}): Promise<{ uid: string; tempPassword?: string; message: string }> {
   const { auth, db } = getFirebaseAuth();
+  
+  let userRecord;
+  let tempPassword;
+  let message;
 
-  // Generate a temporary password
-  const tempPassword = Math.random().toString(36).slice(-8);
+  try {
+    // Check if user already exists
+    userRecord = await auth.getUserByEmail(employeeData.email);
+    message = `El usuario ${userRecord.displayName} ya existía y ha sido vinculado a tu empresa.`;
 
-  // Create user in Firebase Auth
-  const userRecord = await auth.createUser({
-    email: employeeData.email,
-    emailVerified: true,
-    password: tempPassword,
-    displayName: employeeData.name,
-    disabled: false,
-  });
+  } catch (error: any) {
+    // If user does not exist, create them
+    if (error.code === 'auth/user-not-found') {
+      tempPassword = Math.random().toString(36).slice(-8);
+      userRecord = await auth.createUser({
+        email: employeeData.email,
+        emailVerified: true,
+        password: tempPassword,
+        displayName: employeeData.name,
+        disabled: false,
+      });
+      message = `Se ha creado el usuario para ${employeeData.name}. Contraseña temporal: ${tempPassword}`;
+      
+      // Create the user doc only if the user is new
+      const newUserDocRef = db.collection('users').doc(userRecord.uid);
+      await newUserDocRef.set({
+        uid: userRecord.uid,
+        displayName: employeeData.name,
+        email: employeeData.email,
+        role: 'employee',
+        companyOwnerId: employeeData.ownerId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        providerData: [{ providerId: 'password' }],
+      });
+    } else {
+      // Re-throw other errors
+      throw error;
+    }
+  }
 
-  // Create user document in Firestore 'users' collection
-  const userDocRef = db.collection('users').doc(userRecord.uid);
-  await userDocRef.set({
-    uid: userRecord.uid,
-    displayName: employeeData.name,
-    email: employeeData.email,
-    role: 'employee',
-    companyOwnerId: employeeData.ownerId, // Link to the 'empresa' user
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    providerData: [{ providerId: 'password' }],
-  });
+  // If user existed, we still need to update their doc to make them an employee
+  if (!tempPassword) {
+      const existingUserDocRef = db.collection('users').doc(userRecord.uid);
+      await existingUserDocRef.update({
+          role: 'employee',
+          companyOwnerId: employeeData.ownerId,
+      });
+  }
 
-  // Create employee document in Firestore 'employees' collection
+  // Create the employee profile in 'employees' collection regardless of whether they were new or existing
   const employeeDocRef = db.collection('employees').doc();
   await employeeDocRef.set({
     ...employeeData,
-    userId: userRecord.uid, // Link back to the user auth record
+    userId: userRecord.uid,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
-  return { uid: userRecord.uid, tempPassword };
+  return { uid: userRecord.uid, tempPassword, message };
 }
