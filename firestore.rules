@@ -1,77 +1,59 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
+    // Helper function to check ownership
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    function isOwner(resource) {
-      return request.auth.uid == resource.data.ownerId;
-    }
-
-    function isProjectOwner(projectId) {
-      return get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
-    }
-
-    function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    // Collection: users
+    // Users can read their own data.
+    // Admins can read all user data.
+    // Users can only create their own user document.
+    // Users can update their own data.
     match /users/{userId} {
-      // Un usuario puede leer su propio perfil.
-      allow get: if isSignedIn() && request.auth.uid == userId;
-      // Un usuario puede crear su propio perfil.
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      // Un usuario puede actualizar su propio perfil.
-      allow update: if isSignedIn() && request.auth.uid == userId;
-      // Los administradores pueden leer y listar todos los perfiles de usuario.
-      allow get, list: if isSignedIn() && isAdmin();
-      // Nadie puede borrar usuarios desde el cliente.
-      allow delete: if false;
+      allow read: if isOwner(userId) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      // Deleting user documents from the client is generally disallowed for safety.
+      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Collection: projects
-    match /projects/{projectId} {
-      allow get: if isSignedIn() && (isOwner(resource) || isAdmin());
-      allow list: if isSignedIn() && (request.query.get('ownerId') == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isSignedIn() && (isOwner(resource) || isAdmin());
+    // Generic rule for user-owned content
+    match /{collection}/{docId} {
+      allow read, update, delete: if resource.data.ownerId == request.auth.uid;
+      allow create: if request.resource.data.ownerId == request.auth.uid;
     }
 
-    // Collection: tasks
-    match /tasks/{taskId} {
-      allow get: if isSignedIn() && (isOwner(resource) || isAdmin());
-      allow list: if isSignedIn() && (isProjectOwner(request.query.get('projectId')) || isAdmin());
-      allow create: if isSignedIn() && isProjectOwner(request.resource.data.projectId);
-      allow update, delete: if isSignedIn() && (isOwner(resource) || isAdmin());
-    }
-
-    // Collection: invoices (documentos)
+    // Specific rules for collections to ensure ownerId is checked
     match /invoices/{invoiceId} {
-      allow get: if isSignedIn() && (isOwner(resource) || isAdmin());
-      allow list: if isSignedIn() && (request.query.get('ownerId') == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isSignedIn() && (isOwner(resource) || isAdmin());
-    }
-
-    // Collection: expenses (gastos)
-    match /expenses/{expenseId} {
-       allow get: if isSignedIn() && (isOwner(resource) || isAdmin());
-       allow list: if isSignedIn() && (request.query.get('ownerId') == request.auth.uid || isAdmin());
-       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-       allow update, delete: if isSignedIn() && (isOwner(resource) || isAdmin());
+        allow read, write: if isOwner(request.resource.data.ownerId);
     }
     
-    // Collection: contacts
+    match /expenses/{expenseId} {
+        allow read, write: if isOwner(request.resource.data.ownerId);
+    }
+
     match /contacts/{contactId} {
-       allow get: if isSignedIn() && (isOwner(resource) || isAdmin());
-       allow list: if isSignedIn() && (request.query.get('ownerId') == request.auth.uid || isAdmin());
-       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-       allow update, delete: if isSignedIn() && (isOwner(resource) || isAdmin());
+        allow read, write: if isOwner(request.resource.data.ownerId);
+    }
+
+    match /projects/{projectId} {
+        allow read, write: if isOwner(request.resource.data.ownerId);
+    }
+    
+    match /tasks/{taskId} {
+        allow read, write: if isOwner(request.resource.data.ownerId);
+    }
+    
+    match /employees/{employeeId} {
+        allow read, write: if isOwner(request.resource.data.ownerId);
+    }
+
+    match /payrolls/{payrollId} {
+        allow read, write: if isOwner(request.resource.data.ownerId);
     }
   }
 }
