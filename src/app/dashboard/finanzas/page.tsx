@@ -7,7 +7,6 @@ import { FileText, Coins, Landmark, Receipt } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
 import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
-import { BancosTab } from './bancos-tab';
 
 
 const ComingSoon = ({ title }: { title: string }) => (
@@ -27,11 +26,10 @@ export default function FinanzasPage() {
         </div>
 
         <Tabs defaultValue="documentos" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="documentos"><FileText className="mr-2 h-4 w-4" />Documentos</TabsTrigger>
             <TabsTrigger value="gastos"><Receipt className="mr-2 h-4 w-4" />Gastos</TabsTrigger>
             <TabsTrigger value="impuestos"><Coins className="mr-2 h-4 w-4" />Impuestos</TabsTrigger>
-            <TabsTrigger value="bancos"><Landmark className="mr-2 h-4 w-4" />Conexión Bancaria</TabsTrigger>
           </TabsList>
           <TabsContent value="documentos" className="mt-6">
             <DocumentosContent />
@@ -41,9 +39,6 @@ export default function FinanzasPage() {
           </TabsContent>
           <TabsContent value="impuestos"  className="mt-6">
             <ImpuestosTab />
-          </TabsContent>
-          <TabsContent value="bancos"  className="mt-6">
-             <BancosTab />
           </TabsContent>
         </Tabs>
       </div>

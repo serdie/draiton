@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Trash2, Mail, Facebook, Linkedin, Instagram, CreditCard, MessageSquare, Server, Loader2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Mail, Facebook, Linkedin, Instagram, CreditCard, MessageSquare, Server, Loader2, Landmark } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { GoogleIcon } from './google-icon';
@@ -27,6 +27,8 @@ import { AuthContext } from '@/context/auth-context';
 import { auth } from '@/lib/firebase/config';
 import { GoogleAuthProvider, FacebookAuthProvider, linkWithPopup, unlink } from "firebase/auth";
 import { SmtpConnectionModal } from './smtp-connection-modal';
+import { BancosTab } from './bancos-tab';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 type Connection = {
@@ -202,86 +204,97 @@ export default function ConexionesPage() {
       <div>
         <h1 className="text-3xl font-bold">Conexiones y Credenciales</h1>
         <p className="text-muted-foreground">
-          Conecta tus aplicaciones y servicios para usarlos en toda la plataforma, especialmente en las automatizaciones.
+          Conecta tus aplicaciones y servicios para usarlos en toda la plataforma.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Conexiones Disponibles</CardTitle>
-          <CardDescription>Añade nuevas conexiones para potenciar tus flujos de trabajo.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {availableConnections.map((conn) => (
-            <Card key={conn.name} className="flex flex-col items-center justify-center text-center p-4">
-               <div className="mb-4 h-12 w-12 flex items-center justify-center bg-muted rounded-full text-primary">
-                    {React.cloneElement(conn.icon, { className: "h-6 w-6" })}
-               </div>
-              <p className="font-semibold">{conn.name}</p>
-              <p className="text-xs text-muted-foreground mb-4">{conn.description}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleConnect(conn.id || conn.name)}
-                disabled={connectingProvider === (conn.id || conn.name)}
-              >
-                {connectingProvider === (conn.id || conn.name) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-                {connectingProvider === (conn.id || conn.name) ? 'Conectando...' : 'Conectar'}
-              </Button>
-            </Card>
-          ))}
-           {availableConnections.length === 0 && (
-                <p className="text-muted-foreground col-span-full text-center py-4">¡Todas las aplicaciones disponibles ya están conectadas!</p>
-            )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Cuentas Conectadas</CardTitle>
-          <CardDescription>Gestiona tus conexiones existentes.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">Icono</TableHead>
-                <TableHead>Servicio</TableHead>
-                <TableHead>Nombre de la Conexión</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {connectedAccounts.length > 0 ? connectedAccounts.map((acc) => (
-                <TableRow key={acc.id}>
-                  <TableCell className="text-muted-foreground">
-                     {React.cloneElement(getProviderIcon(acc.id), { className: "h-5 w-5" })}
-                  </TableCell>
-                  <TableCell className="font-medium">{acc.provider}</TableCell>
-                  <TableCell className="text-muted-foreground">{acc.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={getStatusBadgeClass(acc.status)}>
-                      {acc.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirmation(acc.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
+       <Tabs defaultValue="apps" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="apps"><Server className="mr-2 h-4 w-4" />Conexiones de Apps</TabsTrigger>
+            <TabsTrigger value="bancos"><Landmark className="mr-2 h-4 w-4" />Conexión Bancaria</TabsTrigger>
+          </TabsList>
+          <TabsContent value="apps" className="mt-6 space-y-8">
+             <Card>
+                <CardHeader>
+                <CardTitle>Conexiones Disponibles</CardTitle>
+                <CardDescription>Añade nuevas conexiones para potenciar tus flujos de trabajo.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {availableConnections.map((conn) => (
+                    <Card key={conn.name} className="flex flex-col items-center justify-center text-center p-4">
+                    <div className="mb-4 h-12 w-12 flex items-center justify-center bg-muted rounded-full text-primary">
+                            {React.cloneElement(conn.icon, { className: "h-6 w-6" })}
+                    </div>
+                    <p className="font-semibold">{conn.name}</p>
+                    <p className="text-xs text-muted-foreground mb-4">{conn.description}</p>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleConnect(conn.id || conn.name)}
+                        disabled={connectingProvider === (conn.id || conn.name)}
+                    >
+                        {connectingProvider === (conn.id || conn.name) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                        {connectingProvider === (conn.id || conn.name) ? 'Conectando...' : 'Conectar'}
                     </Button>
-                  </TableCell>
-                </TableRow>
-              )) : (
-                <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                        No tienes ninguna cuenta conectada.
-                    </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    </Card>
+                ))}
+                {availableConnections.length === 0 && (
+                        <p className="text-muted-foreground col-span-full text-center py-4">¡Todas las aplicaciones disponibles ya están conectadas!</p>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                <CardTitle>Cuentas Conectadas</CardTitle>
+                <CardDescription>Gestiona tus conexiones existentes.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-[50px]">Icono</TableHead>
+                        <TableHead>Servicio</TableHead>
+                        <TableHead>Nombre de la Conexión</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {connectedAccounts.length > 0 ? connectedAccounts.map((acc) => (
+                        <TableRow key={acc.id}>
+                        <TableCell className="text-muted-foreground">
+                            {React.cloneElement(getProviderIcon(acc.id), { className: "h-5 w-5" })}
+                        </TableCell>
+                        <TableCell className="font-medium">{acc.provider}</TableCell>
+                        <TableCell className="text-muted-foreground">{acc.name}</TableCell>
+                        <TableCell>
+                            <Badge variant="outline" className={getStatusBadgeClass(acc.status)}>
+                            {acc.status}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteConfirmation(acc.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        </TableCell>
+                        </TableRow>
+                    )) : (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
+                                No tienes ninguna cuenta conectada.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    </TableBody>
+                </Table>
+                </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="bancos"  className="mt-6">
+             <BancosTab />
+          </TabsContent>
+        </Tabs>
     </div>
     </>
   );
