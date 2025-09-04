@@ -5,7 +5,7 @@ import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -100,6 +100,16 @@ export default function RegisterPage() {
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
 
+      const providerData = {
+        providerData: user.providerData.map(p => ({
+            providerId: p.providerId,
+            uid: p.uid,
+            displayName: p.displayName,
+            email: p.email,
+            photoURL: p.photoURL,
+        })),
+      };
+
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
           uid: user.uid,
@@ -108,14 +118,10 @@ export default function RegisterPage() {
           photoURL: user.photoURL,
           role: 'free', 
           createdAt: serverTimestamp(),
-          providerData: user.providerData.map(p => ({
-              providerId: p.providerId,
-              uid: p.uid,
-              displayName: p.displayName,
-              email: p.email,
-              photoURL: p.photoURL,
-            })),
+          ...providerData,
         }); 
+      } else {
+         await updateDoc(userDocRef, providerData);
       }
       
       // La redirección la manejará el AuthContext
