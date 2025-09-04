@@ -1,6 +1,8 @@
 
 'use client';
 
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PerfilSettings } from "./perfil-settings";
 import { EmpresaSettings } from "./empresa-settings";
@@ -10,8 +12,10 @@ import { SuscripcionSettings } from "./suscripcion-settings";
 import { User, Building, Bell, Palette, CreditCard } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-export default function ConfiguracionPage() {
+function ConfiguracionContent() {
   const isMobile = useIsMobile();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab') || 'perfil';
 
   return (
     <div className="space-y-6">
@@ -21,7 +25,7 @@ export default function ConfiguracionPage() {
           Personaliza tu perfil, los datos de tu empresa y la apariencia de la aplicación.
         </p>
       </div>
-      <Tabs defaultValue="perfil" orientation={isMobile ? 'vertical' : 'horizontal'} className="w-full">
+      <Tabs defaultValue={tab} orientation={isMobile ? 'vertical' : 'horizontal'} className="w-full">
         <TabsList className="w-full md:w-auto">
           <TabsTrigger value="perfil" className="w-full justify-start md:justify-center">
             <User className="mr-2 h-4 w-4" />
@@ -54,4 +58,12 @@ export default function ConfiguracionPage() {
       </Tabs>
     </div>
   );
+}
+
+export default function ConfiguracionPage() {
+    return (
+        <Suspense fallback={<div>Cargando...</div>}>
+            <ConfiguracionContent />
+        </Suspense>
+    )
 }
