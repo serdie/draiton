@@ -6,7 +6,7 @@ import { getFirebaseAuth } from './firebase-admin';
 type UserUpdateData = {
     displayName: string;
     email: string;
-    role: 'free' | 'pro' | 'admin';
+    role: 'free' | 'pro' | 'admin' | 'empresa';
 }
 
 /**
@@ -27,9 +27,9 @@ export async function updateUser(uid: string, data: UserUpdateData): Promise<voi
 /**
  * Actualiza el rol de un usuario en Firestore.
  * @param uid - El ID del usuario a actualizar.
- * @param newRole - El nuevo rol a asignar ('free', 'pro', 'admin').
+ * @param newRole - El nuevo rol a asignar ('free', 'pro', 'admin', 'empresa').
  */
-export async function updateUserRole(uid: string, newRole: 'free' | 'pro' | 'admin'): Promise<void> {
+export async function updateUserRole(uid: string, newRole: 'free' | 'pro' | 'admin' | 'empresa'): Promise<void> {
   const { db } = getFirebaseAuth();
   if (!uid) {
     throw new Error("Se requiere el ID del usuario.");

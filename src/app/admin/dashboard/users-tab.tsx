@@ -19,7 +19,7 @@ import { EditUserModal } from "./edit-user-modal";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export type UserRole = 'free' | 'pro' | 'admin';
+export type UserRole = 'free' | 'pro' | 'admin' | 'empresa';
 
 export type User = {
   id: string;
@@ -29,7 +29,7 @@ export type User = {
   registered: Date;
 };
 
-const userRoles: UserRole[] = ['free', 'pro', 'admin'];
+const userRoles: UserRole[] = ['free', 'pro', 'admin', 'empresa'];
 
 export function UsersTab() {
     const { user: adminUser } = useContext(AuthContext);
@@ -213,6 +213,9 @@ export function UsersTab() {
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'pro' })}>
                                                                 <User className="mr-2 h-4 w-4" /> Pro
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'empresa' })}>
+                                                                <UserCog className="mr-2 h-4 w-4" /> Empresa
                                                             </DropdownMenuItem>
                                                              <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'admin' })}>
                                                                 <UserCog className="mr-2 h-4 w-4" /> Admin

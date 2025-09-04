@@ -29,7 +29,7 @@ import { Loader2 } from 'lucide-react';
 const userFormSchema = z.object({
   displayName: z.string().min(1, { message: 'El nombre es obligatorio.' }),
   email: z.string().email({ message: 'Introduce un correo electrónico válido.' }),
-  role: z.enum(['free', 'pro', 'admin']),
+  role: z.enum(['free', 'pro', 'admin', 'empresa']),
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -107,6 +107,7 @@ export function EditUserForm({ user, onClose }: { user: User, onClose: () => voi
                 <SelectContent>
                   <SelectItem value="free">Free</SelectItem>
                   <SelectItem value="pro">Pro</SelectItem>
+                  <SelectItem value="empresa">Empresa</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>

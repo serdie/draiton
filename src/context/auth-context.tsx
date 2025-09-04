@@ -11,8 +11,8 @@ import { Loader2 } from 'lucide-react';
 import { setSessionCookie, clearSessionCookie } from '@/lib/firebase/auth-actions';
 
 export interface User extends FirebaseUser {
-    plan?: 'free' | 'pro';
-    role?: 'free' | 'pro' | 'admin';
+    plan?: 'free' | 'pro' | 'empresa';
+    role?: 'free' | 'pro' | 'admin' | 'empresa';
     company?: CompanySettings;
 }
 
@@ -22,6 +22,7 @@ interface AuthContextType {
   isPro: boolean;
   isAdmin: boolean;
   isFree: boolean;
+  isEmpresa: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -30,6 +31,7 @@ export const AuthContext = createContext<AuthContextType>({
   isPro: false,
   isAdmin: false,
   isFree: true,
+  isEmpresa: false,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -98,9 +100,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const roles = useMemo(() => {
     const isAdmin = user?.role === 'admin';
-    const isPro = user?.role === 'pro' || isAdmin;
-    const isFree = !isPro && !isAdmin;
-    return { isPro, isAdmin, isFree };
+    const isEmpresa = user?.role === 'empresa';
+    const isPro = user?.role === 'pro' || isAdmin || isEmpresa;
+    const isFree = !isPro && !isAdmin && !isEmpresa;
+    return { isPro, isAdmin, isFree, isEmpresa };
   }, [user]);
 
   if (loading) {
