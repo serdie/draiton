@@ -19,11 +19,6 @@ import { collection, query, where, onSnapshot, doc, deleteDoc, Timestamp } from 
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 
-const initialEmployees: Employee[] = [
-    { id: '1', name: 'Ana García', position: 'Desarrolladora Frontend', nif: '12345678A', socialSecurityNumber: '28/1234567890', contractType: 'Indefinido', grossAnnualSalary: 42000 },
-    { id: '2', name: 'Carlos Martínez', position: 'Diseñador UX/UI', nif: '87654321B', socialSecurityNumber: '28/0987654321', contractType: 'Indefinido', grossAnnualSalary: 38000 },
-    { id: '3', name: 'Laura Sánchez', position: 'Project Manager Jr.', nif: '45678912C', socialSecurityNumber: '28/1122334455', contractType: 'Temporal', grossAnnualSalary: 31000 },
-];
 
 export default function EmployeeDetailPage() {
     const params = useParams();
@@ -32,14 +27,22 @@ export default function EmployeeDetailPage() {
     const { toast } = useToast();
     const employeeId = params.id as string;
     
-    const employee = initialEmployees.find(e => e.id === employeeId);
-    
+    const [employee, setEmployee] = useState<Employee | null>(null);
     const [payrolls, setPayrolls] = useState<(GeneratePayrollOutput & { id: string, status: string })[]>([]);
     const [loading, setLoading] = useState(true);
     const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
     const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
     const [payrollToEdit, setPayrollToEdit] = useState<(GeneratePayrollOutput & { id: string }) | null>(null);
     const [payrollToDelete, setPayrollToDelete] = useState<(GeneratePayrollOutput & { id: string }) | null>(null);
+
+    useEffect(() => {
+        const storedEmployee = sessionStorage.getItem('selectedEmployee');
+        if (storedEmployee) {
+            setEmployee(JSON.parse(storedEmployee));
+        } else {
+           // Handle case where employee data isn't available, maybe redirect or fetch
+        }
+    }, []);
 
     useEffect(() => {
         if (!db || !user || !employeeId) {
@@ -55,14 +58,23 @@ export default function EmployeeDetailPage() {
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const payrollsList = snapshot.docs.map(doc => {
-                const data = doc.data();
+            const payrollsList = snapshot.docs.map(docSnap => {
+                const data = docSnap.data();
                 return {
-                    id: doc.id,
+                    id: docSnap.id,
                     ...data
                 } as (GeneratePayrollOutput & { id: string; status: string });
             });
-            // TODO: Sort payrolls by period date
+             // Sort payrolls by period date, assuming format "Month YYYY"
+            const monthOrder = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            payrollsList.sort((a, b) => {
+                const [monthA, yearA] = a.header.period.split(' ');
+                const [monthB, yearB] = b.header.period.split(' ');
+                const dateA = new Date(parseInt(yearA), monthOrder.indexOf(monthA));
+                const dateB = new Date(parseInt(yearB), monthOrder.indexOf(monthB));
+                return dateB.getTime() - dateA.getTime();
+            });
+
             setPayrolls(payrollsList);
             setLoading(false);
         }, (error) => {
@@ -76,11 +88,8 @@ export default function EmployeeDetailPage() {
 
     if (!employee) {
         return (
-            <div className="text-center">
-                <p>Empleado no encontrado.</p>
-                <Button onClick={() => router.push('/dashboard/finanzas/nominas')} className="mt-4">
-                    Volver a Nóminas
-                </Button>
+             <div className="flex h-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         );
     }
@@ -108,14 +117,14 @@ export default function EmployeeDetailPage() {
 
     return (
         <>
-            {isGenerateModalOpen && (
+            {isGenerateModalOpen && employee && (
                  <GeneratePayrollModal
                     isOpen={isGenerateModalOpen}
                     onClose={() => setIsGenerateModalOpen(false)}
                     employee={employee}
                 />
             )}
-            {payrollToView && (
+            {payrollToView && employee && (
                 <ViewPayrollModal
                     isOpen={!!payrollToView}
                     onClose={() => setPayrollToView(null)}
@@ -123,7 +132,7 @@ export default function EmployeeDetailPage() {
                     employee={employee}
                 />
             )}
-            {payrollToEdit && (
+            {payrollToEdit && employee && (
                 <EditPayrollModal
                     isOpen={!!payrollToEdit}
                     onClose={() => setPayrollToEdit(null)}

@@ -114,6 +114,9 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         employeeId: employee.id,
         ownerId: user.uid,
         status: 'Pagado', // Default status on save
+        employeeName: employee.name,
+        nif: employee.nif,
+        socialSecurityNumber: employee.socialSecurityNumber,
         createdAt: serverTimestamp()
     };
 
@@ -127,10 +130,6 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
     } finally {
         setIsSaving(false);
     }
-  }
-
-  const handleDownload = () => {
-    toast({ title: 'Función no disponible', description: 'La descarga de nóminas en PDF estará disponible pronto.' });
   }
 
   const addConcept = () => {

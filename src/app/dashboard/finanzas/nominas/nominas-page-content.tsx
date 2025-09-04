@@ -70,6 +70,14 @@ export function NominasPageContent() {
         setEmployeeToDelete(null);
     };
 
+    const handleViewHistory = (employee: Employee) => {
+        // In a real app, you might just pass the ID, but for this mock data setup,
+        // we'll pass the whole object via a client-side mechanism or query params.
+        // For simplicity, we'll store it in sessionStorage before navigating.
+        sessionStorage.setItem('selectedEmployee', JSON.stringify(employee));
+        router.push(`/dashboard/finanzas/nominas/${employee.id}`);
+    }
+
     return (
         <>
             <AddEmployeeModal
@@ -157,7 +165,7 @@ export function NominasPageContent() {
                                                         <FileSignature className="mr-2 h-4 w-4" />
                                                         Generar Nómina
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => router.push(`/dashboard/finanzas/nominas/${employee.id}`)}>
+                                                    <DropdownMenuItem onClick={() => handleViewHistory(employee)}>
                                                         <User className="mr-2 h-4 w-4" />
                                                         Ver Historial
                                                     </DropdownMenuItem>
