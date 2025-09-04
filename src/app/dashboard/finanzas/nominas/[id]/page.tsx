@@ -6,13 +6,15 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, FileSignature, Download, Mail, MoreHorizontal } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ArrowLeft, FileSignature, Download, Mail, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { GeneratePayrollModal } from '../generate-payroll-modal';
 import type { Employee } from '../page';
 import { useToast } from '@/hooks/use-toast';
 import type { GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { ViewPayrollModal } from '../view-payroll-modal';
+import { EditPayrollModal } from '../edit-payroll-modal';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 
 // Mock data, in a real app this would come from a database
@@ -23,7 +25,7 @@ const initialEmployees: Employee[] = [
 ];
 
 const mockPayrolls: (GeneratePayrollOutput & { id: string, status: string })[] = [
-    { 
+    {
         id: 'pay_1',
         status: 'Pagado',
         header: { companyName: 'Emprende Total SL', employeeName: 'Ana García', period: 'Julio 2024' },
@@ -32,7 +34,7 @@ const mockPayrolls: (GeneratePayrollOutput & { id: string, status: string })[] =
         netPay: 2644.25,
         contributionBases: { commonContingencies: 3500, professionalContingencies: 3500, irpfWithholding: 3500, irpfPercentage: 18 }
     },
-    { 
+    {
         id: 'pay_2',
         status: 'Pagado',
         header: { companyName: 'Emprende Total SL', employeeName: 'Ana García', period: 'Junio 2024' },
@@ -54,6 +56,9 @@ export default function EmployeeDetailPage() {
     
     const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
     const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
+    const [payrollToEdit, setPayrollToEdit] = useState<(GeneratePayrollOutput & { id: string }) | null>(null);
+    const [payrollToDelete, setPayrollToDelete] = useState<(GeneratePayrollOutput & { id: string }) | null>(null);
+    const [payrolls, setPayrolls] = useState(mockPayrolls);
 
 
     if (!employee) {
@@ -74,7 +79,13 @@ export default function EmployeeDetailPage() {
     const handleDownload = (payroll: GeneratePayrollOutput) => {
         setPayrollToView(payroll);
     }
-
+    
+    const handleDeletePayroll = () => {
+        if (!payrollToDelete) return;
+        setPayrolls(prev => prev.filter(p => p.id !== payrollToDelete.id));
+        toast({ title: "Nómina Eliminada", description: `La nómina de ${payrollToDelete.header.period} ha sido eliminada.`});
+        setPayrollToDelete(null);
+    }
 
     return (
         <>
@@ -93,6 +104,28 @@ export default function EmployeeDetailPage() {
                     employee={employee}
                 />
             )}
+            {payrollToEdit && (
+                <EditPayrollModal
+                    isOpen={!!payrollToEdit}
+                    onClose={() => setPayrollToEdit(null)}
+                    employee={employee}
+                    payroll={payrollToEdit}
+                />
+            )}
+             <AlertDialog open={!!payrollToDelete} onOpenChange={setPayrollToDelete}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta acción eliminará la nómina de <strong>{payrollToDelete?.header.period}</strong>. Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeletePayroll} className="bg-destructive hover:bg-destructive/90">Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <div className="space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
@@ -138,7 +171,7 @@ export default function EmployeeDetailPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {mockPayrolls.map((payroll) => (
+                                {payrolls.map((payroll) => (
                                     <TableRow key={payroll.id}>
                                         <TableCell className="font-medium">{payroll.header.period}</TableCell>
                                         <TableCell>{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(payroll.netPay)}</TableCell>
@@ -155,6 +188,10 @@ export default function EmployeeDetailPage() {
                                                         <FileSignature className="mr-2 h-4 w-4" />
                                                         Ver Nómina
                                                     </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setPayrollToEdit(payroll)}>
+                                                        <Pencil className="mr-2 h-4 w-4" />
+                                                        Editar Nómina
+                                                    </DropdownMenuItem>
                                                      <DropdownMenuItem onClick={() => handleDownload(payroll)}>
                                                         <Download className="mr-2 h-4 w-4" />
                                                         Descargar PDF
@@ -162,6 +199,11 @@ export default function EmployeeDetailPage() {
                                                      <DropdownMenuItem onClick={() => handleComingSoon('Enviar por Email')}>
                                                         <Mail className="mr-2 h-4 w-4" />
                                                         Enviar por Email
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onClick={() => setPayrollToDelete(payroll)} className="text-destructive focus:text-destructive">
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        Eliminar
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
