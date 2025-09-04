@@ -22,6 +22,8 @@ import type { ReviewPayrollOutput } from '@/ai/flows/review-payroll';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { AuthContext } from '@/context/auth-context';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 interface GeneratePayrollModalProps {
   isOpen: boolean;
@@ -103,15 +105,28 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
     setIsReviewing(false);
   }
   
-  const handleSavePayroll = () => {
-    if (!payrollData) return;
+  const handleSavePayroll = async () => {
+    if (!payrollData || !user) return;
     setIsSaving(true);
-    // Simulate saving to DB and updating the employee's payroll history
-    setTimeout(() => {
+    
+    const payrollToSave = {
+        ...payrollData,
+        employeeId: employee.id,
+        ownerId: user.uid,
+        status: 'Pagado', // Default status on save
+        createdAt: serverTimestamp()
+    };
+
+    try {
+        await addDoc(collection(db, 'payrolls'), payrollToSave);
         toast({ title: 'Nómina Guardada', description: `La nómina de ${period} se ha guardado en el historial de ${employee.name}.` });
-        setIsSaving(false);
         onClose();
-    }, 1000);
+    } catch (error) {
+        console.error("Error saving payroll:", error);
+        toast({ variant: 'destructive', title: 'Error al guardar', description: 'No se pudo guardar la nómina.'})
+    } finally {
+        setIsSaving(false);
+    }
   }
 
   const handleDownload = () => {
@@ -245,10 +260,6 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
           <Button onClick={handleSavePayroll} disabled={!payrollData || isSaving}>
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />}
             Guardar Nómina
-          </Button>
-          <Button onClick={handleDownload} disabled={!payrollData}>
-            <Download className="mr-2 h-4 w-4" />
-            Descargar PDF
           </Button>
         </DialogFooter>
       </DialogContent>

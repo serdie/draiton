@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, FileSignature, Download, Mail, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileSignature, Download, Mail, MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { GeneratePayrollModal } from '../generate-payroll-modal';
 import type { Employee } from '../page';
@@ -15,51 +15,64 @@ import type { GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { ViewPayrollModal } from '../view-payroll-modal';
 import { EditPayrollModal } from '../edit-payroll-modal';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { collection, query, where, onSnapshot, doc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { AuthContext } from '@/context/auth-context';
 
-
-// Mock data, in a real app this would come from a database
 const initialEmployees: Employee[] = [
     { id: '1', name: 'Ana García', position: 'Desarrolladora Frontend', nif: '12345678A', socialSecurityNumber: '28/1234567890', contractType: 'Indefinido', grossAnnualSalary: 42000 },
     { id: '2', name: 'Carlos Martínez', position: 'Diseñador UX/UI', nif: '87654321B', socialSecurityNumber: '28/0987654321', contractType: 'Indefinido', grossAnnualSalary: 38000 },
     { id: '3', name: 'Laura Sánchez', position: 'Project Manager Jr.', nif: '45678912C', socialSecurityNumber: '28/1122334455', contractType: 'Temporal', grossAnnualSalary: 31000 },
 ];
 
-const mockPayrolls: (GeneratePayrollOutput & { id: string, status: string })[] = [
-    {
-        id: 'pay_1',
-        status: 'Pagado',
-        header: { companyName: 'Emprende Total SL', employeeName: 'Ana García', period: 'Julio 2024' },
-        accruals: { items: [{ concept: 'Salario Base', amount: 3500 }], total: 3500 },
-        deductions: { items: [{ concept: 'Contingencias Comunes', amount: 168 }, { concept: 'Desempleo', amount: 54.25 }, { concept: 'Formación Profesional', amount: 3.5 }, { concept: 'Retención IRPF (18%)', amount: 630 }], total: 855.75 },
-        netPay: 2644.25,
-        contributionBases: { commonContingencies: 3500, professionalContingencies: 3500, irpfWithholding: 3500, irpfPercentage: 18 }
-    },
-    {
-        id: 'pay_2',
-        status: 'Pagado',
-        header: { companyName: 'Emprende Total SL', employeeName: 'Ana García', period: 'Junio 2024' },
-        accruals: { items: [{ concept: 'Salario Base', amount: 3500 }], total: 3500 },
-        deductions: { items: [{ concept: 'Contingencias Comunes', amount: 168 }, { concept: 'Desempleo', amount: 54.25 }, { concept: 'Formación Profesional', amount: 3.5 }, { concept: 'Retención IRPF (18%)', amount: 630 }], total: 855.75 },
-        netPay: 2644.25,
-        contributionBases: { commonContingencies: 3500, professionalContingencies: 3500, irpfWithholding: 3500, irpfPercentage: 18 }
-    }
-];
-
 export default function EmployeeDetailPage() {
     const params = useParams();
     const router = useRouter();
+    const { user } = useContext(AuthContext);
     const { toast } = useToast();
     const employeeId = params.id as string;
     
-    // In a real app, you would fetch the employee and their payrolls based on the ID
     const employee = initialEmployees.find(e => e.id === employeeId);
     
+    const [payrolls, setPayrolls] = useState<(GeneratePayrollOutput & { id: string, status: string })[]>([]);
+    const [loading, setLoading] = useState(true);
     const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
     const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
     const [payrollToEdit, setPayrollToEdit] = useState<(GeneratePayrollOutput & { id: string }) | null>(null);
     const [payrollToDelete, setPayrollToDelete] = useState<(GeneratePayrollOutput & { id: string }) | null>(null);
-    const [payrolls, setPayrolls] = useState(mockPayrolls);
 
+    useEffect(() => {
+        if (!db || !user || !employeeId) {
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        const q = query(
+            collection(db, 'payrolls'),
+            where('ownerId', '==', user.uid),
+            where('employeeId', '==', employeeId)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const payrollsList = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data
+                } as (GeneratePayrollOutput & { id: string; status: string });
+            });
+            // TODO: Sort payrolls by period date
+            setPayrolls(payrollsList);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching payrolls:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las nóminas.' });
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, employeeId, toast]);
 
     if (!employee) {
         return (
@@ -80,11 +93,17 @@ export default function EmployeeDetailPage() {
         setPayrollToView(payroll);
     }
     
-    const handleDeletePayroll = () => {
+    const handleDeletePayroll = async () => {
         if (!payrollToDelete) return;
-        setPayrolls(prev => prev.filter(p => p.id !== payrollToDelete.id));
-        toast({ title: "Nómina Eliminada", description: `La nómina de ${payrollToDelete.header.period} ha sido eliminada.`});
-        setPayrollToDelete(null);
+        try {
+            await deleteDoc(doc(db, "payrolls", payrollToDelete.id));
+            toast({ title: "Nómina Eliminada", description: `La nómina de ${payrollToDelete.header.period} ha sido eliminada.`});
+        } catch (error) {
+            console.error("Error deleting payroll: ", error);
+            toast({ variant: 'destructive', title: "Error", description: "No se pudo eliminar la nómina."})
+        } finally {
+            setPayrollToDelete(null);
+        }
     }
 
     return (
@@ -112,7 +131,7 @@ export default function EmployeeDetailPage() {
                     payroll={payrollToEdit}
                 />
             )}
-             <AlertDialog open={!!payrollToDelete} onOpenChange={setPayrollToDelete}>
+             <AlertDialog open={!!payrollToDelete} onOpenChange={(open) => !open && setPayrollToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
@@ -161,57 +180,70 @@ export default function EmployeeDetailPage() {
                         <CardDescription>Aquí se guardarán todas las nóminas generadas para este empleado.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Periodo</TableHead>
-                                    <TableHead>Importe Líquido</TableHead>
-                                    <TableHead>Estado</TableHead>
-                                    <TableHead className="text-right">Acciones</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {payrolls.map((payroll) => (
-                                    <TableRow key={payroll.id}>
-                                        <TableCell className="font-medium">{payroll.header.period}</TableCell>
-                                        <TableCell>{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(payroll.netPay)}</TableCell>
-                                        <TableCell className="text-green-600">{payroll.status}</TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
-                                                        <FileSignature className="mr-2 h-4 w-4" />
-                                                        Ver Nómina
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setPayrollToEdit(payroll)}>
-                                                        <Pencil className="mr-2 h-4 w-4" />
-                                                        Editar Nómina
-                                                    </DropdownMenuItem>
-                                                     <DropdownMenuItem onClick={() => handleDownload(payroll)}>
-                                                        <Download className="mr-2 h-4 w-4" />
-                                                        Descargar PDF
-                                                    </DropdownMenuItem>
-                                                     <DropdownMenuItem onClick={() => handleComingSoon('Enviar por Email')}>
-                                                        <Mail className="mr-2 h-4 w-4" />
-                                                        Enviar por Email
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem onClick={() => setPayrollToDelete(payroll)} className="text-destructive focus:text-destructive">
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Eliminar
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
+                        {loading ? (
+                             <div className="flex justify-center items-center py-10">
+                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Periodo</TableHead>
+                                        <TableHead>Importe Líquido</TableHead>
+                                        <TableHead>Estado</TableHead>
+                                        <TableHead className="text-right">Acciones</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {payrolls.map((payroll) => (
+                                        <TableRow key={payroll.id}>
+                                            <TableCell className="font-medium">{payroll.header.period}</TableCell>
+                                            <TableCell>{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(payroll.netPay)}</TableCell>
+                                            <TableCell className="text-green-600">{payroll.status}</TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
+                                                            <FileSignature className="mr-2 h-4 w-4" />
+                                                            Ver Nómina
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => setPayrollToEdit(payroll)}>
+                                                            <Pencil className="mr-2 h-4 w-4" />
+                                                            Editar Nómina
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleDownload(payroll)}>
+                                                            <Download className="mr-2 h-4 w-4" />
+                                                            Descargar PDF
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleComingSoon('Enviar por Email')}>
+                                                            <Mail className="mr-2 h-4 w-4" />
+                                                            Enviar por Email
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onClick={() => setPayrollToDelete(payroll)} className="text-destructive focus:text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Eliminar
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {payrolls.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                No hay nóminas generadas para este empleado.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        )}
                     </CardContent>
                 </Card>
             </div>
