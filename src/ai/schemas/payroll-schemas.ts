@@ -49,3 +49,19 @@ export const GeneratePayrollOutputSchema = z.object({
   }),
 });
 export type GeneratePayrollOutput = z.infer<typeof GeneratePayrollOutputSchema>;
+
+
+export const ReviewPayrollInputSchema = z.object({
+    payrollData: GeneratePayrollOutputSchema.describe('The full JSON data of the generated payroll to be reviewed.'),
+});
+export type ReviewPayrollInput = z.infer<typeof ReviewPayrollInputSchema>;
+
+const ExplanationStepSchema = z.object({
+    concept: z.string().describe('The payroll concept being explained (e.g., "Salario Base", "Retención IRPF").'),
+    explanation: z.string().describe('A clear and simple explanation of how this value was calculated or what it means.'),
+});
+
+export const ReviewPayrollOutputSchema = z.object({
+  explanations: z.array(ExplanationStepSchema).describe('A list of step-by-step explanations for the payroll calculation.'),
+});
+export type ReviewPayrollOutput = z.infer<typeof ReviewPayrollOutputSchema>;

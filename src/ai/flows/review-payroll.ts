@@ -2,24 +2,12 @@
 'use server';
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-import { GeneratePayrollOutputSchema } from '@/ai/schemas/payroll-schemas';
-
-export const ReviewPayrollInputSchema = z.object({
-    payrollData: GeneratePayrollOutputSchema.describe('The full JSON data of the generated payroll to be reviewed.'),
-});
-export type ReviewPayrollInput = z.infer<typeof ReviewPayrollInputSchema>;
-
-const ExplanationStepSchema = z.object({
-    concept: z.string().describe('The payroll concept being explained (e.g., "Salario Base", "Retención IRPF").'),
-    explanation: z.string().describe('A clear and simple explanation of how this value was calculated or what it means.'),
-});
-
-export const ReviewPayrollOutputSchema = z.object({
-  explanations: z.array(ExplanationStepSchema).describe('A list of step-by-step explanations for the payroll calculation.'),
-});
-export type ReviewPayrollOutput = z.infer<typeof ReviewPayrollOutputSchema>;
-
+import { 
+    ReviewPayrollInputSchema,
+    ReviewPayrollOutputSchema,
+    type ReviewPayrollInput,
+    type ReviewPayrollOutput 
+} from '@/ai/schemas/payroll-schemas';
 
 export async function reviewPayroll(input: ReviewPayrollInput): Promise<ReviewPayrollOutput> {
     return reviewPayrollFlow(input);
