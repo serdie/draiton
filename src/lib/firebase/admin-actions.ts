@@ -118,16 +118,17 @@ export async function createEmployeeUser(employeeData: {
   }
 
   // If user existed, we still need to update their doc to make them an employee
+  // Use set with merge to avoid errors if the doc doesn't exist for some reason
   if (!tempPassword) {
       const existingUserDocRef = db.collection('users').doc(userRecord.uid);
-      await existingUserDocRef.update({
+      await existingUserDocRef.set({
           role: 'employee',
           companyOwnerId: employeeData.ownerId,
-      });
+      }, { merge: true });
   }
 
   // Create the employee profile in 'employees' collection regardless of whether they were new or existing
-  const employeeDocRef = db.collection('employees').doc();
+  const employeeDocRef = db.collection('employees').doc(userRecord.uid);
   await employeeDocRef.set({
     ...employeeData,
     userId: userRecord.uid,
