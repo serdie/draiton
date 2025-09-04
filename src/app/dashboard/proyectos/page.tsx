@@ -7,18 +7,30 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Loader2, User, HardHat, FileText, BarChart2, Clock } from 'lucide-react';
+import { PlusCircle, Loader2, User, HardHat, FileText, BarChart2, Clock, Lock } from 'lucide-react';
 import { CreateProjectModal } from './create-project-modal';
 import { AuthContext } from '@/context/auth-context';
 import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
-import ContactosPage from '../contactos/page';
+import { type Project } from '../proyectos/page';
+import { KanbanBoard } from '../proyectos/kanban-board';
+import { CreateTaskModal } from '../tareas/create-task-modal';
 import TareasPage from '../tareas/page';
 import InformesPage from '../informes/page';
 import { FichajesTab } from './fichajes-tab';
+import ContactosPage from '../contactos/page';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
 
@@ -39,12 +51,13 @@ export type Project = {
 export const projectStatuses: ProjectStatus[] = ['Planificación', 'En Progreso', 'En Espera', 'Completado', 'Cancelado'];
 
 export default function OperacionesPage() {
-    const { user } = useContext(AuthContext);
+    const { user, isPro, isEmpresa } = useContext(AuthContext);
     const { toast } = useToast();
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
     
     useEffect(() => {
         if (!db || !user) {
@@ -76,68 +89,36 @@ export default function OperacionesPage() {
 
         return () => unsubscribe();
     }, [user, toast]);
-
-    const activeProjects = useMemo(() => {
-        return projects.filter(p => p.status === 'En Progreso' || p.status === 'Planificación');
-    }, [projects]);
     
-    const getInitials = (name: string) => {
-      if (!name) return 'U';
-      return name.split(' ').map(n => n[0]).join('').toUpperCase();
-    }
-
-    const renderProjectsContent = () => {
-        if (loading) {
-            return (
-                 <div className="flex justify-center items-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-            )
+    const handleFichajesClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (!isEmpresa) {
+            e.preventDefault();
+            setIsUpsellModalOpen(true);
         }
-        if (activeProjects.length === 0) {
-            return (
-                <div className="text-center text-muted-foreground py-12">
-                    No tienes proyectos activos. ¡Crea uno para empezar!
-                </div>
-            );
-        }
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {activeProjects.map(project => {
-                    const progress = project.progress || 0;
-
-                    return (
-                        <Link href={`/dashboard/proyectos/${project.id}`} key={project.id}>
-                            <Card className="hover:border-primary transition-colors h-full flex flex-col">
-                                <CardHeader>
-                                    <CardTitle>{project.name}</CardTitle>
-                                </CardHeader>
-                                <CardContent className="flex-grow">
-                                    <div className="flex items-center justify-between mb-4">
-                                         <div className="flex -space-x-2">
-                                            <Avatar className="w-8 h-8 border-2 border-background">
-                                                <AvatarImage src={user?.photoURL || ''} />
-                                                <AvatarFallback>{getInitials(user?.displayName || '')}</AvatarFallback>
-                                            </Avatar>
-                                        </div>
-                                        <span className="text-sm font-semibold text-primary">{project.budget ? new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(project.budget) : ''}</span>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Progress value={progress} />
-                                        <p className="text-xs text-muted-foreground">{Math.round(progress)}% completado</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
-                    )
-                })}
-            </div>
-        )
     }
 
   return (
     <>
     <CreateProjectModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+    <AlertDialog open={isUpsellModalOpen} onOpenChange={setIsUpsellModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-primary"/>
+                Función del Plan Empresa
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              El sistema de fichajes de empleados es una herramienta avanzada disponible en el plan Empresa. Mejora tu plan para gestionar el tiempo de tu equipo de forma eficiente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -158,13 +139,16 @@ export default function OperacionesPage() {
           <TabsTrigger value="proyectos"><HardHat className="mr-2 h-4 w-4" />Proyectos</TabsTrigger>
           <TabsTrigger value="crm"><User className="mr-2 h-4 w-4" />CRM</TabsTrigger>
           <TabsTrigger value="tareas"><FileText className="mr-2 h-4 w-4" />Tareas</TabsTrigger>
-          <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4" />Fichajes</TabsTrigger>
+          {(isPro || isEmpresa) && (
+            <TabsTrigger value="fichajes" onClick={handleFichajesClick}>
+                <Clock className="mr-2 h-4 w-4" />Fichajes
+            </TabsTrigger>
+          )}
           <TabsTrigger value="informes"><BarChart2 className="mr-2 h-4 w-4"/>Informes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="proyectos" className="mt-6">
-             <h2 className="text-2xl font-semibold mb-4">Proyectos en Curso</h2>
-            {renderProjectsContent()}
+            <KanbanBoard projects={projects} loading={loading} />
         </TabsContent>
         <TabsContent value="crm" className="mt-6">
             <ContactosPage />
@@ -172,9 +156,11 @@ export default function OperacionesPage() {
         <TabsContent value="tareas" className="mt-6">
             <TareasPage />
         </TabsContent>
-        <TabsContent value="fichajes" className="mt-6">
-            <FichajesTab />
-        </TabsContent>
+         {(isPro || isEmpresa) && (
+          <TabsContent value="fichajes" className="mt-6">
+              <FichajesTab />
+          </TabsContent>
+        )}
         <TabsContent value="informes" className="mt-6">
             <InformesPage />
         </TabsContent>
