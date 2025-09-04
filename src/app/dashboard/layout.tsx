@@ -46,6 +46,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileNav } from '@/components/ui/mobile-nav';
 import { MobileHeader } from '@/components/ui/mobile-header';
 import { clearSessionCookie } from '@/lib/firebase/auth-actions';
+import { cn } from '@/lib/utils';
 
 
 export default function DashboardLayout({
@@ -53,7 +54,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isAdmin, isPro } = useContext(AuthContext);
+  const { user, isAdmin, isPro, isEmpresa } = useContext(AuthContext);
   const pathname = usePathname();
   const isMobile = useIsMobile();
   
@@ -204,7 +205,9 @@ export default function DashboardLayout({
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Buscar proyectos, facturas..." className="pl-10 bg-muted border-muted focus:bg-background" />
                 </div>
-                {isPro && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
+                {user?.role === 'pro' && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
+                {user?.role === 'empresa' && <Badge variant="outline" className={cn('border-purple-400 bg-purple-400/10 text-purple-500 dark:border-purple-400 dark:text-purple-400')}>EMPRESA</Badge>}
+
                  <Button asChild variant="ghost" size="icon">
                   <Link href="/dashboard/configuracion">
                     <Settings className="h-5 w-5"/>
