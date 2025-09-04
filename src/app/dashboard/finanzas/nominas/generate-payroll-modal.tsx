@@ -18,7 +18,7 @@ import { Loader2, Sparkles, AlertTriangle, Download } from 'lucide-react';
 import type { Employee } from './page';
 import { AuthContext } from '@/context/auth-context';
 import { generatePayrollAction } from './actions';
-import { type GeneratePayrollOutput } from '@/ai/flows/generate-payroll';
+import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 
@@ -162,4 +162,3 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
     </Dialog>
   );
 }
-

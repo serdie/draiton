@@ -1,7 +1,8 @@
 
 'use server';
 
-import { generatePayroll, type GeneratePayrollInput, type GeneratePayrollOutput } from '@/ai/flows/generate-payroll';
+import { generatePayroll } from '@/ai/flows/generate-payroll';
+import { type GeneratePayrollInput, type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 
 export async function generatePayrollAction(
   input: GeneratePayrollInput
