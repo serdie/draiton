@@ -9,14 +9,8 @@ import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
 import { AuthContext } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
+import { NominasPageContent } from './nominas/nominas-page-content';
 
-
-const ComingSoon = ({ title }: { title: string }) => (
-    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-secondary/30 rounded-lg">
-        <h3 className="text-xl font-semibold mb-2">{title}</h3>
-        <p>Esta sección estará disponible próximamente.</p>
-    </div>
-);
 
 export default function FinanzasPage() {
   const { isEmpresa } = useContext(AuthContext);
@@ -48,7 +42,7 @@ export default function FinanzasPage() {
           </TabsContent>
            {isEmpresa && (
                 <TabsContent value="nominas"  className="mt-6">
-                    <ComingSoon title="Gestión de Nóminas" />
+                    <NominasPageContent />
                 </TabsContent>
            )}
         </Tabs>

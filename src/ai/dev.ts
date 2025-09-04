@@ -15,4 +15,4 @@ import '@/ai/flows/generate-social-post.ts';
 import '@/ai/flows/generate-image-for-post.ts';
 import '@/ai/flows/business-assistant-flow.ts';
 import '@/ai/flows/process-csv-invoices.ts';
-
+import '@/ai/flows/generate-payroll.ts';
