@@ -40,10 +40,13 @@ export function NominasPageContent() {
         const q = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedEmployees = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            } as Employee));
+            const fetchedEmployees = snapshot.docs.map(docSnap => {
+                const data = docSnap.data();
+                return {
+                    id: docSnap.id,
+                    ...data,
+                } as Employee;
+            });
             setEmployees(fetchedEmployees);
             setLoading(false);
         }, (error) => {
@@ -147,7 +150,8 @@ export function NominasPageContent() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {employees.map((employee) => (
+                                {employees.length > 0 ? (
+                                    employees.map((employee) => (
                                     <TableRow key={employee.id}>
                                         <TableCell className="font-medium">{employee.name}</TableCell>
                                         <TableCell>{employee.position}</TableCell>
@@ -183,8 +187,8 @@ export function NominasPageContent() {
                                             </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
-                                ))}
-                                {employees.length === 0 && !loading && (
+                                ))
+                                ) : (
                                      <TableRow>
                                         <TableCell colSpan={4} className="h-24 text-center">
                                             No has añadido ningún empleado todavía.
