@@ -17,15 +17,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { Employee } from './page';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 interface EditEmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
   employee: Employee;
-  onUpdateEmployee: (employee: Employee) => void;
 }
 
-export function EditEmployeeModal({ isOpen, onClose, employee, onUpdateEmployee }: EditEmployeeModalProps) {
+export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeModalProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -45,7 +46,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee, onUpdateEmployee 
     setGrossAnnualSalary(employee.grossAnnualSalary.toString());
   }, [employee]);
 
-  const handleSubmit = () => {
+  const handleUpdateEmployee = async () => {
     if (!name || !position || !nif || !socialSecurityNumber || !grossAnnualSalary) {
       toast({
         variant: 'destructive',
@@ -56,8 +57,8 @@ export function EditEmployeeModal({ isOpen, onClose, employee, onUpdateEmployee 
     }
     setIsLoading(true);
     
-    const updatedEmployee = {
-        ...employee,
+    const employeeRef = doc(db, 'employees', employee.id);
+    const updatedEmployeeData = {
         name,
         position,
         nif,
@@ -66,12 +67,19 @@ export function EditEmployeeModal({ isOpen, onClose, employee, onUpdateEmployee 
         grossAnnualSalary: parseFloat(grossAnnualSalary),
     };
     
-    onUpdateEmployee(updatedEmployee);
-
-    setTimeout(() => {
+    try {
+      await updateDoc(employeeRef, updatedEmployeeData);
+      toast({
+          title: 'Empleado Actualizado',
+          description: `Los datos de ${name} han sido guardados.`,
+      });
+      onClose();
+    } catch(error) {
+      console.error("Error al actualizar empleado:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron guardar los cambios.'});
+    } finally {
         setIsLoading(false);
-        onClose();
-    }, 500);
+    }
   };
 
   return (
@@ -127,7 +135,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee, onUpdateEmployee 
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isLoading}>
+          <Button onClick={handleUpdateEmployee} disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Guardar Cambios
           </Button>

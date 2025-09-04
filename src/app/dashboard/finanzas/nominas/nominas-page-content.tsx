@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, MoreHorizontal, FileSignature, User, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, FileSignature, User, Trash2, Loader2 } from 'lucide-react';
 import { AddEmployeeModal } from './add-employee-modal';
 import { EditEmployeeModal } from './edit-employee-modal';
 import { GeneratePayrollModal } from './generate-payroll-modal';
@@ -14,66 +14,64 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { collection, query, where, onSnapshot, doc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { AuthContext } from '@/context/auth-context';
 
-const initialEmployees: Employee[] = [
-    {
-        id: '1',
-        name: 'Ana García',
-        position: 'Desarrolladora Frontend',
-        nif: '12345678A',
-        socialSecurityNumber: '28/1234567890',
-        contractType: 'Indefinido',
-        grossAnnualSalary: 42000
-    },
-    {
-        id: '2',
-        name: 'Carlos Martínez',
-        position: 'Diseñador UX/UI',
-        nif: '87654321B',
-        socialSecurityNumber: '28/0987654321',
-        contractType: 'Indefinido',
-        grossAnnualSalary: 38000
-    },
-    {
-        id: '3',
-        name: 'Laura Sánchez',
-        position: 'Project Manager Jr.',
-        nif: '45678912C',
-        socialSecurityNumber: '28/1122334455',
-        contractType: 'Temporal',
-        grossAnnualSalary: 31000
-    },
-];
 
 export function NominasPageContent() {
     const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
     const [employeeToGeneratePayroll, setEmployeeToGeneratePayroll] = useState<Employee | null>(null);
     const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
-    const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
     const { toast } = useToast();
+    const { user } = useContext(AuthContext);
 
-    const handleAddEmployee = (newEmployee: Omit<Employee, 'id'>) => {
-        setEmployees(prev => [...prev, { id: Date.now().toString(), ...newEmployee }]);
-    };
+    useEffect(() => {
+        if (!user) {
+            setLoading(false);
+            return;
+        }
 
-    const handleUpdateEmployee = (updatedEmployee: Employee) => {
-        setEmployees(prev => prev.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp));
-        toast({ title: "Empleado Actualizado", description: `Los datos de ${updatedEmployee.name} se han guardado.` });
-    };
+        setLoading(true);
+        const q = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedEmployees = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Employee));
+            setEmployees(fetchedEmployees);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching employees:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
+            setLoading(false);
+        });
 
-    const handleDeleteEmployee = () => {
+        return () => unsubscribe();
+    }, [user, toast]);
+
+    const handleDeleteEmployee = async () => {
         if (!employeeToDelete) return;
-        setEmployees(prev => prev.filter(emp => emp.id !== employeeToDelete.id));
-        toast({ title: 'Empleado Eliminado', description: `${employeeToDelete.name} ha sido eliminado de la lista.` });
-        setEmployeeToDelete(null);
+        try {
+            await deleteDoc(doc(db, "employees", employeeToDelete.id));
+            toast({ title: 'Empleado Eliminado', description: `${employeeToDelete.name} ha sido eliminado de la lista.` });
+        } catch(error) {
+            console.error("Error al eliminar empleado:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo eliminar el empleado.'});
+        } finally {
+            setEmployeeToDelete(null);
+        }
     };
 
     const handleViewHistory = (employee: Employee) => {
-        // In a real app, you might just pass the ID, but for this mock data setup,
-        // we'll pass the whole object via a client-side mechanism or query params.
-        // For simplicity, we'll store it in sessionStorage before navigating.
+        // We can pass the employee data directly to the page component
+        // but for a clean URL, we'll store it in sessionStorage. In a prod app,
+        // the detail page would fetch this by ID.
         sessionStorage.setItem('selectedEmployee', JSON.stringify(employee));
         router.push(`/dashboard/finanzas/nominas/${employee.id}`);
     }
@@ -83,14 +81,12 @@ export function NominasPageContent() {
             <AddEmployeeModal
                 isOpen={isAddEmployeeModalOpen}
                 onClose={() => setIsAddEmployeeModalOpen(false)}
-                onAddEmployee={handleAddEmployee}
             />
             {employeeToEdit && (
                 <EditEmployeeModal
                     isOpen={!!employeeToEdit}
                     onClose={() => setEmployeeToEdit(null)}
                     employee={employeeToEdit}
-                    onUpdateEmployee={handleUpdateEmployee}
                 />
             )}
             {employeeToGeneratePayroll && (
@@ -100,7 +96,7 @@ export function NominasPageContent() {
                     employee={employeeToGeneratePayroll}
                 />
             )}
-             <AlertDialog open={!!employeeToDelete} onOpenChange={setEmployeeToDelete}>
+             <AlertDialog open={!!employeeToDelete} onOpenChange={(open) => !open && setEmployeeToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
@@ -136,6 +132,11 @@ export function NominasPageContent() {
                         <CardDescription>Gestiona los empleados de tu empresa.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        {loading ? (
+                             <div className="flex justify-center items-center py-10">
+                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : (
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -183,7 +184,7 @@ export function NominasPageContent() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {employees.length === 0 && (
+                                {employees.length === 0 && !loading && (
                                      <TableRow>
                                         <TableCell colSpan={4} className="h-24 text-center">
                                             No has añadido ningún empleado todavía.
@@ -192,6 +193,7 @@ export function NominasPageContent() {
                                 )}
                             </TableBody>
                         </Table>
+                        )}
                     </CardContent>
                 </Card>
             </div>

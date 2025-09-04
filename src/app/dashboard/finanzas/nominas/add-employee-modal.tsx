@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,15 +17,19 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { Employee } from './page';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { AuthContext } from '@/context/auth-context';
+
 
 interface AddEmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddEmployee: (employee: Omit<Employee, 'id'>) => void;
 }
 
-export function AddEmployeeModal({ isOpen, onClose, onAddEmployee }: AddEmployeeModalProps) {
+export function AddEmployeeModal({ isOpen, onClose }: AddEmployeeModalProps) {
   const { toast } = useToast();
+  const { user } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   
   const [name, setName] = useState('');
@@ -35,7 +39,16 @@ export function AddEmployeeModal({ isOpen, onClose, onAddEmployee }: AddEmployee
   const [contractType, setContractType] = useState<Employee['contractType']>('Indefinido');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState('');
 
-  const handleSubmit = () => {
+  const resetForm = () => {
+    setName('');
+    setPosition('');
+    setNif('');
+    setSocialSecurityNumber('');
+    setContractType('Indefinido');
+    setGrossAnnualSalary('');
+  };
+
+  const handleAddEmployee = async () => {
     if (!name || !position || !nif || !socialSecurityNumber || !grossAnnualSalary) {
       toast({
         variant: 'destructive',
@@ -44,27 +57,38 @@ export function AddEmployeeModal({ isOpen, onClose, onAddEmployee }: AddEmployee
       });
       return;
     }
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error de autenticación', description: 'Debes iniciar sesión para añadir un empleado.' });
+        return;
+    }
+
     setIsLoading(true);
     
     const newEmployee = {
+        ownerId: user.uid,
         name,
         position,
         nif,
         socialSecurityNumber,
         contractType,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
+        createdAt: serverTimestamp(),
     };
-    
-    onAddEmployee(newEmployee);
 
-    setTimeout(() => {
-         toast({
+    try {
+        await addDoc(collection(db, "employees"), newEmployee);
+        toast({
             title: 'Empleado Añadido',
             description: `${name} ha sido añadido a la lista de empleados.`,
         });
-        setIsLoading(false);
+        resetForm();
         onClose();
-    }, 500);
+    } catch (error) {
+        console.error("Error al añadir empleado:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudo guardar el empleado.'});
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -120,7 +144,7 @@ export function AddEmployeeModal({ isOpen, onClose, onAddEmployee }: AddEmployee
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isLoading}>
+          <Button onClick={handleAddEmployee} disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Añadir Empleado
           </Button>
