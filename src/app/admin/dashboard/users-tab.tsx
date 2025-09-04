@@ -33,16 +33,11 @@ export type User = {
 
 const userRoles: UserRole[] = ['free', 'pro', 'admin', 'empresa'];
 
-const ProviderIcon = ({ providerId }: { providerId: string }) => {
-    if (providerId === 'google.com') {
-        return <GoogleIcon className="h-5 w-5" />;
-    }
-    if (providerId === 'password') {
-        return <KeyRound className="h-5 w-5 text-muted-foreground" />;
-    }
-    return <Mail className="h-5 w-5 text-muted-foreground" />;
-};
-
+const formatProvider = (providerId: string) => {
+    if (providerId === 'google.com') return 'Google';
+    if (providerId === 'password') return 'Password';
+    return providerId;
+}
 
 export function UsersTab() {
     const { user: adminUser } = useContext(AuthContext);
@@ -204,8 +199,8 @@ export function UsersTab() {
                                     <TableRow key={user.id}>
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
-                                        <TableCell>
-                                            <ProviderIcon providerId={user.provider} />
+                                        <TableCell className="text-muted-foreground">
+                                            {formatProvider(user.provider)}
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className={getRoleBadgeClass(user.role)}>
@@ -346,3 +341,5 @@ export function UsersTab() {
         </>
     )
 }
+
+    
