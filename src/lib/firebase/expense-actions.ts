@@ -3,6 +3,7 @@
 
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from './config';
+import { processCsvExpenses, type ProcessCsvExpensesOutput } from '@/ai/flows/process-csv-expenses';
 
 export async function deleteExpense(id: string): Promise<{ success: boolean; error?: string }> {
     if (!db) {
@@ -20,4 +21,18 @@ export async function deleteExpense(id: string): Promise<{ success: boolean; err
         console.error("Error al eliminar gasto: ", error);
         return { success: false, error: error.message };
     }
+}
+
+export async function processCsvExpensesAction(csvContent: string): Promise<{ data: ProcessCsvExpensesOutput | null; error: string | null }> {
+  if (!csvContent) {
+    return { data: null, error: 'El contenido del CSV está vacío.' };
+  }
+
+  try {
+    const result = await processCsvExpenses({ csvContent });
+    return { data: result, error: null };
+  } catch (e: any) {
+    console.error('Error processing CSV with AI:', e);
+    return { data: null, error: 'La IA no pudo procesar el archivo CSV. Revisa el formato y vuelve a intentarlo.' };
+  }
 }

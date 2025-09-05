@@ -168,16 +168,10 @@ export function GastosContent() {
                         Registra, categoriza y controla todos los gastos de tu negocio.
                     </p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => handleOpenModal()}>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        Digitalizar Ticket con IA
-                    </Button>
-                     <Button onClick={() => handleOpenModal()}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Añadir Nuevo Gasto
-                    </Button>
-                </div>
+                 <Button onClick={() => handleOpenModal()}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Añadir/Importar Gasto
+                </Button>
             </div>
 
              <Card>

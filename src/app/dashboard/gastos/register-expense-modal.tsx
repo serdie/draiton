@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CalendarIcon, Loader2, ScanLine, Terminal, Upload, Camera, VideoOff } from 'lucide-react';
+import { CalendarIcon, Loader2, ScanLine, Terminal, Upload, Camera, VideoOff, FileSpreadsheet } from 'lucide-react';
 import { format, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -28,6 +28,9 @@ import { scanReceiptAction } from './actions';
 import { AuthContext } from '@/context/auth-context';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { processCsvExpensesAction } from '@/lib/firebase/expense-actions';
+
 
 interface RegisterExpenseModalProps {
   isOpen: boolean;
@@ -45,9 +48,11 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
 
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [view, setView] = useState<'form' | 'camera'>('form');
+  const [view, setView] = useState<'form' | 'camera' | 'multi-upload'>('form');
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isSaving, startTransition] = useTransition();
+  const [multiFile, setMultiFile] = useState<File | null>(null);
+  const [isUploadingMulti, setIsUploadingMulti] = useState(false);
 
   // Form state
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -184,6 +189,63 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
     };
     event.target.value = ''; // Reset file input
   };
+   
+  const handleMultiFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setMultiFile(file);
+    } else {
+      setMultiFile(null);
+    }
+  }
+
+  const handleMultiImport = async () => {
+    if (!multiFile || !user) return;
+    setIsUploadingMulti(true);
+    
+    const reader = new FileReader();
+    reader.readAsText(multiFile);
+    reader.onload = async (e) => {
+        const csvContent = e.target?.result as string;
+        if (!csvContent) {
+            toast({ variant: 'destructive', title: 'Error de Lectura', description: 'No se pudo leer el contenido del archivo.' });
+            setIsUploadingMulti(false);
+            return;
+        }
+
+        const result = await processCsvExpensesAction(csvContent);
+
+        if (result.error) {
+             toast({ variant: 'destructive', title: 'Error de Procesamiento', description: result.error });
+             setIsUploadingMulti(false);
+             return;
+        }
+        
+        if (result.data && result.data.expenses.length > 0) {
+            const promises = result.data.expenses.map(expense => {
+                const docData = {
+                    ownerId: user.uid,
+                    ...expense,
+                    fecha: new Date(expense.fecha),
+                    fechaCreacion: serverTimestamp(),
+                };
+                return addDoc(collection(db, 'expenses'), docData);
+            });
+            
+            await Promise.all(promises);
+
+            toast({
+                title: 'Importación Completada',
+                description: `${result.data.expenses.length} gastos han sido importados con éxito.`,
+            });
+        } else {
+             toast({ title: 'Importación Finalizada', description: 'No se encontraron gastos para importar en el archivo.' });
+        }
+        
+        setIsUploadingMulti(false);
+        onClose();
+    };
+  };
 
   const getCameraPermission = useCallback(async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -233,105 +295,98 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{view === 'form' ? 'Registrar Nuevo Gasto' : 'Escanear con Cámara'}</DialogTitle>
+          <DialogTitle>Registrar/Importar Gastos</DialogTitle>
            <DialogDescription>
-            {view === 'form' 
-              ? 'Completa la info o usa la IA para escanear un ticket.' 
-              : 'Apunta al ticket y pulsa capturar.'}
+            Añade un gasto manualmente, escanéalo con IA o importa múltiples gastos desde un CSV.
           </DialogDescription>
         </DialogHeader>
-        
-        {view === 'form' && (
-          <div className="space-y-4 py-4">
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" className="w-full" onClick={handleImportClick} disabled={isScanning || isSaving}>
-                    {isScanning ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Procesando...</> : <><Upload className="mr-2 h-4 w-4" /> Importar Ticket</>}
-                </Button>
-                 <Button variant="outline" className="w-full" onClick={() => setView('camera')} disabled={isScanning || isSaving}>
-                    <Camera className="mr-2 h-4 w-4" /> Escanear con Cámara
-                 </Button>
-              </div>
 
-              {isScanning && (
-                <div className="text-center text-sm text-muted-foreground">La IA está analizando tu ticket...</div>
-              )}
-              
-              {scanError && (
-                  <Alert variant="destructive">
-                      <Terminal className="h-4 w-4" />
-                      <AlertTitle>Error de Escaneo</AlertTitle>
-                      <AlertDescription>{scanError}</AlertDescription>
-                  </Alert>
-              )}
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="date" className="text-right">Fecha *</Label>
-                   <Popover>
-                      <PopoverTrigger asChild>
-                          <Button variant={"outline"} className={cn("w-full col-span-3 justify-start text-left font-normal", !date && "text-muted-foreground")}>
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {date ? format(date, "PPP", {locale: es}) : <span>Elige una fecha</span>}
-                          </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                          <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                      </PopoverContent>
-                  </Popover>
-              </div>
-              
-               <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="category" className="text-right">Categoría *</Label>
-                  <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Selecciona una categoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="Software">Software</SelectItem>
-                          <SelectItem value="Oficina">Oficina</SelectItem>
-                          <SelectItem value="Marketing">Marketing</SelectItem>
-                          <SelectItem value="Viajes">Viajes</SelectItem>
-                          <SelectItem value="Suministros">Suministros</SelectItem>
-                          <SelectItem value="Otros">Otros</SelectItem>
-                      </SelectContent>
-                  </Select>
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="proveedor" className="text-right">Proveedor *</Label>
-                  <Input id="proveedor" placeholder="Ej: Amazon, Ferretería Paco" className="col-span-3" value={proveedor} onChange={(e) => setProveedor(e.target.value)} />
-              </div>
+        <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="form">Formulario</TabsTrigger>
+                <TabsTrigger value="camera">Escanear Ticket</TabsTrigger>
+                <TabsTrigger value="multi-upload">Importar CSV</TabsTrigger>
+            </TabsList>
+            <TabsContent value="form" className="pt-4 space-y-4">
+                {scanError && (
+                    <Alert variant="destructive">
+                        <Terminal className="h-4 w-4" />
+                        <AlertTitle>Error de Escaneo</AlertTitle>
+                        <AlertDescription>{scanError}</AlertDescription>
+                    </Alert>
+                )}
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="date" className="text-right">Fecha *</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant={"outline"} className={cn("w-full col-span-3 justify-start text-left font-normal", !date && "text-muted-foreground")}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {date ? format(date, "PPP", {locale: es}) : <span>Elige una fecha</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="category" className="text-right">Categoría *</Label>
+                    <Select value={category} onValueChange={setCategory}>
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="Selecciona una categoría" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Software">Software</SelectItem>
+                            <SelectItem value="Oficina">Oficina</SelectItem>
+                            <SelectItem value="Marketing">Marketing</SelectItem>
+                            <SelectItem value="Viajes">Viajes</SelectItem>
+                            <SelectItem value="Suministros">Suministros</SelectItem>
+                            <SelectItem value="Otros">Otros</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="proveedor" className="text-right">Proveedor *</Label>
+                    <Input id="proveedor" placeholder="Ej: Amazon, Ferretería Paco" className="col-span-3" value={proveedor} onChange={(e) => setProveedor(e.target.value)} />
+                </div>
 
-              <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="descripcion" className="text-right pt-2">Descripción</Label>
-                  <Textarea id="descripcion" placeholder="Detalles del gasto..." className="col-span-3" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-              </div>
+                <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="descripcion" className="text-right pt-2">Descripción</Label>
+                    <Textarea id="descripcion" placeholder="Detalles del gasto..." className="col-span-3" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+                </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="importe" className="text-right">Importe (€) *</Label>
-                  <Input id="importe" type="number" placeholder="Ej: 75.50" className="col-span-3" value={importe} onChange={(e) => setImporte(e.target.value)} />
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="metodo-pago" className="text-right">Método Pago *</Label>
-                   <Select value={metodoPago} onValueChange={setMetodoPago}>
-                      <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Selecciona un método" />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="Tarjeta de Crédito">Tarjeta de Crédito</SelectItem>
-                          <SelectItem value="Tarjeta de Débito">Tarjeta de Débito</SelectItem>
-                          <SelectItem value="Efectivo">Efectivo</SelectItem>
-                          <SelectItem value="Transferencia">Transferencia</SelectItem>
-                          <SelectItem value="Paypal">Paypal</SelectItem>
-                      </SelectContent>
-                  </Select>
-              </div>
-          </div>
-        )}
-
-        {view === 'camera' && (
-             <div className="space-y-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="importe" className="text-right">Importe (€) *</Label>
+                    <Input id="importe" type="number" placeholder="Ej: 75.50" className="col-span-3" value={importe} onChange={(e) => setImporte(e.target.value)} />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="metodo-pago" className="text-right">Método Pago *</Label>
+                    <Select value={metodoPago} onValueChange={setMetodoPago}>
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="Selecciona un método" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Tarjeta de Crédito">Tarjeta de Crédito</SelectItem>
+                            <SelectItem value="Tarjeta de Débito">Tarjeta de Débito</SelectItem>
+                            <SelectItem value="Efectivo">Efectivo</SelectItem>
+                            <SelectItem value="Transferencia">Transferencia</SelectItem>
+                            <SelectItem value="Paypal">Paypal</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <DialogFooter className="pt-4">
+                    <Button variant="outline" onClick={handleClose} disabled={isSaving}>Cancelar</Button>
+                    <Button onClick={handleRegister} disabled={isSaving}>
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSaving ? 'Guardando...' : 'Registrar Gasto'}
+                    </Button>
+                </DialogFooter>
+            </TabsContent>
+            <TabsContent value="camera" className="pt-4 space-y-4">
                 <div className="relative aspect-video bg-muted rounded-md flex items-center justify-center overflow-hidden">
                     <video ref={videoRef} className={cn("w-full h-full object-cover", hasCameraPermission === null || hasCameraPermission === false ? 'hidden' : 'block')} autoPlay muted playsInline />
                     <canvas ref={canvasRef} className="hidden" />
@@ -356,20 +411,27 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
                         <><ScanLine className="mr-2 h-4 w-4" /> Capturar y escanear</>
                     )}
                 </Button>
-            </div>
-        )}
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => view === 'form' ? handleClose() : setView('form')} disabled={isSaving}>
-            {view === 'form' ? 'Cancelar' : 'Volver'}
-          </Button>
-          {view === 'form' && (
-            <Button onClick={handleRegister} disabled={isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSaving ? 'Guardando...' : 'Registrar Gasto'}
-            </Button>
-          )}
-        </DialogFooter>
+            </TabsContent>
+             <TabsContent value="multi-upload" className="pt-4 space-y-4">
+                <div className="space-y-2">
+                <Label htmlFor="multi-file-upload">Seleccionar Archivo (CSV, XLS, XLSX)</Label>
+                <Input
+                    id="multi-file-upload"
+                    type="file"
+                    onChange={handleMultiFileChange}
+                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                />
+                </div>
+                <Button onClick={handleMultiImport} className="w-full" disabled={!multiFile || isUploadingMulti}>
+                {isUploadingMulti ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-2 h-4 w-4" />}
+                {isUploadingMulti ? 'Procesando...' : `Iniciar Importación`}
+                </Button>
+                 <DialogFooter className="pt-4">
+                    <Button variant="outline" onClick={handleClose}>Cerrar</Button>
+                </DialogFooter>
+            </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
