@@ -27,6 +27,13 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '@/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import Link from 'next/link';
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
@@ -178,8 +185,20 @@ export default function DashboardPage() {
      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <main className="lg:col-span-2 space-y-6">
             <Card>
-                <CardHeader>
-                    <CardTitle>Visión Financiera (Últ. 6 meses)</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Visión Financiera</CardTitle>
+                     <Select defaultValue="semestral">
+                        <SelectTrigger className="w-[220px]">
+                            <SelectValue placeholder="Seleccionar periodo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="mensual">Este Mes</SelectItem>
+                            <SelectItem value="trimestral">Este Trimestre</SelectItem>
+                            <SelectItem value="semestral">Últimos 6 meses</SelectItem>
+                            <SelectItem value="anual">Este Año</SelectItem>
+                            <SelectItem value="personalizado">Personalizado</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </CardHeader>
                 <CardContent className="space-y-6">
                      {loading ? (
