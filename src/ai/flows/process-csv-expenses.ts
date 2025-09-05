@@ -12,7 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const ProcessCsvExpensesInputSchema = z.object({
+const ProcessCsvExpensesInputSchema = z.object({
   csvContent: z.string().describe('The full content of the CSV file as a string.'),
 });
 export type ProcessCsvExpensesInput = z.infer<typeof ProcessCsvExpensesInputSchema>;
@@ -26,7 +26,7 @@ const ExpenseSchema = z.object({
     metodoPago: z.string().describe('El método de pago utilizado.'),
 });
 
-export const ProcessCsvExpensesOutputSchema = z.object({
+const ProcessCsvExpensesOutputSchema = z.object({
   expenses: z.array(ExpenseSchema).describe('Una lista de los gastos procesados desde el CSV.'),
 });
 export type ProcessCsvExpensesOutput = z.infer<typeof ProcessCsvExpensesOutputSchema>;
