@@ -288,21 +288,24 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </div>
 
             <div className="flex flex-col items-end space-y-2">
-                <Select value={status} onValueChange={(v) => setStatus(v as DocumentStatus)}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Borrador">Borrador</SelectItem>
-                        <SelectItem value="Emitido">Emitido</SelectItem>
-                        <SelectItem value="Enviado">Enviado</SelectItem>
-                        <SelectItem value="Pagado">Pagado</SelectItem>
-                        <SelectItem value="Vencido">Vencido</SelectItem>
-                        <SelectItem value="Impagada">Impagada</SelectItem>
-                        <SelectItem value="Aceptado">Aceptado</SelectItem>
-                        <SelectItem value="Rechazado">Rechazado</SelectItem>
-                    </SelectContent>
-                </Select>
+                <div className="w-[180px] space-y-2">
+                    <Label>Estado del Documento</Label>
+                    <Select value={status} onValueChange={(v) => setStatus(v as DocumentStatus)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Borrador">Borrador</SelectItem>
+                            <SelectItem value="Emitido">Emitido</SelectItem>
+                            <SelectItem value="Enviado">Enviado</SelectItem>
+                            <SelectItem value="Pagado">Pagado</SelectItem>
+                            <SelectItem value="Vencido">Vencido</SelectItem>
+                            <SelectItem value="Impagada">Impagada</SelectItem>
+                            <SelectItem value="Aceptado">Aceptado</SelectItem>
+                            <SelectItem value="Rechazado">Rechazado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="w-[240px] space-y-1 text-right p-4 bg-muted rounded-md">
                     <div className="flex justify-between"><span>Subtotal:</span><span>{subtotal.toFixed(2)} EUR</span></div>
                     <div className="flex justify-between"><span>Impuestos ({taxRate}%):</span><span>{taxAmount.toFixed(2)} EUR</span></div>
@@ -311,10 +314,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </div>
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
-          <Button type="submit" disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? "Guardando..." : "Guardar Cambios"}
+          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading ? "Guardando..." : "Guardar Cambios"}
           </Button>
         </div>
     </form>
