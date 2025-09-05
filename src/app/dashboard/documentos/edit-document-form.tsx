@@ -298,6 +298,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                         <SelectItem value="Enviado">Enviado</SelectItem>
                         <SelectItem value="Pagado">Pagado</SelectItem>
                         <SelectItem value="Vencido">Vencido</SelectItem>
+                        <SelectItem value="Impagada">Impagada</SelectItem>
                         <SelectItem value="Aceptado">Aceptado</SelectItem>
                         <SelectItem value="Rechazado">Rechazado</SelectItem>
                     </SelectContent>

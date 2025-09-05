@@ -411,9 +411,12 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                         <SelectContent>
                             <SelectItem value="Borrador">Borrador</SelectItem>
                             <SelectItem value="Emitido">Emitido</SelectItem>
-                            <SelectItem value="Pagado">Pagado</SelectItem>
                             <SelectItem value="Enviado">Enviado</SelectItem>
+                            <SelectItem value="Pagado">Pagado</SelectItem>
+                            <SelectItem value="Vencido">Vencido</SelectItem>
+                             <SelectItem value="Impagada">Impagada</SelectItem>
                              <SelectItem value="Aceptado">Aceptado</SelectItem>
+                              <SelectItem value="Rechazado">Rechazado</SelectItem>
                         </SelectContent>
                     </Select>
                     <div className="w-[240px] space-y-1 text-right p-4 bg-muted rounded-md">
