@@ -46,7 +46,7 @@ import type { Project, ProjectStatus } from './proyectos/page';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { AiAssistantChat } from './ai-assistant-chat';
-import { format, subMonths } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 type ActivityItem = {
@@ -55,6 +55,8 @@ type ActivityItem = {
     text: string;
     time: string;
 };
+
+type Period = 'mensual' | 'trimestral' | 'semestral' | 'anual';
 
 const initialFinancialChartData = Array.from({ length: 6 }, (_, i) => {
     const d = subMonths(new Date(), 5 - i);
@@ -65,12 +67,17 @@ const initialFinancialChartData = Array.from({ length: 6 }, (_, i) => {
 export default function DashboardPage() {
     const { user } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
+    const [periodo, setPeriodo] = useState<Period>('semestral');
+    
+    // Financial states
     const [income, setIncome] = useState(0);
     const [expenses, setExpenses] = useState(0);
+    const [financialChartData, setFinancialChartData] = useState(initialFinancialChartData);
+    
+    // Other states
     const [activeProjects, setActiveProjects] = useState(0);
     const [pendingTasks, setPendingTasks] = useState(0);
     const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
-    const [financialChartData, setFinancialChartData] = useState(initialFinancialChartData);
 
     useEffect(() => {
         if (!user || !db) {
@@ -81,45 +88,86 @@ export default function DashboardPage() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // Fetch Income (Paid Invoices)
+                // Determine date range based on selected period
+                const now = new Date();
+                let startDate: Date;
+                let endDate: Date = endOfMonth(now);
+
+                switch (periodo) {
+                    case 'mensual':
+                        startDate = startOfMonth(now);
+                        break;
+                    case 'trimestral':
+                        startDate = startOfQuarter(now);
+                        endDate = endOfQuarter(now);
+                        break;
+                    case 'anual':
+                        startDate = startOfYear(now);
+                        endDate = endOfYear(now);
+                        break;
+                    case 'semestral':
+                    default:
+                        startDate = startOfMonth(subMonths(now, 5));
+                        break;
+                }
+
+                // Fetch Invoices
                 const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
                 const invoicesSnapshot = await getDocs(invoicesQuery);
-                const invoices = invoicesSnapshot.docs.map(doc => doc.data() as Document);
-                const totalIncome = invoices.reduce((acc, doc) => acc + doc.importe, 0);
+                const allInvoices = invoicesSnapshot.docs.map(doc => doc.data() as Document);
+                
+                const filteredInvoices = allInvoices.filter(inv => {
+                    const invDate = (inv.fechaEmision as any).toDate();
+                    return invDate >= startDate && invDate <= endDate;
+                });
+                const totalIncome = filteredInvoices.reduce((acc, doc) => acc + doc.importe, 0);
                 setIncome(totalIncome);
 
                 // Fetch Expenses
                 const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
                 const expensesSnapshot = await getDocs(expensesQuery);
-                const expensesData = expensesSnapshot.docs.map(doc => doc.data() as Expense);
-                const totalExpenses = expensesData.reduce((acc, doc) => acc + doc.importe, 0);
+                const allExpenses = expensesSnapshot.docs.map(doc => doc.data() as Expense);
+
+                const filteredExpenses = allExpenses.filter(exp => {
+                    const expDate = (exp.fecha as any).toDate();
+                    return expDate >= startDate && expDate <= endDate;
+                });
+                const totalExpenses = filteredExpenses.reduce((acc, doc) => acc + doc.importe, 0);
                 setExpenses(totalExpenses);
                 
                 // Process chart data
-                const newChartData = Array.from({ length: 6 }, (_, i) => {
-                    const d = subMonths(new Date(), 5 - i);
-                    return { month: format(d, 'MMM', { locale: es }), income: 0, expenses: 0, year: d.getFullYear(), monthNum: d.getMonth() };
-                });
-
-                invoices.forEach(inv => {
+                let chartDataTemplate: { month: string, income: number, expenses: number, year: number, monthNum: number }[];
+                if (periodo === 'anual') {
+                    chartDataTemplate = Array.from({ length: 12 }, (_, i) => {
+                        const d = new Date(now.getFullYear(), i, 1);
+                        return { month: format(d, 'MMM', { locale: es }), income: 0, expenses: 0, year: d.getFullYear(), monthNum: d.getMonth() };
+                    });
+                } else {
+                     chartDataTemplate = Array.from({ length: 6 }, (_, i) => {
+                        const d = subMonths(now, 5 - i);
+                        return { month: format(d, 'MMM', { locale: es }), income: 0, expenses: 0, year: d.getFullYear(), monthNum: d.getMonth() };
+                    });
+                }
+                
+                filteredInvoices.forEach(inv => {
                     const invDate = (inv.fechaEmision as any).toDate();
                     const monthStr = format(invDate, 'MMM', { locale: es });
-                    const chartEntry = newChartData.find(d => d.month === monthStr && d.year === invDate.getFullYear());
+                    const chartEntry = chartDataTemplate.find(d => d.month === monthStr && d.year === invDate.getFullYear());
                     if (chartEntry) {
                         chartEntry.income += inv.importe;
                     }
                 });
 
-                expensesData.forEach(exp => {
+                filteredExpenses.forEach(exp => {
                     const expDate = (exp.fecha as any).toDate();
                      const monthStr = format(expDate, 'MMM', { locale: es });
-                    const chartEntry = newChartData.find(d => d.month === monthStr && d.year === expDate.getFullYear());
+                    const chartEntry = chartDataTemplate.find(d => d.month === monthStr && d.year === expDate.getFullYear());
                     if (chartEntry) {
                         chartEntry.expenses += exp.importe;
                     }
                 });
                 
-                setFinancialChartData(newChartData);
+                setFinancialChartData(chartDataTemplate);
 
                 // Fetch Projects
                 const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid), where('status', 'in', ['En Progreso', 'Planificación']));
@@ -157,7 +205,6 @@ export default function DashboardPage() {
                 
                 setRecentActivities(activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 4));
 
-
             } catch (error) {
                 console.error("Error fetching dashboard data: ", error);
             } finally {
@@ -166,7 +213,7 @@ export default function DashboardPage() {
         };
 
         fetchData();
-    }, [user]);
+    }, [user, periodo]);
     
     const netProfit = income - expenses;
     const formatCurrency = (amount: number) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -187,7 +234,7 @@ export default function DashboardPage() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Visión Financiera</CardTitle>
-                     <Select defaultValue="semestral">
+                     <Select value={periodo} onValueChange={(value) => setPeriodo(value as Period)}>
                         <SelectTrigger className="w-[220px]">
                             <SelectValue placeholder="Seleccionar periodo" />
                         </SelectTrigger>
@@ -196,7 +243,7 @@ export default function DashboardPage() {
                             <SelectItem value="trimestral">Este Trimestre</SelectItem>
                             <SelectItem value="semestral">Últimos 6 meses</SelectItem>
                             <SelectItem value="anual">Este Año</SelectItem>
-                            <SelectItem value="personalizado">Personalizado</SelectItem>
+                            <SelectItem value="personalizado" disabled>Personalizado</SelectItem>
                         </SelectContent>
                     </Select>
                 </CardHeader>
