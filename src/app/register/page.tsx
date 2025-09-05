@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal, Loader2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
-import { AuthVideo } from '@/components/auth-video';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 const GoogleIcon = () => (
     <svg className="mr-2 h-4 w-4" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Google</title><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.62 1.9-4.73 1.9-3.41 0-6.18-2.8-6.18-6.18s2.77-6.18 6.18-6.18c1.93 0 3.25.78 4.23 1.7l2.06-2.06C18.12 2.66 15.61 1.53 12.48 1.53c-5.18 0-9.42 4.13-9.42 9.19s4.24 9.19 9.42 9.19c5.18 0 9.42-4.13 9.42-9.19 0-.82-.07-1.62-.2-2.38z" fill="currentColor"/></svg>
@@ -122,89 +122,85 @@ export default function RegisterPage() {
 
 
   return (
-     <main className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
-        <div className="relative hidden lg:block">
-            <AuthVideo />
-        </div>
-        <div className="flex items-center justify-center bg-background p-6">
-            <div className="w-full max-w-sm space-y-6">
-                 <div className="space-y-2 text-center">
-                    <h1 className="text-3xl font-bold">Crea tu Cuenta</h1>
-                    <p className="text-muted-foreground">Empieza a transformar tu negocio hoy mismo.</p>
+    <main className="flex min-h-screen w-full items-center justify-center bg-background p-6">
+       <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl">Crea tu Cuenta</CardTitle>
+          <CardDescription>Empieza a transformar tu negocio hoy mismo.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            {error && (
+                <Alert variant="destructive">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Error de Registro</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+
+            <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="name">Nombre</Label>
+                    <Input
+                        id="name"
+                        type="text"
+                        placeholder="Juan Pérez"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
                 </div>
-                
-                {error && (
-                    <Alert variant="destructive">
-                    <Terminal className="h-4 w-4" />
-                    <AlertTitle>Error de Registro</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                )}
-
-                <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Nombre</Label>
-                        <Input
-                            id="name"
-                            type="text"
-                            placeholder="Juan Pérez"
-                            required
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Correo Electrónico</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="tu@email.com"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="password">Contraseña</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            minLength={6}
-                        />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Crear Cuenta
-                    </Button>
-                </form>
-
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                        O continuar con
-                    </span>
-                    </div>
+                <div className="space-y-2">
+                    <Label htmlFor="email">Correo Electrónico</Label>
+                    <Input
+                        id="email"
+                        type="email"
+                        placeholder="tu@email.com"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
                 </div>
-
-                <Button variant="outline" className="w-full text-current" onClick={handleGoogleSignIn} disabled={googleLoading}>
-                    {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
-                    Google
+                <div className="space-y-2">
+                    <Label htmlFor="password">Contraseña</Label>
+                    <Input
+                        id="password"
+                        type="password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        minLength={6}
+                    />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Crear Cuenta
                 </Button>
-                
-                 <p className="text-center text-sm text-muted-foreground">
-                    ¿Ya tienes una cuenta?{' '}
-                    <Link href="/login" className="font-semibold text-primary underline-offset-4 hover:underline">
-                    Inicia sesión
-                    </Link>
-                </p>
+            </form>
+
+            <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                    O continuar con
+                </span>
+                </div>
             </div>
-        </div>
+
+            <Button variant="outline" className="w-full text-current" onClick={handleGoogleSignIn} disabled={googleLoading}>
+                {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+                Google
+            </Button>
+            
+            <p className="text-center text-sm text-muted-foreground">
+                ¿Ya tienes una cuenta?{' '}
+                <Link href="/login" className="font-semibold text-primary underline-offset-4 hover:underline">
+                Inicia sesión
+                </Link>
+            </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }
