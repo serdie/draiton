@@ -305,7 +305,7 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
             <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="form">Formulario</TabsTrigger>
                 <TabsTrigger value="camera">Escanear Ticket</TabsTrigger>
-                <TabsTrigger value="multi-upload">Importar CSV</TabsTrigger>
+                <TabsTrigger value="multi-upload">Importar CSV/PDF</TabsTrigger>
             </TabsList>
             <TabsContent value="form" className="pt-4 space-y-4">
                 {scanError && (
@@ -414,12 +414,12 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
             </TabsContent>
              <TabsContent value="multi-upload" className="pt-4 space-y-4">
                 <div className="space-y-2">
-                <Label htmlFor="multi-file-upload">Seleccionar Archivo (CSV, XLS, XLSX)</Label>
+                <Label htmlFor="multi-file-upload">Seleccionar Archivo (CSV, PDF, etc.)</Label>
                 <Input
                     id="multi-file-upload"
                     type="file"
                     onChange={handleMultiFileChange}
-                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/pdf"
                     className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                 />
                 </div>
