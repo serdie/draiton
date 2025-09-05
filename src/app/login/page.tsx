@@ -142,13 +142,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 />
             </div>
-            <div className="flex items-center justify-between text-sm">
-                 <p className="text-muted-foreground">
-                ¿No tienes cuenta?{' '}
-                <Link href="/register" className="font-medium text-primary hover:underline">
-                    Regístrate
-                </Link>
-                </p>
+            <div className="flex items-center justify-end text-sm">
                 <Link href="#" className="font-medium text-primary hover:underline">
                 ¿Olvidaste tu contraseña?
                 </Link>
@@ -172,6 +166,12 @@ export default function LoginPage() {
                 {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
                 Google
             </Button>
+             <p className="mt-6 text-center text-sm text-muted-foreground">
+                ¿No tienes cuenta?{' '}
+                <Link href="/register" className="font-medium text-primary hover:underline">
+                    Regístrate
+                </Link>
+            </p>
         </CardContent>
       </Card>
     </main>
