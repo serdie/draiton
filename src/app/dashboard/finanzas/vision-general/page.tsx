@@ -4,7 +4,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Tooltip, LabelList } from 'recharts';
 import { TrendingUp, TrendingDown, Landmark, Percent, Scale, Loader2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { db } from '@/lib/firebase/config';
@@ -209,10 +209,11 @@ export default function VisionGeneralFinanzasPage() {
                  <ChartContainer config={{}} className="h-[300px] w-full">
                     <PieChart>
                          <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                        <Pie data={expenseCategoriesData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} labelLine={false}>
+                        <Pie data={expenseCategoriesData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5}>
                              {expenseCategoriesData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.fill} />
                             ))}
+                            <LabelList dataKey="name" className="fill-background text-sm" stroke="hsl(var(--foreground))" strokeWidth={0.5} />
                         </Pie>
                     </PieChart>
                 </ChartContainer>
