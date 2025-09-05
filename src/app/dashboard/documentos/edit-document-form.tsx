@@ -16,7 +16,7 @@ import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { type DocumentType, type DocumentStatus, type Document, type LineItem as DocLineItem } from './page';
 import { useToast } from '@/hooks/use-toast';
-import { updateDocument } from '@/lib/firebase/document-actions';
+import { updateDocumentAction } from '@/lib/firebase/document-actions';
 import { AuthContext } from '@/context/auth-context';
 import Link from 'next/link';
 
@@ -122,23 +122,23 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
       moneda: 'EUR',
     };
 
-    try {
-      await updateDocument(document.id, documentData);
+    const result = await updateDocumentAction(document.id, documentData);
+
+    if (result.success) {
       toast({
         title: 'Documento Actualizado',
         description: `El documento ${docNumber} se ha actualizado correctamente.`,
       });
       onClose();
-    } catch (error) {
-      console.error("Error al actualizar documento: ", error);
+    } else {
       toast({
         variant: 'destructive',
         title: 'Error al actualizar',
-        description: 'No se pudo guardar el documento. Revisa la consola y los permisos.',
+        description: result.error,
       });
-    } finally {
-        setIsSaving(false);
     }
+
+    setIsSaving(false);
   }
 
 
