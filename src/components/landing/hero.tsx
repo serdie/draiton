@@ -1,22 +1,14 @@
-
 'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import Image from 'next/image';
+import { AuthVideo } from '@/components/auth-video';
 
 
 export function Hero() {
   return (
     <section className="relative w-full h-[80vh] flex items-center justify-center text-center overflow-hidden">
-        <Image 
-            src="https://picsum.photos/1200/800"
-            alt="Persona trabajando en un ordenador con un dashboard"
-            data-ai-hint="woman working computer"
-            fill
-            className="object-cover z-0"
-        />
-        <div className="absolute z-10 w-full h-full bg-black/50"></div>
+        <AuthVideo />
         <div className="z-20 container flex flex-col items-center justify-center text-white px-4">
             <h1 className="text-4xl font-bold tracking-tighter md:text-6xl/tight">
             Transforma la gestión de tu negocio
