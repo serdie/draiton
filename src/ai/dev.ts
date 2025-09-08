@@ -18,4 +18,5 @@ import '@/ai/flows/process-csv-invoices.ts';
 import '@/ai/flows/generate-payroll.ts';
 import '@/ai/flows/review-payroll.ts';
 import '@/ai/flows/process-csv-expenses.ts';
+import '@/ai/flows/process-pdf-expenses.ts';
 

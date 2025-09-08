@@ -29,7 +29,7 @@ import { AuthContext } from '@/context/auth-context';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { processCsvExpensesAction } from '@/lib/firebase/expense-actions';
+import { processCsvExpensesAction, processPdfExpensesAction } from '@/lib/firebase/expense-actions';
 
 
 interface RegisterExpenseModalProps {
@@ -204,47 +204,93 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
     setIsUploadingMulti(true);
     
     const reader = new FileReader();
-    reader.readAsText(multiFile);
-    reader.onload = async (e) => {
-        const csvContent = e.target?.result as string;
-        if (!csvContent) {
-            toast({ variant: 'destructive', title: 'Error de Lectura', description: 'No se pudo leer el contenido del archivo.' });
-            setIsUploadingMulti(false);
-            return;
-        }
+    
+    if (multiFile.type === 'application/pdf') {
+        reader.readAsDataURL(multiFile);
+        reader.onload = async (e) => {
+            const pdfDataUri = e.target?.result as string;
+            if (!pdfDataUri) {
+                toast({ variant: 'destructive', title: 'Error de Lectura', description: 'No se pudo leer el contenido del PDF.' });
+                setIsUploadingMulti(false);
+                return;
+            }
 
-        const result = await processCsvExpensesAction(csvContent);
+            const result = await processPdfExpensesAction(pdfDataUri);
 
-        if (result.error) {
-             toast({ variant: 'destructive', title: 'Error de Procesamiento', description: result.error });
-             setIsUploadingMulti(false);
-             return;
-        }
-        
-        if (result.data && result.data.expenses.length > 0) {
-            const promises = result.data.expenses.map(expense => {
-                const docData = {
-                    ownerId: user.uid,
-                    ...expense,
-                    fecha: new Date(expense.fecha),
-                    fechaCreacion: serverTimestamp(),
-                };
-                return addDoc(collection(db, 'expenses'), docData);
-            });
+             if (result.error) {
+                toast({ variant: 'destructive', title: 'Error de Procesamiento', description: result.error });
+                setIsUploadingMulti(false);
+                return;
+            }
+
+            if (result.data && result.data.expenses.length > 0) {
+                const promises = result.data.expenses.map(expense => {
+                    const docData = {
+                        ownerId: user.uid,
+                        ...expense,
+                        fecha: new Date(expense.fecha),
+                        fechaCreacion: serverTimestamp(),
+                    };
+                    return addDoc(collection(db, 'expenses'), docData);
+                });
+                
+                await Promise.all(promises);
+
+                toast({
+                    title: 'Importación de PDF Completada',
+                    description: `${result.data.expenses.length} gastos han sido importados con éxito desde el PDF.`,
+                });
+            } else {
+                toast({ title: 'Importación Finalizada', description: 'No se encontraron gastos para importar en el PDF.' });
+            }
             
-            await Promise.all(promises);
+            setIsUploadingMulti(false);
+            onClose();
+        };
 
-            toast({
-                title: 'Importación Completada',
-                description: `${result.data.expenses.length} gastos han sido importados con éxito.`,
-            });
-        } else {
-             toast({ title: 'Importación Finalizada', description: 'No se encontraron gastos para importar en el archivo.' });
-        }
-        
-        setIsUploadingMulti(false);
-        onClose();
-    };
+    } else { // Assume CSV
+        reader.readAsText(multiFile);
+        reader.onload = async (e) => {
+            const csvContent = e.target?.result as string;
+            if (!csvContent) {
+                toast({ variant: 'destructive', title: 'Error de Lectura', description: 'No se pudo leer el contenido del archivo.' });
+                setIsUploadingMulti(false);
+                return;
+            }
+
+            const result = await processCsvExpensesAction(csvContent);
+
+            if (result.error) {
+                toast({ variant: 'destructive', title: 'Error de Procesamiento', description: result.error });
+                setIsUploadingMulti(false);
+                return;
+            }
+            
+            if (result.data && result.data.expenses.length > 0) {
+                const promises = result.data.expenses.map(expense => {
+                    const docData = {
+                        ownerId: user.uid,
+                        ...expense,
+                        fecha: new Date(expense.fecha),
+                        fechaCreacion: serverTimestamp(),
+                    };
+                    return addDoc(collection(db, 'expenses'), docData);
+                });
+                
+                await Promise.all(promises);
+
+                toast({
+                    title: 'Importación Completada',
+                    description: `${result.data.expenses.length} gastos han sido importados con éxito.`,
+                });
+            } else {
+                toast({ title: 'Importación Finalizada', description: 'No se encontraron gastos para importar en el archivo.' });
+            }
+            
+            setIsUploadingMulti(false);
+            onClose();
+        };
+    }
   };
 
   const getCameraPermission = useCallback(async () => {
@@ -305,7 +351,7 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
             <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="form">Formulario</TabsTrigger>
                 <TabsTrigger value="camera">Escanear Ticket</TabsTrigger>
-                <TabsTrigger value="multi-upload">Importar CSV/PDF</TabsTrigger>
+                <TabsTrigger value="multi-upload">Importar Archivo</TabsTrigger>
             </TabsList>
             <TabsContent value="form" className="pt-4 space-y-4">
                 {scanError && (
@@ -414,7 +460,7 @@ export function RegisterExpenseModal({ isOpen, onClose, onOpenModal, initialData
             </TabsContent>
              <TabsContent value="multi-upload" className="pt-4 space-y-4">
                 <div className="space-y-2">
-                <Label htmlFor="multi-file-upload">Seleccionar Archivo (CSV, PDF, etc.)</Label>
+                <Label htmlFor="multi-file-upload">Seleccionar Archivo (CSV, PDF)</Label>
                 <Input
                     id="multi-file-upload"
                     type="file"

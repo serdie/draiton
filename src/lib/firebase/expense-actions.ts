@@ -4,6 +4,7 @@
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from './config';
 import { processCsvExpenses, type ProcessCsvExpensesOutput } from '@/ai/flows/process-csv-expenses';
+import { processPdfExpenses, type ProcessPdfExpensesOutput } from '@/ai/flows/process-pdf-expenses';
 
 export async function deleteExpense(id: string): Promise<{ success: boolean; error?: string }> {
     if (!db) {
@@ -34,5 +35,19 @@ export async function processCsvExpensesAction(csvContent: string): Promise<{ da
   } catch (e: any) {
     console.error('Error processing CSV with AI:', e);
     return { data: null, error: 'La IA no pudo procesar el archivo CSV. Revisa el formato y vuelve a intentarlo.' };
+  }
+}
+
+export async function processPdfExpensesAction(pdfDataUri: string): Promise<{ data: ProcessPdfExpensesOutput | null; error: string | null }> {
+  if (!pdfDataUri) {
+    return { data: null, error: 'No se ha proporcionado el archivo PDF.' };
+  }
+
+  try {
+    const result = await processPdfExpenses({ pdfDataUri });
+    return { data: result, error: null };
+  } catch (e: any) {
+    console.error('Error processing PDF with AI:', e);
+    return { data: null, error: 'La IA no pudo procesar el archivo PDF. Revisa el archivo y vuelve a intentarlo.' };
   }
 }
