@@ -114,10 +114,10 @@ export default function DashboardPage() {
                 // Fetch Invoices
                 const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
                 const invoicesSnapshot = await getDocs(invoicesQuery);
-                const allInvoices = invoicesSnapshot.docs.map(doc => doc.data() as Document);
+                const allInvoices = invoicesSnapshot.docs.map(doc => ({...doc.data(), fechaEmision: doc.data().fechaEmision.toDate()}) as Document);
                 
                 const filteredInvoices = allInvoices.filter(inv => {
-                    const invDate = (inv.fechaEmision as any).toDate();
+                    const invDate = inv.fechaEmision;
                     return invDate >= startDate && invDate <= endDate;
                 });
                 const totalIncome = filteredInvoices.reduce((acc, doc) => acc + doc.importe, 0);
@@ -126,10 +126,10 @@ export default function DashboardPage() {
                 // Fetch Expenses
                 const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
                 const expensesSnapshot = await getDocs(expensesQuery);
-                const allExpenses = expensesSnapshot.docs.map(doc => doc.data() as Expense);
+                const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), fecha: doc.data().fecha.toDate()}) as Expense);
 
                 const filteredExpenses = allExpenses.filter(exp => {
-                    const expDate = (exp.fecha as any).toDate();
+                    const expDate = exp.fecha;
                     return expDate >= startDate && expDate <= endDate;
                 });
                 const totalExpenses = filteredExpenses.reduce((acc, doc) => acc + doc.importe, 0);
@@ -150,7 +150,7 @@ export default function DashboardPage() {
                 }
                 
                 filteredInvoices.forEach(inv => {
-                    const invDate = (inv.fechaEmision as any).toDate();
+                    const invDate = inv.fechaEmision;
                     const monthStr = format(invDate, 'MMM', { locale: es });
                     const chartEntry = chartDataTemplate.find(d => d.month === monthStr && d.year === invDate.getFullYear());
                     if (chartEntry) {
@@ -159,7 +159,7 @@ export default function DashboardPage() {
                 });
 
                 filteredExpenses.forEach(exp => {
-                    const expDate = (exp.fecha as any).toDate();
+                    const expDate = exp.fecha;
                      const monthStr = format(expDate, 'MMM', { locale: es });
                     const chartEntry = chartDataTemplate.find(d => d.month === monthStr && d.year === expDate.getFullYear());
                     if (chartEntry) {
@@ -167,7 +167,7 @@ export default function DashboardPage() {
                     }
                 });
                 
-                setFinancialChartData(chartDataTemplate);
+                setFinancialChartData(chartDataTemplate as any);
 
                 // Fetch Projects
                 const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid), where('status', 'in', ['En Progreso', 'Planificación']));
