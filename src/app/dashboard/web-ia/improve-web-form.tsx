@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Search, Terminal, Sparkles, CheckCircle, Speedometer, ShieldCheck, UserCheck } from 'lucide-react';
+import { Loader2, Search, Terminal, Sparkles, CheckCircle, TrendingUp, ShieldCheck, UserCheck } from 'lucide-react';
 import type { AnalyzeWebsiteOutput } from '@/ai/flows/analyze-website';
 
 type FormState = {
@@ -78,7 +78,7 @@ export function ImproveWebForm({ action }: { action: (currentState: FormState, f
                  <CategoryCard 
                     title={state.output.performance.title} 
                     points={state.output.performance.points} 
-                    icon={<Speedometer className="h-5 w-5"/>}
+                    icon={<TrendingUp className="h-5 w-5"/>}
                 />
                 <CategoryCard 
                     title={state.output.ux.title} 
