@@ -51,7 +51,7 @@ const prompt = ai.definePrompt({
   name: 'analyzeWebsitePrompt',
   input: {schema: AnalyzeWebsiteInputSchema},
   output: {schema: AnalyzeWebsiteOutputSchema},
-  prompt: `You are a world-class web development and digital marketing consultant. Your task is to analyze the provided website URL and generate a structured report with actionable improvement points.
+  prompt: `You are a world-class web development and digital marketing consultant. Your task is to analyze the provided website URL and generate a structured report with actionable improvement points. Respond ALWAYS in Spanish.
 
 Website to analyze: {{{url}}}
 
