@@ -2,6 +2,7 @@
 'use server';
 
 import { aiPoweredWebManagement, AIPoweredWebManagementOutput } from '@/ai/flows/ai-powered-web-management';
+import { analyzeWebsite, AnalyzeWebsiteOutput } from '@/ai/flows/analyze-website';
 
 export async function getWebsiteConceptAction(
     currentState: { output: AIPoweredWebManagementOutput | null; error: string | null },
@@ -25,5 +26,24 @@ export async function getWebsiteConceptAction(
     } catch (e: any) {
         console.error(e);
         return { output: null, error: "Ha ocurrido un error al generar el concepto. Inténtalo de nuevo." };
+    }
+}
+
+
+export async function analyzeWebsiteAction(
+    currentState: { output: AnalyzeWebsiteOutput | null; error: string | null },
+    formData: FormData
+): Promise<{ output: AnalyzeWebsiteOutput | null; error: string | null }> {
+    const url = formData.get('url') as string;
+    if (!url) {
+        return { output: null, error: 'Por favor, introduce una URL para analizar.' };
+    }
+
+    try {
+        const result = await analyzeWebsite({ url });
+        return { output: result, error: null };
+    } catch (e: any) {
+        console.error(e);
+        return { output: null, error: "Ha ocurrido un error al analizar la web. Inténtalo de nuevo." };
     }
 }

@@ -11,11 +11,19 @@ import type { AIPoweredWebManagementOutput } from '@/ai/flows/ai-powered-web-man
 import { ConnectSiteModal } from './connect-site-modal';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ImproveWebForm } from './improve-web-form';
+import type { AnalyzeWebsiteOutput } from '@/ai/flows/analyze-website';
 
 type GetWebsiteConceptAction = (
     currentState: { output: AIPoweredWebManagementOutput | null; error: string | null },
     formData: FormData
 ) => Promise<{ output: AIPoweredWebManagementOutput | null; error: string | null }>;
+
+type AnalyzeWebsiteAction = (
+    currentState: { output: AnalyzeWebsiteOutput | null; error: string | null },
+    formData: FormData
+) => Promise<{ output: AnalyzeWebsiteOutput | null; error: string | null }>;
+
 
 export type Site = {
     id: string;
@@ -60,7 +68,10 @@ const SiteCard = ({ site }: { site: Site }) => {
 }
 
 
-export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConceptAction: GetWebsiteConceptAction }) {
+export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction }: { 
+    getWebsiteConceptAction: GetWebsiteConceptAction,
+    analyzeWebsiteAction: AnalyzeWebsiteAction 
+}) {
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [connectedSites, setConnectedSites] = useState<Site[]>([]);
   const [generatedSite, setGeneratedSite] = useState<AIPoweredWebManagementOutput | null>(null);
@@ -91,8 +102,9 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
       </div>
       
       <Tabs defaultValue="crear" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-lg">
             <TabsTrigger value="crear">Crear Nuevo Sitio</TabsTrigger>
+            <TabsTrigger value="mejorar">Mejorar Web</TabsTrigger>
             <TabsTrigger value="gestionar">Gestionar Sitios</TabsTrigger>
         </TabsList>
         <TabsContent value="crear" className="mt-6">
@@ -106,6 +118,20 @@ export function WebIAPageContent({ getWebsiteConceptAction }: { getWebsiteConcep
             </CardHeader>
             <CardContent>
               <GestorWebForm action={getWebsiteConceptAction} setGeneratedSite={setGeneratedSite} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+         <TabsContent value="mejorar" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-primary" />
+                Analizar y Mejorar mi Web
+              </CardTitle>
+              <CardDescription>Introduce la URL de tu sitio web y la IA te dará un informe con puntos de mejora.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ImproveWebForm action={analyzeWebsiteAction} />
             </CardContent>
           </Card>
         </TabsContent>

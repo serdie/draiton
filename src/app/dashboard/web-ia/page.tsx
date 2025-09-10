@@ -5,7 +5,7 @@ import { useContext } from 'react';
 import Link from 'next/link';
 import { AuthContext } from '@/context/auth-context';
 import { WebIAPageContent } from './web-ia-page-content';
-import { getWebsiteConceptAction } from './actions';
+import { getWebsiteConceptAction, analyzeWebsiteAction } from './actions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lock } from 'lucide-react';
@@ -38,8 +38,12 @@ export default function WebIAPage() {
     <div className="relative">
       {!isPro && <ProFeatureLock />}
       <div className={cn("space-y-6", !isPro && "opacity-50 pointer-events-none")}>
-        <WebIAPageContent getWebsiteConceptAction={getWebsiteConceptAction} />
+        <WebIAPageContent 
+          getWebsiteConceptAction={getWebsiteConceptAction} 
+          analyzeWebsiteAction={analyzeWebsiteAction}
+        />
       </div>
     </div>
   );
 }
+
