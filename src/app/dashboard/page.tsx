@@ -222,7 +222,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          Bienvenida, {user?.displayName?.split(' ')[0] || 'Elena'}
+          Bienvenido, {user?.displayName?.split(' ')[0] || 'Usuario'}
         </h1>
         <p className="text-muted-foreground">
           Aquí tienes un resumen de tu negocio de hoy.
