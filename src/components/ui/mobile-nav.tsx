@@ -9,7 +9,7 @@ import { useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
 
 const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: Home, roles: ['free', 'pro', 'empresa', 'admin', 'employee'] },
+    { href: '/dashboard', label: 'Escritorio', icon: Home, roles: ['free', 'pro', 'empresa', 'admin', 'employee'] },
     { href: '/dashboard/finanzas', label: 'Finanzas', icon: Wallet, roles: ['free', 'pro', 'empresa', 'admin', 'employee'] },
     { href: '/dashboard/proyectos', label: 'Operaciones', icon: Blocks, roles: ['free', 'pro', 'empresa', 'admin', 'employee'] },
     { href: '/dashboard/gestor-ia', label: 'Herram. IA', icon: FlaskConical, roles: ['pro', 'empresa', 'admin'] },

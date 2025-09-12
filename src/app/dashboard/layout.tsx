@@ -76,7 +76,7 @@ export default function DashboardLayout({
       if (isActive('/dashboard/finanzas')) return 'Mis Nóminas';
       if (isActive('/dashboard/proyectos')) return 'Operaciones';
       if (isActive('/dashboard/configuracion')) return 'Configuración';
-      return 'Dashboard';
+      return 'Escritorio';
     }
     if (isActive('/dashboard/finanzas')) return 'Finanzas';
     if (isActive('/dashboard/proyectos')) return 'Operaciones';
@@ -84,7 +84,7 @@ export default function DashboardLayout({
     if (isActive('/dashboard/conexiones')) return 'Conexiones';
     if (isActive('/dashboard/configuracion') || isActive('/dashboard/mi-perfil')) return 'Configuración';
     if (isActive('/admin/dashboard')) return 'Administración';
-    return 'Dashboard';
+    return 'Escritorio';
   }
   
   const getRoleDisplayName = (role: string | undefined) => {
@@ -129,9 +129,9 @@ export default function DashboardLayout({
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/dashboard">
-                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Dashboard">
+                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Escritorio">
                   <Home />
-                  <span>Dashboard</span>
+                  <span>Escritorio</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -238,6 +238,12 @@ export default function DashboardLayout({
                     <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
                         <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <Link href="/dashboard">
+                            <DropdownMenuItem>
+                            <Home className="mr-2 h-4 w-4" />
+                            <span>Escritorio</span>
+                            </DropdownMenuItem>
+                        </Link>
                         <Link href="/dashboard/configuracion">
                             <DropdownMenuItem>
                             <Settings className="mr-2 h-4 w-4" />

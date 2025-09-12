@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import { Settings, LogOut, Home } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { clearSessionCookie } from '@/lib/firebase/auth-actions';
@@ -78,8 +78,8 @@ export function Header() {
                   <DropdownMenuSeparator />
                    <Link href="/dashboard">
                      <DropdownMenuItem>
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>Dashboard</span>
+                        <Home className="mr-2 h-4 w-4" />
+                        <span>Escritorio</span>
                      </DropdownMenuItem>
                    </Link>
                   <Link href="/dashboard/configuracion">
