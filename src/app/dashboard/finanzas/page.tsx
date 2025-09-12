@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useContext } from 'react';
+import { useContext } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Coins, Receipt, FileSignature } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';

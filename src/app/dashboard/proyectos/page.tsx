@@ -13,8 +13,7 @@ import { AuthContext } from '@/context/auth-context';
 import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
-import { type Project } from '../proyectos/page';
-import { KanbanBoard } from '../proyectos/kanban-board';
+import { KanbanBoard } from './kanban-board';
 import { CreateTaskModal } from '../tareas/create-task-modal';
 import TareasPage from '../tareas/page';
 import InformesPage from '../informes/page';
@@ -59,7 +58,7 @@ export default function OperacionesPage() {
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('proyectos');
+    const [activeTab, setActiveTab] = useState(isEmployee ? 'fichajes' : 'proyectos');
     
     useEffect(() => {
         if (!db || !user) {

@@ -19,10 +19,14 @@ const navItems = [
 
 export function MobileNav() {
     const pathname = usePathname();
-    const { effectiveRole } = useContext(AuthContext);
+    const { effectiveRole, isEmployee } = useContext(AuthContext);
 
     const visibleNavItems = navItems.filter(item => {
-      return item.roles.includes(effectiveRole || 'free');
+        if (isEmployee) {
+            // Special menu for employees
+            return ['/dashboard', '/dashboard/finanzas', '/dashboard/proyectos', '/dashboard/configuracion'].includes(item.href);
+        }
+        return item.roles.includes(effectiveRole || 'free');
     });
 
     const gridColsClass = `grid-cols-${visibleNavItems.length}`;
@@ -33,11 +37,15 @@ export function MobileNav() {
             <div className={cn("grid h-full max-w-lg mx-auto", gridColsClass)}>
                 {visibleNavItems.map(item => {
                     const isActive = (pathname === item.href) || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                    let label = item.label;
+                    if (isEmployee && item.href === '/dashboard/finanzas') {
+                        label = 'Nóminas';
+                    }
                     return (
                         <Link key={item.href} href={item.href} className="inline-flex flex-col items-center justify-center px-2 hover:bg-gray-50 dark:hover:bg-gray-800 group">
                              <item.icon className={cn("h-6 w-6 mb-1 text-gray-500 dark:text-gray-400 group-hover:text-primary", isActive && "text-primary")} />
                              <span className={cn("text-xs text-gray-500 dark:text-gray-400 group-hover:text-primary", isActive && "text-primary")}>
-                                {item.label}
+                                {label}
                              </span>
                         </Link>
                     )

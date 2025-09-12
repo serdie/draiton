@@ -72,6 +72,12 @@ export default function DashboardLayout({
   };
 
   const getPageTitle = () => {
+    if (isEmployee) {
+      if (isActive('/dashboard/finanzas')) return 'Mis Nóminas';
+      if (isActive('/dashboard/proyectos')) return 'Operaciones';
+      if (isActive('/dashboard/configuracion')) return 'Configuración';
+      return 'Dashboard';
+    }
     if (isActive('/dashboard/finanzas')) return 'Finanzas';
     if (isActive('/dashboard/proyectos')) return 'Operaciones';
     if (isActive('/dashboard/gestor-ia')) return 'Herramientas IA';
@@ -133,7 +139,7 @@ export default function DashboardLayout({
               <Link href="/dashboard/finanzas">
                 <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
                   <Wallet />
-                  <span>Finanzas</span>
+                  <span>{isEmployee ? 'Nóminas' : 'Finanzas'}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
