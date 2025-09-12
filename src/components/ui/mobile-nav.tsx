@@ -9,23 +9,24 @@ import { useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
 
 const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: Home, adminOnly: false },
-    { href: '/dashboard/finanzas', label: 'Finanzas', icon: Wallet, adminOnly: false },
-    { href: '/dashboard/proyectos', label: 'Operaciones', icon: Blocks, adminOnly: false },
-    { href: '/dashboard/gestor-ia', label: 'Herram. IA', icon: FlaskConical, adminOnly: false },
-    { href: '/dashboard/configuracion', label: 'Perfil', icon: User, adminOnly: false },
-    { href: '/admin/dashboard', label: 'Admin', icon: UserCog, adminOnly: true },
+    { href: '/dashboard', label: 'Dashboard', icon: Home, roles: ['free', 'pro', 'empresa', 'admin', 'employee'] },
+    { href: '/dashboard/finanzas', label: 'Finanzas', icon: Wallet, roles: ['free', 'pro', 'empresa', 'admin', 'employee'] },
+    { href: '/dashboard/proyectos', label: 'Operaciones', icon: Blocks, roles: ['free', 'pro', 'empresa', 'admin', 'employee'] },
+    { href: '/dashboard/gestor-ia', label: 'Herram. IA', icon: FlaskConical, roles: ['pro', 'empresa', 'admin'] },
+    { href: '/dashboard/configuracion', label: 'Perfil', icon: User, roles: ['free', 'pro', 'empresa', 'admin', 'employee'] },
+    { href: '/admin/dashboard', label: 'Admin', icon: UserCog, roles: ['admin'] },
 ]
 
 export function MobileNav() {
     const pathname = usePathname();
-    const { isAdmin } = useContext(AuthContext);
+    const { effectiveRole } = useContext(AuthContext);
 
     const visibleNavItems = navItems.filter(item => {
-      return item.adminOnly ? isAdmin : true;
+      return item.roles.includes(effectiveRole || 'free');
     });
 
-    const gridColsClass = isAdmin ? 'grid-cols-6' : 'grid-cols-5';
+    const gridColsClass = `grid-cols-${visibleNavItems.length}`;
+
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50 md:hidden">

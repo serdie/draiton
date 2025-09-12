@@ -13,8 +13,20 @@ import { NominasPageContent } from './nominas/nominas-page-content';
 
 
 export default function FinanzasPage() {
-  const { isEmpresa } = useContext(AuthContext);
+  const { isEmpresa, isEmployee } = useContext(AuthContext);
   
+  if (isEmployee) {
+    return (
+         <div className="space-y-6">
+            <div>
+            <h1 className="text-3xl font-bold">Mis Nóminas</h1>
+            <p className="text-muted-foreground">Consulta y descarga tus nóminas.</p>
+            </div>
+             <NominasPageContent />
+        </div>
+    )
+  }
+
   return (
       <div className="space-y-6">
         <div>

@@ -30,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FichajeEmpleadoTab } from './fichaje-empleado-tab';
 
 
 export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
@@ -51,7 +52,7 @@ export type Project = {
 export const projectStatuses: ProjectStatus[] = ['Planificación', 'En Progreso', 'En Espera', 'Completado', 'Cancelado'];
 
 export default function OperacionesPage() {
-    const { user, isPro, isEmpresa } = useContext(AuthContext);
+    const { user, isPro, isEmpresa, isEmployee } = useContext(AuthContext);
     const { toast } = useToast();
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
@@ -99,7 +100,7 @@ export default function OperacionesPage() {
     }
 
     const handleTabChange = (value: string) => {
-        if (value === 'fichajes' && !isEmpresa && isPro) {
+        if (value === 'fichajes' && !isEmpresa && !isEmployee && isPro) {
             setIsUpsellModalOpen(true);
         } else {
             setActiveTab(value);
@@ -110,6 +111,23 @@ export default function OperacionesPage() {
         setIsUpsellModalOpen(false);
         setActiveTab('proyectos');
     };
+
+    const tabsForOwner = [
+        { value: 'proyectos', label: 'Proyectos', icon: HardHat },
+        { value: 'crm', label: 'CRM', icon: User },
+        { value: 'tareas', label: 'Tareas', icon: FileText },
+        { value: 'fichajes', label: 'Fichajes', icon: Clock, condition: isEmpresa },
+        { value: 'informes', label: 'Informes', icon: BarChart2 }
+    ];
+
+    const tabsForEmployee = [
+        { value: 'proyectos', label: 'Proyectos', icon: HardHat },
+        { value: 'tareas', label: 'Tareas', icon: FileText },
+        { value: 'fichajes', label: 'Mi Fichaje', icon: Clock },
+        { value: 'informes', label: 'Informes', icon: BarChart2 }
+    ];
+
+    const visibleTabs = isEmployee ? tabsForEmployee : tabsForOwner.filter(tab => tab.condition !== false);
 
   return (
     <>
@@ -142,23 +160,21 @@ export default function OperacionesPage() {
             Organiza tu trabajo, gestiona tus contactos y sigue el pulso de tu negocio.
           </p>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Crear Nuevo Proyecto
-        </Button>
+        {!isEmployee && (
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Crear Nuevo Proyecto
+            </Button>
+        )}
       </div>
       
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList>
-          <TabsTrigger value="proyectos"><HardHat className="mr-2 h-4 w-4" />Proyectos</TabsTrigger>
-          <TabsTrigger value="crm"><User className="mr-2 h-4 w-4" />CRM</TabsTrigger>
-          <TabsTrigger value="tareas"><FileText className="mr-2 h-4 w-4" />Tareas</TabsTrigger>
-          {(isPro || isEmpresa) && (
-            <TabsTrigger value="fichajes" onClick={handleFichajesClick}>
-                <Clock className="mr-2 h-4 w-4" />Fichajes
+          {visibleTabs.map(tab => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+                <tab.icon className="mr-2 h-4 w-4" />{tab.label}
             </TabsTrigger>
-          )}
-          <TabsTrigger value="informes"><BarChart2 className="mr-2 h-4 w-4"/>Informes</TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value="proyectos" className="mt-6">
@@ -170,11 +186,9 @@ export default function OperacionesPage() {
         <TabsContent value="tareas" className="mt-6">
             <TareasPage />
         </TabsContent>
-         {(isPro || isEmpresa) && isEmpresa && (
-          <TabsContent value="fichajes" className="mt-6">
-              <FichajesTab />
-          </TabsContent>
-        )}
+        <TabsContent value="fichajes" className="mt-6">
+            {isEmployee ? <FichajeEmpleadoTab /> : isEmpresa ? <FichajesTab /> : null}
+        </TabsContent>
         <TabsContent value="informes" className="mt-6">
             <InformesPage />
         </TabsContent>
@@ -183,5 +197,3 @@ export default function OperacionesPage() {
     </>
   );
 }
-
-

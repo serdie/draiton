@@ -54,7 +54,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isAdmin, isPro, isEmpresa } = useContext(AuthContext);
+  const { user, isAdmin, isPro, isEmpresa, isEmployee } = useContext(AuthContext);
   const pathname = usePathname();
   const isMobile = useIsMobile();
   
@@ -91,6 +91,8 @@ export default function DashboardLayout({
         return 'Empresa';
       case 'admin':
         return 'Admin';
+      case 'employee':
+          return 'Empleado';
       default:
         return 'Usuario';
     }
@@ -144,23 +146,27 @@ export default function DashboardLayout({
               </Link>
             </SidebarMenuItem>
             
-            <SidebarMenuItem>
-              <Link href="/dashboard/gestor-ia">
-                  <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
-                  <FlaskConical />
-                  <span>Herramientas IA</span>
-                  </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
+            {!isEmployee && (
+                 <SidebarMenuItem>
+                    <Link href="/dashboard/gestor-ia">
+                        <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
+                        <FlaskConical />
+                        <span>Herramientas IA</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            )}
 
-             <SidebarMenuItem>
-              <Link href="/dashboard/conexiones">
-                <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
-                  <Network />
-                  <span>Conexiones</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
+            {!isEmployee && (
+                <SidebarMenuItem>
+                    <Link href="/dashboard/conexiones">
+                        <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
+                        <Network />
+                        <span>Conexiones</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            )}
             
             <SidebarMenuItem>
               <Link href="/dashboard/configuracion">
@@ -184,7 +190,7 @@ export default function DashboardLayout({
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className='p-4 space-y-4'>
-          {!isPro && (
+          {!isPro && !isEmployee && (
             <div className='p-4 bg-secondary rounded-lg text-center'>
               <p className='font-bold'>Upgrade a Pro</p>
               <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
