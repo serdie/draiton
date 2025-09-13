@@ -48,7 +48,7 @@ export async function importGoogleContacts(contacts: ContactToImport[]): Promise
         for (const contact of contacts) {
              // Evitar duplicados por email para el mismo usuario
             const q = query(contactsRef, where('ownerId', '==', ownerUid), where('email', '==', contact.email));
-            const existingContactSnapshot = await q.get();
+            const existingContactSnapshot = await getDocs(q);
 
             if (existingContactSnapshot.empty && contact.email) { // Solo importar si no existe y tiene email
                 const newContactRef = contactsRef.doc();
@@ -84,6 +84,7 @@ export async function getGoogleContacts(): Promise<{ contacts: any[] | null; err
         if (!sessionCookie) {
             return { contacts: null, error: 'Usuario no autenticado.' };
         }
+        
         // This is a placeholder as getting the real access token on the server is complex
         // and requires a full OAuth2 flow with refresh tokens stored securely.
         // For demonstration, we'll return mock data.
@@ -100,4 +101,3 @@ export async function getGoogleContacts(): Promise<{ contacts: any[] | null; err
         return { contacts: null, error: 'No se pudieron obtener los contactos de Google.' };
     }
 }
-
