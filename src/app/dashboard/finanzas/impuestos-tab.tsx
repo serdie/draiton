@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Sparkles, Send } from 'lucide-react';
+import { AiAssistantChat } from '../ai-assistant-chat';
 
 
 const taxModels = [
@@ -61,33 +62,9 @@ export function ImpuestosTab() {
 
         {/* Right Column */}
         <div className="lg:col-span-2">
-            <Card className="h-full flex flex-col">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Sparkles className="text-primary"/>
-                        Asistente IA
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow flex flex-col gap-4">
-                    <div className="p-4 bg-secondary rounded-lg flex items-start gap-3 w-fit max-w-lg">
-                        <div className="flex-shrink-0 size-8 bg-primary/20 text-primary flex items-center justify-center rounded-full">
-                           <Sparkles className="h-5 w-5"/>
-                        </div>
-                        <p className="text-sm text-secondary-foreground pt-1.5">
-                            ¡Hola! Soy GestorIA. Pregúntame sobre impuestos, facturas, o cómo optimizar tu negocio.
-                        </p>
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <div className="relative w-full">
-                        <Input placeholder="Escribe tu consulta..." className="pr-12 h-12" />
-                        <Button size="icon" className="absolute right-2 top-1/2 -translate-y-1/2">
-                            <Send className="h-5 w-5" />
-                        </Button>
-                    </div>
-                </CardFooter>
-            </Card>
+           <AiAssistantChat />
         </div>
     </div>
   );
 }
+
