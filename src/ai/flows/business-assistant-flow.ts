@@ -51,7 +51,7 @@ const businessAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     
-    const llm = ai.model();
+    const llm = ai.model('googleai/gemini-2.0-flash');
     
     const history: MessageData[] = [
       systemPrompt,
