@@ -25,7 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { GoogleIcon } from './google-icon';
 import { AuthContext } from '@/context/auth-context';
 import { auth } from '@/lib/firebase/config';
-import { GoogleAuthProvider, FacebookAuthProvider, linkWithPopup, unlink } from "firebase/auth";
+import { GoogleAuthProvider, FacebookAuthProvider, linkWithPopup, unlink, OAuthProvider } from "firebase/auth";
 import { SmtpConnectionModal } from './smtp-connection-modal';
 import { BancosTab } from './bancos-tab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -40,7 +40,8 @@ type Connection = {
 
 const allAvailableConnections = [
   { id: 'google.com', name: 'Google', description: 'Gmail, Drive, Calendar, Contacts...', icon: <GoogleIcon /> },
-  { id: 'facebook.com', name: 'Facebook', description: 'Facebook Pages, Messenger...', icon: <Facebook /> },
+  // { id: 'facebook.com', name: 'Facebook', description: 'Facebook Pages, Messenger...', icon: <Facebook /> },
+  { id: 'microsoft.com', name: 'Microsoft', description: 'Outlook, OneDrive, Calendar...', icon: <Mail /> },
   { id: 'instagram.com', name: 'Instagram', description: 'Instagram for Business', icon: <Instagram /> },
   { id: 'linkedin.com', name: 'LinkedIn', description: 'Perfiles y páginas de empresa', icon: <Linkedin /> },
   { id: 'mailchimp.com', name: 'Mailchimp', description: 'Listas y campañas', icon: <Mail /> },
@@ -77,7 +78,7 @@ export default function ConexionesPage() {
     const providerInfo = allAvailableConnections.find(c => c.id === p.providerId);
     return {
         id: p.providerId,
-        provider: providerInfo?.name || p.providerId,
+        provider: providerInfo?.name || p.providerId.replace('.com', ''),
         name: p.displayName || p.email || 'Cuenta Conectada',
         status: 'Activa'
     }
@@ -91,13 +92,13 @@ export default function ConexionesPage() {
     let provider;
     if (providerId === 'google.com') {
         provider = new GoogleAuthProvider();
-        // Request access to the user's contacts.
         provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+    } else if (providerId === 'microsoft.com') {
+        provider = new OAuthProvider('microsoft.com');
+        provider.addScope('Contacts.Read');
     } else if (providerId === 'facebook.com') {
         provider = new FacebookAuthProvider();
         provider.addScope('pages_show_list');
-        provider.addScope('pages_manage_posts');
-        provider.addScope('pages_read_engagement');
     } else if (providerId === 'smtp') {
         setIsSmtpModalOpen(true);
         setConnectingProvider(null);

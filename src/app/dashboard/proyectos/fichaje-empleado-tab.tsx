@@ -17,14 +17,16 @@ type FichajeStatus = 'out' | 'in';
 export function FichajeEmpleadoTab() {
     const { user } = useContext(AuthContext);
     const { toast } = useToast();
-    const [status, setStatus] = useState<FichajeStatus>('out');
+    const [status, setStatus] = useState<FichajeStatus | 'loading'>('loading');
     const [lastFichajeTime, setLastFichajeTime] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
 
     // Effect to determine initial status
     useEffect(() => {
-        if (!user) return;
-        setIsLoading(true);
+        if (!user) {
+            setStatus('out');
+            return;
+        };
+
         const q = query(
             collection(db, 'fichajes'),
             where('employeeId', '==', user.uid),
@@ -41,7 +43,6 @@ export function FichajeEmpleadoTab() {
                 setStatus('out');
                 setLastFichajeTime(null);
             }
-            setIsLoading(false);
         });
 
         return () => unsubscribe();
@@ -53,7 +54,6 @@ export function FichajeEmpleadoTab() {
             return;
         }
 
-        setIsLoading(true);
         const newType = status === 'out' ? 'Entrada' : 'Salida';
 
         try {
@@ -71,10 +71,10 @@ export function FichajeEmpleadoTab() {
             console.error("Error al registrar fichaje:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje.' });
         }
-        // No need to setIsLoading(false) here because the onSnapshot listener will do it.
     };
 
     const isClockIn = status === 'in';
+    const isLoading = status === 'loading';
 
     return (
         <div className="flex justify-center items-center h-full">
@@ -86,14 +86,14 @@ export function FichajeEmpleadoTab() {
             <CardContent className="flex flex-col items-center gap-6">
                 <div className={`p-6 rounded-full ${isClockIn ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                     <div className={`p-4 rounded-full ${isClockIn ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                        <Power className={`h-16 w-16 ${isClockIn ? 'text-green-500' : 'text-red-500'}`} />
+                       {isLoading ? <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" /> : <Power className={`h-16 w-16 ${isClockIn ? 'text-green-500' : 'text-red-500'}`} />}
                     </div>
                 </div>
                  <div className="text-center">
                     <p className="font-semibold text-xl">
-                        {isClockIn ? 'Actualmente DENTRO' : 'Actualmente FUERA'}
+                        {isLoading ? 'Cargando estado...' : (isClockIn ? 'Actualmente DENTRO' : 'Actualmente FUERA')}
                     </p>
-                    {lastFichajeTime && (
+                    {lastFichajeTime && !isLoading && (
                         <p className="text-sm text-muted-foreground">
                             Último fichaje: {lastFichajeTime}
                         </p>
