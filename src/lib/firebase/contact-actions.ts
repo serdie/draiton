@@ -84,20 +84,87 @@ export async function getGoogleContacts(): Promise<{ contacts: any[] | null; err
         if (!sessionCookie) {
             return { contacts: null, error: 'Usuario no autenticado.' };
         }
+        const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
         
         // This is a placeholder as getting the real access token on the server is complex
         // and requires a full OAuth2 flow with refresh tokens stored securely.
         // For demonstration, we'll return mock data.
         const mockContacts = [
-            { resourceName: 'people/c1', names: [{ displayName: 'Ana García' }], emailAddresses: [{ value: 'ana.garcia@example.com' }] },
-            { resourceName: 'people/c2', names: [{ displayName: 'Carlos Martínez' }], emailAddresses: [{ value: 'carlos.martinez@example.com' }], phoneNumbers: [{ value: '+34 600 111 222' }] },
-            { resourceName: 'people/c3', names: [{ displayName: 'Laura Sánchez' }], emailAddresses: [{ value: 'laura.sanchez@example.com' }] },
-            { resourceName: 'people/c4', names: [{ displayName: 'Proveedor de Material' }], emailAddresses: [{ value: 'pedidos@proveedor.com' }] },
-            { resourceName: 'people/c5', names: [{ displayName: 'Lead de la Web' }], emailAddresses: [{ value: 'lead.web@example.com' }] },
+            { resourceName: 'people/c1', names: [{ displayName: 'Ana García (Google)' }], emailAddresses: [{ value: 'ana.garcia@example.com' }] },
+            { resourceName: 'people/c2', names: [{ displayName: 'Carlos Martínez (Google)' }], emailAddresses: [{ value: 'carlos.martinez@example.com' }], phoneNumbers: [{ value: '+34 600 111 222' }] },
+            { resourceName: 'people/c3', names: [{ displayName: 'Laura Sánchez (Google)' }], emailAddresses: [{ value: 'laura.sanchez@example.com' }] },
         ];
         return { contacts: mockContacts, error: null };
     } catch (error) {
         console.error('Error getting Google contacts:', error);
         return { contacts: null, error: 'No se pudieron obtener los contactos de Google.' };
+    }
+}
+
+
+export async function importOutlookContacts(contacts: ContactToImport[]): Promise<{ success: boolean; count: number; error?: string }> {
+    try {
+        const { auth, db } = getFirebaseAuth();
+        const sessionCookie = cookies().get('session')?.value;
+        if (!sessionCookie) {
+             return { success: false, count: 0, error: 'Usuario no autenticado.' };
+        }
+        const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
+        const ownerUid = decodedToken.uid;
+
+
+        const batch = db.batch();
+        const contactsRef = db.collection('contacts');
+        
+        let importedCount = 0;
+        for (const contact of contacts) {
+            const q = query(contactsRef, where('ownerId', '==', ownerUid), where('email', '==', contact.email));
+            const existingContactSnapshot = await getDocs(q);
+
+            if (existingContactSnapshot.empty && contact.email) {
+                const newContactRef = contactsRef.doc();
+                 batch.set(newContactRef, {
+                    ownerId: ownerUid,
+                    name: contact.name,
+                    email: contact.email,
+                    phone: contact.phone || '',
+                    type: 'Lead',
+                    company: '',
+                    cif: '',
+                    notes: 'Importado desde Outlook/Microsoft',
+                    createdAt: serverTimestamp(),
+                });
+                importedCount++;
+            }
+        }
+
+        await batch.commit();
+
+        return { success: true, count: importedCount };
+    } catch (error: any) {
+        console.error('Error al importar contactos de Outlook: ', error);
+        return { success: false, count: 0, error: 'No se pudieron guardar los contactos en la base de datos.' };
+    }
+}
+
+
+export async function getOutlookContacts(): Promise<{ contacts: any[] | null; error: string | null; }> {
+    try {
+        const { auth } = getFirebaseAuth();
+        const sessionCookie = cookies().get('session')?.value;
+        if (!sessionCookie) {
+            return { contacts: null, error: 'Usuario no autenticado.' };
+        }
+        await auth.verifySessionCookie(sessionCookie, true);
+        
+        // This is a placeholder for a real Microsoft Graph API call.
+        const mockContacts = [
+            { id: '1', displayName: 'Pedro Ramírez (Outlook)', emailAddresses: [{ address: 'pedro.ramirez@outlook.com' }], businessPhones: ['+34 600 333 444'] },
+            { id: '2', displayName: 'Sofía Torres (Outlook)', emailAddresses: [{ address: 'sofia.torres@hotmail.com' }], businessPhones: [] },
+        ];
+        return { contacts: mockContacts, error: null };
+    } catch (error) {
+        console.error('Error getting Outlook contacts:', error);
+        return { contacts: null, error: 'No se pudieron obtener los contactos de Outlook.' };
     }
 }
