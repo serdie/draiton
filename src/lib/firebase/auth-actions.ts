@@ -11,7 +11,8 @@ export async function setSessionCookie(idToken: string) {
     const expiresIn = 60 * 60 * 24 * 14 * 1000;
     const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
 
-    cookies().set('session', sessionCookie, {
+    const cookieStore = cookies();
+    cookieStore.set('session', sessionCookie, {
         maxAge: expiresIn,
         httpOnly: true,
         secure: true,
@@ -22,6 +23,6 @@ export async function setSessionCookie(idToken: string) {
 
 
 export async function clearSessionCookie() {
-  cookies().delete('session');
+  const cookieStore = cookies();
+  cookieStore.delete('session');
 }
-
