@@ -5,7 +5,7 @@ import { useState, useEffect, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Tooltip, LabelList } from 'recharts';
-import { TrendingUp, TrendingDown, Landmark, Percent, Scale, Loader2 } from 'lucide-react';
+import { TrendingUp, Landmark, Percent, Scale, Loader2, FileText } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
@@ -13,6 +13,8 @@ import type { Document } from '../../documentos/page';
 import type { Expense } from '../../gastos/page';
 import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { FinancialReportModal } from './financial-report-modal';
 
 const chartConfig = {
   income: { label: 'Ingresos', color: 'hsl(var(--chart-2))' },
@@ -20,6 +22,7 @@ const chartConfig = {
 };
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ff7300'];
+type ReportType = 'p&g' | 'balance' | 'cashflow';
 
 export default function VisionGeneralFinanzasPage() {
     const { user } = useContext(AuthContext);
@@ -33,7 +36,10 @@ export default function VisionGeneralFinanzasPage() {
 
     // Chart states
     const [incomeVsExpensesData, setIncomeVsExpensesData] = useState([]);
-    const [expenseCategoriesData, setExpenseCategoriesData] = useState<any[]>([]);
+    
+    // Report Modal State
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [selectedReport, setSelectedReport] = useState<ReportType | null>(null);
 
      useEffect(() => {
         if (!user) {
@@ -60,8 +66,8 @@ export default function VisionGeneralFinanzasPage() {
             setPendingInvoices(totalPending);
 
             const ivaDevengado = quarterInvoices.reduce((sum, i) => sum + i.impuestos, 0);
-            setTaxIVA(ivaDevengado);
             
+
             // --- Expenses listener (nested to calculate net profit) ---
             const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
             const unsubscribeExpenses = onSnapshot(expensesQuery, (expensesSnapshot) => {
@@ -76,6 +82,10 @@ export default function VisionGeneralFinanzasPage() {
 
                 const baseIRPF = calculatedNetProfit > 0 ? calculatedNetProfit : 0;
                 setTaxIRPF(baseIRPF * 0.20); // 20% estimation
+
+                const ivaSoportado = quarterExpenses.reduce((sum, i) => sum + (i.importe * 0.21 / 1.21), 0); // Assuming 21% VAT
+                setTaxIVA(ivaDevengado - ivaSoportado);
+
 
                 // -- Bar Chart Data (last 6 months) --
                 const sixMonthsAgo = startOfMonth(subMonths(now, 5));
@@ -97,22 +107,6 @@ export default function VisionGeneralFinanzasPage() {
                     }
                 });
                 setIncomeVsExpensesData(monthlyData as any);
-
-                // -- Pie Chart Data (current month) --
-                const startOfThisMonth = startOfMonth(now);
-                const endOfThisMonth = endOfMonth(now);
-                const monthExpenses = allExpenses.filter(exp => exp.fecha >= startOfThisMonth && exp.fecha <= endOfThisMonth);
-                const categoryTotals = monthExpenses.reduce((acc, exp) => {
-                    acc[exp.categoria] = (acc[exp.categoria] || 0) + exp.importe;
-                    return acc;
-                }, {} as Record<string, number>);
-
-                setExpenseCategoriesData(Object.entries(categoryTotals).map(([name, value], index) => ({
-                    name,
-                    value,
-                    fill: COLORS[index % COLORS.length]
-                })));
-
                 setLoading(false);
             });
 
@@ -123,6 +117,11 @@ export default function VisionGeneralFinanzasPage() {
 
     }, [user]);
 
+    const handleOpenReport = (reportType: ReportType) => {
+        setSelectedReport(reportType);
+        setIsReportModalOpen(true);
+    };
+
     if (loading) {
         return (
             <div className="flex h-[calc(100vh-200px)] items-center justify-center">
@@ -132,6 +131,12 @@ export default function VisionGeneralFinanzasPage() {
     }
 
   return (
+    <>
+     <FinancialReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        reportType={selectedReport}
+      />
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Visión General Financiera</h1>
       <p className="text-muted-foreground">
@@ -201,23 +206,24 @@ export default function VisionGeneralFinanzasPage() {
             </CardContent>
         </Card>
         <Card className="lg:col-span-3">
-            <CardHeader>
-                <CardTitle>Desglose de Gastos</CardTitle>
-                <CardDescription>Categorías principales este mes</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <ChartContainer config={{}} className="h-[300px] w-full">
-                    <PieChart>
-                         <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                        <Pie data={expenseCategoriesData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5}>
-                             {expenseCategoriesData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
-                            ))}
-                            <LabelList dataKey="name" className="fill-background text-sm" stroke="hsl(var(--foreground))" strokeWidth={0.5} />
-                        </Pie>
-                    </PieChart>
-                </ChartContainer>
-            </CardContent>
+          <CardHeader>
+            <CardTitle>Informes Financieros</CardTitle>
+            <CardDescription>Genera informes contables clave para tu negocio.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Button variant="outline" className="justify-start" onClick={() => handleOpenReport('p&g')}>
+              <FileText className="mr-2 h-4 w-4" />
+              Pérdidas y Ganancias
+            </Button>
+            <Button variant="outline" className="justify-start" onClick={() => handleOpenReport('balance')}>
+              <FileText className="mr-2 h-4 w-4" />
+              Balance de Situación
+            </Button>
+            <Button variant="outline" className="justify-start" onClick={() => handleOpenReport('cashflow')}>
+              <FileText className="mr-2 h-4 w-4" />
+              Flujo de Caja
+            </Button>
+          </CardContent>
         </Card>
       </div>
        <Card>
@@ -230,5 +236,6 @@ export default function VisionGeneralFinanzasPage() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
