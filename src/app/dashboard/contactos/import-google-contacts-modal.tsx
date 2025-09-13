@@ -18,8 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Search, UserPlus } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
-import { GoogleAuthProvider, getAuth } from 'firebase/auth';
-import { importGoogleContacts } from '@/lib/firebase/contact-actions';
+import { importGoogleContacts, getGoogleContacts } from '@/lib/firebase/contact-actions';
 
 interface ImportGoogleContactsModalProps {
   isOpen: boolean;
@@ -48,58 +47,28 @@ export function ImportGoogleContactsModal({ isOpen, onClose }: ImportGoogleConta
   const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      fetchContacts();
-    } else {
-      // Reset state when modal is closed
-      setContacts([]);
-      setSelectedContacts([]);
-      setSearchTerm('');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
-  
-  const fetchContacts = async () => {
-    if (!user) return;
-    setIsLoading(true);
-
-    try {
-        const auth = getAuth();
-        const currentUser = auth.currentUser;
-        if (!currentUser) throw new Error("Usuario no autenticado");
-
-        const googleProviderInfo = currentUser.providerData.find(p => p.providerId === GoogleAuthProvider.PROVIDER_ID);
-        if (!googleProviderInfo) {
-            throw new Error("La cuenta de Google no está vinculada.");
-        }
+    async function fetchContacts() {
+        if (!isOpen) return;
         
-        const idToken = await currentUser.getIdToken(true);
-        const response = await fetch('/api/google-contacts', {
-            headers: {
-                'Authorization': `Bearer ${idToken}`
-            }
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Error al obtener contactos: ${response.statusText}`);
+        setIsLoading(true);
+        const result = await getGoogleContacts();
+
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error al Cargar Contactos',
+                description: result.error,
+            });
+            setContacts([]);
+        } else {
+            setContacts(result.contacts || []);
         }
-
-        const data = await response.json();
-        setContacts(data.connections || []);
-
-    } catch (error: any) {
-        console.error(error);
-        toast({
-            variant: 'destructive',
-            title: 'Error al Cargar Contactos',
-            description: error.message || 'No se pudieron cargar tus contactos de Google. Inténtalo de nuevo.',
-        });
-    } finally {
         setIsLoading(false);
     }
-  };
 
+    fetchContacts();
+  }, [isOpen, toast]);
+  
   const handleSelectContact = (resourceName: string) => {
     setSelectedContacts(prev =>
       prev.includes(resourceName)
@@ -175,7 +144,7 @@ export function ImportGoogleContactsModal({ isOpen, onClose }: ImportGoogleConta
                 </div>
             ) : (
                  <ScrollArea className="h-full pr-4 -mr-4">
-                    {filteredContacts.map(contact => (
+                    {filteredContacts.length > 0 ? filteredContacts.map(contact => (
                         <div
                             key={contact.resourceName}
                             className="flex items-center gap-3 p-2 rounded-md hover:bg-muted"
@@ -198,7 +167,11 @@ export function ImportGoogleContactsModal({ isOpen, onClose }: ImportGoogleConta
                                 </div>
                             </label>
                         </div>
-                    ))}
+                    )) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                            <p>No se encontraron contactos.</p>
+                        </div>
+                    )}
                  </ScrollArea>
             )}
         </div>
