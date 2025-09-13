@@ -32,10 +32,10 @@ if (firebaseConfig.apiKey) {
 } else {
     console.warn("Firebase configuration is missing. Firebase features will be disabled.");
     // Provide default null values or mock implementations if needed
-    app = null as any;
-    auth = null as any;
-    db = null as any;
-    storage = null as any;
+    app = {} as any;
+    auth = {} as any;
+    db = {} as any;
+    storage = {} as any;
 }
 
 export { app, auth, db, storage };

@@ -8,9 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { UserPlus, Mail, Upload } from 'lucide-react';
+import { UserPlus, Mail, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase/config';
+import { GoogleAuthProvider, linkWithPopup } from 'firebase/auth';
+import { useContext, useState } from 'react';
+import { AuthContext } from '@/context/auth-context';
 
 interface AddContactOptionsModalProps {
   isOpen: boolean;
@@ -30,8 +34,10 @@ const OutlookIcon = () => (
 )
 
 export function AddContactOptionsModal({ isOpen, onClose, onAddManual }: AddContactOptionsModalProps) {
+  const { user } = useContext(AuthContext);
   const { toast } = useToast();
   const router = useRouter();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleComingSoon = () => {
     toast({
@@ -40,8 +46,53 @@ export function AddContactOptionsModal({ isOpen, onClose, onAddManual }: AddCont
     });
   };
 
-  const handleImportFromGoogle = () => {
-    router.push('/dashboard/conexiones');
+  const handleImportFromGoogle = async () => {
+    if (!auth.currentUser) return;
+    
+    const isGoogleLinked = user?.providerData?.some(p => p.providerId === 'google.com');
+
+    if (isGoogleLinked) {
+        toast({ title: 'Ya conectado', description: 'Tu cuenta de Google ya está vinculada. La importación se habilitará pronto.'});
+        router.push('/dashboard/conexiones');
+        return;
+    }
+
+    setIsGoogleLoading(true);
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+
+    try {
+        await linkWithPopup(auth.currentUser, provider);
+        toast({
+            title: `¡Conexión con Google establecida!`,
+            description: 'Ahora puedes sincronizar tus contactos.',
+        });
+        onClose();
+        router.push('/dashboard/conexiones');
+    } catch (error: any) {
+        if (error.code === 'auth/credential-already-in-use') {
+             toast({
+                variant: 'destructive',
+                title: 'Cuenta ya en uso',
+                description: 'Esta cuenta de Google ya está vinculada a otro usuario de la plataforma.',
+            });
+        } else if(error.code === 'auth/popup-closed-by-user') {
+            toast({
+                variant: 'destructive',
+                title: 'Conexión cancelada',
+                description: 'Has cerrado la ventana de conexión de Google.',
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Error de Conexión',
+                description: 'No se pudo vincular la cuenta. Inténtalo de nuevo.',
+            });
+        }
+        console.error("Error linking Google account:", error);
+    } finally {
+        setIsGoogleLoading(false);
+    }
   };
 
   return (
@@ -61,8 +112,8 @@ export function AddContactOptionsModal({ isOpen, onClose, onAddManual }: AddCont
                 <p className="text-sm text-muted-foreground">Introduce los datos de un nuevo contacto.</p>
             </div>
           </button>
-           <button onClick={handleImportFromGoogle} className="w-full text-left p-4 rounded-lg border hover:bg-muted transition-colors flex items-center gap-4">
-            <GoogleIcon />
+           <button onClick={handleImportFromGoogle} className="w-full text-left p-4 rounded-lg border hover:bg-muted transition-colors flex items-center gap-4" disabled={isGoogleLoading}>
+            {isGoogleLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <GoogleIcon />}
             <div>
                 <p className="font-semibold">Importar desde Google</p>
                 <p className="text-sm text-muted-foreground">Conecta tu cuenta para sincronizar contactos.</p>
