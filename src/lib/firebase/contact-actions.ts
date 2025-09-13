@@ -1,9 +1,10 @@
 
 'use server';
 
-import { doc, deleteDoc, collection, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, deleteDoc, collection, writeBatch, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { db } from './config';
 import { getFirebaseAuth } from './firebase-admin';
+import { cookies } from 'next/headers';
 
 export async function deleteContact(id: string): Promise<{ success: boolean; error?: string }> {
     if (!db) {
@@ -32,33 +33,37 @@ type ContactToImport = {
 export async function importGoogleContacts(contacts: ContactToImport[]): Promise<{ success: boolean; count: number; error?: string }> {
     try {
         const { auth, db } = getFirebaseAuth();
-        // This is a server action, so there's no "currentUser". We need to get the UID from the decoded token.
-        // For simplicity, we'll assume the client passes the UID, or we'd need to verify a token here.
-        // Let's assume the client-side context handles passing the correct user ID.
-        // We will receive the ownerId in the function call. This needs to be implemented.
-        // For now, let's proceed assuming we can get a user UID.
-        // The previous implementation was flawed as it called auth.currentUser on the server.
-        // Let's create a placeholder for the UID. In a real app, this would come from verified session.
-        const ownerUid = "some-verified-uid"; // This is a placeholder and needs a real implementation.
+        const sessionCookie = cookies().get('session')?.value;
+        if (!sessionCookie) {
+             return { success: false, count: 0, error: 'Usuario no autenticado.' };
+        }
+        const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
+        const ownerUid = decodedToken.uid;
 
 
         const batch = db.batch();
         const contactsRef = db.collection('contacts');
         
-        contacts.forEach(contact => {
-            const newContactRef = contactsRef.doc();
-            batch.set(newContactRef, {
-                ownerId: ownerUid,
-                name: contact.name,
-                email: contact.email,
-                phone: contact.phone,
-                type: 'Lead', // Default type for imported contacts
-                company: '',
-                cif: '',
-                notes: 'Importado desde Google Contacts',
-                createdAt: serverTimestamp(),
-            });
-        });
+        for (const contact of contacts) {
+             // Evitar duplicados por email para el mismo usuario
+            const q = query(contactsRef, where('ownerId', '==', ownerUid), where('email', '==', contact.email));
+            const existingContact = await getDocs(q);
+
+            if (existingContact.empty && contact.email) { // Solo importar si no existe y tiene email
+                const newContactRef = contactsRef.doc();
+                 batch.set(newContactRef, {
+                    ownerId: ownerUid,
+                    name: contact.name,
+                    email: contact.email,
+                    phone: contact.phone || '',
+                    type: 'Lead', // Default type for imported contacts
+                    company: '',
+                    cif: '',
+                    notes: 'Importado desde Google Contacts',
+                    createdAt: serverTimestamp(),
+                });
+            }
+        }
 
         await batch.commit();
 
