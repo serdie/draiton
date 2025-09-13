@@ -18,7 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Search, UserPlus } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
-import { GoogleAuthProvider, getAuth, reauthenticateWithPopup, OAuthProvider } from 'firebase/auth';
+import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { importGoogleContacts } from '@/lib/firebase/contact-actions';
 
 interface ImportGoogleContactsModalProps {
@@ -68,26 +68,21 @@ export function ImportGoogleContactsModal({ isOpen, onClose }: ImportGoogleConta
         const currentUser = auth.currentUser;
         if (!currentUser) throw new Error("Usuario no autenticado");
 
-        const googleProvider = new GoogleAuthProvider();
-        googleProvider.addScope('https://www.googleapis.com/auth/contacts.readonly');
-        
-        // Re-authenticate to get a fresh access token. This is the safest way.
-        const result = await reauthenticateWithPopup(currentUser, googleProvider);
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const accessToken = credential?.accessToken;
-
-        if (!accessToken) {
-            throw new Error('No se pudo obtener el token de acceso de Google.');
+        const googleProviderInfo = currentUser.providerData.find(p => p.providerId === GoogleAuthProvider.PROVIDER_ID);
+        if (!googleProviderInfo) {
+            throw new Error("La cuenta de Google no está vinculada.");
         }
-
-        const response = await fetch('https://people.googleapis.com/v1/people/me/connections?personFields=names,emailAddresses,phoneNumbers', {
+        
+        const idToken = await currentUser.getIdToken(true);
+        const response = await fetch('/api/google-contacts', {
             headers: {
-                'Authorization': `Bearer ${accessToken}`
+                'Authorization': `Bearer ${idToken}`
             }
         });
-
+        
         if (!response.ok) {
-            throw new Error(`Error al obtener contactos: ${response.statusText}`);
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Error al obtener contactos: ${response.statusText}`);
         }
 
         const data = await response.json();
