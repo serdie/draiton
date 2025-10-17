@@ -67,22 +67,50 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
     };
 
     const handleDownloadPdf = async () => {
-        const element = printableRef.current;
-        if (!element) return;
+        const reportElement = printableRef.current;
+        if (!reportElement || !generatedReport) return;
         setIsDownloading(true);
 
         try {
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: null,
-            });
-            const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
+            const margin = 15;
             const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            const textWidth = pdfWidth - margin * 2;
+
+            // --- Render Header with html2canvas ---
+            const headerElement = reportElement.querySelector('#report-header');
+            if (headerElement) {
+                const canvas = await html2canvas(headerElement as HTMLElement, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: null,
+                });
+                const imgData = canvas.toDataURL('image/png');
+                const imgProps = pdf.getImageProperties(imgData);
+                const headerHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, headerHeight);
+            }
+            
+            let cursorY = 70; // Start position after header
+
+            // --- Render Text Content with jsPDF ---
+            pdf.setFontSize(11);
+            pdf.setTextColor(40);
+            
+            const lines = pdf.splitTextToSize(generatedReport, textWidth);
+            
+            lines.forEach((line: string) => {
+                if (cursorY > pdf.internal.pageSize.getHeight() - margin) {
+                    pdf.addPage();
+                    cursorY = margin;
+                }
+                 pdf.text(line, margin, cursorY);
+                 cursorY += 7; // Line height
+            });
+
+
             pdf.save('informe-generado.pdf');
+
         } catch (error) {
             console.error('Error al generar el PDF:', error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo generar el informe en PDF.' });
@@ -187,7 +215,7 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
                     <CardContent className="flex-1">
                         {generatedReport ? (
                             <div ref={printableRef} className="p-6 bg-background rounded-md">
-                                <header className="flex justify-between items-start mb-6 pb-4 border-b">
+                                <header id="report-header" className="flex justify-between items-start mb-6 pb-4 border-b">
                                     <div>
                                         <Logo className="h-8 w-8 mb-2" />
                                         <h2 className="font-bold text-lg">{user?.company?.name || 'Tu Empresa'}</h2>
