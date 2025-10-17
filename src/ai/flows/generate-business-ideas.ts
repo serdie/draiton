@@ -22,14 +22,14 @@ const GenerateBusinessIdeasOutputSchema = z.object({
   suggestions: z
     .array(
       z.object({
-        title: z.string().describe('Un título conciso para la sugerencia.'),
+        title: z.string().describe('A concise title for the suggestion.'),
         details: z
           .string()
-          .describe('Una descripción detallada de la sugerencia.'),
+          .describe('A detailed description of the suggestion.'),
       })
     )
     .describe(
-      'Una lista de sugerencias para mejorar las estrategias de comercialización y la oferta de productos de la empresa.'
+      'A list of suggestions for improving the company\'s marketing strategies and product offerings.'
     ),
 });
 export type GenerateBusinessIdeasOutput = z.infer<typeof GenerateBusinessIdeasOutputSchema>;
