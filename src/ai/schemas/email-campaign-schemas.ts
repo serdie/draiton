@@ -1,4 +1,3 @@
-// This file is deprecated and will be removed. Please import from /src/ai/schemas/email-campaign-schemas.ts
 import { z } from 'zod';
 
 export const GenerateEmailCampaignInputSchema = z.object({

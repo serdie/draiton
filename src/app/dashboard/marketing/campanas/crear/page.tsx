@@ -12,7 +12,7 @@ import { ArrowLeft, Sparkles, Send, Loader2, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { generateEmailCampaign } from '@/ai/flows/generate-email-campaign';
-import { type GenerateEmailCampaignOutput } from './schemas';
+import { type GenerateEmailCampaignOutput } from '@/ai/schemas/email-campaign-schemas';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
@@ -49,6 +49,7 @@ export default function CreateCampaignPage() {
             campaignGoal: aiGoal,
             targetAudience: 'Clientes existentes y potenciales',
             tone: aiTone,
+            keyInfo: '',
         });
         setSubject(result.subject);
         setBody(result.body);

@@ -9,13 +9,9 @@
  */
 
 import { ai } from '@/ai/genkit';
-import {
-  GenerateEmailCampaignInputSchema,
-  GenerateEmailCampaignOutputSchema,
-  type GenerateEmailCampaignInput,
-  type GenerateEmailCampaignOutput,
-} from '@/app/dashboard/marketing/campanas/crear/schemas';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
+import { GenerateEmailCampaignInputSchema, GenerateEmailCampaignOutputSchema, type GenerateEmailCampaignInput, type GenerateEmailCampaignOutput } from '@/ai/schemas/email-campaign-schemas';
+
 
 export async function generateEmailCampaign(input: GenerateEmailCampaignInput): Promise<GenerateEmailCampaignOutput> {
   return generateEmailCampaignFlow(input);
