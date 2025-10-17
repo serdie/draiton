@@ -1,81 +1,164 @@
-
+/**
+ * @fileoverview Firestore Security Rules for Prototyping.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes security by enforcing strict user-ownership for most data.
+ * It avoids complex data validation to allow for rapid prototyping and schema evolution.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores individual user profiles. Accessible only by the user.
+ * - /projects/{projectId}: Stores project data. Accessible only by the project owner.
+ * - /tasks/{taskId}: Stores task data. Accessible only by the task owner.
+ * - /invoices/{invoiceId}: Stores invoice data. Accessible only by the invoice owner.
+ * - /expenses/{expenseId}: Stores expense data. Accessible only by the expense owner.
+ * - /contacts/{contactId}: Stores contact data. Accessible only by the contact owner.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed to prevent data leakage.
+ * - All write operations (create, update, delete) require explicit ownership validation.
+ * - In this prototyping phase, detailed schema validation is omitted to accelerate development,
+ *   except for authorization-critical fields like ownerId which are validated on creation and updates.
+ *
+ * Denormalization for Authorization:
+ * - Each document that should be user-owned (projects, tasks, documents, expenses, contacts) includes
+ *   an `ownerId` field. This allows for simple and efficient ownership checks in the rules.
+ */
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // Users Collection
+    /**
+     * @description Manages user profile data.
+     * @path /users/{userId}
+     * @allow (create) User with ID 'test_user' can create their profile.
+     *   request.auth.uid == 'test_user'
+     * @deny (create) User with ID 'test_user' cannot create a profile with a mismatched ID.
+     *   request.auth.uid != 'another_user'
+     * @allow (get, list, update, delete) User with ID 'test_user' can read, update, and delete their own profile.
+     *   request.auth.uid == 'test_user'
+     * @deny (get, list, update, delete) User with ID 'another_user' cannot access 'test_user' profile.
+     *   request.auth.uid != 'test_user'
+     * @principle Enforces document ownership for all operations on user profiles.
+     */
     match /users/{userId} {
-      allow read;
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isOwner(userId);
-      allow delete: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.uid == userId;
+      allow get, list: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId) && resource.data.uid == userId;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
     }
 
-    // Invoices Collection
-    match /invoices/{invoiceId} {
-      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-    }
-
-    // Expenses Collection
-    match /expenses/{expenseId} {
-        allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-        allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-    }
-    
-    // Contacts Collection
-    match /contacts/{contactId} {
-      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-    }
-
-    // Projects Collection
+    /**
+     * @description Manages project data.
+     * @path /projects/{projectId}
+     * @allow (create) User with ID 'test_user' can create a project.
+     *   request.auth.uid == 'test_user'
+     * @deny (create) User with ID 'test_user' cannot create a project for another user.
+     *   request.resource.data.ownerId != request.auth.uid
+     * @allow (get, list, update, delete) User with ID 'test_user' can read, update, and delete their own project.
+     *   request.auth.uid == 'test_user' && resource.data.ownerId == request.auth.uid
+     * @deny (get, list, update, delete) User with ID 'another_user' cannot access 'test_user' project.
+     *   request.auth.uid != 'test_user'
+     * @principle Enforces document ownership for all operations on projects.
+     */
     match /projects/{projectId} {
-      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow get, list: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId) && resource.data.ownerId == request.resource.data.ownerId;
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
     }
 
-    // Tasks Collection
+    /**
+     * @description Manages task data.
+     * @path /tasks/{taskId}
+     * @allow (create) User with ID 'test_user' can create a task.
+     *   request.auth.uid == 'test_user'
+     * @deny (create) User with ID 'test_user' cannot create a task for another user.
+     *   request.resource.data.ownerId != request.auth.uid
+     * @allow (get, list, update, delete) User with ID 'test_user' can read, update, and delete their own task.
+     *   request.auth.uid == 'test_user' && resource.data.ownerId == request.auth.uid
+     * @deny (get, list, update, delete) User with ID 'another_user' cannot access 'test_user' task.
+     *   request.auth.uid != 'test_user'
+     * @principle Enforces document ownership for all operations on tasks.
+     */
     match /tasks/{taskId} {
-      // Owner can do anything
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-      
-      // Assigned employee can read and update (e.g., mark as complete)
-      allow read, update: if isSignedIn() && resource.data.assigneeId == request.auth.uid;
-    }
-    
-    // Employees Collection
-    match /employees/{employeeId} {
-       allow read, create, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow get, list: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId) && resource.data.ownerId == request.resource.data.ownerId;
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
     }
 
-    // Payrolls Collection
-    match /payrolls/{payrollId} {
-      // Owner can manage all payrolls
-      allow create, read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-      // Employee can read their own payrolls
-      allow read: if isSignedIn() && resource.data.employeeId == request.auth.uid;
+    /**
+     * @description Manages document data (invoices, quotes, etc.).
+     * @path /invoices/{invoiceId}
+     * @allow (create) User with ID 'test_user' can create a document.
+     *   request.auth.uid == 'test_user'
+     * @deny (create) User with ID 'test_user' cannot create a document for another user.
+     *   request.resource.data.ownerId != request.auth.uid
+     * @allow (get, list, update, delete) User with ID 'test_user' can read, update, and delete their own document.
+     *   request.auth.uid == 'test_user' && resource.data.ownerId == request.auth.uid
+     * @deny (get, list, update, delete) User with ID 'another_user' cannot access 'test_user' document.
+     *   request.auth.uid != 'test_user'
+     * @principle Enforces document ownership for all operations on invoices.
+     */
+    match /invoices/{invoiceId} {
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow get, list: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId) && resource.data.ownerId == request.resource.data.ownerId;
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
     }
 
-    // Fichajes (Clock-ins) Collection
-    match /fichajes/{fichajeId} {
-      // Employees can create their own clock-ins
-      allow create: if isSignedIn() && request.resource.data.employeeId == request.auth.uid;
-      // Company owner can read all clock-ins for their employees
-      allow read: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'empresa';
-      // Employees can read their own clock-ins
-      allow read: if isSignedIn() && resource.data.employeeId == request.auth.uid;
+    /**
+     * @description Manages expense data.
+     * @path /expenses/{expenseId}
+     * @allow (create) User with ID 'test_user' can create an expense.
+     *   request.auth.uid == 'test_user'
+     * @deny (create) User with ID 'test_user' cannot create an expense for another user.
+     *   request.resource.data.ownerId != request.auth.uid
+     * @allow (get, list, update, delete) User with ID 'test_user' can read, update, and delete their own expense.
+     *   request.auth.uid == 'test_user' && resource.data.ownerId == request.auth.uid
+     * @deny (get, list, update, delete) User with ID 'another_user' cannot access 'test_user' expense.
+     *   request.auth.uid != 'test_user'
+     * @principle Enforces document ownership for all operations on expenses.
+     */
+    match /expenses/{expenseId} {
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow get, list: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId) && resource.data.ownerId == request.resource.data.ownerId;
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
     }
+
+     /**
+      * @description Manages contact data.
+      * @path /contacts/{contactId}
+      * @allow (create) User with ID 'test_user' can create a contact.
+      *   request.auth.uid == 'test_user'
+      * @deny (create) User with ID 'test_user' cannot create a contact for another user.
+      *   request.resource.data.ownerId != request.auth.uid
+      * @allow (get, list, update, delete) User with ID 'test_user' can read, update, and delete their own contact.
+      *   request.auth.uid == 'test_user' && resource.data.ownerId == request.auth.uid
+      * @deny (get, list, update, delete) User with ID 'another_user' cannot access 'test_user' contact.
+      *   request.auth.uid != 'test_user'
+      * @principle Enforces document ownership for all operations on contacts.
+      */
+    match /contacts/{contactId} {
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow get, list: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId) && resource.data.ownerId == request.resource.data.ownerId;
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+  }
+
+  // Helper Functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+    function isExistingOwner(ownerId) {
+    return isSignedIn() && isOwner(ownerId) && resource != null;
   }
 }
