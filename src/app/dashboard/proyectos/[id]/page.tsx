@@ -116,24 +116,21 @@ export default function ProjectDetailPage() {
     });
 
     const fetchUsers = async () => {
-        const ownerQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
-
-        const [ownerSnapshot, employeesSnapshot] = await Promise.all([
-            getDocs(ownerQuery),
-            getDocs(employeesQuery)
-        ]);
-
         const userList = new Map<string, { id: string; name: string }>();
 
-        ownerSnapshot.forEach(doc => {
+        // Fetch owner
+        const selfDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', user.uid)));
+        selfDoc.forEach(doc => {
             userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
         });
 
+        // Fetch employees
+        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+        const employeesSnapshot = await getDocs(employeesQuery);
         employeesSnapshot.forEach(doc => {
             userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
         });
-
+        
         setUsers(Array.from(userList.values()));
     }
     fetchUsers();
