@@ -1,4 +1,3 @@
-
 'use server';
 
 import { findPotentialClients, type FindPotentialClientsOutput } from '@/ai/flows/find-potential-clients';
@@ -24,6 +23,6 @@ export async function findPotentialClientsAction(
     return { output: result, error: null };
   } catch (e: any) {
     console.error(e);
-    return { output: null, error: "Ha ocurrido un error al buscar clientes. Inténtalo de nuevo." };
+    return { output: null, error: `Error de la IA: ${e.message}` };
   }
 }

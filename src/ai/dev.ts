@@ -1,4 +1,4 @@
-
+'use server';
 import { config } from 'dotenv';
 config();
 
@@ -20,4 +20,3 @@ import '@/ai/flows/review-payroll.ts';
 import '@/ai/flows/process-csv-expenses.ts';
 import '@/ai/flows/process-pdf-expenses.ts';
 import '@/ai/flows/analyze-website.ts';
-
