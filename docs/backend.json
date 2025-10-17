@@ -28,9 +28,11 @@
         "startDate": { "type": "string", "format": "date-time", "description": "The start date of the project." },
         "endDate": { "type": "string", "format": "date-time", "description": "The estimated end date of the project." },
         "ownerId": { "type": "string", "description": "The ID of the user who owns the project." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the project was created." }
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the project was created." },
+        "clientPortalActive": { "type": "boolean", "description": "Whether the client portal is active for this project." },
+        "clientPortalId": { "type": "string", "description": "A unique ID for the client portal URL." }
       },
-      "required": ["name", "client", "status", "ownerId", "createdAt"]
+      "required": ["name", "client", "status", "ownerId", "createdAt", "clientPortalActive", "clientPortalId"]
     },
     "Task": {
       "title": "Task",
@@ -46,7 +48,8 @@
         "assigneeId": { "type": "string", "description": "The ID of the user assigned to the task." },
         "projectId": { "type": "string", "description": "The ID of the project this task belongs to." },
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the task was created." },
-        "dueDate": { "type": "string", "format": "date-time", "description": "The due date for the task." }
+        "dueDate": { "type": "string", "format": "date-time", "description": "The due date for the task." },
+        "timeTracked": { "type": "number", "description": "Total seconds tracked for this task."}
       },
       "required": ["title", "isCompleted", "ownerId", "assigneeId", "createdAt", "status", "priority"]
     },

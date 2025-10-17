@@ -46,6 +46,8 @@ export type Project = {
   status: ProjectStatus;
   progress?: number;
   createdAt: Date;
+  clientPortalActive?: boolean;
+  clientPortalId?: string;
 };
 
 export const projectStatuses: ProjectStatus[] = ['Planificación', 'En Progreso', 'En Espera', 'Completado', 'Cancelado'];
@@ -129,6 +131,7 @@ export default function OperacionesPage() {
         isOpen={isCreateTaskModalOpen} 
         onClose={() => setIsCreateTaskModalOpen(false)} 
         projects={projects}
+        users={[]}
     />
     <AlertDialog open={isUpsellModalOpen} onOpenChange={setIsUpsellModalOpen}>
         <AlertDialogContent>

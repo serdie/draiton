@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useContext } from 'react';
@@ -20,6 +21,7 @@ import { EditProjectModal } from '../edit-project-modal';
 import { ProjectTaskList } from './project-task-list';
 import { TimeTracker } from './time-tracker';
 import { useToast } from '@/hooks/use-toast';
+import { ClientPortalCard } from './client-portal-card';
 
 const getStatusBadgeClass = (status: ProjectStatus) => {
   switch (status) {
@@ -31,26 +33,6 @@ const getStatusBadgeClass = (status: ProjectStatus) => {
     default: return 'bg-secondary text-secondary-foreground';
   }
 };
-
-const ClientPortalCard = () => (
-     <Card>
-        <CardHeader>
-            <CardTitle>Portal de Cliente</CardTitle>
-            <CardDescription>Gestiona el acceso de tu cliente a este proyecto.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                    <p className="font-medium">Estado del Portal</p>
-                    <p className="text-sm text-muted-foreground">El cliente puede ver el progreso y descargar facturas.</p>
-                </div>
-                <Badge variant="default">Activo</Badge>
-            </div>
-             <Button>Enviar invitación al cliente</Button>
-             <Button variant="outline">Ver portal como cliente</Button>
-        </CardContent>
-    </Card>
-)
 
 export default function ProjectDetailPage() {
   const { user } = useContext(AuthContext);
@@ -259,7 +241,7 @@ export default function ProjectDetailPage() {
                     </Card>
                 </TabsContent>
                  <TabsContent value="client-portal">
-                    <ClientPortalCard />
+                    <ClientPortalCard project={project} />
                 </TabsContent>
             </div>
         </Tabs>
