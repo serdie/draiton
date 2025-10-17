@@ -65,16 +65,16 @@ export default function TareasPage() {
                     getDocs(selfQuery),
                 ]);
                 
-                const employeesList = employeesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
-                const selfList = selfSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
-
-                const allUsersMap = new Map<string, { id: string; name: string; }>();
-                // Add owner first to ensure they are in the list
-                selfList.forEach(u => allUsersMap.set(u.id, u));
-                // Add employees, which will overwrite if ID is the same but that's fine
-                employeesList.forEach(u => allUsersMap.set(u.id, u));
+                const userList = new Map<string, { id: string; name: string; }>();
                 
-                setUsers(Array.from(allUsersMap.values()));
+                selfSnapshot.forEach(doc => {
+                    userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+                });
+                employeesSnapshot.forEach(doc => {
+                    userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+                });
+                
+                setUsers(Array.from(userList.values()));
 
 
                 setLoading(false);
@@ -107,6 +107,7 @@ export default function TareasPage() {
                 isOpen={isCreateModalOpen} 
                 onClose={() => setIsCreateModalOpen(false)} 
                 projects={projects}
+                users={users}
             />
             {taskToEdit && (
                 <EditTaskModal

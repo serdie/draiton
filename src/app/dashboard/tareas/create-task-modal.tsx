@@ -15,9 +15,10 @@ interface CreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   projects: Project[];
+  users: { id: string; name: string; }[];
 }
 
-export function CreateTaskModal({ isOpen, onClose, projects }: CreateTaskModalProps) {
+export function CreateTaskModal({ isOpen, onClose, projects, users }: CreateTaskModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
@@ -28,7 +29,7 @@ export function CreateTaskModal({ isOpen, onClose, projects }: CreateTaskModalPr
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-4">
-          <CreateTaskForm onClose={onClose} projects={projects} />
+          <CreateTaskForm onClose={onClose} projects={projects} users={users} />
         </div>
       </DialogContent>
     </Dialog>

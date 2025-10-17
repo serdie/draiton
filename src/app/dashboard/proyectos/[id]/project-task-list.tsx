@@ -26,17 +26,17 @@ interface ProjectTaskListProps {
     projectId: string;
     initialProgress: number;
     onProgressChange: (newProgress: number) => void;
-    projects: Project[];
-    users: { id: string; name: string; }[];
 }
 
-export function ProjectTaskList({ projectId, initialProgress, onProgressChange, projects, users }: ProjectTaskListProps) {
+export function ProjectTaskList({ projectId, initialProgress, onProgressChange }: ProjectTaskListProps) {
     const { user } = useContext(AuthContext);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [progress, setProgress] = useState(initialProgress);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [users, setUsers] = useState<{ id: string; name: string; }[]>([]);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -127,15 +127,12 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
     
     const handleDeleteTask = async () => {
         if (!taskToDelete) return;
-
-        const { success, error } = await deleteTaskClient(taskToDelete.id);
-
-        if (success) {
+        const result = await deleteTaskClient(taskToDelete.id);
+        if (result.success) {
             toast({ title: 'Tarea Eliminada', description: 'La tarea ha sido eliminada correctamente.' });
         } else {
-            toast({ variant: 'destructive', title: 'Error al Eliminar', description: error });
+            toast({ variant: 'destructive', title: 'Error al Eliminar', description: result.error });
         }
-        
         setTaskToDelete(null);
     };
 

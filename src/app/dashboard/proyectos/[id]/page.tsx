@@ -109,35 +109,8 @@ export default function ProjectDetailPage() {
         router.push('/dashboard/proyectos');
     });
 
-    const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
-    const unsubscribeProjects = onSnapshot(projectsQuery, (snapshot) => {
-        const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-        setProjects(fetchedProjects);
-    });
-
-    const fetchUsers = async () => {
-        const userList = new Map<string, { id: string; name: string }>();
-
-        // Fetch owner
-        const selfDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', user.uid)));
-        selfDoc.forEach(doc => {
-            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
-        });
-
-        // Fetch employees
-        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
-        const employeesSnapshot = await getDocs(employeesQuery);
-        employeesSnapshot.forEach(doc => {
-            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
-        });
-        
-        setUsers(Array.from(userList.values()));
-    }
-    fetchUsers();
-
     return () => {
         unsubscribe();
-        unsubscribeProjects();
     };
   }, [user, projectId, router]);
 
@@ -235,8 +208,6 @@ export default function ProjectDetailPage() {
                         projectId={project.id} 
                         initialProgress={project.progress || 0}
                         onProgressChange={handleProgressChange}
-                        projects={projects}
-                        users={users}
                     />
                 </TabsContent>
                  <TabsContent value="time">

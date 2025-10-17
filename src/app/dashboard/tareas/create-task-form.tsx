@@ -27,13 +27,13 @@ type TaskPriority = 'Baja' | 'Media' | 'Alta';
 interface CreateTaskFormProps {
   onClose: () => void;
   projects: Project[];
+  users: { id: string; name: string; }[];
 }
 
-export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
+export function CreateTaskForm({ onClose, projects, users }: CreateTaskFormProps) {
   const { user } = useContext(AuthContext);
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [allUsers, setAllUsers] = useState<{ id: string; name: string; }[]>([]);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -48,31 +48,6 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
     if (user) {
         setAssigneeId(user.uid);
     }
-  }, [user]);
-
-  // Fetch all users to populate the assignee dropdown
-  useEffect(() => {
-    const fetchUsers = async () => {
-        if (!db || !user) return;
-        
-        const userList = new Map<string, { id: string; name: string; }>();
-
-        // Fetch owner
-        const selfDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', user.uid)));
-        selfDoc.forEach(doc => {
-            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
-        });
-
-        // Fetch employees
-        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
-        const employeesSnapshot = await getDocs(employeesQuery);
-        employeesSnapshot.forEach(doc => {
-            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
-        });
-
-        setAllUsers(Array.from(userList.values()));
-    };
-    fetchUsers();
   }, [user]);
 
 
@@ -172,7 +147,7 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
                 <SelectValue placeholder="Asignar a un usuario" />
                 </SelectTrigger>
                 <SelectContent>
-                {allUsers.map(u => (
+                {users.map(u => (
                     <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                 ))}
                 </SelectContent>
