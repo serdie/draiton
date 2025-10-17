@@ -5,7 +5,7 @@
 import { useState, useEffect, useContext, useMemo } from 'react';
 import { AuthContext } from '@/context/auth-context';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -16,9 +16,10 @@ import { Plus, Trash2, Pencil, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { deleteTask } from '@/lib/firebase/task-actions';
+import { deleteTask, updateTask } from '@/lib/firebase/task-actions';
 import type { Task } from '../../tareas/types';
 import { EditTaskModal } from '../../tareas/edit-task-modal';
+import type { Project } from '../page';
 
 
 interface ProjectTaskListProps {
@@ -34,6 +35,8 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     const [progress, setProgress] = useState(initialProgress);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [users, setUsers] = useState<{ id: string; name: string; }[]>([]);
     const { toast } = useToast();
 
 
@@ -43,8 +46,9 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     
     useEffect(() => {
         if (!user) return;
+
         const q = query(collection(db, 'tasks'), where('projectId', '==', projectId));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubscribeTasks = onSnapshot(q, (snapshot) => {
             const fetchedTasks = snapshot.docs.map(docSnap => {
                 const data = docSnap.data();
                 return {
@@ -59,7 +63,37 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
              console.error("Error fetching tasks:", error);
              toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las tareas. Revisa los permisos.' });
         });
-        return () => unsubscribe();
+
+        const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+        const unsubscribeProjects = onSnapshot(projectsQuery, (snapshot) => {
+            const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+            setProjects(fetchedProjects);
+        });
+
+        const usersQuery = query(collection(db, 'users'), where('ownerId', '==', user.uid));
+        const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+
+        const fetchUsers = async () => {
+            const [employeesSnapshot, selfSnapshot] = await Promise.all([
+                getDocs(usersQuery),
+                getDocs(selfQuery),
+            ]);
+            const employeesList = employeesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
+            const selfList = selfSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
+            
+            const allUsersMap = new Map<string, { id: string; name: string; }>();
+            selfList.forEach(u => allUsersMap.set(u.id, u));
+            employeesList.forEach(u => allUsersMap.set(u.id, u));
+            
+            setUsers(Array.from(allUsersMap.values()));
+        }
+        
+        fetchUsers();
+
+        return () => {
+            unsubscribeTasks();
+            unsubscribeProjects();
+        }
     }, [projectId, user, toast]);
 
     useEffect(() => {
@@ -152,6 +186,8 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
                 isOpen={!!taskToEdit}
                 onClose={() => setTaskToEdit(null)}
                 task={taskToEdit}
+                projects={projects}
+                users={users}
             />
         )}
         <AlertDialog open={!!taskToDelete} onOpenChange={(open) => !open && setTaskToDelete(null)}>
