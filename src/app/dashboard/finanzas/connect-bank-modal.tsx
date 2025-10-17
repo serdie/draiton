@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, CreditCard, ArrowLeft, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Image from 'next/image';
 
 interface ConnectBankModalProps {
   isOpen: boolean;
@@ -22,9 +23,7 @@ interface ConnectBankModalProps {
 }
 
 const PaypalIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M7.444 6.417c.307-1.129.97-2.18 2.18-2.18h5.903c4.16 0 5.834 2.14 5.207 6.182-.482 3.076-2.583 4.88-5.11 4.88h-1.686c-.53 0-.96.42-1.03.95l-.564 3.722c-.04.26-.25.45-.51.45h-1.92c-.22 0-.41-.15-.47-.36-.85-3.076.28-4.52 1.83-4.52h.42c.47 0 .86-.34.93-.8l.56-3.73c.04-.26.25-.45.51-.45h.35c.87 0 1.63-.82 1.74-1.8.13-1.14-.6-1.92-1.46-1.92h-2.92c-.95 0-1.74.83-1.63 1.92.11.98.87 1.8 1.81 1.8h.68c.48 0 .87.35.94.82l.56 3.73c.04.26.25-.45.51-.45h.39c.87 0 1.63-.82 1.74-1.8.13-1.14-.6-1.92-1.46-1.92h-2.92c-2.31 0-3.88-2.03-3.13-5.07zM11.9 15.198c-.2 0-.37-.13-.43-.32l-1.3-4.22c-.04-.13-.02-.27.05-.39.07-.12.2-.19.34-.19h2.33c2.2 0 3.2 1.3 3.5 3.3.2 1.25-.3 2.1-1.1 2.1h-3.4z" />
-    </svg>
+    <Image src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.png" alt="PayPal" width={24} height={24} className="object-contain" />
 );
 
 const BankLogo = ({ bankName }: { bankName: string }) => {
