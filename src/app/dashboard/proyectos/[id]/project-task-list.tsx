@@ -16,7 +16,7 @@ import { Plus, Trash2, Pencil, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { deleteTask, updateTask } from '@/lib/firebase/task-actions';
+import { deleteTaskClient, updateTask } from '@/lib/firebase/task-actions';
 import type { Task } from '../../tareas/types';
 import { EditTaskModal } from '../../tareas/edit-task-modal';
 import type { Project } from '../page';
@@ -70,17 +70,19 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
             setProjects(fetchedProjects);
         });
 
-        const usersQuery = query(collection(db, 'users'), where('ownerId', '==', user.uid));
+        // Fetch users: both the owner and their employees
+        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
         const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
 
         const fetchUsers = async () => {
             const [employeesSnapshot, selfSnapshot] = await Promise.all([
-                getDocs(usersQuery),
+                getDocs(employeesQuery),
                 getDocs(selfQuery),
             ]);
+            
             const employeesList = employeesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
             const selfList = selfSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
-            
+
             const allUsersMap = new Map<string, { id: string; name: string; }>();
             selfList.forEach(u => allUsersMap.set(u.id, u));
             employeesList.forEach(u => allUsersMap.set(u.id, u));
@@ -159,14 +161,16 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     const handleDeleteTask = async () => {
         if (!taskToDelete) return;
 
-        const { success, error } = await deleteTask(taskToDelete.id);
-
-        if (success) {
+        try {
+            await deleteTaskClient(taskToDelete.id);
             toast({ title: 'Tarea Eliminada', description: 'La tarea ha sido eliminada correctamente.' });
-        } else {
-            toast({ variant: 'destructive', title: 'Error', description: error });
+        } catch (error: any) {
+            // The contextual error is thrown by deleteTaskClient and caught by the listener.
+            // We just show a generic toast here as a fallback.
+            toast({ variant: 'destructive', title: 'Error', description: error.message || "No se pudo eliminar la tarea." });
+        } finally {
+            setTaskToDelete(null);
         }
-        setTaskToDelete(null);
     };
 
     const handleSliderChange = (value: number[]) => {
