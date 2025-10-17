@@ -17,24 +17,3 @@ export async function askBusinessAssistantAction(
         return { response: null, error: 'Ha ocurrido un error al contactar al asistente. Inténtalo de nuevo.' };
     }
 }
-
-export async function getBusinessIdeas(
-    currentState: { output: GenerateBusinessIdeasOutput | null; error: string | null },
-    formData: FormData
-  ): Promise<{ output: GenerateBusinessIdeasOutput | null; error: string | null }> {
-    "use server";
-    
-    const companyData = formData.get('companyData') as string;
-
-    if (!companyData) {
-      return { output: null, error: "Por favor, introduce la información de tu empresa." };
-    }
-
-    try {
-      const result = await generateBusinessIdeas({ companyData });
-      return { output: result, error: null };
-    } catch (e: any) {
-      console.error(e);
-      return { output: null, error: "Ha ocurrido un error al generar las ideas. Inténtalo de nuevo." };
-    }
-  }

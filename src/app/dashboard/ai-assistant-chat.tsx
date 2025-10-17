@@ -24,7 +24,10 @@ export function AiAssistantChat() {
 
     const scrollToBottom = () => {
         if (scrollAreaRef.current) {
-            scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+            const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+            if (viewport) {
+                viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+            }
         }
     };
     
@@ -57,11 +60,11 @@ export function AiAssistantChat() {
     }
 
   return (
-    <Card className="flex flex-col h-full max-h-[calc(100vh-200px)]">
+    <>
         <CardHeader>
             <CardTitle className="flex items-center gap-2">
                 <Sparkles className="text-primary"/>
-                Chatea con GestorIA
+                Asistente IA
             </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden">
@@ -115,6 +118,6 @@ export function AiAssistantChat() {
                 </Button>
             </form>
         </CardFooter>
-    </Card>
+    </>
   )
 }

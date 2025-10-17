@@ -47,6 +47,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { AiAssistantChat } from './ai-assistant-chat';
 
 type ActivityItem = {
     id: string;
@@ -295,6 +296,10 @@ export default function DashboardPage() {
                 </CardFooter>
             </Card>
 
+             <Card className="flex flex-col h-[480px]">
+                <AiAssistantChat />
+            </Card>
+
         </main>
         <aside className="space-y-6">
             <Card>
@@ -339,6 +344,18 @@ export default function DashboardPage() {
                             ))}
                         </ul>
                      )}
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle>Accesos Rápidos</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" asChild><Link href="/dashboard/documentos"><FileText className="mr-2"/>Factura</Link></Button>
+                    <Button variant="outline" asChild><Link href="/dashboard/proyectos"><Briefcase className="mr-2"/>Proyecto</Link></Button>
+                    <Button variant="outline" asChild><Link href="/dashboard/contactos"><UserPlus className="mr-2"/>Contacto</Link></Button>
+                    <Button variant="outline" asChild><Link href="/dashboard/gastos"><Landmark className="mr-2"/>Gasto</Link></Button>
                 </CardContent>
             </Card>
         </aside>

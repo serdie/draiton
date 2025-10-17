@@ -168,15 +168,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-            
-            <SidebarMenuItem>
-              <Link href="/dashboard/asistente-ia">
-                <SidebarMenuButton isActive={isActive('/dashboard/asistente-ia')} tooltip="Asistente IA">
-                  <MessageSquare />
-                  <span>Asistente IA</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
 
             {!isEmployee && (
                  <SidebarMenuItem id="tour-ia">
