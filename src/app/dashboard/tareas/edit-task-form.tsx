@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
@@ -10,31 +9,29 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon, Loader2, PlusCircle } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { useToast } from '@/hooks/use-toast';
 import { type Project } from '../proyectos/page';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
-import Link from 'next/link';
 import { type Task, type TaskStatus, type TaskPriority } from './types';
 import { updateTask } from '@/lib/firebase/task-actions';
 
 interface EditTaskFormProps {
   onClose: () => void;
   task: Task;
+  projects: Project[];
+  users: { id: string; name: string }[];
 }
 
-export function EditTaskForm({ onClose, task }: EditTaskFormProps) {
+export function EditTaskForm({ onClose, task, projects, users }: EditTaskFormProps) {
   const { user } = useContext(AuthContext);
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [allUsers, setAllUsers] = useState<{ id: string; name: string; }[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
 
+  // Form state, initialized directly from the task prop
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
   const [projectId, setProjectId] = useState<string>(task.projectId || 'sin-proyecto');
@@ -43,37 +40,17 @@ export function EditTaskForm({ onClose, task }: EditTaskFormProps) {
   const [assigneeId, setAssigneeId] = useState<string>(task.assigneeId);
   const [dueDate, setDueDate] = useState<Date | undefined>(task.dueDate);
 
-  // Fetch users and projects
+  // This effect ensures the form state resets if a new task is passed to an already-open modal.
   useEffect(() => {
-    if (!user) return;
-    
-    const fetchDropdownData = async () => {
-        if (!db) return;
-        
-        // Fetch Users
-        const usersQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
-        const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-        
-        const [usersSnapshot, selfSnapshot] = await Promise.all([getDocs(usersQuery), getDocs(selfQuery)]);
-        
-        const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
-        const selfList = selfSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
+    setTitle(task.title);
+    setDescription(task.description || '');
+    setProjectId(task.projectId || 'sin-proyecto');
+    setStatus(task.status);
+    setPriority(task.priority);
+    setAssigneeId(task.assigneeId);
+    setDueDate(task.dueDate);
+  }, [task]);
 
-        // Combine and remove duplicates
-        const allUsersMap = new Map();
-        [...selfList, ...usersList].forEach(u => allUsersMap.set(u.id, u));
-        setAllUsers(Array.from(allUsersMap.values()));
-
-
-        // Fetch Projects
-        const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
-        const projectsSnapshot = await getDocs(projectsQuery);
-        const projectsList = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-        setProjects(projectsList);
-    };
-    
-    fetchDropdownData();
-  }, [user]);
 
   const handleUpdateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +68,7 @@ export function EditTaskForm({ onClose, task }: EditTaskFormProps) {
       status,
       priority,
       assigneeId,
-      dueDate: dueDate || undefined,
+      dueDate,
       isCompleted: status === 'Completado',
     };
     
@@ -100,7 +77,7 @@ export function EditTaskForm({ onClose, task }: EditTaskFormProps) {
         toast({ title: 'Tarea Actualizada', description: `La tarea "${title}" ha sido actualizada.` });
         onClose();
     } catch(error: any) {
-         toast({
+        toast({
             variant: 'destructive',
             title: 'Error al actualizar',
             description: error.message || "No se pudo actualizar la tarea. Revisa los permisos."
@@ -157,7 +134,7 @@ export function EditTaskForm({ onClose, task }: EditTaskFormProps) {
                     <SelectValue placeholder="Asignar a un usuario" />
                 </SelectTrigger>
                 <SelectContent>
-                {allUsers.map(u => (
+                {users.map(u => (
                     <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                 ))}
                 </SelectContent>

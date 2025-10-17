@@ -11,7 +11,7 @@ import type { Project } from '../proyectos/page';
 import type { Task } from './types';
 import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 export default function TareasPage() {
@@ -19,6 +19,7 @@ export default function TareasPage() {
     const { toast } = useToast();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
+    const [users, setUsers] = useState<{ id: string; name: string; }[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
@@ -32,45 +33,60 @@ export default function TareasPage() {
 
         const fetchAllData = async () => {
             setLoading(true);
-
-            // Fetch projects
-            const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
-            const unsubscribeProjects = onSnapshot(projectsQuery, (snapshot) => {
-                const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-                setProjects(fetchedProjects);
-            }, (error) => {
-                console.error("Error fetching projects:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los proyectos.' });
-            });
-
-            // Fetch tasks
-            const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid));
-            const unsubscribeTasks = onSnapshot(tasksQuery, (snapshot) => {
-                const fetchedTasks = snapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        ...data,
-                        dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
-                        createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : new Date(),
-                    } as Task;
+            try {
+                // Fetch projects
+                const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+                const projectsUnsubscribe = onSnapshot(projectsQuery, (snapshot) => {
+                    const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+                    setProjects(fetchedProjects);
                 });
-                
-                setTasks(fetchedTasks);
-                setLoading(false);
-            }, (error) => {
-                console.error("Error fetching tasks:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las tareas.' });
-                setLoading(false);
-            });
-            
-            return () => {
-                unsubscribeProjects();
-                unsubscribeTasks();
-            };
-        }
 
-        fetchAllData();
+                // Fetch tasks
+                const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid));
+                const tasksUnsubscribe = onSnapshot(tasksQuery, (snapshot) => {
+                    const fetchedTasks = snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            ...data,
+                            dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
+                            createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : new Date(),
+                        } as Task;
+                    });
+                    setTasks(fetchedTasks);
+                });
+
+                 // Fetch users
+                const usersQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+                const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+                
+                const [usersSnapshot, selfSnapshot] = await Promise.all([getDocs(usersQuery), getDocs(selfQuery)]);
+                
+                const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
+                const selfList = selfSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
+
+                const allUsersMap = new Map();
+                [...selfList, ...usersList].forEach(u => allUsersMap.set(u.id, u));
+                setUsers(Array.from(allUsersMap.values()));
+
+
+                setLoading(false);
+                return () => {
+                    projectsUnsubscribe();
+                    tasksUnsubscribe();
+                };
+            } catch (error) {
+                console.error("Error fetching dashboard data: ", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los datos.' });
+                setLoading(false);
+            }
+        };
+
+        const unsubscribe = fetchAllData();
+        
+        return () => {
+            unsubscribe.then(fn => fn && fn());
+        };
 
     }, [user, toast]);
 
@@ -90,6 +106,8 @@ export default function TareasPage() {
                     isOpen={!!taskToEdit}
                     onClose={() => setTaskToEdit(null)}
                     task={taskToEdit}
+                    projects={projects}
+                    users={users}
                 />
             )}
             <div className="space-y-6">
