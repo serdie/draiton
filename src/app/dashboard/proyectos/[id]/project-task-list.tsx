@@ -47,7 +47,11 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
     useEffect(() => {
         if (!user) return;
 
-        const q = query(collection(db, 'tasks'), where('projectId', '==', projectId));
+        const q = query(
+            collection(db, 'tasks'), 
+            where('projectId', '==', projectId),
+            where('ownerId', '==', user.uid)
+        );
         const unsubscribeTasks = onSnapshot(q, (snapshot) => {
             const fetchedTasks = snapshot.docs.map(docSnap => {
                 const data = docSnap.data();
@@ -136,8 +140,6 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
             await deleteTaskClient(taskToDelete.id);
             toast({ title: 'Tarea Eliminada', description: 'La tarea ha sido eliminada correctamente.' });
         } catch (error: any) {
-            // The contextual error is thrown by deleteTaskClient and caught by the listener.
-            // We just show a generic toast here as a fallback.
             toast({ variant: 'destructive', title: 'Error', description: error.message || "No se pudo eliminar la tarea." });
         } finally {
             setTaskToDelete(null);
