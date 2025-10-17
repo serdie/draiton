@@ -23,7 +23,7 @@ interface EditTaskFormProps {
   onClose: () => void;
   task: Task;
   projects: Project[];
-  users: { id: string; name: string }[];
+  users: { id: string; name: string; }[];
 }
 
 export function EditTaskForm({ onClose, task, projects, users }: EditTaskFormProps) {
