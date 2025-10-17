@@ -22,4 +22,3 @@ export async function getBusinessIdeasAction(
       return { output: null, error: "Ha ocurrido un error al generar las ideas. Inténtalo de nuevo." };
     }
   }
-
