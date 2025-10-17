@@ -17,6 +17,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EditProjectModal } from '../edit-project-modal';
 import { ProjectTaskList } from './project-task-list';
+import { TimeTracker } from './time-tracker';
 
 const getStatusBadgeClass = (status: ProjectStatus) => {
   switch (status) {
@@ -28,26 +29,6 @@ const getStatusBadgeClass = (status: ProjectStatus) => {
     default: return 'bg-secondary text-secondary-foreground';
   }
 };
-
-const TimeTrackingCard = () => (
-    <Card>
-        <CardHeader>
-            <CardTitle>Seguimiento de Tiempo</CardTitle>
-            <CardDescription>Registra el tiempo dedicado a este proyecto.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-             <div className="text-4xl font-bold font-mono">01:23:45</div>
-             <div className="flex gap-2">
-                <Button>Iniciar</Button>
-                <Button variant="outline">Pausar</Button>
-                <Button variant="destructive">Detener</Button>
-             </div>
-        </CardContent>
-        <CardFooter>
-            <p className="text-sm text-muted-foreground">El tiempo registrado se puede añadir a una factura.</p>
-        </CardFooter>
-    </Card>
-)
 
 const ClientPortalCard = () => (
      <Card>
@@ -241,7 +222,7 @@ export default function ProjectDetailPage() {
                     />
                 </TabsContent>
                  <TabsContent value="time">
-                    <TimeTrackingCard />
+                    <TimeTracker />
                 </TabsContent>
                 <TabsContent value="invoices">
                      <Card>
