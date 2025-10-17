@@ -15,24 +15,11 @@ import {
   type GenerateEmailCampaignInput,
   type GenerateEmailCampaignOutput,
 } from '@/app/dashboard/marketing/campanas/crear/schemas';
+import { googleAI } from '@genkit-ai/googleai';
 
 export async function generateEmailCampaign(input: GenerateEmailCampaignInput): Promise<GenerateEmailCampaignOutput> {
   return generateEmailCampaignFlow(input);
 }
-
-const prompt = ai.definePrompt({
-  name: 'generateEmailCampaignPrompt',
-  input: { schema: GenerateEmailCampaignInputSchema },
-  output: { schema: GenerateEmailCampaignOutputSchema },
-  prompt: `Eres un experto en email marketing. Tu tarea es escribir un correo electrónico convincente basado en los siguientes objetivos.
-
-**Objetivo de la Campaña:** {{{campaignGoal}}}
-**Público Objetivo:** {{{targetAudience}}}
-**Tono deseado:** {{{tone}}}
-**Información Clave a Incluir:** {{{keyInfo}}}
-
-Basado en esto, genera un asunto (subject) y un cuerpo (body) para el correo. El cuerpo debe ser claro, persuasivo y terminar con una llamada a la acción clara. Escribe el correo en español.`,
-});
 
 const generateEmailCampaignFlow = ai.defineFlow(
   {
@@ -41,7 +28,20 @@ const generateEmailCampaignFlow = ai.defineFlow(
     outputSchema: GenerateEmailCampaignOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await ai.generate({
+      model: googleAI.model('gemini-1.5-flash'),
+      prompt: `Eres un experto en email marketing. Tu tarea es escribir un correo electrónico convincente basado en los siguientes objetivos.
+
+**Objetivo de la Campaña:** ${input.campaignGoal}
+**Público Objetivo:** ${input.targetAudience}
+**Tono deseado:** ${input.tone}
+**Información Clave a Incluir:** ${input.keyInfo}
+
+Basado en esto, genera un asunto (subject) y un cuerpo (body) para el correo. El cuerpo debe ser claro, persuasivo y terminar con una llamada a la acción clara. Escribe el correo en español.`,
+      output: {
+        schema: GenerateEmailCampaignOutputSchema,
+      },
+    });
     return output!;
   }
 );
