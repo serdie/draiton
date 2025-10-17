@@ -18,6 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { deleteTask } from '@/lib/firebase/task-actions';
 import type { Task } from '../../tareas/types';
+import { EditTaskModal } from '../../tareas/edit-task-modal';
 
 
 interface ProjectTaskListProps {
@@ -32,6 +33,7 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [progress, setProgress] = useState(initialProgress);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+    const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
     const { toast } = useToast();
 
 
@@ -43,7 +45,15 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
         if (!user) return;
         const q = query(collection(db, 'tasks'), where('projectId', '==', projectId), orderBy('createdAt', 'asc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+            const fetchedTasks = snapshot.docs.map(docSnap => {
+                const data = docSnap.data();
+                return {
+                    id: docSnap.id,
+                    ...data,
+                    dueDate: data.dueDate ? data.dueDate.toDate() : undefined,
+                    createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+                } as Task;
+            });
             setTasks(fetchedTasks);
         }, (error) => {
              console.error("Error fetching tasks:", error);
@@ -137,6 +147,13 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
 
     return (
         <>
+        {taskToEdit && (
+            <EditTaskModal 
+                isOpen={!!taskToEdit}
+                onClose={() => setTaskToEdit(null)}
+                task={taskToEdit}
+            />
+        )}
         <AlertDialog open={!!taskToDelete} onOpenChange={(open) => !open && setTaskToDelete(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -190,7 +207,7 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setTaskToEdit(task)}>
                                             <Pencil className="mr-2 h-4 w-4" />
                                             Editar
                                         </DropdownMenuItem>
