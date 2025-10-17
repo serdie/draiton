@@ -77,13 +77,16 @@ export function EditTaskForm({ onClose, task }: EditTaskFormProps) {
       isCompleted: status === 'Completado',
     };
     
-    const { success, error } = await updateTask(task.id, taskData);
-
-    if (success) {
-      toast({ title: 'Tarea Actualizada', description: `La tarea "${title}" ha sido actualizada.` });
-      onClose();
-    } else {
-      toast({ variant: 'destructive', title: 'Error', description: error });
+    try {
+        await updateTask(task.id, taskData);
+        toast({ title: 'Tarea Actualizada', description: `La tarea "${title}" ha sido actualizada.` });
+        onClose();
+    } catch(error: any) {
+         toast({
+            variant: 'destructive',
+            title: 'Error al actualizar',
+            description: error.message || "No se pudo actualizar la tarea. Revisa los permisos."
+        });
     }
 
     setIsLoading(false);

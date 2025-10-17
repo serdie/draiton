@@ -95,17 +95,18 @@ export function TaskKanbanBoard({ tasks, projects, onEditTask }: TaskKanbanBoard
         const task = tasks.find(t => t.id === activeId);
 
         if (task && overStatus && task.status !== overStatus) {
-            const { success, error } = await updateTaskStatus(task.id, overStatus as TaskStatus);
-            if (success) {
-                 toast({
+            try {
+                await updateTaskStatus(task.id, overStatus as TaskStatus);
+                toast({
                     title: 'Tarea actualizada',
                     description: `El estado de "${task.title}" se cambió a "${overStatus}".`
                 });
-            } else {
+            } catch (error: any) {
+                console.error("Error updating task status:", error);
                  toast({
                     variant: 'destructive',
-                    title: 'Error',
-                    description: error
+                    title: 'Error al actualizar',
+                    description: error.message || "No se pudo actualizar el estado de la tarea. Revisa los permisos."
                 });
             }
         }
