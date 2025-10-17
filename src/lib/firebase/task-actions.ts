@@ -1,7 +1,8 @@
 
+
 'use server';
 
-import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './config';
 import type { Task, TaskStatus } from '@/app/dashboard/tareas/types';
 
@@ -33,7 +34,6 @@ export async function updateTaskStatus(id: string, status: TaskStatus): Promise<
     }
     
     const taskRef = doc(db, 'tasks', id);
-    // Let the caller handle the try/catch to get richer errors
     await updateDoc(taskRef, { 
         status: status,
         isCompleted: status === 'Completado' 
@@ -49,6 +49,12 @@ export async function updateTask(id: string, data: Partial<Omit<Task, 'id' | 'ow
     }
 
     const taskRef = doc(db, 'tasks', id);
-    // Let the caller handle the try/catch to get richer errors
-    await updateDoc(taskRef, data);
+
+    // Asegurarse de que projectId se elimina si es `undefined` en lugar de guardarse como `null`.
+    const dataToUpdate = { ...data };
+    if (data.projectId === undefined) {
+        dataToUpdate.projectId = (serverTimestamp() as any).delete();
+    }
+    
+    await updateDoc(taskRef, dataToUpdate);
 }

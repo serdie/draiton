@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
@@ -15,7 +16,7 @@ import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { useToast } from '@/hooks/use-toast';
 import { type Project } from '../proyectos/page';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import Link from 'next/link';
@@ -44,18 +45,35 @@ export function EditTaskForm({ onClose, task }: EditTaskFormProps) {
 
   // Fetch users and projects
   useEffect(() => {
-    const fetchData = async () => {
+    if (!user) return;
+    
+    const fetchDropdownData = async () => {
         if (!db) return;
-        const usersSnapshot = await getDocs(collection(db, 'users'));
+        
+        // Fetch Users
+        const usersQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+        const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+        
+        const [usersSnapshot, selfSnapshot] = await Promise.all([getDocs(usersQuery), getDocs(selfQuery)]);
+        
         const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
-        setAllUsers(usersList);
+        const selfList = selfSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
 
-        const projectsSnapshot = await getDocs(collection(db, 'projects'));
+        // Combine and remove duplicates
+        const allUsersMap = new Map();
+        [...selfList, ...usersList].forEach(u => allUsersMap.set(u.id, u));
+        setAllUsers(Array.from(allUsersMap.values()));
+
+
+        // Fetch Projects
+        const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+        const projectsSnapshot = await getDocs(projectsQuery);
         const projectsList = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
         setProjects(projectsList);
     };
-    fetchData();
-  }, []);
+    
+    fetchDropdownData();
+  }, [user]);
 
   const handleUpdateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +192,7 @@ export function EditTaskForm({ onClose, task }: EditTaskFormProps) {
           </Select>
         </div>
        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
           <Button type="submit" disabled={isLoading}>
              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Guardar Cambios
