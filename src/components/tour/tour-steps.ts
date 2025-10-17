@@ -7,7 +7,7 @@ export type TourStep = {
   align?: "start" | "center" | "end";
 };
 
-export const tourSteps: TourStep[] = [
+export const tourStepsBase: TourStep[] = [
   {
     id: "tour-logo",
     title: "Bienvenido a GestorIA",
@@ -36,21 +36,7 @@ export const tourSteps: TourStep[] = [
     side: "right",
     align: "start",
   },
-  {
-    id: "tour-ia",
-    title: "Herramientas de IA",
-    content: "Potencia tu negocio con inteligencia artificial. Crea contenido de marketing, analiza tu web y mucho más.",
-    side: "right",
-    align: "start",
-  },
-  {
-    id: "tour-upgrade",
-    title: "Mejora tu Plan",
-    content: "Algunas funcionalidades avanzadas requieren un plan superior. ¡Explora los beneficios de Pro y Empresa!",
-    side: "top",
-    align: "center",
-  },
-  {
+   {
     id: "tour-perfil",
     title: "Tu Perfil",
     content: "Desde aquí puedes acceder a la configuración de tu cuenta, cambiar de plan o cerrar la sesión.",
@@ -58,3 +44,35 @@ export const tourSteps: TourStep[] = [
     align: "end",
   },
 ];
+
+
+export const tourStepsPro: TourStep[] = [
+    {
+        id: "tour-ia",
+        title: "Herramientas de IA",
+        content: "Potencia tu negocio con inteligencia artificial. Crea contenido de marketing, analiza tu web y mucho más.",
+        side: "right",
+        align: "start",
+    },
+];
+
+export const tourStepsFree: TourStep[] = [
+    {
+        id: "tour-upgrade",
+        title: "Mejora tu Plan",
+        content: "Algunas funcionalidades avanzadas requieren un plan superior. ¡Explora los beneficios de Pro y Empresa!",
+        side: "top",
+        align: "center",
+    },
+]
+
+
+export const tourStepsAdmin: TourStep[] = [
+    {
+        id: "tour-admin",
+        title: "Panel de Administración",
+        content: "Desde aquí puedes gestionar usuarios, ver analíticas y configurar aspectos globales de la aplicación.",
+        side: "right",
+        align: "start"
+    }
+]

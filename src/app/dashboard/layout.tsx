@@ -50,10 +50,11 @@ import { clearSessionCookie } from '@/lib/firebase/auth-actions';
 import { cn } from '@/lib/utils';
 import { TourProvider, useTour } from '@/context/tour-context';
 import { TourSpotlight } from '@/components/tour/tour-spotlight';
+import { tourStepsBase, tourStepsPro, tourStepsFree, tourStepsAdmin } from '@/components/tour/tour-steps';
 
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, isPro, isEmpresa, isEmployee } = useContext(AuthContext);
+  const { user, isAdmin, isPro, isEmpresa, isEmployee, isFree } = useContext(AuthContext);
   const pathname = usePathname();
   const isMobile = useIsMobile();
   const { startTour } = useTour();
@@ -62,6 +63,19 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     await signOut(auth);
     await clearSessionCookie();
   };
+
+  const handleStartTour = () => {
+    let steps = [...tourStepsBase];
+    if (isAdmin) {
+      steps = [...steps, ...tourStepsPro, ...tourStepsAdmin];
+    } else if (isEmpresa || isPro) {
+      steps = [...steps, ...tourStepsPro];
+    } else if (isFree) {
+        steps = [...steps, ...tourStepsFree]
+    }
+    startTour(steps);
+  };
+
 
   if (!user) {
     return null;
@@ -185,7 +199,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
 
              {isAdmin && (
-                <SidebarMenuItem>
+                <SidebarMenuItem id="tour-admin">
                     <Link href="/admin/dashboard">
                     <SidebarMenuButton isActive={isActive('/admin/dashboard')} tooltip="Admin Panel">
                         <UserCog />
@@ -197,7 +211,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className='p-4 space-y-4'>
-          {!isPro && !isEmployee && (
+          {isFree && (
             <div id="tour-upgrade" className='p-4 bg-secondary rounded-lg text-center'>
               <p className='font-bold'>Upgrade a Pro</p>
               <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
@@ -260,7 +274,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                           </Link>
                         )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => startTour()}>
+                        <DropdownMenuItem onClick={handleStartTour}>
                             <BookOpen className="mr-2 h-4 w-4" />
                             <span>Iniciar Tour</span>
                         </DropdownMenuItem>

@@ -2,13 +2,13 @@
 'use client';
 
 import { createContext, useState, useContext, ReactNode, useCallback, useEffect } from 'react';
-import { tourSteps, TourStep } from '@/components/tour/tour-steps';
+import { TourStep } from '@/components/tour/tour-steps';
 
 interface TourContextType {
   isActive: boolean;
   currentStep: number;
   stepData: TourStep | null;
-  startTour: () => void;
+  startTour: (steps: TourStep[]) => void;
   nextStep: () => void;
   prevStep: () => void;
   stopTour: () => void;
@@ -19,14 +19,20 @@ const TourContext = createContext<TourContextType | undefined>(undefined);
 export const TourProvider = ({ children }: { children: ReactNode }) => {
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [tourSteps, setTourSteps] = useState<TourStep[]>([]);
 
-  const startTour = useCallback(() => {
-    setCurrentStep(0);
-    setIsActive(true);
+  const startTour = useCallback((steps: TourStep[]) => {
+    if (steps && steps.length > 0) {
+        setTourSteps(steps);
+        setCurrentStep(0);
+        setIsActive(true);
+    }
   }, []);
 
   const stopTour = useCallback(() => {
     setIsActive(false);
+    setCurrentStep(0);
+    setTourSteps([]);
   }, []);
 
   const nextStep = useCallback(() => {
@@ -35,7 +41,7 @@ export const TourProvider = ({ children }: { children: ReactNode }) => {
     } else {
       stopTour();
     }
-  }, [currentStep, stopTour]);
+  }, [currentStep, tourSteps.length, stopTour]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
