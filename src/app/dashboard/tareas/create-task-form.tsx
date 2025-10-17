@@ -20,8 +20,6 @@ import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import Link from 'next/link';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 type TaskStatus = 'Pendiente' | 'En Progreso' | 'Completado';
 type TaskPriority = 'Baja' | 'Media' | 'Alta';
@@ -97,27 +95,23 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
       isCompleted: status === 'Completado',
     };
     
-    const tasksCollectionRef = collection(db, 'tasks');
-
-    addDoc(tasksCollectionRef, taskData)
-      .then(() => {
+    try {
+        await addDoc(collection(db, 'tasks'), taskData);
         toast({
           title: 'Tarea Creada',
           description: `La tarea "${title}" ha sido creada con éxito.`,
         });
         onClose();
-      })
-      .catch((serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: tasksCollectionRef.path,
-          operation: 'create',
-          requestResourceData: taskData,
+    } catch(error) {
+         console.error("Error al crear la tarea:", error);
+         toast({
+            variant: 'destructive',
+            title: 'Error al crear la tarea',
+            description: 'No se pudo guardar la tarea en la base de datos. Revisa los permisos de Firestore y la consola para más detalles.',
         });
-        errorEmitter.emit('permission-error', permissionError);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
