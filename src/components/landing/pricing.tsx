@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -6,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 
 const freeFeatures = [
   'Panel de control principal',
-  'Gestión de Documentos (10/mes)',
-  'Gestión de Gastos (10/mes)',
+  'Gestión de Documentos (5/mes)',
+  'Gestión de Gastos (5/mes)',
   'Gestión de Contactos (10)',
   'Gestión de Proyectos (1)',
   'Asistente IA (Consultas básicas)',
