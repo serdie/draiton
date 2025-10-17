@@ -78,15 +78,25 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tasks]);
     
-    const handleToggleTask = async (taskId: string, currentStatus: boolean) => {
+    const handleToggleTask = (taskId: string, currentStatus: boolean) => {
         const taskRef = doc(db, 'tasks', taskId);
-        await updateDoc(taskRef, { isCompleted: !currentStatus });
+        const updatedData = { isCompleted: !currentStatus };
+        
+        updateDoc(taskRef, updatedData)
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: taskRef.path,
+                    operation: 'update',
+                    requestResourceData: updatedData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            });
     };
 
     const handleAddTask = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newTaskTitle.trim() || !user) return;
-        await addDoc(collection(db, 'tasks'), {
+        const taskData = {
             title: newTaskTitle,
             isCompleted: false,
             projectId,
@@ -95,7 +105,18 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
             status: 'Pendiente',
             priority: 'Media',
             assigneeId: user.uid,
+        };
+
+        addDoc(collection(db, 'tasks'), taskData)
+         .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: 'tasks',
+                operation: 'create',
+                requestResourceData: taskData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
+
         setNewTaskTitle('');
     };
 
