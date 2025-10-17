@@ -20,8 +20,8 @@ import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import Link from 'next/link';
-import { errorEmitter } from '@/lib/firebase/error-emitter';
-import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type TaskStatus = 'Pendiente' | 'En Progreso' | 'Completado';
 type TaskPriority = 'Baja' | 'Media' | 'Alta';

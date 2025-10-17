@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useContext, useMemo } from 'react';
@@ -13,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 type Task = {
@@ -46,6 +49,11 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
             const fetchedTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
             setTasks(fetchedTasks);
         }, (error) => {
+            const permissionError = new FirestorePermissionError({
+                path: `tasks`,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
             console.error("Error fetching tasks:", error);
             toast({ variant: 'destructive', title: 'Error de Permisos', description: 'No se pudieron cargar las tareas. Revisa tus reglas de seguridad de Firestore.' });
         });
