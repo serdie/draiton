@@ -25,7 +25,7 @@ const StripeLogo = () => (
 );
 
 const PayPalLogo = () => (
-    <Image src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.png" alt="PayPal" width={80} height={50} data-ai-hint="PayPal logo" />
+    <Image src="https://www.paypalobjects.com/webstatic/mktg/logo-center/logotipo_paypal_pagos.png" alt="PayPal" width={111} height={69} data-ai-hint="PayPal logo" />
 );
 
 export function SuscripcionSettings() {
