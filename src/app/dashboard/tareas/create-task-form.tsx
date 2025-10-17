@@ -20,6 +20,8 @@ import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import Link from 'next/link';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 type TaskStatus = 'Pendiente' | 'En Progreso' | 'Completado';
 type TaskPriority = 'Baja' | 'Media' | 'Alta';
@@ -93,24 +95,28 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
       createdAt: serverTimestamp(),
       isCompleted: status === 'Completado',
     };
+    
+    const tasksCollectionRef = collection(db, 'tasks');
 
-    try {
-        await addDoc(collection(db, "tasks"), taskData);
+    addDoc(tasksCollectionRef, taskData)
+      .then(() => {
         toast({
-            title: 'Tarea Creada',
-            description: `La tarea "${title}" ha sido creada con éxito.`,
+          title: 'Tarea Creada',
+          description: `La tarea "${title}" ha sido creada con éxito.`,
         });
         onClose();
-    } catch (error) {
-        console.error("Error al crear la tarea:", error);
-        toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'No se pudo crear la tarea. Revisa los permisos de Firestore.',
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: tasksCollectionRef.path,
+          operation: 'create',
+          requestResourceData: taskData,
         });
-    } finally {
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
         setIsLoading(false);
-    }
+      });
   };
 
   return (
