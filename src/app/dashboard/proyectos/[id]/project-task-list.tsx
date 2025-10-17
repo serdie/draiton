@@ -26,9 +26,11 @@ interface ProjectTaskListProps {
     projectId: string;
     initialProgress: number;
     onProgressChange: (newProgress: number) => void;
+    projects: Project[];
+    users: { id: string; name: string; }[];
 }
 
-export function ProjectTaskList({ projectId, initialProgress, onProgressChange }: ProjectTaskListProps) {
+export function ProjectTaskList({ projectId, initialProgress, onProgressChange, projects, users }: ProjectTaskListProps) {
     const { user } = useContext(AuthContext);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -36,9 +38,6 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
     const { toast } = useToast();
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [users, setUsers] = useState<{ id: string; name: string; }[]>([]);
-
 
     useEffect(() => {
         setProgress(initialProgress);
@@ -68,28 +67,8 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
              toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las tareas. Revisa los permisos.' });
         });
         
-        // Fetch projects and users for the edit modal
-        const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
-        const unsubscribeProjects = onSnapshot(projectsQuery, (snapshot) => {
-            const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-            setProjects(fetchedProjects);
-        });
-
-        const fetchUsers = async () => {
-            const ownerQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-            const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
-            const [ownerSnapshot, employeesSnapshot] = await Promise.all([getDocs(ownerQuery), getDocs(employeesQuery)]);
-            const userList = new Map<string, { id: string; name: string }>();
-            ownerSnapshot.forEach(doc => userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
-            employeesSnapshot.forEach(doc => userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
-            setUsers(Array.from(userList.values()));
-        };
-        fetchUsers();
-
-
         return () => {
             unsubscribeTasks();
-            unsubscribeProjects();
         }
     }, [projectId, user, toast]);
 
@@ -146,18 +125,11 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
         }
     };
     
-    const handleDeleteTask = async () => {
+    const handleDeleteTask = () => {
         if (!taskToDelete) return;
-
-        try {
-            await deleteTaskClient(taskToDelete.id);
-            toast({ title: 'Tarea Eliminada', description: 'La tarea ha sido eliminada correctamente.' });
-        } catch (error) {
-           // Error is emitted globally and will be displayed by the FirebaseErrorListener's toast
-           // No need to show a generic error toast here
-        } finally {
-            setTaskToDelete(null);
-        }
+        deleteTaskClient(taskToDelete.id);
+        toast({ title: 'Tarea Eliminada', description: 'La tarea ha sido eliminada correctamente.' });
+        setTaskToDelete(null);
     };
 
     const handleSliderChange = (value: number[]) => {
