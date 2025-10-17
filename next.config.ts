@@ -46,7 +46,13 @@ const nextConfig: NextConfig = {
         hostname: 'www.paypalobjects.com',
         port: '',
         pathname: '/**',
-      }
+      },
+       {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {
