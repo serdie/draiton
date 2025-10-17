@@ -14,6 +14,7 @@ export type Task = {
   dueDate?: Date;
   isCompleted: boolean;
   createdAt: Date;
+  timeTracked?: number;
 };
 
 export const taskStatuses: TaskStatus[] = ['Pendiente', 'En Progreso', 'Completado'];

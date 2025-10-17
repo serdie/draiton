@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Clock } from 'lucide-react';
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -29,6 +29,13 @@ interface EditTaskFormProps {
   task: Task;
   projects: Project[];
   users: { id: string; name: string; }[];
+}
+
+const formatTimeTracked = (seconds?: number) => {
+    if (!seconds) return '0h 0m';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
 }
 
 export function EditTaskForm({ onClose, task, projects, users }: EditTaskFormProps) {
@@ -164,19 +171,28 @@ export function EditTaskForm({ onClose, task, projects, users }: EditTaskFormPro
           </Popover>
         </div>
       </div>
-       <div className="space-y-2">
-          <Label htmlFor="task-priority">Prioridad</Label>
-          <Select value={priority} onValueChange={(value) => setPriority(value as TaskPriority)}>
-            <SelectTrigger id="task-priority">
-              <SelectValue placeholder="Seleccionar prioridad" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="Baja">Baja</SelectItem>
-                <SelectItem value="Media">Media</SelectItem>
-                <SelectItem value="Alta">Alta</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+            <Label htmlFor="task-priority">Prioridad</Label>
+            <Select value={priority} onValueChange={(value) => setPriority(value as TaskPriority)}>
+                <SelectTrigger id="task-priority">
+                <SelectValue placeholder="Seleccionar prioridad" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="Baja">Baja</SelectItem>
+                    <SelectItem value="Media">Media</SelectItem>
+                    <SelectItem value="Alta">Alta</SelectItem>
+                </SelectContent>
+            </Select>
+            </div>
+            <div className="space-y-2">
+                <Label>Tiempo Registrado</Label>
+                <div className="flex items-center h-10 px-3 rounded-md border border-input bg-muted">
+                    <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground font-mono">{formatTimeTracked(task.timeTracked)}</span>
+                </div>
+            </div>
+       </div>
        <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
           <Button type="submit" disabled={isLoading}>

@@ -7,8 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { type Task, type TaskPriority } from './types';
 import type { Project } from '../proyectos/page';
-import { format } from 'date-fns';
+import { format, formatDistanceToNowStrict } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Clock } from 'lucide-react';
 
 interface TaskCardProps {
     task: Task;
@@ -23,6 +24,15 @@ const getPriorityBadgeClass = (priority: TaskPriority) => {
     default: return 'bg-secondary text-secondary-foreground';
   }
 };
+
+const formatTimeTracked = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+}
 
 
 export function TaskCard({ task, project }: TaskCardProps) {
@@ -46,11 +56,21 @@ export function TaskCard({ task, project }: TaskCardProps) {
                     {project.name}
                 </Badge>
             )}
-             {task.dueDate && (
-                <p className="text-xs text-muted-foreground">
-                    Vence: {format(task.dueDate, "dd MMM", { locale: es })}
-                </p>
-            )}
+            <div className="flex justify-between items-center mt-2">
+                 {task.dueDate && (
+                    <p className="text-xs text-muted-foreground">
+                        Vence: {format(task.dueDate, "dd MMM", { locale: es })}
+                    </p>
+                )}
+                {task.timeTracked && task.timeTracked > 0 ? (
+                    <Badge variant="outline" className="text-xs font-mono">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {formatTimeTracked(task.timeTracked)}
+                    </Badge>
+                ) : (
+                    <div />
+                )}
+            </div>
         </CardContent>
     </Card>
   );

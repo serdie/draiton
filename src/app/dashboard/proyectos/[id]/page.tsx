@@ -250,7 +250,7 @@ export default function ProjectDetailPage() {
                     />
                 </TabsContent>
                  <TabsContent value="time">
-                    <TimeTracker />
+                    <TimeTracker tasks={tasks} />
                 </TabsContent>
                 <TabsContent value="invoices">
                      <Card>
