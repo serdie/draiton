@@ -11,12 +11,23 @@ export function TourSpotlight() {
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
+    let element: HTMLElement | null = null;
     if (isActive && stepData) {
-      const element = document.getElementById(stepData.id);
+      element = document.getElementById(stepData.id);
+      if (element) {
+        element.style.position = 'relative';
+        element.style.zIndex = '101';
+      }
       setTargetElement(element);
-    } else {
-      setTargetElement(null);
     }
+    
+    // Cleanup function
+    return () => {
+      if (element) {
+        element.style.position = '';
+        element.style.zIndex = '';
+      }
+    };
   }, [isActive, stepData]);
 
   if (!isActive || !stepData || !targetElement) {
@@ -26,19 +37,18 @@ export function TourSpotlight() {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-[100] bg-black/30 backdrop-blur-sm" onClick={stopTour} />
+      <div className="fixed inset-0 z-[100] bg-black/50" onClick={stopTour} />
 
       {/* Popover attached to the element */}
       <Popover open={true}>
         <PopoverTrigger asChild>
           <div
-            className="fixed z-[101] rounded-md transition-all duration-300"
+            className="fixed rounded-md transition-all duration-300"
             style={{
               left: `${targetElement.getBoundingClientRect().left}px`,
               top: `${targetElement.getBoundingClientRect().top}px`,
               width: `${targetElement.getBoundingClientRect().width}px`,
               height: `${targetElement.getBoundingClientRect().height}px`,
-              boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
             }}
           />
         </PopoverTrigger>
