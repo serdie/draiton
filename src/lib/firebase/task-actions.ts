@@ -20,7 +20,9 @@ export async function deleteTaskClient(id: string): Promise<void> {
 
     const taskRef = doc(db, 'tasks', id);
     
-    deleteDoc(taskRef).catch((serverError) => {
+    try {
+        await deleteDoc(taskRef);
+    } catch (serverError) {
         const permissionError = new FirestorePermissionError({
             path: taskRef.path,
             operation: 'delete',
@@ -28,7 +30,7 @@ export async function deleteTaskClient(id: string): Promise<void> {
         errorEmitter.emit('permission-error', permissionError);
         // Re-throw the original error to be caught by the calling component's catch block
         throw serverError;
-    });
+    }
 }
 
 
