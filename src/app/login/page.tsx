@@ -4,7 +4,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,12 +14,8 @@ import { Terminal, Loader2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
+import { GoogleIcon } from '../dashboard/conexiones/google-icon';
 
-declare global {
-  interface Window {
-    google: any;
-  }
-}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -38,18 +34,6 @@ export default function LoginPage() {
     }
   }, [user, authLoading, router]);
 
-   useEffect(() => {
-    if (typeof window.google !== 'undefined' && window.google.accounts) {
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        callback: handleGoogleSignIn,
-      });
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-signin-button'),
-        { theme: 'filled_blue', size: 'large', type: 'standard', text: 'signin_with' }
-      );
-    }
-  }, [authLoading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +63,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleSignIn = async (response: any) => {
+  const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     setError(null);
 
@@ -89,9 +73,10 @@ export default function LoginPage() {
         return;
     }
 
+    const provider = new GoogleAuthProvider();
+
     try {
-        const credential = GoogleAuthProvider.credential(response.credential);
-        await signInWithCredential(auth, credential);
+        await signInWithPopup(auth, provider);
         // Redirection and data sync is handled by AuthContext
     } catch (err: any) {
        if (err.code === 'auth/unauthorized-domain') {
@@ -177,8 +162,10 @@ export default function LoginPage() {
                     </span>
                 </div>
             </div>
-             <div id="google-signin-button" className="flex justify-center"></div>
-             {googleLoading && <div className="flex justify-center mt-2"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+            <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-gray-700 font-medium" disabled={googleLoading} onClick={handleGoogleSignIn}>
+                {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5" />}
+                Google
+             </Button>
              <p className="mt-6 text-center text-sm text-muted-foreground">
                 ¿No tienes cuenta?{' '}
                 <Link href="/register" className="font-medium text-primary hover:underline">

@@ -4,7 +4,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
@@ -15,12 +15,7 @@ import { Terminal, Loader2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
-
-declare global {
-  interface Window {
-    google: any;
-  }
-}
+import { GoogleIcon } from '../dashboard/conexiones/google-icon';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -38,18 +33,6 @@ export default function RegisterPage() {
     }
   }, [user, authLoading, router]);
 
-   useEffect(() => {
-    if (typeof window.google !== 'undefined' && window.google.accounts) {
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        callback: handleGoogleSignIn,
-      });
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-signup-button'),
-        { theme: 'filled_blue', size: 'large', type: 'standard', text: 'signup_with' }
-      );
-    }
-  }, [authLoading]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +81,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleSignIn = async (response: any) => {
+  const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     setError(null);
     if (!auth || !db) {
@@ -107,9 +90,10 @@ export default function RegisterPage() {
         return;
     }
 
+    const provider = new GoogleAuthProvider();
+
     try {
-      const credential = GoogleAuthProvider.credential(response.credential);
-      await signInWithCredential(auth, credential);
+      await signInWithPopup(auth, provider);
       // La redirección y la sincronización de datos la manejará el AuthContext
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
@@ -202,8 +186,10 @@ export default function RegisterPage() {
                 </div>
             </div>
 
-            <div id="google-signup-button" className="flex justify-center"></div>
-             {googleLoading && <div className="flex justify-center mt-2"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+            <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-gray-700 font-medium" disabled={googleLoading} onClick={handleGoogleSignIn}>
+                {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5" />}
+                Registrarse con Google
+             </Button>
             
             <p className="mt-6 text-center text-sm text-muted-foreground">
                 ¿Ya tienes una cuenta?{' '}
