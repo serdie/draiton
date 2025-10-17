@@ -12,7 +12,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { MessageData } from 'genkit/model';
-import { googleAI } from '@genkit-ai/googleai';
 
 const BusinessAssistantInputSchema = z.object({
     history: z.array(z.custom<MessageData>()).describe("The conversation history."),
@@ -52,15 +51,13 @@ const businessAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     
-    const llm = ai.model(googleAI.model('gemini-1.5-flash'));
-    
     const history: MessageData[] = [
       systemPrompt,
       ...input.history,
       { role: 'user', content: [{ text: input.message }] }
     ];
 
-    const { content } = await llm.generate({
+    const { content } = await ai.generate({
       history,
     });
     
