@@ -1,6 +1,5 @@
 
 'use server';
-
 /**
  * @fileOverview This file defines a Genkit flow for generating business ideas based on provided company data.
  *
@@ -30,7 +29,7 @@ const GenerateBusinessIdeasOutputSchema = z.object({
       })
     )
     .describe(
-      'A list of suggestions for improving the company\'s marketing strategies and product offerings.'
+      "A list of suggestions for improving the company's marketing strategies and product offerings."
     ),
 });
 export type GenerateBusinessIdeasOutput = z.infer<typeof GenerateBusinessIdeasOutputSchema>;
@@ -45,11 +44,9 @@ const prompt = ai.definePrompt({
   name: 'generateBusinessIdeasPrompt',
   input: {schema: GenerateBusinessIdeasInputSchema},
   output: {schema: GenerateBusinessIdeasOutputSchema},
-  prompt: `Eres un consultor de negocios experto. Analiza los datos de la empresa proporcionados y genera sugerencias prácticas para mejorar sus estrategias de comercialización y oferta de productos.
+  prompt: `Eres un consultor de negocios experto. Analiza los datos de la empresa proporcionados y genera sugerencias prácticas para mejorar sus estrategias de comercialización y oferta de productos. Responde siempre en español.
 
-Responde siempre en español.
-
-You will be provided with a company profile. Company profile: {{{companyData}}}
+Datos de la empresa: {{{companyData}}}
 
 Genera una lista de sugerencias con un título y detalles para cada una.`,
 });
