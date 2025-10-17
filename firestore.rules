@@ -4,38 +4,78 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    // Los usuarios pueden leer y escribir en su propio documento
+    // Users Collection
     match /users/{userId} {
-      allow read, update: if isOwner(userId);
-    }
-    
-    // Los usuarios pueden crear, leer, actualizar y borrar sus propios proyectos
-    match /projects/{projectId} {
-        allow read, write: if isOwner(request.resource.data.ownerId);
-    }
-    
-    // Los usuarios pueden gestionar sus propias tareas
-    match /tasks/{taskId} {
-      allow read, write: if isOwner(request.resource.data.ownerId);
+      allow read;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
-    // Los usuarios pueden gestionar sus propios contactos
-    match /contacts/{contactId} {
-        allow read, write: if isOwner(request.resource.data.ownerId);
-    }
-
-    // Los usuarios pueden gestionar sus propios documentos (facturas, etc)
+    // Invoices Collection
     match /invoices/{invoiceId} {
-        allow read, write: if isOwner(request.resource.data.ownerId);
+      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    // Expenses Collection
+    match /expenses/{expenseId} {
+        allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
     }
     
-    // Los usuarios pueden gestionar sus propios gastos
-    match /expenses/{expenseId} {
-        allow read, write: if isOwner(request.resource.data.ownerId);
+    // Contacts Collection
+    match /contacts/{contactId} {
+      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    // Projects Collection
+    match /projects/{projectId} {
+      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    // Tasks Collection
+    match /tasks/{taskId} {
+      // Owner can do anything
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      
+      // Assigned employee can read and update (e.g., mark as complete)
+      allow read, update: if isSignedIn() && resource.data.assigneeId == request.auth.uid;
+    }
+    
+    // Employees Collection
+    match /employees/{employeeId} {
+       allow read, create, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Payrolls Collection
+    match /payrolls/{payrollId} {
+      // Owner can manage all payrolls
+      allow create, read, update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      // Employee can read their own payrolls
+      allow read: if isSignedIn() && resource.data.employeeId == request.auth.uid;
+    }
+
+    // Fichajes (Clock-ins) Collection
+    match /fichajes/{fichajeId} {
+      // Employees can create their own clock-ins
+      allow create: if isSignedIn() && request.resource.data.employeeId == request.auth.uid;
+      // Company owner can read all clock-ins for their employees
+      allow read: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'empresa';
+      // Employees can read their own clock-ins
+      allow read: if isSignedIn() && resource.data.employeeId == request.auth.uid;
     }
   }
 }
