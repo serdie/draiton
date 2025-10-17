@@ -19,6 +19,6 @@ export async function getBusinessIdeasAction(
       return { output: result, error: null };
     } catch (e: any) {
       console.error(e);
-      return { output: null, error: "Ha ocurrido un error al generar las ideas. Inténtalo de nuevo." };
+      return { output: null, error: `Error de la IA: ${e.message}` };
     }
   }

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { findGrantsAndNews, type FindGrantsAndNewsOutput } from '@/ai/flows/find-grants-and-news';
@@ -32,7 +33,7 @@ export async function getGrantsAndNewsAction(
     return { output: result, error: null };
   } catch (e: any) {
     console.error(e);
-    return { output: null, error: "Ha ocurrido un error al buscar la información. Inténtalo de nuevo." };
+    return { output: null, error: `Error de la IA: ${e.message}` };
   }
 }
 
