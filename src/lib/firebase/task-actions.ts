@@ -10,23 +10,24 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 
-export async function deleteTaskClient(id: string): Promise<void> {
+export async function deleteTaskClient(id: string): Promise<{ success: boolean; error?: string }> {
     if (!db) {
-        throw new Error("La base de datos no está inicializada.");
+        return { success: false, error: "La base de datos no está inicializada." };
     }
     if (!id) {
-        throw new Error("Se requiere el ID de la tarea.");
+        return { success: false, error: "Se requiere el ID de la tarea." };
     }
 
     const taskRef = doc(db, 'tasks', id);
     
-    deleteDoc(taskRef).catch((serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: taskRef.path,
-            operation: 'delete',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    try {
+        await deleteDoc(taskRef);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error al eliminar la tarea:", error);
+        // Devolvemos el mensaje de error para que el componente lo muestre
+        return { success: false, error: error.message || "Error desconocido al eliminar la tarea." };
+    }
 }
 
 

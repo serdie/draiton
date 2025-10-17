@@ -5,7 +5,7 @@
 import { useState, useEffect, useContext, useMemo } from 'react';
 import { AuthContext } from '@/context/auth-context';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, getDocs, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -47,9 +47,9 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
         if (!user) return;
 
         const q = query(
-            collection(db, 'tasks'), 
+            collection(db, 'tasks'),
             where('projectId', '==', projectId),
-            where('ownerId', '==', user.uid)
+            where('ownerId', '==', user.uid) // Añadir esta condición
         );
         const unsubscribeTasks = onSnapshot(q, (snapshot) => {
             const fetchedTasks = snapshot.docs.map(docSnap => {
@@ -125,10 +125,17 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
         }
     };
     
-    const handleDeleteTask = () => {
+    const handleDeleteTask = async () => {
         if (!taskToDelete) return;
-        deleteTaskClient(taskToDelete.id);
-        toast({ title: 'Tarea Eliminada', description: 'La tarea ha sido eliminada correctamente.' });
+
+        const { success, error } = await deleteTaskClient(taskToDelete.id);
+
+        if (success) {
+            toast({ title: 'Tarea Eliminada', description: 'La tarea ha sido eliminada correctamente.' });
+        } else {
+            toast({ variant: 'destructive', title: 'Error al Eliminar', description: error });
+        }
+        
         setTaskToDelete(null);
     };
 
