@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Sun, Moon, Laptop, User, ShieldCheck, Gem, Building, HardHat } from 'lucide-react';
+import { Sun, Moon, Laptop, User, ShieldCheck, Gem, Building, HardHat, Layers } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import type { UserRole } from '@/context/auth-context';
 
@@ -27,7 +27,7 @@ export function AparienciaSettings() {
         <RadioGroup
             value={theme}
             onValueChange={setTheme}
-            className="grid max-w-md grid-cols-1 sm:grid-cols-3 gap-4"
+            className="grid max-w-lg grid-cols-2 sm:grid-cols-4 gap-4"
         >
             <div>
                 <RadioGroupItem value="light" id="light" className="peer sr-only" />
@@ -57,6 +57,16 @@ export function AparienciaSettings() {
                 >
                     <Laptop className="mb-3 h-6 w-6" />
                     Sistema
+                </Label>
+            </div>
+            <div>
+                <RadioGroupItem value="neumorphism" id="neumorphism" className="peer sr-only" />
+                <Label
+                    htmlFor="neumorphism"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                >
+                    <Layers className="mb-3 h-6 w-6" />
+                    Neumorfismo
                 </Label>
             </div>
         </RadioGroup>

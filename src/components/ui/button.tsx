@@ -9,15 +9,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 neumorphism:bg-background neumorphism:shadow-[var(--light-shadow),var(--dark-shadow)] neumorphism:hover:shadow-[var(--light-shadow-inset),var(--dark-shadow-inset)] neumorphism:text-foreground",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground neumorphism:border-none neumorphism:shadow-[var(--light-shadow),var(--dark-shadow)] neumorphism:hover:shadow-[var(--light-shadow-inset),var(--dark-shadow-inset)]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 neumorphism:bg-background neumorphism:shadow-[var(--light-shadow),var(--dark-shadow)] neumorphism:hover:shadow-[var(--light-shadow-inset),var(--dark-shadow-inset)]",
+        ghost: "hover:bg-accent hover:text-accent-foreground neumorphism:hover:bg-transparent neumorphism:hover:shadow-none",
+        link: "text-primary underline-offset-4 hover:underline neumorphism:hover:no-underline neumorphism:text-foreground",
       },
       size: {
         default: "h-10 px-4 py-2",
