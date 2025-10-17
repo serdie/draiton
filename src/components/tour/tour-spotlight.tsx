@@ -8,47 +8,46 @@ import { useEffect, useState } from 'react';
 
 export function TourSpotlight() {
   const { isActive, stepData, nextStep, prevStep, stopTour, currentStep } = useTour();
-  const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
-    let element: HTMLElement | null = null;
     if (isActive && stepData) {
-      element = document.getElementById(stepData.id);
+      const element = document.getElementById(stepData.id);
       if (element) {
-        element.style.position = 'relative';
-        element.style.zIndex = '101';
+        setTargetRect(element.getBoundingClientRect());
+      } else {
+        setTargetRect(null);
       }
-      setTargetElement(element);
+    } else {
+        setTargetRect(null);
     }
-    
-    // Cleanup function
-    return () => {
-      if (element) {
-        element.style.position = '';
-        element.style.zIndex = '';
-      }
-    };
-  }, [isActive, stepData]);
+  }, [isActive, stepData, currentStep]);
 
-  if (!isActive || !stepData || !targetElement) {
+  if (!isActive || !stepData || !targetRect) {
     return null;
   }
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-[100] bg-black/50" onClick={stopTour} />
+      {/* Backdrop with a hole */}
+      <div 
+        className="fixed inset-0 z-[100]" 
+        style={{
+            boxShadow: `0 0 0 9999px rgba(0, 0, 0, 0.5)`
+        }}
+        onClick={stopTour}
+       />
 
-      {/* Popover attached to the element */}
+      {/* Popover attached to the highlighted element */}
       <Popover open={true}>
         <PopoverTrigger asChild>
           <div
-            className="fixed rounded-md transition-all duration-300"
+            className="fixed rounded-md transition-all duration-300 z-[101]"
             style={{
-              left: `${targetElement.getBoundingClientRect().left}px`,
-              top: `${targetElement.getBoundingClientRect().top}px`,
-              width: `${targetElement.getBoundingClientRect().width}px`,
-              height: `${targetElement.getBoundingClientRect().height}px`,
+              left: `${targetRect.left}px`,
+              top: `${targetRect.top}px`,
+              width: `${targetRect.width}px`,
+              height: `${targetRect.height}px`,
             }}
           />
         </PopoverTrigger>
@@ -56,7 +55,7 @@ export function TourSpotlight() {
           side={stepData.side || 'bottom'}
           align={stepData.align || 'center'}
           className="z-[102] w-72"
-          onOpenAutoFocus={(e) => e.preventDefault()} // Prevents focus stealing
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">{stepData.title}</h3>
