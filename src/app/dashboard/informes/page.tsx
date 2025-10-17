@@ -89,6 +89,16 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
             setIsDownloading(false);
         }
     };
+    
+    const handleCopyToClipboard = () => {
+        if (!generatedReport) return;
+        navigator.clipboard.writeText(generatedReport).then(() => {
+            toast({
+                title: 'Informe Copiado',
+                description: 'El contenido del informe ha sido copiado al portapapeles.',
+            });
+        });
+    };
 
 
     return (
@@ -165,7 +175,7 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
                         <CardTitle>Informe Generado</CardTitle>
                          {generatedReport && (
                             <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8"><Copy className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCopyToClipboard}><Copy className="h-4 w-4" /></Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownloadPdf} disabled={isDownloading}>
                                     {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                                 </Button>
