@@ -43,7 +43,7 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     
     useEffect(() => {
         if (!user) return;
-        const q = query(collection(db, 'tasks'), where('projectId', '==', projectId), orderBy('createdAt', 'asc'));
+        const q = query(collection(db, 'tasks'), where('projectId', '==', projectId));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedTasks = snapshot.docs.map(docSnap => {
                 const data = docSnap.data();
