@@ -190,7 +190,7 @@ export default function OperacionesPage() {
             <ContactosPage />
         </TabsContent>
         <TabsContent value="tareas" className="mt-6">
-            <p>Aquí se mostrará un tablero Kanban con todas tus tareas.</p>
+            <TareasPage />
         </TabsContent>
         <TabsContent value="fichajes" className="mt-6">
             {isEmployee ? <FichajeEmpleadoTab /> : isEmpresa ? <FichajesTab /> : null}
