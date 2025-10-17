@@ -35,6 +35,7 @@ import {
   FlaskConical,
   Network,
   User,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -47,16 +48,15 @@ import { MobileNav } from '@/components/ui/mobile-nav';
 import { MobileHeader } from '@/components/ui/mobile-header';
 import { clearSessionCookie } from '@/lib/firebase/auth-actions';
 import { cn } from '@/lib/utils';
+import { TourProvider, useTour } from '@/context/tour-context';
+import { TourSpotlight } from '@/components/tour/tour-spotlight';
 
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, isPro, isEmpresa, isEmployee } = useContext(AuthContext);
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const { startTour } = useTour();
   
   const handleLogout = async () => {
     await signOut(auth);
@@ -112,6 +112,7 @@ export default function DashboardLayout({
               {children}
           </main>
           <MobileNav />
+          <TourSpotlight />
       </div>
     );
   }
@@ -120,14 +121,14 @@ export default function DashboardLayout({
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-4">
-            <Link href="/dashboard" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex items-center gap-2" id="tour-logo">
                 <Logo className="h-6 w-auto" />
                 <span className="font-bold text-lg tracking-tight">GestorIA</span>
             </Link>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            <SidebarMenuItem>
+            <SidebarMenuItem id="tour-escritorio">
               <Link href="/dashboard">
                 <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Escritorio">
                   <Home />
@@ -135,7 +136,7 @@ export default function DashboardLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem id="tour-finanzas">
               <Link href="/dashboard/finanzas">
                 <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
                   <Wallet />
@@ -143,7 +144,7 @@ export default function DashboardLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem id="tour-operaciones">
               <Link href="/dashboard/proyectos">
                 <SidebarMenuButton isActive={isActive('/dashboard/proyectos')} tooltip="Operaciones">
                   <Blocks />
@@ -153,7 +154,7 @@ export default function DashboardLayout({
             </SidebarMenuItem>
             
             {!isEmployee && (
-                 <SidebarMenuItem>
+                 <SidebarMenuItem id="tour-ia">
                     <Link href="/dashboard/gestor-ia">
                         <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
                         <FlaskConical />
@@ -197,7 +198,7 @@ export default function DashboardLayout({
         </SidebarContent>
         <SidebarFooter className='p-4 space-y-4'>
           {!isPro && !isEmployee && (
-            <div className='p-4 bg-secondary rounded-lg text-center'>
+            <div id="tour-upgrade" className='p-4 bg-secondary rounded-lg text-center'>
               <p className='font-bold'>Upgrade a Pro</p>
               <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
               <Button asChild size="sm" className="w-full">
@@ -227,7 +228,7 @@ export default function DashboardLayout({
                 </Button>
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <div className='flex items-center gap-3 cursor-pointer'>
+                      <div id="tour-perfil" className='flex items-center gap-3 cursor-pointer'>
                         <UserAvatar user={user} />
                         <div className="hidden md:flex flex-col items-start">
                           <span className="font-semibold text-sm">{user?.displayName || 'Usuario'}</span>
@@ -259,6 +260,11 @@ export default function DashboardLayout({
                           </Link>
                         )}
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => startTour()}>
+                            <BookOpen className="mr-2 h-4 w-4" />
+                            <span>Iniciar Tour</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleLogout}>
                             <LogOut className="mr-2 h-4 w-4" />
                             <span>Cerrar sesión</span>
@@ -271,6 +277,19 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+      <TourSpotlight />
     </SidebarProvider>
   );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <TourProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </TourProvider>
+  )
 }
