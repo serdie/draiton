@@ -45,6 +45,7 @@ export function TourSpotlight() {
               top: `${targetRect.top}px`,
               width: `${targetRect.width}px`,
               height: `${targetRect.height}px`,
+              boxShadow: 'inset 0 0 0 5px white, 0 0 0 9999px rgba(0,0,0,0.5)',
             }}
           />
         </PopoverTrigger>
@@ -78,3 +79,4 @@ export function TourSpotlight() {
     </>
   );
 }
+
