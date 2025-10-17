@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Lock, ArrowRight, Sparkles, Lightbulb, MonitorCog, ScanLine, LineChart, Zap, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AsistenteForm } from '@/app/dashboard/asistente-ia/asistente-form';
+import { BusinessIdeasForm } from '@/app/dashboard/perspectivas-ia/business-ideas-form';
 import { getBusinessIdeasAction } from '@/app/dashboard/perspectivas-ia/actions';
 import { AyudasForm } from './ayudas/ayudas-form';
 import { getGrantsAndNewsAction } from './ayudas/actions';
@@ -75,7 +75,7 @@ export default function GestorIAPage() {
                                     <CardDescription>Describe tu empresa, productos, servicios y mercado. Nuestra IA analizará los datos y te dará ideas para mejorar tu comercialización y oferta.</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <AsistenteForm action={getBusinessIdeasAction} />
+                                    <BusinessIdeasForm action={getBusinessIdeasAction} />
                                 </CardContent>
                             </Card>
                         </TabsContent>

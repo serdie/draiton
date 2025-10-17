@@ -4,7 +4,7 @@
 import { useContext } from 'react';
 import Link from 'next/link';
 import { AuthContext } from '@/context/auth-context';
-import { AsistenteForm } from '../asistente-ia/asistente-form';
+import { BusinessIdeasForm } from './business-ideas-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lock } from 'lucide-react';
@@ -52,7 +52,7 @@ export default function PerspectivasIAPage() {
             <CardDescription>Cuantos más detalles proporciones, mejores serán las sugerencias.</CardDescription>
           </CardHeader>
           <CardContent>
-            <AsistenteForm action={getBusinessIdeasAction} />
+            <BusinessIdeasForm action={getBusinessIdeasAction} />
           </CardContent>
         </Card>
       </div>
