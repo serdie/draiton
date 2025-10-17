@@ -15,6 +15,7 @@ import type { Project } from '../proyectos/page';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Logo } from '@/components/logo';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function InformesPage() {
     const { user } = useContext(AuthContext);
@@ -197,9 +198,11 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
                                         <p className="text-sm text-muted-foreground">Fecha: {new Date().toLocaleDateString('es-ES')}</p>
                                     </div>
                                 </header>
-                                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                                    {generatedReport}
-                                </div>
+                                <Textarea
+                                    value={generatedReport}
+                                    onChange={(e) => setGeneratedReport(e.target.value)}
+                                    className="w-full h-[400px] p-2 border rounded-md prose prose-sm dark:prose-invert max-w-none"
+                                />
                             </div>
                         ) : (
                              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
