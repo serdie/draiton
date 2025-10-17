@@ -29,12 +29,9 @@ export function TourSpotlight() {
 
   return (
     <>
-      {/* Backdrop with a hole */}
+      {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-[100]" 
-        style={{
-            boxShadow: `0 0 0 9999px rgba(0, 0, 0, 0.5)`
-        }}
+        className="fixed inset-0 z-[100] bg-black/50" 
         onClick={stopTour}
        />
 
@@ -42,7 +39,7 @@ export function TourSpotlight() {
       <Popover open={true}>
         <PopoverTrigger asChild>
           <div
-            className="fixed rounded-md transition-all duration-300 z-[101]"
+            className="fixed rounded-md transition-all duration-300 z-[101] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"
             style={{
               left: `${targetRect.left}px`,
               top: `${targetRect.top}px`,
