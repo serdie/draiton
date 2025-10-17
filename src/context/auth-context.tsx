@@ -131,6 +131,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (user && isAuthPage) {
       router.push('/dashboard');
     }
+
+    if (!user && pathname !== '/' && !isAuthPage) {
+        router.push('/');
+    }
+    
   }, [user, loading, pathname, router]);
 
   const effectiveRole = simulatedRole ?? user?.role;
