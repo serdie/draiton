@@ -67,7 +67,8 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
   }, []);
 
 
-  const handleCreateTask = async () => {
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!title) {
       toast({
         variant: 'destructive',
@@ -120,7 +121,7 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <form onSubmit={handleCreateTask} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="task-title">Título de la Tarea</Label>
         <Input id="task-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej: Diseñar la página de inicio" />
@@ -213,11 +214,11 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
         </div>
        <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-          <Button onClick={handleCreateTask} disabled={isLoading}>
+          <Button type="submit" disabled={isLoading}>
              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Crear Tarea
           </Button>
         </div>
-    </div>
+    </form>
   );
 }
