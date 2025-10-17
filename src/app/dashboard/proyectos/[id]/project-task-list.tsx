@@ -16,7 +16,7 @@ import { Plus, Trash2, Pencil, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { deleteTaskClient, updateTask } from '@/lib/firebase/task-actions';
+import { deleteTaskClient, updateTaskStatus } from '@/lib/firebase/task-actions';
 import type { Task } from '../../tareas/types';
 import { EditTaskModal } from '../../tareas/edit-task-modal';
 import type { Project } from '../page';
@@ -26,11 +26,9 @@ interface ProjectTaskListProps {
     projectId: string;
     initialProgress: number;
     onProgressChange: (newProgress: number) => void;
-    projects: Project[];
-    users: { id: string; name: string; }[];
 }
 
-export function ProjectTaskList({ projectId, initialProgress, onProgressChange, projects, users }: ProjectTaskListProps) {
+export function ProjectTaskList({ projectId, initialProgress, onProgressChange }: ProjectTaskListProps) {
     const { user } = useContext(AuthContext);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -38,6 +36,8 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
     const { toast } = useToast();
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [users, setUsers] = useState<{ id: string; name: string; }[]>([]);
 
 
     useEffect(() => {
@@ -67,9 +67,29 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
              console.error("Error fetching tasks:", error);
              toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las tareas. Revisa los permisos.' });
         });
+        
+        // Fetch projects and users for the edit modal
+        const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+        const unsubscribeProjects = onSnapshot(projectsQuery, (snapshot) => {
+            const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+            setProjects(fetchedProjects);
+        });
+
+        const fetchUsers = async () => {
+            const ownerQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+            const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+            const [ownerSnapshot, employeesSnapshot] = await Promise.all([getDocs(ownerQuery), getDocs(employeesQuery)]);
+            const userList = new Map<string, { id: string; name: string }>();
+            ownerSnapshot.forEach(doc => userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
+            employeesSnapshot.forEach(doc => userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
+            setUsers(Array.from(userList.values()));
+        };
+        fetchUsers();
+
 
         return () => {
             unsubscribeTasks();
+            unsubscribeProjects();
         }
     }, [projectId, user, toast]);
 
@@ -92,18 +112,11 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
     }, [tasks]);
     
     const handleToggleTask = (taskId: string, currentStatus: boolean) => {
-        const taskRef = doc(db, 'tasks', taskId);
-        const updatedData = { isCompleted: !currentStatus, status: !currentStatus ? 'Completado' : 'Pendiente' };
-        
-        updateDoc(taskRef, updatedData)
-            .catch((serverError) => {
-                console.error("Error al actualizar tarea:", serverError);
-                 toast({
-                    variant: "destructive",
-                    title: "Error al actualizar",
-                    description: "No se pudo actualizar la tarea."
-                });
-            });
+        updateTaskStatus(taskId, currentStatus ? 'Pendiente' : 'Completado').catch(
+          () => {
+            // Error is handled by the global error emitter, no need to toast here
+          }
+        );
     };
 
     const handleAddTask = async (e: React.FormEvent) => {
@@ -139,8 +152,9 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
         try {
             await deleteTaskClient(taskToDelete.id);
             toast({ title: 'Tarea Eliminada', description: 'La tarea ha sido eliminada correctamente.' });
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Error', description: error.message || "No se pudo eliminar la tarea." });
+        } catch (error) {
+           // Error is emitted globally and will be displayed by the FirebaseErrorListener's toast
+           // No need to show a generic error toast here
         } finally {
             setTaskToDelete(null);
         }
