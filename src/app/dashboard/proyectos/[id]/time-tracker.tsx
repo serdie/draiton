@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { FilePlus } from 'lucide-react';
 
 // Helper function to format seconds into HH:MM:SS
 const formatTime = (totalSeconds: number) => {
@@ -49,12 +50,23 @@ export function TimeTracker() {
     const handleStop = () => {
         setIsRunning(false);
         // Here you would typically save the elapsedTime to your backend
-        toast({
-            title: "Tiempo Guardado (Simulación)",
-            description: `Se han registrado ${formatTime(elapsedTime)} en este proyecto.`,
-        });
-        setElapsedTime(0);
+        if (elapsedTime > 0) {
+            toast({
+                title: "Tiempo Guardado (Simulación)",
+                description: `Se han registrado ${formatTime(elapsedTime)} en este proyecto. Ahora puedes añadirlo a una factura.`,
+            });
+        }
     };
+    
+    const handleAddToInvoice = () => {
+        if (elapsedTime > 0 && !isRunning) {
+            toast({
+                title: 'Tiempo Añadido a Factura (Simulación)',
+                description: `Se ha añadido una línea de ${formatTime(elapsedTime)} a la próxima factura de este proyecto.`
+            });
+            setElapsedTime(0); // Reset after adding to invoice
+        }
+    }
 
     return (
         <Card>
@@ -70,8 +82,12 @@ export function TimeTracker() {
                     <Button variant="destructive" onClick={handleStop} disabled={elapsedTime === 0}>Detener</Button>
                 </div>
             </CardContent>
-            <CardFooter>
-                <p className="text-sm text-muted-foreground">El tiempo registrado se puede añadir a una factura.</p>
+            <CardFooter className="flex flex-col items-start gap-4">
+                 <p className="text-sm text-muted-foreground">Detén el cronómetro para guardar el tiempo y añadirlo a una factura.</p>
+                 <Button onClick={handleAddToInvoice} disabled={elapsedTime === 0 || isRunning}>
+                    <FilePlus className="mr-2 h-4 w-4"/>
+                    Añadir a Factura
+                 </Button>
             </CardFooter>
         </Card>
     );
