@@ -7,6 +7,7 @@ export function getFirebaseAuth() {
       app: admin.app(),
       auth: admin.auth(),
       db: admin.firestore(),
+      admin: admin, // Export admin namespace
     };
   }
   
@@ -24,5 +25,6 @@ export function getFirebaseAuth() {
     app,
     auth: admin.auth(),
     db: admin.firestore(),
+    admin: admin, // Export admin namespace
   };
 }

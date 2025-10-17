@@ -56,17 +56,24 @@ export default function TareasPage() {
                     setTasks(fetchedTasks);
                 });
 
-                 // Fetch users
-                const usersQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+                 // Fetch users: both the owner and their employees
+                const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
                 const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
                 
-                const [usersSnapshot, selfSnapshot] = await Promise.all([getDocs(usersQuery), getDocs(selfQuery)]);
+                const [employeesSnapshot, selfSnapshot] = await Promise.all([
+                    getDocs(employeesQuery),
+                    getDocs(selfQuery),
+                ]);
                 
-                const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
+                const employeesList = employeesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
                 const selfList = selfSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
 
-                const allUsersMap = new Map();
-                [...selfList, ...usersList].forEach(u => allUsersMap.set(u.id, u));
+                const allUsersMap = new Map<string, { id: string; name: string; }>();
+                // Add owner first to ensure they are in the list
+                selfList.forEach(u => allUsersMap.set(u.id, u));
+                // Add employees, which will overwrite if ID is the same but that's fine
+                employeesList.forEach(u => allUsersMap.set(u.id, u));
+                
                 setUsers(Array.from(allUsersMap.values()));
 
 
@@ -82,10 +89,10 @@ export default function TareasPage() {
             }
         };
 
-        const unsubscribe = fetchAllData();
+        const unsubscribePromise = fetchAllData();
         
         return () => {
-            unsubscribe.then(fn => fn && fn());
+            unsubscribePromise.then(fn => fn && fn());
         };
 
     }, [user, toast]);

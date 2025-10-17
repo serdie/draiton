@@ -2,9 +2,10 @@
 
 'use server';
 
-import { doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc, FieldValue } from 'firebase/firestore';
 import { db } from './config';
 import type { Task, TaskStatus } from '@/app/dashboard/tareas/types';
+import { getFirebaseAuth } from './firebase-admin';
 
 export async function deleteTask(id: string): Promise<{ success: boolean; error?: string }> {
     if (!db) {
@@ -41,20 +42,20 @@ export async function updateTaskStatus(id: string, status: TaskStatus): Promise<
 }
 
 export async function updateTask(id: string, data: Partial<Omit<Task, 'id' | 'ownerId' | 'createdAt'>>): Promise<void> {
-    if (!db) {
-        throw new Error("La base de datos no está inicializada.");
-    }
+    const { db: adminDb, admin } = getFirebaseAuth();
+
     if (!id) {
         throw new Error("Se requiere el ID de la tarea.");
     }
 
-    const taskRef = doc(db, 'tasks', id);
+    const taskRef = adminDb.collection('tasks').doc(id);
 
-    // Asegurarse de que projectId se elimina si es `undefined` en lugar de guardarse como `null`.
     const dataToUpdate = { ...data };
-    if (data.projectId === undefined) {
-        dataToUpdate.projectId = (serverTimestamp() as any).delete();
+    
+    if (data.projectId === 'sin-proyecto') {
+        // Use FieldValue.delete() to remove the field from the document
+        dataToUpdate.projectId = admin.firestore.FieldValue.delete() as any;
     }
     
-    await updateDoc(taskRef, dataToUpdate);
+    await taskRef.update(dataToUpdate);
 }
