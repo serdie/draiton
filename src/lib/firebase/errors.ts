@@ -10,7 +10,14 @@ export class FirestorePermissionError extends Error {
   public context: SecurityRuleContext;
 
   constructor(context: SecurityRuleContext) {
-    super(`Firestore Permission Denied: Cannot ${context.operation} at ${context.path}.`);
+    const message = `Firestore Permission Denied: The following request was denied by Firestore Security Rules:
+${JSON.stringify({
+  path: context.path,
+  operation: context.operation,
+  requestResourceData: context.requestResourceData,
+}, null, 2)}`;
+
+    super(message);
     this.name = 'FirestorePermissionError';
     this.context = context;
   }

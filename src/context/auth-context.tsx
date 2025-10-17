@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
@@ -9,6 +10,7 @@ import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { setSessionCookie, clearSessionCookie } from '@/lib/firebase/auth-actions';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export type UserRole = 'free' | 'pro' | 'admin' | 'empresa' | 'employee';
 
@@ -166,6 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ user, loading, ...roles, effectiveRole, setSimulatedRole }}>
+      <FirebaseErrorListener />
       {children}
     </AuthContext.Provider>
   );

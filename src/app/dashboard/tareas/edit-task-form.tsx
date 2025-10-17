@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
@@ -17,7 +18,11 @@ import { useToast } from '@/hooks/use-toast';
 import { type Project } from '../proyectos/page';
 import { AuthContext } from '@/context/auth-context';
 import { type Task, type TaskStatus, type TaskPriority } from './types';
-import { updateTask } from '@/lib/firebase/task-actions';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+
 
 interface EditTaskFormProps {
   onClose: () => void;
@@ -61,7 +66,8 @@ export function EditTaskForm({ onClose, task, projects, users }: EditTaskFormPro
     
     setIsLoading(true);
 
-    const taskData: Partial<Task> = {
+    const taskRef = doc(db, 'tasks', task.id);
+    const updatedData: Partial<Task> = {
       title,
       description,
       projectId: projectId === 'sin-proyecto' ? undefined : projectId,
@@ -72,19 +78,22 @@ export function EditTaskForm({ onClose, task, projects, users }: EditTaskFormPro
       isCompleted: status === 'Completado',
     };
     
-    try {
-        await updateTask(task.id, taskData);
-        toast({ title: 'Tarea Actualizada', description: `La tarea "${title}" ha sido actualizada.` });
-        onClose();
-    } catch(error: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Error al actualizar',
-            description: error.message || "No se pudo actualizar la tarea. Revisa los permisos."
+    updateDoc(taskRef, updatedData)
+      .then(() => {
+          toast({ title: 'Tarea Actualizada', description: `La tarea "${title}" ha sido actualizada.` });
+          onClose();
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: taskRef.path,
+          operation: 'update',
+          requestResourceData: updatedData,
         });
-    }
-
-    setIsLoading(false);
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (

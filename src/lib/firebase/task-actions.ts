@@ -40,22 +40,3 @@ export async function updateTaskStatus(id: string, status: TaskStatus): Promise<
         isCompleted: status === 'Completado' 
     });
 }
-
-export async function updateTask(id: string, data: Partial<Omit<Task, 'id' | 'ownerId' | 'createdAt'>>): Promise<void> {
-    const { db: adminDb, admin } = getFirebaseAuth();
-
-    if (!id) {
-        throw new Error("Se requiere el ID de la tarea.");
-    }
-
-    const taskRef = adminDb.collection('tasks').doc(id);
-
-    const dataToUpdate = { ...data };
-    
-    if (data.projectId === 'sin-proyecto') {
-        // Use FieldValue.delete() to remove the field from the document
-        dataToUpdate.projectId = admin.firestore.FieldValue.delete() as any;
-    }
-    
-    await taskRef.update(dataToUpdate);
-}
