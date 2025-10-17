@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Sparkles, Send, Loader2, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { generateEmailCampaign, type GenerateEmailCampaignOutput } from '@/ai/flows/generate-email-campaign';
+import { generateEmailCampaign } from '@/ai/flows/generate-email-campaign';
+import { type GenerateEmailCampaignOutput } from './schemas';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
