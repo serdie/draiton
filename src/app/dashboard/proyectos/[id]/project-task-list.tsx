@@ -12,11 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2, Pencil, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { deleteTask } from '@/lib/firebase/task-actions';
 
 type Task = {
     id: string;
@@ -35,6 +37,7 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     const [tasks, setTasks] = useState<Task[]>([]);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [progress, setProgress] = useState(initialProgress);
+    const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const { toast } = useToast();
 
 
@@ -105,17 +108,30 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
             assigneeId: user.uid,
         };
 
-        addDoc(collection(db, 'tasks'), taskData)
-         .catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: 'tasks',
-                operation: 'create',
-                requestResourceData: taskData,
+        try {
+          await addDoc(collection(db, 'tasks'), taskData);
+          setNewTaskTitle('');
+        } catch (error) {
+            console.error("Error al crear tarea:", error);
+            toast({
+                variant: "destructive",
+                title: "Error al guardar tarea",
+                description: "No se pudo guardar la tarea en la base de datos. Revisa los permisos de Firestore y la consola para más detalles."
             });
-            errorEmitter.emit('permission-error', permissionError);
-        });
+        }
+    };
+    
+    const handleDeleteTask = async () => {
+        if (!taskToDelete) return;
 
-        setNewTaskTitle('');
+        const { success, error } = await deleteTask(taskToDelete.id);
+
+        if (success) {
+            toast({ title: 'Tarea Eliminada', description: 'La tarea ha sido eliminada correctamente.' });
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: error });
+        }
+        setTaskToDelete(null);
     };
 
     const handleSliderChange = (value: number[]) => {
@@ -129,6 +145,19 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     const completedCount = useMemo(() => tasks.filter(t => t.isCompleted).length, [tasks]);
 
     return (
+        <>
+        <AlertDialog open={!!taskToDelete} onOpenChange={(open) => !open && setTaskToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                    <AlertDialogDescription>Esta acción no se puede deshacer. Se eliminará la tarea permanentemente.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteTask} className="bg-destructive hover:bg-destructive/90">Eliminar</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
         <div className="space-y-6">
             <div className="space-y-2">
                  <div className="flex items-center justify-between">
@@ -149,9 +178,9 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
                     <CardTitle>Checklist de Tareas ({completedCount}/{tasks.length})</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                         {tasks.map(task => (
-                            <div key={task.id} className="flex items-center gap-3">
+                            <div key={task.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
                                 <Checkbox
                                     id={`task-${task.id}`}
                                     checked={task.isCompleted}
@@ -163,6 +192,23 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
                                 >
                                     {task.title}
                                 </Label>
+                                 <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem>
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            Editar
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setTaskToDelete(task)} className="text-destructive focus:text-destructive">
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Eliminar
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         ))}
                          {tasks.length === 0 && (
@@ -184,5 +230,6 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
                 </CardContent>
             </Card>
         </div>
+        </>
     );
 }
