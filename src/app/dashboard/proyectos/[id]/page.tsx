@@ -7,6 +7,7 @@ import { doc, onSnapshot, updateDoc, collection, query, where, getDocs } from 'f
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { type Project, type ProjectStatus } from '../page';
+import { type Task } from '../../tareas/types';
 import { Loader2, ArrowLeft, Briefcase, FileText, Clock, User, HardHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -18,6 +19,7 @@ import { es } from 'date-fns/locale';
 import { EditProjectModal } from '../edit-project-modal';
 import { ProjectTaskList } from './project-task-list';
 import { TimeTracker } from './time-tracker';
+import { useToast } from '@/hooks/use-toast';
 
 const getStatusBadgeClass = (status: ProjectStatus) => {
   switch (status) {
@@ -62,6 +64,8 @@ export default function ProjectDetailPage() {
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<{ id: string; name: string; }[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user || !projectId) return;
@@ -98,6 +102,28 @@ export default function ProjectDetailPage() {
         setProjects(fetchedProjects);
     });
 
+     // Fetch tasks for this project
+    const tasksQuery = query(
+        collection(db, 'tasks'),
+        where('projectId', '==', projectId),
+        where('ownerId', '==', user.uid)
+    );
+    const unsubscribeTasks = onSnapshot(tasksQuery, (snapshot) => {
+        const fetchedTasks = snapshot.docs.map(docSnap => {
+            const data = docSnap.data();
+            return {
+                id: docSnap.id,
+                ...data,
+                dueDate: data.dueDate ? data.dueDate.toDate() : undefined,
+                createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+            } as Task;
+        });
+        setTasks(fetchedTasks);
+    }, (error) => {
+        console.error("Error fetching tasks:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las tareas. Revisa los permisos.' });
+    });
+
     // Fetch all users (owner + employees) for the dropdown
     const fetchUsers = async () => {
         const userList = new Map<string, { id: string; name: string; }>();
@@ -120,8 +146,9 @@ export default function ProjectDetailPage() {
     return () => {
         unsubscribeProject();
         unsubscribeProjects();
+        unsubscribeTasks();
     };
-  }, [user, projectId, router]);
+  }, [user, projectId, router, toast]);
 
    const handleProgressChange = async (newProgress: number) => {
     if (!project) return;
@@ -219,6 +246,7 @@ export default function ProjectDetailPage() {
                         onProgressChange={handleProgressChange}
                         projects={projects}
                         users={users}
+                        tasks={tasks}
                     />
                 </TabsContent>
                  <TabsContent value="time">

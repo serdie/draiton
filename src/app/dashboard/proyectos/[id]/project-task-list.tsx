@@ -28,11 +28,11 @@ interface ProjectTaskListProps {
     onProgressChange: (newProgress: number) => void;
     projects: Project[];
     users: { id: string; name: string; }[];
+    tasks: Task[];
 }
 
-export function ProjectTaskList({ projectId, initialProgress, onProgressChange, projects, users }: ProjectTaskListProps) {
+export function ProjectTaskList({ projectId, initialProgress, onProgressChange, projects, users, tasks }: ProjectTaskListProps) {
     const { user } = useContext(AuthContext);
-    const [tasks, setTasks] = useState<Task[]>([]);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [progress, setProgress] = useState(initialProgress);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
@@ -43,35 +43,6 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
         setProgress(initialProgress);
     }, [initialProgress]);
     
-    useEffect(() => {
-        if (!user) return;
-
-        const q = query(
-            collection(db, 'tasks'),
-            where('projectId', '==', projectId),
-            where('ownerId', '==', user.uid)
-        );
-        const unsubscribeTasks = onSnapshot(q, (snapshot) => {
-            const fetchedTasks = snapshot.docs.map(docSnap => {
-                const data = docSnap.data();
-                return {
-                    id: docSnap.id,
-                    ...data,
-                    dueDate: data.dueDate ? data.dueDate.toDate() : undefined,
-                    createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
-                } as Task;
-            });
-            setTasks(fetchedTasks);
-        }, (error) => {
-             console.error("Error fetching tasks:", error);
-             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las tareas. Revisa los permisos.' });
-        });
-        
-        return () => {
-            unsubscribeTasks();
-        }
-    }, [projectId, user, toast]);
-
     useEffect(() => {
         if (tasks.length === 0) {
             if(progress !== 0) {
