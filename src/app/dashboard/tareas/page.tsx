@@ -10,7 +10,6 @@ import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firest
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { type Project } from '../proyectos/page';
-import { KanbanBoard } from '../proyectos/kanban-board';
 import { CreateTaskModal } from './create-task-modal';
 
 
@@ -61,16 +60,17 @@ export default function TareasPage() {
     />
     <div className="space-y-6">
         <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold">Tablero de Tareas y Proyectos</h2>
-            <Button onClick={() => setIsCreateModalOpen(true)}>
+            <h2 className="text-2xl font-semibold">Tablero de Tareas</h2>
+             <Button onClick={() => setIsCreateModalOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Crear Tarea
             </Button>
         </div>
-      <KanbanBoard projects={projects} loading={loading} />
+        <p className="text-muted-foreground">Próximamente: Un tablero Kanban dedicado para todas tus tareas, independientemente del proyecto.</p>
     </div>
     </>
   );
 }
+
 
 
