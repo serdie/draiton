@@ -48,7 +48,7 @@ const prompt = ai.definePrompt({
 
 Responde siempre en español.
 
-Company Data: {{{companyData}}}
+You will be provided with a company profile. Company profile: {{{companyData}}}
 
 Genera una lista de sugerencias con un título y detalles para cada una.`,
 });
