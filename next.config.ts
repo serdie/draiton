@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
         hostname: 'www.diemy.es',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.paypalobjects.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
