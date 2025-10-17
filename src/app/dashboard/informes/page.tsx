@@ -1,17 +1,20 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useContext } from 'react';
+import { useState, useMemo, useEffect, useContext, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, FileText, Copy, Download, Mail } from 'lucide-react';
+import { Sparkles, FileText, Copy, Download, Mail, Loader2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import type { Project } from '../proyectos/page';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { Logo } from '@/components/logo';
 
 export default function InformesPage() {
     const { user } = useContext(AuthContext);
@@ -19,6 +22,8 @@ export default function InformesPage() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [generatedReport, setGeneratedReport] = useState<string | null>(null);
+    const printableRef = useRef<HTMLDivElement>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     useEffect(() => {
         if (!db || !user) {
@@ -58,7 +63,33 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
 -   **Riesgo:** Posible retraso en la entrega de contenido por parte del cliente.
 -   **Mitigación:** Se ha establecido un calendario de contenido compartido y recordatorios automáticos.
 `);
-    }
+    };
+
+    const handleDownloadPdf = async () => {
+        const element = printableRef.current;
+        if (!element) return;
+        setIsDownloading(true);
+
+        try {
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: null,
+            });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save('informe-generado.pdf');
+        } catch (error) {
+            console.error('Error al generar el PDF:', error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo generar el informe en PDF.' });
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -135,15 +166,30 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
                          {generatedReport && (
                             <div className="flex items-center gap-2">
                                 <Button variant="ghost" size="icon" className="h-8 w-8"><Copy className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8"><Download className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownloadPdf} disabled={isDownloading}>
+                                    {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                                </Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8"><Mail className="h-4 w-4" /></Button>
                             </div>
                         )}
                     </CardHeader>
                     <CardContent className="flex-1">
                         {generatedReport ? (
-                            <div className="prose prose-sm prose-invert max-w-none whitespace-pre-wrap">
-                                {generatedReport}
+                            <div ref={printableRef} className="p-6 bg-background rounded-md">
+                                <header className="flex justify-between items-start mb-6 pb-4 border-b">
+                                    <div>
+                                        <Logo className="h-8 w-8 mb-2" />
+                                        <h2 className="font-bold text-lg">{user?.company?.name || 'Tu Empresa'}</h2>
+                                        <p className="text-sm text-muted-foreground">{user?.company?.cif || 'Tu CIF'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <h3 className="text-xl font-semibold">Informe de Proyecto</h3>
+                                        <p className="text-sm text-muted-foreground">Fecha: {new Date().toLocaleDateString('es-ES')}</p>
+                                    </div>
+                                </header>
+                                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                                    {generatedReport}
+                                </div>
                             </div>
                         ) : (
                              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
