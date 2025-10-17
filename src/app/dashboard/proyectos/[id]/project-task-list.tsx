@@ -14,17 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Pencil, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { deleteTask } from '@/lib/firebase/task-actions';
+import type { Task } from '../../tareas/types';
 
-type Task = {
-    id: string;
-    title: string;
-    isCompleted: boolean;
-};
 
 interface ProjectTaskListProps {
     projectId: string;
@@ -52,11 +46,8 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
             const fetchedTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
             setTasks(fetchedTasks);
         }, (error) => {
-            const permissionError = new FirestorePermissionError({
-                path: `tasks`,
-                operation: 'list',
-            });
-            errorEmitter.emit('permission-error', permissionError);
+             console.error("Error fetching tasks:", error);
+             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las tareas. Revisa los permisos.' });
         });
         return () => unsubscribe();
     }, [projectId, user, toast]);
@@ -81,16 +72,16 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
     
     const handleToggleTask = (taskId: string, currentStatus: boolean) => {
         const taskRef = doc(db, 'tasks', taskId);
-        const updatedData = { isCompleted: !currentStatus };
+        const updatedData = { isCompleted: !currentStatus, status: !currentStatus ? 'Completado' : 'Pendiente' };
         
         updateDoc(taskRef, updatedData)
             .catch((serverError) => {
-                const permissionError = new FirestorePermissionError({
-                    path: taskRef.path,
-                    operation: 'update',
-                    requestResourceData: updatedData,
+                console.error("Error al actualizar tarea:", serverError);
+                 toast({
+                    variant: "destructive",
+                    title: "Error al actualizar",
+                    description: "No se pudo actualizar la tarea."
                 });
-                errorEmitter.emit('permission-error', permissionError);
             });
     };
 
