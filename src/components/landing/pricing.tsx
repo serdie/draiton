@@ -5,27 +5,32 @@ import { Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const freeFeatures = [
-  'Gestión de hasta 10 clientes',
-  'Creación de 5 facturas/mes',
-  'Gestión de proyectos (1 proyecto)',
-  'Asistente IA (Básico)',
+  'Panel de control principal',
+  'Gestión de Documentos (10/mes)',
+  'Gestión de Gastos (10/mes)',
+  'Gestión de Contactos (10)',
+  'Gestión de Proyectos (1)',
+  'Asistente IA (Consultas básicas)',
 ];
 
 const proFeatures = [
   'Todo lo del plan Gratis',
-  'Clientes y facturas ilimitados',
-  'Gestión de proyectos ilimitados',
-  'Marketing y Redes Sociales',
-  'Automatizaciones y Conexiones',
-  'Gestor Web y Extractor de Facturas IA',
+  'Documentos, Gastos y Contactos Ilimitados',
+  'Proyectos Ilimitados',
+  'Marketing IA (Emails, Posts Redes Sociales)',
+  'Web IA (Creación y análisis de sitios web)',
+  'Automatizaciones y Conexiones con apps',
+  'Buscador IA de ayudas y clientes',
+  'Importación IA (Facturas y Gastos)',
 ];
 
 const enterpriseFeatures = [
     'Todo lo del plan Pro',
+    'Gestión de Empleados (hasta 5)',
+    'Gestión y generación de Nóminas',
+    'Control Horario (Fichajes)',
+    'Analíticas Avanzadas e Informes',
     'Soporte prioritario 24/7',
-    'Hasta 5 usuarios de equipo',
-    'Analíticas avanzadas e informes',
-    'API de acceso y webhooks',
 ];
 
 export function Pricing() {
@@ -66,7 +71,7 @@ export function Pricing() {
         <Card className="border-accent shadow-lg flex flex-col relative">
           <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Más Popular</Badge>
           <CardHeader>
-            <CardTitle>Pro</CardTitle>
+            <CardTitle>Pro (Autónomo)</CardTitle>
             <CardDescription>Para profesionales que quieren llevar su negocio al siguiente nivel.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 flex-grow">
