@@ -54,8 +54,6 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
                 operation: 'list',
             });
             errorEmitter.emit('permission-error', permissionError);
-            console.error("Error fetching tasks:", error);
-            toast({ variant: 'destructive', title: 'Error de Permisos', description: 'No se pudieron cargar las tareas. Revisa tus reglas de seguridad de Firestore.' });
         });
         return () => unsubscribe();
     }, [projectId, user, toast]);
