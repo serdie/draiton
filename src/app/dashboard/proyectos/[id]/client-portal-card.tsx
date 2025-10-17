@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -10,7 +11,7 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Project } from '../page';
 import { nanoid } from 'nanoid';
-import { Copy, Check, ExternalLink, Send } from 'lucide-react';
+import { Copy, Check, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 interface ClientPortalCardProps {
@@ -62,14 +63,6 @@ export function ClientPortalCard({ project }: ClientPortalCardProps) {
         setTimeout(() => setIsCopied(false), 2000);
     });
   }
-  
-  const sendEmailInvitation = () => {
-      // Here you would typically trigger a server action to send the email
-      toast({
-          title: 'Invitación Enviada (Simulación)',
-          description: `Se ha enviado un correo al cliente con el enlace al portal.`
-      })
-  }
 
   return (
     <Card>
@@ -113,10 +106,6 @@ export function ClientPortalCard({ project }: ClientPortalCardProps) {
                         <ExternalLink className="mr-2 h-4 w-4" />
                         Ver Portal de Cliente
                     </Link>
-                </Button>
-                 <Button size="sm" variant="secondary" onClick={sendEmailInvitation}>
-                    <Send className="mr-2 h-4 w-4" />
-                    Enviar invitación por email
                 </Button>
             </div>
           </div>
