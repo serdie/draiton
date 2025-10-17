@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -10,6 +11,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
+
 
 const GenerateSocialPostInputSchema = z.object({
   objective: z.string().describe('The main goal of the social media post (e.g., promote a new product, share a company update, post a tutorial).'),
@@ -29,20 +32,6 @@ export async function generateSocialPost(input: GenerateSocialPostInput): Promis
   return generateSocialPostFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateSocialPostPrompt',
-  input: { schema: GenerateSocialPostInputSchema },
-  output: { schema: GenerateSocialPostOutputSchema },
-  prompt: `Eres un community manager experto en crear contenido viral y efectivo para redes sociales. Tu tarea es escribir un post para redes sociales basado en los siguientes objetivos.
-
-**Objetivo del Post:** {{{objective}}}
-**Formato del Post:** {{{format}}}
-**Tono Deseado:** {{{tone}}}
-**Información Clave a Incluir (Opcional):** {{{keyInfo}}}
-
-Basado en esto, genera el texto completo para la publicación. Asegúrate de que sea atractivo, se adapte a la plataforma (formato), y termine con una llamada a la acción clara si es apropiado. Incluye 2-3 hashtags relevantes. Escribe el post en español.`,
-});
-
 const generateSocialPostFlow = ai.defineFlow(
   {
     name: 'generateSocialPostFlow',
@@ -50,7 +39,20 @@ const generateSocialPostFlow = ai.defineFlow(
     outputSchema: GenerateSocialPostOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await ai.generate({
+        model: googleAI.model('gemini-1.5-flash'),
+        prompt: `Eres un community manager experto en crear contenido viral y efectivo para redes sociales. Tu tarea es escribir un post para redes sociales basado en los siguientes objetivos.
+
+**Objetivo del Post:** ${input.objective}
+**Formato del Post:** ${input.format}
+**Tono Deseado:** ${input.tone}
+**Información Clave a Incluir (Opcional):** ${input.keyInfo}
+
+Basado en esto, genera el texto completo para la publicación. Asegúrate de que sea atractivo, se adapte a la plataforma (formato), y termine con una llamada a la acción clara si es apropiado. Incluye 2-3 hashtags relevantes. Escribe el post en español.`,
+        output: {
+            schema: GenerateSocialPostOutputSchema
+        }
+    });
     return output!;
   }
 );
