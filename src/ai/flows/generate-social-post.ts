@@ -40,7 +40,7 @@ const generateSocialPostFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await ai.generate({
-        model: googleAI.model('gemini-1.5-flash'),
+        model: googleAI.model('gemini-2.5-flash-lite'),
         prompt: `Eres un community manager experto en crear contenido viral y efectivo para redes sociales. Tu tarea es escribir un post para redes sociales basado en los siguientes objetivos.
 
 **Objetivo del Post:** ${input.objective}

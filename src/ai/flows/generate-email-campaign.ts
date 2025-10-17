@@ -26,7 +26,7 @@ const generateEmailCampaignFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await ai.generate({
-      model: googleAI.model('gemini-1.5-flash'),
+      model: googleAI.model('gemini-2.5-flash-lite'),
       prompt: `Eres un experto en email marketing. Tu tarea es escribir un correo electrónico convincente basado en los siguientes objetivos.
 
 **Objetivo de la Campaña:** ${input.campaignGoal}
