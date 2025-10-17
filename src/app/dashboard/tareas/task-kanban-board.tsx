@@ -29,9 +29,10 @@ import { updateTaskStatus } from '@/lib/firebase/task-actions';
 interface TaskKanbanBoardProps {
     tasks: Task[];
     projects: Project[];
+    onEditTask: (task: Task) => void;
 }
 
-function KanbanColumn({ status, tasks, projects }: { status: TaskStatus; tasks: Task[]; projects: Project[] }) {
+function KanbanColumn({ status, tasks, projects, onEditTask }: { status: TaskStatus; tasks: Task[]; projects: Project[], onEditTask: (task: Task) => void; }) {
     const { setNodeRef } = useSortable({ id: status, data: {type: 'column'} });
 
     return (
@@ -40,11 +41,12 @@ function KanbanColumn({ status, tasks, projects }: { status: TaskStatus; tasks: 
             <div className="bg-secondary p-2 rounded-lg min-h-[100px]">
                  <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                     {tasks.map((task) => (
-                        <TaskCard 
-                            key={task.id} 
-                            task={task} 
-                            project={projects.find(p => p.id === task.projectId)} 
-                        />
+                        <div key={task.id} onClick={() => onEditTask(task)} className="cursor-pointer">
+                            <TaskCard 
+                                task={task} 
+                                project={projects.find(p => p.id === task.projectId)} 
+                            />
+                        </div>
                     ))}
                 </SortableContext>
             </div>
@@ -52,7 +54,7 @@ function KanbanColumn({ status, tasks, projects }: { status: TaskStatus; tasks: 
     )
 }
 
-export function TaskKanbanBoard({ tasks, projects }: TaskKanbanBoardProps) {
+export function TaskKanbanBoard({ tasks, projects, onEditTask }: TaskKanbanBoardProps) {
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const { toast } = useToast();
     const isMobile = useIsMobile();
@@ -123,6 +125,7 @@ export function TaskKanbanBoard({ tasks, projects }: TaskKanbanBoardProps) {
                         status={status} 
                         tasks={columns[status] || []}
                         projects={projects}
+                        onEditTask={onEditTask}
                     />
                 ))}
             </div>

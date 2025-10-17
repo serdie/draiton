@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Loader2 } from 'lucide-react';
 import { TaskKanbanBoard } from './task-kanban-board';
 import { CreateTaskModal } from './create-task-modal';
+import { EditTaskModal } from './edit-task-modal';
 import type { Project } from '../proyectos/page';
 import type { Task } from './types';
 import { AuthContext } from '@/context/auth-context';
@@ -20,6 +21,8 @@ export default function TareasPage() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
 
     useEffect(() => {
         if (!user || !db) {
@@ -49,14 +52,10 @@ export default function TareasPage() {
                         id: doc.id,
                         ...data,
                         dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
+                        createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : new Date(),
                     } as Task;
                 });
-                // Sort tasks by creation date client-side
-                fetchedTasks.sort((a, b) => {
-                    const dateA = a.createdAt ? (a.createdAt as any).toDate() : new Date(0);
-                    const dateB = b.createdAt ? (b.createdAt as any).toDate() : new Date(0);
-                    return dateB.getTime() - dateA.getTime();
-                });
+                
                 setTasks(fetchedTasks);
                 setLoading(false);
             }, (error) => {
@@ -75,6 +74,10 @@ export default function TareasPage() {
 
     }, [user, toast]);
 
+    const handleEditTask = (task: Task) => {
+        setTaskToEdit(task);
+    }
+
     return (
         <>
             <CreateTaskModal 
@@ -82,6 +85,13 @@ export default function TareasPage() {
                 onClose={() => setIsCreateModalOpen(false)} 
                 projects={projects}
             />
+            {taskToEdit && (
+                <EditTaskModal
+                    isOpen={!!taskToEdit}
+                    onClose={() => setTaskToEdit(null)}
+                    task={taskToEdit}
+                />
+            )}
             <div className="space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
@@ -100,7 +110,11 @@ export default function TareasPage() {
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : (
-                    <TaskKanbanBoard tasks={tasks} projects={projects} />
+                    <TaskKanbanBoard 
+                        tasks={tasks} 
+                        projects={projects} 
+                        onEditTask={handleEditTask} 
+                    />
                 )}
             </div>
         </>
