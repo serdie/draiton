@@ -46,7 +46,7 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateBusinessIdeasOutputSchema},
   prompt: `Eres un consultor de negocios experto. Analiza los datos de la empresa proporcionados y genera sugerencias prácticas para mejorar sus estrategias de comercialización y oferta de productos. Responde siempre en español.
 
-Datos de la empresa: {{{companyData}}}
+Datos de la empresa: {{{ companyData }}}
 
 Genera una lista de sugerencias con un título y detalles para cada una.`,
 });
