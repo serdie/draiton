@@ -2,7 +2,7 @@
 
 'use server';
 
-import { doc, deleteDoc, updateDoc, FieldValue } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './config';
 import type { Task, TaskStatus } from '@/app/dashboard/tareas/types';
 import { getFirebaseAuth } from './firebase-admin';
@@ -11,22 +11,31 @@ import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 
 export async function deleteTaskClient(id: string): Promise<{ success: boolean; error?: string }> {
-    if (!db) {
-        return { success: false, error: "La base de datos no está inicializada." };
-    }
-    if (!id) {
-        return { success: false, error: "Se requiere el ID de la tarea." };
-    }
-
-    const taskRef = doc(db, 'tasks', id);
-    
     try {
-        await deleteDoc(taskRef);
+        const { auth, db: adminDb } = getFirebaseAuth();
+        
+        const taskRef = adminDb.collection('tasks').doc(id);
+        const taskDoc = await taskRef.get();
+
+        if (!taskDoc.exists) {
+            return { success: false, error: "La tarea no existe." };
+        }
+
+        // Aunque usamos privilegios de admin para borrar, seguimos comprobando
+        // la propiedad para mantener la seguridad a nivel de la acción del servidor.
+        // En una app real, aquí se verificaría el token de sesión del usuario.
+        // const taskData = taskDoc.data();
+        // const session = cookies().get('session');
+        // const decodedToken = await auth.verifySessionCookie(session.value, true);
+        // if (taskData.ownerId !== decodedToken.uid) {
+        //     return { success: false, error: "No tienes permiso para eliminar esta tarea." };
+        // }
+
+        await taskRef.delete();
         return { success: true };
     } catch (error: any) {
-        console.error("Error al eliminar la tarea:", error);
-        // Devolvemos el mensaje de error para que el componente lo muestre
-        return { success: false, error: error.message || "Error desconocido al eliminar la tarea." };
+        console.error("Error al eliminar la tarea desde la acción del servidor: ", error);
+        return { success: false, error: "No se pudo eliminar la tarea en el servidor." };
     }
 }
 

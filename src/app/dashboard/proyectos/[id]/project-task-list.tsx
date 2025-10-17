@@ -49,7 +49,7 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange, 
         const q = query(
             collection(db, 'tasks'),
             where('projectId', '==', projectId),
-            where('ownerId', '==', user.uid) // Añadir esta condición
+            where('ownerId', '==', user.uid)
         );
         const unsubscribeTasks = onSnapshot(q, (snapshot) => {
             const fetchedTasks = snapshot.docs.map(docSnap => {
