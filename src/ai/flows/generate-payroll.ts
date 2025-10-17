@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -81,4 +80,3 @@ const generatePayrollFlow = ai.defineFlow(
     return output!;
   }
 );
-

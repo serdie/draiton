@@ -1,4 +1,4 @@
-// 'use server';
+'use server';
 /**
  * @fileOverview This file defines a Genkit flow for extracting invoice data from an image.
  *
@@ -6,8 +6,6 @@
  * - ExtractInvoiceDataInput - The input type for the extractInvoiceData function.
  * - ExtractInvoiceDataOutput - The return type for the extractInvoiceData function.
  */
-
-'use server';
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
