@@ -26,17 +26,17 @@ interface ProjectTaskListProps {
     projectId: string;
     initialProgress: number;
     onProgressChange: (newProgress: number) => void;
+    projects: Project[];
+    users: { id: string; name: string; }[];
 }
 
-export function ProjectTaskList({ projectId, initialProgress, onProgressChange }: ProjectTaskListProps) {
+export function ProjectTaskList({ projectId, initialProgress, onProgressChange, projects, users }: ProjectTaskListProps) {
     const { user } = useContext(AuthContext);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [progress, setProgress] = useState(initialProgress);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [users, setUsers] = useState<{ id: string; name: string; }[]>([]);
     const { toast } = useToast();
 
 
@@ -64,37 +64,8 @@ export function ProjectTaskList({ projectId, initialProgress, onProgressChange }
              toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las tareas. Revisa los permisos.' });
         });
 
-        const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
-        const unsubscribeProjects = onSnapshot(projectsQuery, (snapshot) => {
-            const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-            setProjects(fetchedProjects);
-        });
-
-        // Fetch users: both the owner and their employees
-        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
-        const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-
-        const fetchUsers = async () => {
-            const [employeesSnapshot, selfSnapshot] = await Promise.all([
-                getDocs(employeesQuery),
-                getDocs(selfQuery),
-            ]);
-            
-            const employeesList = employeesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
-            const selfList = selfSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' }));
-
-            const allUsersMap = new Map<string, { id: string; name: string; }>();
-            selfList.forEach(u => allUsersMap.set(u.id, u));
-            employeesList.forEach(u => allUsersMap.set(u.id, u));
-            
-            setUsers(Array.from(allUsersMap.values()));
-        }
-        
-        fetchUsers();
-
         return () => {
             unsubscribeTasks();
-            unsubscribeProjects();
         }
     }, [projectId, user, toast]);
 

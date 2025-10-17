@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useContext } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { type Project, type ProjectStatus } from '../page';
@@ -78,6 +78,9 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<{ id: string; name: string; }[]>([]);
 
   useEffect(() => {
     if (!user || !projectId) return;
@@ -106,7 +109,39 @@ export default function ProjectDetailPage() {
         router.push('/dashboard/proyectos');
     });
 
-    return () => unsubscribe();
+    const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+    const unsubscribeProjects = onSnapshot(projectsQuery, (snapshot) => {
+        const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+        setProjects(fetchedProjects);
+    });
+
+    const fetchUsers = async () => {
+        const ownerQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+
+        const [ownerSnapshot, employeesSnapshot] = await Promise.all([
+            getDocs(ownerQuery),
+            getDocs(employeesQuery)
+        ]);
+
+        const userList = new Map<string, { id: string; name: string }>();
+
+        ownerSnapshot.forEach(doc => {
+            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+        });
+
+        employeesSnapshot.forEach(doc => {
+            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+        });
+
+        setUsers(Array.from(userList.values()));
+    }
+    fetchUsers();
+
+    return () => {
+        unsubscribe();
+        unsubscribeProjects();
+    };
   }, [user, projectId, router]);
 
    const handleProgressChange = async (newProgress: number) => {
@@ -203,6 +238,8 @@ export default function ProjectDetailPage() {
                         projectId={project.id} 
                         initialProgress={project.progress || 0}
                         onProgressChange={handleProgressChange}
+                        projects={projects}
+                        users={users}
                     />
                 </TabsContent>
                  <TabsContent value="time">
