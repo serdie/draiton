@@ -45,7 +45,6 @@ import type { Contact } from './contactos/page';
 import type { Project, ProjectStatus } from './proyectos/page';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { AiAssistantChat } from './ai-assistant-chat';
 import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -295,8 +294,6 @@ export default function DashboardPage() {
                     </Button>
                 </CardFooter>
             </Card>
-
-            <AiAssistantChat />
 
         </main>
         <aside className="space-y-6">

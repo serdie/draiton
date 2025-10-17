@@ -36,6 +36,7 @@ import {
   Network,
   User,
   BookOpen,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -94,6 +95,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     }
     if (isActive('/dashboard/finanzas')) return 'Finanzas';
     if (isActive('/dashboard/proyectos')) return 'Operaciones';
+    if (isActive('/dashboard/asistente-ia')) return 'Asistente IA';
     if (isActive('/dashboard/gestor-ia')) return 'Herramientas IA';
     if (isActive('/dashboard/conexiones')) return 'Conexiones';
     if (isActive('/dashboard/configuracion') || isActive('/dashboard/mi-perfil')) return 'Configuración';
@@ -167,6 +169,15 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
               </Link>
             </SidebarMenuItem>
             
+            <SidebarMenuItem>
+              <Link href="/dashboard/asistente-ia">
+                <SidebarMenuButton isActive={isActive('/dashboard/asistente-ia')} tooltip="Asistente IA">
+                  <MessageSquare />
+                  <span>Asistente IA</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+
             {!isEmployee && (
                  <SidebarMenuItem id="tour-ia">
                     <Link href="/dashboard/gestor-ia">
