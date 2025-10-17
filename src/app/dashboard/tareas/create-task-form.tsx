@@ -10,13 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon, Loader2, PlusCircle } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { useToast } from '@/hooks/use-toast';
 import { type Project } from '../proyectos/page';
-import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import Link from 'next/link';
@@ -53,16 +53,27 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
   // Fetch all users to populate the assignee dropdown
   useEffect(() => {
     const fetchUsers = async () => {
-        if (!db) return;
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        const usersList = usersSnapshot.docs.map(doc => ({
-            id: doc.id,
-            name: doc.data().displayName || 'Usuario sin nombre'
-        }));
-        setAllUsers(usersList);
+        if (!db || !user) return;
+        
+        const userList = new Map<string, { id: string; name: string; }>();
+
+        // Fetch owner
+        const selfDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', user.uid)));
+        selfDoc.forEach(doc => {
+            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+        });
+
+        // Fetch employees
+        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+        const employeesSnapshot = await getDocs(employeesQuery);
+        employeesSnapshot.forEach(doc => {
+            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+        });
+
+        setAllUsers(Array.from(userList.values()));
     };
     fetchUsers();
-  }, []);
+  }, [user]);
 
 
   const handleCreateTask = async (e: React.FormEvent) => {
@@ -156,27 +167,16 @@ export function CreateTaskForm({ onClose, projects }: CreateTaskFormProps) {
        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="task-assignee">Responsable</Label>
-            {allUsers.length > 0 ? (
-                <Select value={assigneeId} onValueChange={setAssigneeId}>
-                    <SelectTrigger id="task-assignee">
-                    <SelectValue placeholder="Asignar a un usuario" />
-                    </SelectTrigger>
-                    <SelectContent>
-                    {allUsers.map(u => (
-                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
-            ) : (
-                 <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground">No hay empleados.</p>
-                     <Button variant="outline" size="sm" asChild>
-                        <Link href="/dashboard/finanzas?tab=nominas">
-                           <PlusCircle className="mr-2 h-4 w-4"/> Añadir
-                        </Link>
-                    </Button>
-                </div>
-            )}
+            <Select value={assigneeId} onValueChange={setAssigneeId}>
+                <SelectTrigger id="task-assignee">
+                <SelectValue placeholder="Asignar a un usuario" />
+                </SelectTrigger>
+                <SelectContent>
+                {allUsers.map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                ))}
+                </SelectContent>
+            </Select>
         </div>
          <div className="space-y-2">
           <Label>Fecha de Entrega</Label>
