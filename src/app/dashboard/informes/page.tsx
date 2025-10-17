@@ -6,16 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, FileText, Copy, Download, Mail, Loader2 } from 'lucide-react';
+import { Sparkles, FileText, Copy, Download, Mail, Loader2, CalendarIcon } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import type { Project } from '../proyectos/page';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { Logo } from '@/components/logo';
 import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from '@/lib/utils';
+import type { DateRange } from 'react-day-picker';
+
 
 export default function InformesPage() {
     const { user } = useContext(AuthContext);
@@ -25,6 +31,9 @@ export default function InformesPage() {
     const [generatedReport, setGeneratedReport] = useState<string | null>(null);
     const printableRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [period, setPeriod] = useState<string>('mes');
+    const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
+
 
     useEffect(() => {
         if (!db || !user) {
@@ -80,12 +89,13 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
             // --- Render Header with html2canvas ---
             const headerElement = reportElement.querySelector('#report-header');
             if (headerElement) {
-                const canvas = await html2canvas(headerElement as HTMLElement, {
+                 const canvas = await import('html2canvas').then(mod => mod.default);
+                const headerCanvas = await canvas(headerElement as HTMLElement, {
                     scale: 2,
                     useCORS: true,
                     backgroundColor: null,
                 });
-                const imgData = canvas.toDataURL('image/png');
+                const imgData = headerCanvas.toDataURL('image/png');
                 const imgProps = pdf.getImageProperties(imgData);
                 const headerHeight = (imgProps.height * pdfWidth) / imgProps.width;
                 pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, headerHeight);
@@ -178,7 +188,7 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="report-period">Periodo</Label>
-                            <Select>
+                            <Select value={period} onValueChange={setPeriod}>
                                 <SelectTrigger id="report-period">
                                     <SelectValue placeholder="Seleccionar periodo" />
                                 </SelectTrigger>
@@ -186,9 +196,26 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
                                     <SelectItem value="semana">Última Semana</SelectItem>
                                     <SelectItem value="mes">Último Mes</SelectItem>
                                     <SelectItem value="trimestre">Último Trimestre</SelectItem>
+                                    <SelectItem value="custom">Personalizado</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
+                        {period === 'custom' && (
+                            <div className="space-y-2">
+                                <Label>Rango de Fechas</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button id="date" variant={"outline"} className={cn("w-full justify-start text-left font-normal", !customDateRange && "text-muted-foreground")}>
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {customDateRange?.from ? (customDateRange.to ? (<>{format(customDateRange.from, "dd LLL, y", { locale: es })} - {format(customDateRange.to, "dd LLL, y", { locale: es })}</>) : (format(customDateRange.from, "dd LLL, y", { locale: es }))) : (<span>Elige un rango</span>)}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar initialFocus mode="range" defaultMonth={customDateRange?.from} selected={customDateRange} onSelect={setCustomDateRange} numberOfMonths={2} locale={es}/>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        )}
                     </CardContent>
                     <CardFooter>
                          <Button className="w-full" onClick={handleGenerateReport}>
