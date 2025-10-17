@@ -3,6 +3,8 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
+import { getAnalytics, type Analytics } from "firebase/analytics";
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -13,7 +15,8 @@ const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 
@@ -22,6 +25,8 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
+let analytics: Analytics | undefined;
+
 
 // This guard prevents the app from crashing on the server if the environment variables are not set.
 if (firebaseConfig.apiKey) {
@@ -29,6 +34,9 @@ if (firebaseConfig.apiKey) {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+    if (typeof window !== 'undefined') {
+        analytics = getAnalytics(app);
+    }
 } else {
     console.warn("Firebase configuration is missing. Firebase features will be disabled.");
     // Provide default null values or mock implementations if needed
@@ -36,6 +44,7 @@ if (firebaseConfig.apiKey) {
     auth = {} as any;
     db = {} as any;
     storage = {} as any;
+    analytics = undefined;
 }
 
-export { app, auth, db, storage };
+export { app, auth, db, storage, analytics };

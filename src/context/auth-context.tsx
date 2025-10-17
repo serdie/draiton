@@ -4,7 +4,7 @@
 import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot, setDoc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore'; 
-import { auth as clientAuth, db } from '@/lib/firebase/config';
+import { auth as clientAuth, db, analytics } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -49,6 +49,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [simulatedRole, setSimulatedRole] = useState<UserRole | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Initialize Analytics
+    if (analytics) {
+      console.log('Firebase Analytics initialized');
+    }
+  }, []);
 
   useEffect(() => {
     if (!clientAuth) {
