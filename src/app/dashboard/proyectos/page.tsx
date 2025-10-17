@@ -56,7 +56,8 @@ export default function OperacionesPage() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
+    const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
     const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState(isEmployee ? 'fichajes' : 'proyectos');
     
@@ -91,13 +92,6 @@ export default function OperacionesPage() {
         return () => unsubscribe();
     }, [user, toast]);
     
-    const handleFichajesClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-        if (!isEmpresa && isPro) {
-            e.preventDefault();
-            setIsUpsellModalOpen(true);
-        }
-    }
-
     const handleTabChange = (value: string) => {
         if (value === 'fichajes' && !isEmpresa && !isEmployee && isPro) {
             setIsUpsellModalOpen(true);
@@ -115,7 +109,7 @@ export default function OperacionesPage() {
         { value: 'proyectos', label: 'Proyectos', icon: HardHat },
         { value: 'crm', label: 'CRM', icon: User },
         { value: 'tareas', label: 'Tareas', icon: FileText },
-        { value: 'fichajes', label: 'Fichajes', icon: Clock, condition: isEmpresa },
+        { value: 'fichajes', label: 'Fichajes', condition: isEmpresa },
         { value: 'informes', label: 'Informes', icon: BarChart2 }
     ];
 
@@ -130,7 +124,12 @@ export default function OperacionesPage() {
 
   return (
     <>
-    <CreateProjectModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+    <CreateProjectModal isOpen={isCreateProjectModalOpen} onClose={() => setIsCreateProjectModalOpen(false)} />
+    <CreateTaskModal 
+        isOpen={isCreateTaskModalOpen} 
+        onClose={() => setIsCreateTaskModalOpen(false)} 
+        projects={projects}
+    />
     <AlertDialog open={isUpsellModalOpen} onOpenChange={setIsUpsellModalOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -159,12 +158,20 @@ export default function OperacionesPage() {
             Organiza tu trabajo, gestiona tus contactos y sigue el pulso de tu negocio.
           </p>
         </div>
-        {!isEmployee && (
-            <Button onClick={() => setIsCreateModalOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Crear Nuevo Proyecto
-            </Button>
-        )}
+         <div className="flex gap-2">
+            {!isEmployee && (
+                <Button variant="outline" onClick={() => setIsCreateTaskModalOpen(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Crear Tarea
+                </Button>
+            )}
+            {!isEmployee && (
+                <Button onClick={() => setIsCreateProjectModalOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Crear Proyecto
+                </Button>
+            )}
+         </div>
       </div>
       
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -183,7 +190,7 @@ export default function OperacionesPage() {
             <ContactosPage />
         </TabsContent>
         <TabsContent value="tareas" className="mt-6">
-            <TareasPage />
+            <p>Aquí se mostrará un tablero Kanban con todas tus tareas.</p>
         </TabsContent>
         <TabsContent value="fichajes" className="mt-6">
             {isEmployee ? <FichajeEmpleadoTab /> : isEmpresa ? <FichajesTab /> : null}
@@ -196,4 +203,3 @@ export default function OperacionesPage() {
     </>
   );
 }
-
