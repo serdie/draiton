@@ -1,50 +1,169 @@
-
+/**
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model, ensuring that users can only access their own data.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile information. Only the user can read and write their own profile.
+ * - /projects/{projectId}: Stores project details. Only the project owner can read and write project data.
+ * - /tasks/{taskId}: Stores individual tasks. Only the task owner can read and write task data.
+ * - /invoices/{invoiceId}: Stores invoice and financial document data. Only the document owner can read and write.
+ * - /expenses/{expenseId}: Stores expense data. Only the expense owner can read and write expense data.
+ * - /contacts/{contactId}: Stores contact data. Only the contact owner can read and write contact data.
+ *
+ * Key Security Decisions:
+ * - No user listing: Listing all users is disallowed for privacy and security.
+ * - Owner-only access: All data access is restricted to the owner of the respective document.
+ * - Data Denormalization: Authorization relies on the `ownerId` field within each document.
+ */
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Reglas para Perfiles de Usuario
+
+    /**
+     * @description Controls access to user profile information.
+     * @path /users/{userId}
+     * @allow (get, create, update, delete) User with matching {userId} can access their own profile.
+     * @deny (get, create, update, delete) User tries to access another user's profile.
+     * @principle Enforces document ownership for writes.
+     */
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId;
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
-    // Reglas para Proyectos
+    /**
+     * @description Controls access to project data.
+     * @path /projects/{projectId}
+     * @allow (get, create, update, delete) User with matching project.ownerId can access project data.
+     * @deny (get, create, update, delete) User tries to access another user's project.
+     * @principle Enforces document ownership for writes.
+     */
     match /projects/{projectId} {
-      allow read, write: if request.auth.uid == resource.data.ownerId;
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      function isOwner() {
+        return request.auth.uid == resource.data.ownerId;
+      }
+      function isCreatingOwner() {
+        return request.auth.uid == request.resource.data.ownerId;
+      }
+
+      allow get: if isSignedIn() && isOwner();
+      allow list: if false;
+      allow create: if isSignedIn() && isCreatingOwner();
+      allow update: if isSignedIn() && isOwner();
+      allow delete: if isSignedIn() && isOwner();
     }
 
-    // Reglas para Tareas
+    /**
+     * @description Controls access to task data.
+     * @path /tasks/{taskId}
+     * @allow (get, create, update, delete) User with matching task.ownerId can access task data.
+     * @deny (get, create, update, delete) User tries to access another user's task.
+     * @principle Enforces document ownership for writes.
+     */
     match /tasks/{taskId} {
-      allow read: if request.auth.uid == resource.data.ownerId || request.auth.uid == resource.data.assigneeId;
-      allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow update, delete: if request.auth.uid == resource.data.ownerId;
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      function isOwner() {
+        return request.auth.uid == resource.data.ownerId;
+      }
+      function isCreatingOwner() {
+        return request.auth.uid == request.resource.data.ownerId;
+      }
+
+      allow get: if isSignedIn() && isOwner();
+      allow list: if false;
+      allow create: if isSignedIn() && isCreatingOwner();
+      allow update: if isSignedIn() && isOwner();
+      allow delete: if isSignedIn() && isOwner();
     }
 
-    // Reglas para Documentos (Facturas, etc.)
+    /**
+     * @description Controls access to invoices data.
+     * @path /invoices/{invoiceId}
+     * @allow (get, create, update, delete) User with matching invoice.ownerId can access invoice data.
+     * @deny (get, create, update, delete) User tries to access another user's invoice.
+     */
     match /invoices/{invoiceId} {
-        allow read, write: if request.auth.uid == resource.data.ownerId;
+        function isSignedIn() {
+            return request.auth != null;
+        }
+        function isOwner() {
+          return request.auth.uid == resource.data.ownerId;
+        }
+        function isCreatingOwner() {
+          return request.auth.uid == request.resource.data.ownerId;
+        }
+
+        allow get: if isSignedIn() && isOwner();
+        allow list: if false;
+        allow create: if isSignedIn() && isCreatingOwner();
+        allow update: if isSignedIn() && isOwner();
+        allow delete: if isSignedIn() && isOwner();
     }
 
-    // Reglas para Gastos
+       /**
+     * @description Controls access to expenses data.
+     * @path /expenses/{expenseId}
+     * @allow (get, create, update, delete) User with matching expense.ownerId can access expense data.
+     * @deny (get, create, update, delete) User tries to access another user's expense.
+     */
     match /expenses/{expenseId} {
-        allow read, write: if request.auth.uid == resource.data.ownerId;
+        function isSignedIn() {
+            return request.auth != null;
+        }
+        function isOwner() {
+          return request.auth.uid == resource.data.ownerId;
+        }
+        function isCreatingOwner() {
+          return request.auth.uid == request.resource.data.ownerId;
+        }
+
+        allow get: if isSignedIn() && isOwner();
+        allow list: if false;
+        allow create: if isSignedIn() && isCreatingOwner();
+        allow update: if isSignedIn() && isOwner();
+        allow delete: if isSignedIn() && isOwner();
     }
 
-    // Reglas para Contactos (CRM)
-     match /contacts/{contactId} {
-        allow read, write: if request.auth.uid == resource.data.ownerId;
-    }
+    /**
+     * @description Controls access to contacts data.
+     * @path /contacts/{contactId}
+     * @allow (get, create, update, delete) User with matching contact.ownerId can access contact data.
+     * @deny (get, create, update, delete) User tries to access another user's contact.
+     */
+    match /contacts/{contactId} {
+        function isSignedIn() {
+            return request.auth != null;
+        }
+        function isOwner() {
+          return request.auth.uid == resource.data.ownerId;
+        }
+        function isCreatingOwner() {
+          return request.auth.uid == request.resource.data.ownerId;
+        }
 
-    // Reglas para Fichajes
-    match /fichajes/{fichajeId} {
-        allow read: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'empresa' || request.auth.uid == resource.data.employeeId;
-        allow create: if request.auth.uid == request.resource.data.employeeId;
-    }
-    
-    // Reglas para Empleados
-     match /employees/{employeeId} {
-        allow read, write: if request.auth.uid == resource.data.ownerId;
+        allow get: if isSignedIn() && isOwner();
+        allow list: if false;
+        allow create: if isSignedIn() && isCreatingOwner();
+        allow update: if isSignedIn() && isOwner();
+        allow delete: if isSignedIn() && isOwner();
     }
   }
 }
