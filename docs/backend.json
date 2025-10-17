@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile in the system.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The user's unique ID." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "photoURL": { "type": "string", "format": "uri", "description": "URL of the user's profile picture." },
+        "role": { "type": "string", "enum": ["free", "pro", "empresa", "admin", "employee"], "description": "The user's role." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the user was created." }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Represents a user's project.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the project." },
+        "client": { "type": "string", "description": "The client associated with the project." },
+        "description": { "type": "string", "description": "A brief description of the project." },
+        "status": { "type": "string", "enum": ["Planificación", "En Progreso", "En Espera", "Completado", "Cancelado"], "description": "The current status of the project." },
+        "budget": { "type": "number", "description": "The budget allocated for the project." },
+        "progress": { "type": "number", "description": "The completion percentage of the project." },
+        "startDate": { "type": "string", "format": "date-time", "description": "The start date of the project." },
+        "endDate": { "type": "string", "format": "date-time", "description": "The estimated end date of the project." },
+        "ownerId": { "type": "string", "description": "The ID of the user who owns the project." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the project was created." }
+      },
+      "required": ["name", "client", "status", "ownerId", "createdAt"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Represents a single task within a project or standalone.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title of the task." },
+        "description": { "type": "string", "description": "A detailed description of the task." },
+        "status": { "type": "string", "enum": ["Pendiente", "En Progreso", "Completado"], "description": "The current status of the task." },
+        "priority": { "type": "string", "enum": ["Baja", "Media", "Alta"], "description": "The priority of the task." },
+        "isCompleted": { "type": "boolean", "description": "Whether the task is completed or not." },
+        "ownerId": { "type": "string", "description": "The ID of the user who owns the task." },
+        "assigneeId": { "type": "string", "description": "The ID of the user assigned to the task." },
+        "projectId": { "type": "string", "description": "The ID of the project this task belongs to." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the task was created." },
+        "dueDate": { "type": "string", "format": "date-time", "description": "The due date for the task." }
+      },
+      "required": ["title", "isCompleted", "ownerId", "assigneeId", "createdAt", "status", "priority"]
+    },
+    "Document": {
+      "title": "Document",
+      "description": "Represents a financial document like an invoice or quote.",
+      "type": "object",
+      "properties": {
+        "numero": { "type": "string" },
+        "tipo": { "type": "string", "enum": ["factura", "presupuesto", "nota-credito", "recurrente"] },
+        "cliente": { "type": "string" },
+        "importe": { "type": "number" },
+        "estado": { "type": "string" },
+        "fechaEmision": { "type": "string", "format": "date-time" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["numero", "tipo", "cliente", "importe", "estado", "fechaEmision", "ownerId"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Represents a business expense.",
+      "type": "object",
+      "properties": {
+        "fecha": { "type": "string", "format": "date-time" },
+        "categoria": { "type": "string" },
+        "proveedor": { "type": "string" },
+        "importe": { "type": "number" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["fecha", "categoria", "proveedor", "importe", "ownerId"]
+    },
+    "Contact": {
+        "title": "Contact",
+        "description": "Represents a contact in the CRM.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string"},
+            "email": { "type": "string", "format": "email"},
+            "phone": { "type": "string"},
+            "company": { "type": "string"},
+            "type": { "type": "string", "enum": ["Cliente", "Proveedor", "Lead", "Colaborador"]},
+            "ownerId": { "type": "string"}
+        },
+        "required": ["name", "email", "type", "ownerId"]
+    }
+  },
+  "auth": {
+    "providers": ["anonymous", "google.com", "microsoft.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores user profile information."
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Stores project details."
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Stores individual tasks."
+    },
+    "/invoices/{invoiceId}": {
+        "schema": { "$ref": "#/entities/Document" },
+        "description": "Stores invoices, quotes, and other financial documents."
+    },
+    "/expenses/{expenseId}": {
+        "schema": { "$ref": "#/entities/Expense" },
+        "description": "Stores business expenses."
+    },
+    "/contacts/{contactId}": {
+        "schema": { "$ref": "#/entities/Contact" },
+        "description": "Stores CRM contacts."
+    }
+  }
+}
