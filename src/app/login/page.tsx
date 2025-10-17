@@ -4,7 +4,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,16 +15,11 @@ import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
 
-const GoogleIcon = () => (
-    <svg className="mr-2 h-4 w-4" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <title>Google</title>
-        <path
-            d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.62 1.9-4.73 1.9-3.41 0-6.18-2.8-6.18-6.18s2.77-6.18 6.18-6.18c1.93 0 3.25.78 4.23 1.7l2.06-2.06C18.12 2.66 15.61 1.53 12.48 1.53c-5.18 0-9.42 4.13-9.42 9.19s4.24 9.19 9.42 9.19c5.18 0 9.42-4.13 9.42-9.19 0-.82-.07-1.62-.2-2.38H12.48z"
-            fill="#4285F4"
-        />
-    </svg>
-);
-
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -42,6 +37,19 @@ export default function LoginPage() {
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
+
+   useEffect(() => {
+    if (typeof window.google !== 'undefined' && window.google.accounts) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        callback: handleGoogleSignIn,
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById('google-signin-button'),
+        { theme: 'filled_blue', size: 'large', type: 'standard', text: 'signin_with' }
+      );
+    }
+  }, [authLoading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,22 +79,22 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (response: any) => {
     setGoogleLoading(true);
     setError(null);
-    const provider = new GoogleAuthProvider();
 
     if (!auth) {
-        setError('El servicio de autenticación no está disponible. Por favor, contacta al soporte.');
+        setError('El servicio de autenticación no está disponible.');
         setGoogleLoading(false);
         return;
     }
 
     try {
-      await signInWithPopup(auth, provider);
-      // Redirection and data sync is handled by AuthContext
+        const credential = GoogleAuthProvider.credential(response.credential);
+        await signInWithCredential(auth, credential);
+        // Redirection and data sync is handled by AuthContext
     } catch (err: any) {
-      if (err.code === 'auth/unauthorized-domain') {
+       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
       } else {
         setError('No se pudo iniciar sesión con Google. Inténtalo más tarde.');
@@ -169,10 +177,8 @@ export default function LoginPage() {
                     </span>
                 </div>
             </div>
-             <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-gray-700 font-medium" onClick={handleGoogleSignIn} disabled={googleLoading}>
-                {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
-                Iniciar sesión con Google
-            </Button>
+             <div id="google-signin-button" className="flex justify-center"></div>
+             {googleLoading && <div className="flex justify-center mt-2"><Loader2 className="h-6 w-6 animate-spin" /></div>}
              <p className="mt-6 text-center text-sm text-muted-foreground">
                 ¿No tienes cuenta?{' '}
                 <Link href="/register" className="font-medium text-primary hover:underline">
