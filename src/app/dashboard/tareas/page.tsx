@@ -10,7 +10,7 @@ import type { Project } from '../proyectos/page';
 import type { Task } from './types';
 import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { collection, query, where, onSnapshot, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 export default function TareasPage() {
@@ -41,7 +41,7 @@ export default function TareasPage() {
             });
 
             // Fetch tasks
-            const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'));
+            const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid));
             const unsubscribeTasks = onSnapshot(tasksQuery, (snapshot) => {
                 const fetchedTasks = snapshot.docs.map(doc => {
                     const data = doc.data();
@@ -50,6 +50,12 @@ export default function TareasPage() {
                         ...data,
                         dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
                     } as Task;
+                });
+                // Sort tasks by creation date client-side
+                fetchedTasks.sort((a, b) => {
+                    const dateA = a.createdAt ? (a.createdAt as any).toDate() : new Date(0);
+                    const dateB = b.createdAt ? (b.createdAt as any).toDate() : new Date(0);
+                    return dateB.getTime() - dateA.getTime();
                 });
                 setTasks(fetchedTasks);
                 setLoading(false);
