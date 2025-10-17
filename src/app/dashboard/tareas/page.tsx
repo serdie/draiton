@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useContext } from 'react';
@@ -57,23 +58,23 @@ export default function TareasPage() {
                 });
 
                  // Fetch users: both the owner and their employees
-                const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
-                const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-                
-                const [employeesSnapshot, selfSnapshot] = await Promise.all([
-                    getDocs(employeesQuery),
-                    getDocs(selfQuery),
-                ]);
-                
                 const userList = new Map<string, { id: string; name: string; }>();
-                
+
+                const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+                const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+
+                const [selfSnapshot, employeesSnapshot] = await Promise.all([
+                    getDocs(selfQuery),
+                    getDocs(employeesQuery),
+                ]);
+
                 selfSnapshot.forEach(doc => {
                     userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
                 });
                 employeesSnapshot.forEach(doc => {
                     userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
                 });
-                
+
                 setUsers(Array.from(userList.values()));
 
 

@@ -85,8 +85,9 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     if (!user || !projectId) return;
 
+    // Fetch the single project
     const docRef = doc(db, 'projects', projectId);
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+    const unsubscribeProject = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         if (data.ownerId === user.uid) {
@@ -109,8 +110,35 @@ export default function ProjectDetailPage() {
         router.push('/dashboard/proyectos');
     });
 
+    // Fetch all projects for the dropdown
+    const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+    const unsubscribeProjects = onSnapshot(projectsQuery, (snapshot) => {
+        const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+        setProjects(fetchedProjects);
+    });
+
+    // Fetch all users (owner + employees) for the dropdown
+    const fetchUsers = async () => {
+        const userList = new Map<string, { id: string; name: string; }>();
+        // Fetch owner
+        const selfDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', user.uid)));
+        selfDoc.forEach(doc => {
+            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+        });
+        // Fetch employees
+        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+        const employeesSnapshot = await getDocs(employeesQuery);
+        employeesSnapshot.forEach(doc => {
+            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+        });
+        setUsers(Array.from(userList.values()));
+    }
+    fetchUsers();
+
+
     return () => {
-        unsubscribe();
+        unsubscribeProject();
+        unsubscribeProjects();
     };
   }, [user, projectId, router]);
 
@@ -208,6 +236,8 @@ export default function ProjectDetailPage() {
                         projectId={project.id} 
                         initialProgress={project.progress || 0}
                         onProgressChange={handleProgressChange}
+                        projects={projects}
+                        users={users}
                     />
                 </TabsContent>
                  <TabsContent value="time">
