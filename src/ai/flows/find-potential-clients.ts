@@ -62,7 +62,7 @@ Based on this information, perform a search to find potential companies that wou
 Focus on providing high-quality, relevant leads. Provide the response in Spanish.`;
 
     const llmResponse = await ai.generate({
-        model: googleAI.model('gemini-2.5-flash-lite'),
+        model: googleAI.model('gemini-1.5-flash-latest'),
         prompt: prompt,
         output: { schema: FindPotentialClientsOutputSchema },
         tools: [googleSearch]

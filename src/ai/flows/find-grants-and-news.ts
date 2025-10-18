@@ -63,7 +63,7 @@ Please perform a search and provide a curated list of:
 For each item, provide a clear title, a short summary explaining its relevance, and a direct link to the official source or news article. Focus on information from the last 6 months to ensure relevance. Respond ONLY in Spanish.`;
     
     const llmResponse = await ai.generate({
-        model: googleAI.model('gemini-2.5-flash-lite'),
+        model: googleAI.model('gemini-1.5-flash-latest'),
         prompt: prompt,
         output: { schema: FindGrantsAndNewsOutputSchema },
         tools: [googleSearch],

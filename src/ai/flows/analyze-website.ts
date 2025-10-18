@@ -70,7 +70,7 @@ Please provide a detailed analysis covering the following four key areas:
 For each area, provide a list of specific, actionable improvement points. Each point should have a clear title and a detailed suggestion. Be concise but thorough.`;
     
     const llmResponse = await ai.generate({
-        model: googleAI.model('gemini-2.5-flash-lite'),
+        model: googleAI.model('gemini-1.5-flash-latest'),
         prompt: prompt,
         output: { schema: AnalyzeWebsiteOutputSchema },
         tools: [googleSearch],
