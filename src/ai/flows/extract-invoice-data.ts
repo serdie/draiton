@@ -84,8 +84,13 @@ const extractInvoiceDataFlow = ai.defineFlow(
     inputSchema: ExtractInvoiceDataInputSchema,
     outputSchema: ExtractInvoiceDataOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    // 1. Usamos el nombre correcto: 'extractInvoiceDataPrompt'
+    // 2. Añadimos el modelo como segundo argumento
+    const { output } = await extractInvoiceDataPrompt(input, {
+      model: googleAI.model('gemini-2.5-flash-lite'),
+    });
+    
     return output!;
   }
 );

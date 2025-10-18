@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
+import { googleAI } from '@genkit-ai/googleai';
 import { GenerateEmailCampaignInputSchema, GenerateEmailCampaignOutputSchema, type GenerateEmailCampaignInput, type GenerateEmailCampaignOutput } from '@/ai/schemas/email-campaign-schemas';
 
 
@@ -23,7 +23,7 @@ const prompt = ai.definePrompt({
   name: 'generateEmailCampaignPrompt',
   input: { schema: GenerateEmailCampaignInputSchema },
   output: { schema: GenerateEmailCampaignOutputSchema },
-  model: googleAI.model('gemini-1.5-flash-latest'),
+  model: googleAI.model('gemini-2.5-flash-lite'),
   prompt: `Eres un experto en email marketing. Tu tarea es escribir un correo electrónico convincente basado en los siguientes objetivos.
 
 **Objetivo de la Campaña:** {{{campaignGoal}}}

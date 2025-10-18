@@ -6,7 +6,7 @@ import { AuthContext } from "@/context/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Loader2, User, Trash2, ShieldCheck, UserCog, FilterX, ChevronLeft, ChevronRight, Mail, KeyRound } from "lucide-react";
+import { MoreHorizontal, Loader2, User, Trash2, ShieldCheck, UserCog, FilterX, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import { collection, onSnapshot, Timestamp } from "firebase/firestore";
@@ -18,7 +18,8 @@ import { getRoleBadgeClass } from "@/lib/utils";
 import { EditUserModal } from "./edit-user-modal";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GoogleIcon } from "@/app/dashboard/conexiones/google-icon";
+import { cn } from "@/lib/utils";
+
 
 export type UserRole = 'free' | 'pro' | 'admin' | 'empresa' | 'employee';
 
@@ -203,7 +204,7 @@ export function UsersTab() {
                                             {formatProvider(user.provider)}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className={getRoleBadgeClass(user.role)}>
+                                            <Badge variant="outline" className={cn(getRoleBadgeClass(user.role))}>
                                                 {user.role}
                                             </Badge>
                                         </TableCell>
@@ -334,5 +335,3 @@ export function UsersTab() {
         </>
     )
 }
-
-    

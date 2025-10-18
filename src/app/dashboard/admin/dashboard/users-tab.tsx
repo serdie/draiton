@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useContext, useMemo } from "react";
@@ -21,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 
 
-export type UserRole = 'free' | 'pro' | 'admin';
+export type UserRole = 'free' | 'pro' | 'admin' | 'empresa' | 'employee';
 
 export type User = {
   id: string;
@@ -29,9 +28,16 @@ export type User = {
   email: string;
   role: UserRole;
   registered: Date;
+  provider: string;
 };
 
-const userRoles: UserRole[] = ['free', 'pro', 'admin'];
+const userRoles: UserRole[] = ['free', 'pro', 'admin', 'empresa', 'employee'];
+
+const formatProvider = (providerId: string) => {
+    if (providerId === 'google.com') return 'Google';
+    if (providerId === 'password') return 'Password';
+    return providerId;
+}
 
 export function UsersTab() {
     const { user: adminUser } = useContext(AuthContext);
@@ -65,19 +71,24 @@ export function UsersTab() {
                     ? data.createdAt.toDate() 
                     : new Date();
 
+                const provider = (data.providerData && data.providerData.length > 0)
+                    ? data.providerData[0].providerId
+                    : 'password';
+
                 return {
                     id: doc.id,
                     name: data.displayName || 'Sin nombre',
                     email: data.email,
                     role: data.role || 'free',
                     registered: registeredDate,
+                    provider: provider
                 };
             });
             setUsers(userList);
             setLoading(false);
         }, (error) => {
             console.error("Error al obtener usuarios con onSnapshot:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los usuarios en tiempo real.' });
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los usuarios en tiempo real. Revisa los permisos de Firestore.' });
             setLoading(false);
         });
 
@@ -176,6 +187,7 @@ export function UsersTab() {
                                 <TableRow>
                                     <TableHead>Nombre</TableHead>
                                     <TableHead>Email</TableHead>
+                                    <TableHead>Proveedor</TableHead>
                                     <TableHead>Rol</TableHead>
                                     <TableHead>Fecha de Registro</TableHead>
                                     <TableHead className="text-right">Acciones</TableHead>
@@ -187,6 +199,9 @@ export function UsersTab() {
                                     <TableRow key={user.id}>
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
+                                        <TableCell className="text-muted-foreground">
+                                            {formatProvider(user.provider)}
+                                        </TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className={cn(getRoleBadgeClass(user.role))}>
                                                 {user.role}
@@ -210,15 +225,11 @@ export function UsersTab() {
                                                             Cambiar Rol
                                                         </DropdownMenuSubTrigger>
                                                         <DropdownMenuSubContent>
-                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'free' })}>
-                                                                <User className="mr-2 h-4 w-4" /> Free
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'pro' })}>
-                                                                <User className="mr-2 h-4 w-4" /> Pro
-                                                            </DropdownMenuItem>
-                                                             <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'admin' })}>
-                                                                <UserCog className="mr-2 h-4 w-4" /> Admin
-                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'free' })}>Free</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'pro' })}>Pro</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'empresa' })}>Empresa</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'employee' })}>Empleado</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setUserToChangeRole({ user, newRole: 'admin' })}>Admin</DropdownMenuItem>
                                                         </DropdownMenuSubContent>
                                                     </DropdownMenuSub>
                                                     <DropdownMenuSeparator />
@@ -233,7 +244,7 @@ export function UsersTab() {
                                 ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
+                                        <TableCell colSpan={6} className="h-24 text-center">
                                             No se encontraron usuarios con los filtros aplicados.
                                         </TableCell>
                                     </TableRow>
@@ -323,5 +334,3 @@ export function UsersTab() {
         </>
     )
 }
-
-    

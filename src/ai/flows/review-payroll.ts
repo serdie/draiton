@@ -44,7 +44,12 @@ const reviewPayrollFlow = ai.defineFlow(
     outputSchema: ReviewPayrollOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    // 1. El nombre 'prompt' es correcto.
+    // 2. Añadimos el modelo como segundo argumento.
+    const { output } = await prompt(input, {
+      model: googleAI.model('gemini-2.5-flash-lite'),
+    });
+    
     return output!;
   }
 );

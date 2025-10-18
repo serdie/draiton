@@ -59,7 +59,9 @@ const generateBusinessIdeasFlow = ai.defineFlow(
     outputSchema: GenerateBusinessIdeasOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await prompt(input, {
+      model: googleAI.model('gemini-2.5-flash-lite'),
+    });
     return output!;
   }
 );

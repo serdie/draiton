@@ -98,8 +98,12 @@ const aiPoweredWebManagementFlow = ai.defineFlow(
     inputSchema: AIPoweredWebManagementInputSchema,
     outputSchema: AIPoweredWebManagementOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    // Aquí es donde añadimos el modelo, como segundo argumento
+    const { output } = await prompt(input, {
+      model: googleAI.model('gemini-2.5-flash-lite'),
+    });
+    
     return output!;
   }
 );
