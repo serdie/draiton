@@ -56,8 +56,8 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
 
 
   const handleGenerate = async () => {
-    if (!user?.company) {
-        toast({ variant: 'destructive', title: 'Faltan datos de la empresa', description: 'Por favor, completa los datos de tu empresa en la configuración.' });
+    if (!user?.company?.name || !user?.company?.cif) {
+        toast({ variant: 'destructive', title: 'Faltan datos de la empresa', description: 'Por favor, completa el nombre y CIF de tu empresa en la configuración.' });
         return;
     }
     
@@ -69,8 +69,8 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         ...employee,
         employeeName: employee.name,
         paymentPeriod: period,
-        companyName: user.company.name || 'Empresa Sin Nombre',
-        cif: user.company.cif || 'Sin CIF',
+        companyName: user.company.name,
+        cif: user.company.cif,
         contributionAccountCode: '28/123456789', // Mock data
         professionalGroup: 'Grupo 1', // Mock data
         additionalConcepts: additionalConcepts
