@@ -9,6 +9,7 @@ import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import type { Project, ProjectStatus } from '@/app/dashboard/proyectos/page';
 import type { Task } from '@/app/dashboard/tareas/types';
+import type { Document } from '@/app/dashboard/documentos/page';
 import { Loader2, ArrowLeft, Briefcase, FileText, Clock, User, HardHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';

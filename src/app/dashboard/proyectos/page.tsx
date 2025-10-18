@@ -30,7 +30,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { FichajeEmpleadoTab } from './fichaje-empleado-tab';
-import { nanoid } from 'nanoid';
 
 export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
 
