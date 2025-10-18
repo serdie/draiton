@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Search, Terminal, Building2, ExternalLink } from 'lucide-react';
+import { Loader2, Search, Terminal, Building2, ExternalLink, Mail, Phone } from 'lucide-react';
 import type { FindPotentialClientsOutput } from '@/ai/flows/find-potential-clients';
 import { Input } from '@/components/ui/input';
 
@@ -75,13 +75,17 @@ export function BuscarClientesForm({ action }: { action: (currentState: FormStat
                         <CardContent className="space-y-2 text-sm flex-grow">
                             <p className="text-muted-foreground italic">{client.profile}</p>
                             <p><strong className="font-medium">¿Por qué es un buen cliente?</strong> {client.reasoning}</p>
+                              {client.email && <div className="flex items-center gap-2 pt-2"><Mail className="h-4 w-4 text-muted-foreground" /><span>{client.email}</span></div>}
+                            {client.telefono && <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /><span>{client.telefono}</span></div>}
                         </CardContent>
                         <CardFooter>
+                           {client.website && (
                             <Button variant="link" asChild className="p-0 h-auto">
                                 <Link href={client.website} target="_blank" rel="noopener noreferrer">
                                     Visitar web <ExternalLink className="ml-2 h-3 w-3" />
                                 </Link>
                             </Button>
+                           )}
                         </CardFooter>
                     </Card>
                 )) : <p className="text-sm text-muted-foreground col-span-full">No se encontraron clientes potenciales con estos criterios.</p>}

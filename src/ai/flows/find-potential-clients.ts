@@ -1,17 +1,15 @@
-
 'use server';
 
 /**
  * @fileOverview A Genkit flow to find potential B2B clients for a business.
- *
- * - findPotentialClients - A function that takes a business profile and returns a list of potential clients.
- * - FindPotentialClientsInput - The input type for the findPotentialClients function.
- * - FindPotentialClientsOutput - The return type for the findPotentialClients function.
+ * (Versión corregida con 'website' opcional)
  */
 
 import { ai } from '@/ai/genkit';
-import {googleAI, googleSearch} from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
+
+// --- ESQUEMAS (Actualizados con 'website' opcional) ---
 
 const FindPotentialClientsInputSchema = z.object({
   productsAndServices: z.string().describe('A detailed description of the products or services the user offers.'),
@@ -20,11 +18,14 @@ const FindPotentialClientsInputSchema = z.object({
 });
 export type FindPotentialClientsInput = z.infer<typeof FindPotentialClientsInputSchema>;
 
+// 1. CORRECCIÓN: Hacemos 'website' opcional añadiendo `.optional()`
 const PotentialClientSchema = z.object({
-    name: z.string().describe('The name of the potential client company.'),
-    profile: z.string().describe('A brief profile of the potential client, including their industry and size.'),
-    reasoning: z.string().describe('A clear explanation of why this company is a good potential client.'),
-    website: z.string().url().describe('The official website URL of the potential client.'),
+  name: z.string().describe('The name of the potential client company.'),
+  profile: z.string().describe('A brief profile of the potential client, including their industry and size.'),
+  reasoning: z.string().describe('A clear explanation of why this company is a good potential client.'),
+  website: z.string().url().optional().describe('The official website URL of the potential client, if found.'), // <-- Añadido .optional()
+  email: z.string().optional().describe('El email de contacto público (ej. info@, contacto@) si se encuentra.'),
+  telefono: z.string().optional().describe('El teléfono de contacto público si se encuentra.'),
 });
 
 const FindPotentialClientsOutputSchema = z.object({
@@ -36,38 +37,82 @@ export async function findPotentialClients(input: FindPotentialClientsInput): Pr
   return findPotentialClientsFlow(input);
 }
 
+// --- FLUJO CORREGIDO (CON PROMPT MEJORADO PARA 'website' opcional) ---
 
 const findPotentialClientsFlow = ai.defineFlow(
   {
     name: 'findPotentialClientsFlow',
     inputSchema: FindPotentialClientsInputSchema,
     outputSchema: FindPotentialClientsOutputSchema,
-    tools: [googleSearch]
   },
-  async (input) => {
+  async (input: FindPotentialClientsInput) => {
     
-    const prompt = `You are an expert business development consultant. Your task is to identify potential B2B clients for a user based on their business profile. Use the search tool to find real companies.
+    console.log("Paso 1: Iniciando búsqueda de Clientes B2B...");
 
-The user's business profile is as follows:
-- Products and Services Offered: ${input.productsAndServices}
-- Ideal Client Profile: ${input.existingClientProfile}
-- Location: ${input.companyLocation}
+    // === PASO 1: BÚSQUEDA (Prompt mejorado) ===
+    
+    const searchPrompt = `You are an expert business researcher. Use the search tool to find potential B2B clients in Spain matching this profile:
+    - We sell: ${input.productsAndServices}
+    - We are looking for: ${input.existingClientProfile}
+    - Our location: ${input.companyLocation}
 
-Based on this information, perform a search to find potential companies that would be a good fit as clients. For each potential client, provide:
-1.  **Company Name:** The official name of the company.
-2.  **Profile:** A brief description of what the company does and its approximate size or relevance.
-3.  **Reasoning:** A short, clear explanation of why they would be a good client for the user.
-4.  **Website:** The company's official website.
+    Return a detailed text summary of your findings, including company names, their profiles, why they are a good fit, their websites (only include if a valid URL is found), and if available, a public contact email and phone number.
+    Responde SIEMPRE en español.`; // <-- Instrucción añadida para website
 
-Focus on providing high-quality, relevant leads. Provide the response in Spanish.`;
+    let searchResultsText = '';
+    try {
+      const searchResponse = await ai.generate({
+        model: googleAI.model('gemini-2.5-flash-lite'),
+        prompt: searchPrompt,
+        config: {
+          tools: [{ googleSearch: {} }] 
+        },
+      });
+      searchResultsText = searchResponse.text;
 
-    const llmResponse = await ai.generate({
-        model: googleAI.model('gemini-1.5-flash-latest'),
-        prompt: prompt,
+    } catch (error) {
+      console.error(`Error en el Paso 1 (Búsqueda de Clientes):`, error);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error durante la búsqueda de clientes: ${message}`);
+    }
+
+    console.log("Paso 2: Estructurando resultados de Clientes...");
+
+    // === PASO 2: ESTRUCTURACIÓN (Prompt mejorado) ===
+    
+    // 2. CORRECCIÓN: Instrucción para omitir 'website' si no es URL
+    const formatPrompt = `You are an expert data processor. Take the following block of text, which contains my research notes on potential clients, and parse it into a structured JSON format.
+    
+    Research Notes:
+    """
+    ${searchResultsText}
+    """
+
+    Extract all companies into the 'potentialClients' array. 
+    Ensure the 'website' field is only included if it contains a valid URL. If the notes mention that a website was not found or provide text instead of a URL, omit the 'website' field entirely for that client.
+    Extract 'email' and 'telefono' if they were found in the notes. If they are not present, leave the fields undefined.
+    Respond ONLY with the JSON.`;
+
+    try {
+      const llmResponse = await ai.generate({
+        model: googleAI.model('gemini-2.5-flash-lite'),
+        prompt: formatPrompt,
         output: { schema: FindPotentialClientsOutputSchema },
-        tools: [googleSearch]
-    });
-    
-    return llmResponse.output!;
+      });
+
+      const parsed = FindPotentialClientsOutputSchema.safeParse(llmResponse.output);
+
+      if (!parsed.success) {
+        console.error('Error de Zod en findPotentialClients (Paso 2):', parsed.error);
+        throw new Error('La IA ha devuelto una lista de clientes con un formato inesperado.');
+      }
+      
+      return parsed.data;
+
+    } catch (error) {
+      console.error(`Error en el Paso 2 (Estructuración de Clientes):`, error);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error al formatear los clientes encontrados: ${message}`);
+    }
   }
 );
