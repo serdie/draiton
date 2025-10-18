@@ -15,7 +15,7 @@ import type { GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { ViewPayrollModal } from '../view-payroll-modal';
 import { EditPayrollModal } from '../edit-payroll-modal';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { collection, query, where, onSnapshot, doc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, deleteDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 
@@ -36,13 +36,24 @@ export default function EmployeeDetailPage() {
     const [payrollToDelete, setPayrollToDelete] = useState<(GeneratePayrollOutput & { id: string }) | null>(null);
 
     useEffect(() => {
-        const storedEmployee = sessionStorage.getItem('selectedEmployee');
-        if (storedEmployee) {
-            setEmployee(JSON.parse(storedEmployee));
-        } else {
-           // Handle case where employee data isn't available, maybe redirect or fetch
-        }
-    }, []);
+        const fetchEmployeeData = async () => {
+            const storedEmployee = sessionStorage.getItem('selectedEmployee');
+            if (storedEmployee) {
+                setEmployee(JSON.parse(storedEmployee));
+            } else if (db && employeeId) {
+                // Fetch from Firestore if not in session storage
+                const employeeDocRef = doc(db, 'employees', employeeId);
+                const employeeDoc = await getDoc(employeeDocRef);
+                if (employeeDoc.exists()) {
+                    setEmployee({ id: employeeDoc.id, ...employeeDoc.data() } as Employee);
+                } else {
+                    toast({ variant: 'destructive', title: 'Error', description: 'No se pudo encontrar al empleado.' });
+                    router.push('/dashboard/finanzas?tab=nominas');
+                }
+            }
+        };
+        fetchEmployeeData();
+    }, [employeeId, router, toast]);
 
     useEffect(() => {
         if (!db || !user || !employeeId) {
