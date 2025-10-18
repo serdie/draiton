@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -9,6 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const ExtractReceiptDataInputSchema = z.object({
@@ -64,7 +66,17 @@ const extractReceiptDataFlow = ai.defineFlow(
     outputSchema: ExtractReceiptDataOutputSchema,
   },
   async input => {
-    const {output} = await extractReceiptDataPrompt(input);
+    const {output} = await ai.generate({
+      prompt: extractReceiptDataPrompt.template,
+      model: googleAI.model('gemini-2.5-flash-lite'),
+      output: { schema: ExtractReceiptDataOutputSchema },
+      context: [
+        {
+          role: 'user',
+          content: [{ text: JSON.stringify(input) }],
+        },
+      ],
+    });
     return output!;
   }
 );

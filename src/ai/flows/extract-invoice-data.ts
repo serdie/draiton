@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for extracting invoice data from an image.
@@ -8,6 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const ExtractInvoiceDataInputSchema = z.object({
@@ -83,7 +85,17 @@ const extractInvoiceDataFlow = ai.defineFlow(
     outputSchema: ExtractInvoiceDataOutputSchema,
   },
   async input => {
-    const {output} = await extractInvoiceDataPrompt(input);
+    const {output} = await ai.generate({
+      prompt: extractInvoiceDataPrompt.template,
+      model: googleAI.model('gemini-2.5-flash-lite'),
+      output: { schema: ExtractInvoiceDataOutputSchema },
+      context: [
+        {
+          role: 'user',
+          content: [{ text: JSON.stringify(input) }],
+        },
+      ],
+    });
     return output!;
   }
 );

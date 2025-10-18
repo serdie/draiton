@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for generating business ideas based on provided company data.
@@ -8,6 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GenerateBusinessIdeasInputSchema = z.object({
@@ -57,7 +59,17 @@ const generateBusinessIdeasFlow = ai.defineFlow(
     outputSchema: GenerateBusinessIdeasOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await ai.generate({
+      prompt: prompt.template,
+      model: googleAI.model('gemini-2.5-flash-lite'),
+      output: { schema: GenerateBusinessIdeasOutputSchema },
+      context: [
+        {
+          role: 'user',
+          content: [{ text: JSON.stringify(input) }],
+        },
+      ],
+    });
     return output!;
   }
 );
