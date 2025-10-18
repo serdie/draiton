@@ -30,7 +30,25 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FichajeEmpleadoTab } from './fichaje-empleado-tab';
 import { nanoid } from 'nanoid';
-import type { Project, ProjectStatus } from './page';
+
+export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
+
+export type Project = {
+  id: string;
+  name: string;
+  client: string;
+  description?: string;
+  status: ProjectStatus;
+  progress: number;
+  budget?: number;
+  startDate?: Date;
+  endDate?: Date;
+  ownerId: string;
+  createdAt: Date;
+  clientPortalActive: boolean;
+  clientPortalId: string;
+};
+
 
 export const projectStatuses: ProjectStatus[] = ['Planificación', 'En Progreso', 'En Espera', 'Completado', 'Cancelado'];
 
