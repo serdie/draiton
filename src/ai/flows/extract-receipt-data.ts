@@ -10,7 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const ExtractReceiptDataInputSchema = z.object({
@@ -66,17 +66,7 @@ const extractReceiptDataFlow = ai.defineFlow(
     outputSchema: ExtractReceiptDataOutputSchema,
   },
   async input => {
-    const {output} = await ai.generate({
-      prompt: extractReceiptDataPrompt.template,
-      model: googleAI.model('gemini-2.5-flash-lite'),
-      output: { schema: ExtractReceiptDataOutputSchema },
-      context: [
-        {
-          role: 'user',
-          content: [{ text: JSON.stringify(input) }],
-        },
-      ],
-    });
+    const {output} = await prompt(input);
     return output!;
   }
 );

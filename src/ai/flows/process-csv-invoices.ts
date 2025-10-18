@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import {googleAI} from '@genkit-ai/googleai';
 import { z } from 'genkit';
 
 const ProcessCsvInvoicesInputSchema = z.object({
@@ -73,17 +73,7 @@ const processCsvInvoicesFlow = ai.defineFlow(
     outputSchema: ProcessCsvInvoicesOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-      prompt: prompt.template,
-      model: googleAI.model('gemini-2.5-flash-lite'),
-      output: { schema: ProcessCsvInvoicesOutputSchema },
-      context: [
-        {
-          role: 'user',
-          content: [{ text: JSON.stringify(input) }],
-        },
-      ],
-    });
+    const { output } = await prompt(input);
     return output!;
   }
 );

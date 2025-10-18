@@ -10,7 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const AnalyzeWebsiteInputSchema = z.object({
@@ -72,17 +72,7 @@ const analyzeWebsiteFlow = ai.defineFlow(
     outputSchema: AnalyzeWebsiteOutputSchema,
   },
   async input => {
-    const {output} = await ai.generate({
-      prompt: prompt.template,
-      model: googleAI.model('gemini-2.5-flash-lite'),
-      output: { schema: AnalyzeWebsiteOutputSchema },
-      context: [
-        {
-          role: 'user',
-          content: [{ text: JSON.stringify(input) }],
-        },
-      ],
-    });
+    const {output} = await prompt(input);
     return output!;
   }
 );

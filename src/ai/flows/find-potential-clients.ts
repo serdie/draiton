@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import {googleAI} from '@genkit-ai/googleai';
 import { z } from 'genkit';
 
 const FindPotentialClientsInputSchema = z.object({
@@ -63,17 +63,7 @@ const findPotentialClientsFlow = ai.defineFlow(
     outputSchema: FindPotentialClientsOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-      prompt: prompt.template,
-      model: googleAI.model('gemini-2.5-flash-lite'),
-      output: { schema: FindPotentialClientsOutputSchema },
-      context: [
-        {
-          role: 'user',
-          content: [{ text: JSON.stringify(input) }],
-        },
-      ],
-    });
+    const { output } = await prompt(input);
     return output!;
   }
 );

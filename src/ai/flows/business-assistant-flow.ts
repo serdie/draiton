@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import {googleAI} from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { MessageData } from 'genkit/model';
 
@@ -60,7 +60,6 @@ const businessAssistantFlow = ai.defineFlow(
 
     const { content } = await ai.generate({
       history,
-      model: googleAI.model('gemini-2.5-flash-lite'),
     });
     
     const text = content[0]?.text;

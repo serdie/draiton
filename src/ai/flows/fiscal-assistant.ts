@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import {googleAI} from '@genkit-ai/googleai';
 import { z } from 'genkit';
 
 const FiscalAssistantInputSchema = z.object({
@@ -65,17 +65,7 @@ const fiscalAssistantFlow = ai.defineFlow(
     outputSchema: FiscalAssistantOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-      prompt: prompt.template,
-      model: googleAI.model('gemini-2.5-flash-lite'),
-      output: { schema: FiscalAssistantOutputSchema },
-      context: [
-        {
-          role: 'user',
-          content: [{ text: JSON.stringify(input) }],
-        },
-      ],
-    });
+    const { output } = await prompt(input);
     return output!;
   }
 );

@@ -11,7 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { googleAI } from '@genkit-ai/google-genai';
+import { googleAI } from '@genkit-ai/googleai';
 
 
 const GenerateSocialPostInputSchema = z.object({
@@ -40,7 +40,6 @@ const generateSocialPostFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await ai.generate({
-        model: googleAI.model('gemini-2.5-flash-lite'),
         prompt: `Eres un community manager experto en crear contenido viral y efectivo para redes sociales. Tu tarea es escribir un post para redes sociales basado en los siguientes objetivos.
 
 **Objetivo del Post:** ${input.objective}
