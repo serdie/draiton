@@ -101,25 +101,25 @@ export async function createEmployeeUser(employeeData: {
     }
   }
 
-  // Create or update the user document in 'users' collection.
   const userDocRef = db.collection('users').doc(userRecord.uid);
   await userDocRef.set({
       uid: userRecord.uid,
       displayName: employeeData.name,
       email: employeeData.email,
       role: 'employee',
-      companyOwnerId: employeeData.ownerId,
+      companyOwnerId: employeeData.ownerId, 
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       providerData: [{ providerId: 'password' }],
   }, { merge: true });
 
-  // Use the user's UID as the document ID in the 'employees' collection to prevent duplicates.
   const employeeDocRef = db.collection('employees').doc(userRecord.uid); 
+  const { ownerId, ...restOfEmployeeData } = employeeData;
   await employeeDocRef.set({
-    ...employeeData,
-    userId: userRecord.uid, // Link to the user in 'users' collection
+    ...restOfEmployeeData,
+    companyOwnerId: ownerId, 
+    userId: userRecord.uid,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true }); // Use merge to create or update
+  }, { merge: true });
 
   return { uid: userRecord.uid, tempPassword, message };
 }
