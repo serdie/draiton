@@ -55,6 +55,7 @@ const extractInvoiceDataPrompt = ai.definePrompt({
   name: 'extractInvoiceDataPrompt',
   input: {schema: ExtractInvoiceDataInputSchema},
   output: {schema: ExtractInvoiceDataOutputSchema},
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are an expert AI assistant specialized in extracting structured data from invoices.
 
 You will receive an image of an invoice. Your task is to extract all the relevant information to fill out a form. Be as detailed as possible.
@@ -85,12 +86,7 @@ const extractInvoiceDataFlow = ai.defineFlow(
     outputSchema: ExtractInvoiceDataOutputSchema,
   },
   async (input) => {
-    // 1. Usamos el nombre correcto: 'extractInvoiceDataPrompt'
-    // 2. Añadimos el modelo como segundo argumento
-    const { output } = await extractInvoiceDataPrompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
-    });
-    
+    const { output } = await extractInvoiceDataPrompt(input);
     return output!;
   }
 );

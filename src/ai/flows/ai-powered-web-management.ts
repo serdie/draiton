@@ -79,6 +79,7 @@ const prompt = ai.definePrompt({
   name: 'aiPoweredWebManagementPrompt',
   input: {schema: AIPoweredWebManagementInputSchema},
   output: {schema: AIPoweredWebManagementOutputSchema},
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are an expert web developer and copywriter. Your task is to generate a complete, personalized website template structure based on the user's business information. Generate compelling and professional content for each section.
 
 Business Information:
@@ -99,11 +100,7 @@ const aiPoweredWebManagementFlow = ai.defineFlow(
     outputSchema: AIPoweredWebManagementOutputSchema,
   },
   async (input) => {
-    // Aquí es donde añadimos el modelo, como segundo argumento
-    const { output } = await prompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
-    });
-    
+    const { output } = await prompt(input);
     return output!;
   }
 );

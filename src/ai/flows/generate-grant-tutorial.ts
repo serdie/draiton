@@ -37,6 +37,7 @@ const prompt = ai.definePrompt({
   name: 'generateGrantTutorialPrompt',
   input: { schema: GenerateGrantTutorialInputSchema },
   output: { schema: GenerateGrantTutorialOutputSchema },
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `Eres un consultor experto en la solicitud de ayudas y subvenciones públicas en España. Tu tarea es crear un tutorial claro y detallado, paso a paso, para que un autónomo o pyme pueda solicitar la siguiente ayuda:
 
 **Nombre de la Ayuda:** {{{grantTitle}}}
@@ -60,12 +61,7 @@ const generateGrantTutorialFlow = ai.defineFlow(
     outputSchema: GenerateGrantTutorialOutputSchema,
   },
   async (input) => {
-    // 1. El nombre 'prompt' es correcto.
-    // 2. Añadimos el modelo como segundo argumento.
-    const { output } = await prompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
-    });
-    
+    const { output } = await prompt(input);
     return output!;
   }
 );

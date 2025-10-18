@@ -41,6 +41,7 @@ const prompt = ai.definePrompt({
   name: 'fiscalAssistantPrompt',
   input: { schema: FiscalAssistantInputSchema },
   output: { schema: FiscalAssistantOutputSchema },
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are an expert tax advisor in Spain. A user needs help filling out a tax form. Your task is to provide clear, step-by-step instructions based on the data they provide.
 
 **User's Data:**
@@ -65,12 +66,7 @@ const fiscalAssistantFlow = ai.defineFlow(
     outputSchema: FiscalAssistantOutputSchema,
   },
   async (input) => {
-    // 1. El nombre 'prompt' es correcto.
-    // 2. Añadimos el modelo como segundo argumento.
-    const { output } = await prompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
-    });
-    
+    const { output } = await prompt(input);
     return output!;
   }
 );

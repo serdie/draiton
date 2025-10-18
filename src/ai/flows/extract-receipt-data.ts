@@ -44,6 +44,7 @@ const extractReceiptDataPrompt = ai.definePrompt({
   name: 'extractReceiptDataPrompt',
   input: {schema: ExtractReceiptDataInputSchema},
   output: {schema: ExtractReceiptDataOutputSchema},
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are an expert AI assistant specialized in extracting data from receipts and tickets.
 
 You will receive an image of a receipt. Your task is to extract the following information:
@@ -66,12 +67,7 @@ const extractReceiptDataFlow = ai.defineFlow(
     outputSchema: ExtractReceiptDataOutputSchema,
   },
   async (input) => {
-    // 1. Usamos el nombre de variable correcto: 'extractReceiptDataPrompt'
-    // 2. Añadimos el modelo como segundo argumento
-    const { output } = await extractReceiptDataPrompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
-    });
-    
+    const { output } = await extractReceiptDataPrompt(input);
     return output!;
   }
 );

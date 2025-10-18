@@ -45,6 +45,7 @@ const prompt = ai.definePrompt({
   name: 'processPdfExpensesPrompt',
   input: { schema: ProcessPdfExpensesInputSchema },
   output: { schema: ProcessPdfExpensesOutputSchema },
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are an expert data processor. Your task is to analyze the provided PDF document, which contains multiple expenses (like a bank statement or credit card summary), and convert each transaction into a structured JSON format.
 
 The user has provided a PDF file. Identify every single expense transaction in the document. For each transaction, extract the following information:
@@ -69,12 +70,7 @@ const processPdfExpensesFlow = ai.defineFlow(
     outputSchema: ProcessPdfExpensesOutputSchema,
   },
   async (input) => {
-    // 1. El nombre 'prompt' es correcto.
-    // 2. Añadimos el modelo como segundo argumento.
-    const { output } = await prompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
-    });
-    
+    const { output } = await prompt(input);
     return output!;
   }
 );

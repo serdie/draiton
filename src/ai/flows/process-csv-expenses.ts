@@ -41,6 +41,7 @@ const prompt = ai.definePrompt({
   name: 'processCsvExpensesPrompt',
   input: { schema: ProcessCsvExpensesInputSchema },
   output: { schema: ProcessCsvExpensesOutputSchema },
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are an expert data processor. Your task is to analyze the provided CSV content, which contains multiple expenses, and convert it into a structured JSON format.
 
 The CSV headers are likely to be in Spanish. Common headers might include "Fecha", "Categoría", "Proveedor", "Descripción", "Importe", "Método de pago". Your task is to intelligently map these columns to the required output schema, even if the header names are slightly different.
@@ -65,12 +66,7 @@ const processCsvExpensesFlow = ai.defineFlow(
     outputSchema: ProcessCsvExpensesOutputSchema,
   },
   async (input) => {
-    // 1. El nombre 'prompt' es correcto.
-    // 2. Añadimos el modelo como segundo argumento.
-    const { output } = await prompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
-    });
-    
+    const { output } = await prompt(input);
     return output!;
   }
 );

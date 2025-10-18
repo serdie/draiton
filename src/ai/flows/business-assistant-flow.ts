@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -57,18 +58,12 @@ const businessAssistantFlow = ai.defineFlow(
       { role: 'user', content: [{ text: input.message }] },
     ];
 
-    // --- INICIO DEL CÓDIGO CORREGIDO ---
-    
-    // 1. Llamamos a generate con el 'model' y 'messages'
     const response = await ai.generate({
-      model: googleAI.model('gemini-2.5-flash-lite'), // <-- El modelo que faltaba
-      messages: history, // <-- El nombre correcto es 'messages', no 'history'
+      model: googleAI.model('gemini-1.5-flash-latest'),
+      history: history,
     });
 
-    // 2. Extraemos el texto con .text (sin paréntesis)
     const text = response.text;
-
-    // --- FIN DEL CÓDIGO CORREGIDO ---
 
     if (text === undefined) {
       throw new Error('El asistente de IA no pudo generar una respuesta.');

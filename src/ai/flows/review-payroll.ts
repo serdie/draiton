@@ -19,6 +19,7 @@ const prompt = ai.definePrompt({
   name: 'reviewPayrollPrompt',
   input: { schema: ReviewPayrollInputSchema },
   output: { schema: ReviewPayrollOutputSchema },
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `Eres un experto asesor laboral en España. Analiza la siguiente nómina generada y proporciona una explicación clara y sencilla de cómo se ha calculado cada uno de los conceptos clave.
 
 **Datos de la Nómina a Revisar:**
@@ -44,12 +45,7 @@ const reviewPayrollFlow = ai.defineFlow(
     outputSchema: ReviewPayrollOutputSchema,
   },
   async (input) => {
-    // 1. El nombre 'prompt' es correcto.
-    // 2. Añadimos el modelo como segundo argumento.
-    const { output } = await prompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
-    });
-    
+    const { output } = await prompt(input);
     return output!;
   }
 );
