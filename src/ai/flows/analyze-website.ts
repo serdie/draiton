@@ -10,7 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import {googleAI, googleSearch} from '@genkit-ai/googleai';
 import {z} from 'genkit';
 
 const AnalyzeWebsiteInputSchema = z.object({
@@ -48,13 +48,18 @@ export async function analyzeWebsite(input: AnalyzeWebsiteInput): Promise<Analyz
   return analyzeWebsiteFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'analyzeWebsitePrompt',
-  input: {schema: AnalyzeWebsiteInputSchema},
-  output: {schema: AnalyzeWebsiteOutputSchema},
-  prompt: `You are a world-class web development and digital marketing consultant. Your task is to analyze the provided website URL and generate a structured report with actionable improvement points. Respond ALWAYS in Spanish.
 
-Website to analyze: {{{url}}}
+const analyzeWebsiteFlow = ai.defineFlow(
+  {
+    name: 'analyzeWebsiteFlow',
+    inputSchema: AnalyzeWebsiteInputSchema,
+    outputSchema: AnalyzeWebsiteOutputSchema,
+    tools: [googleSearch]
+  },
+  async (input) => {
+    const prompt = `You are a world-class web development and digital marketing consultant. Your task is to analyze the provided website URL and generate a structured report with actionable improvement points. Use the search tool to find best practices and common issues for the topics. Respond ALWAYS in Spanish.
+
+Website to analyze: ${input.url}
 
 Please provide a detailed analysis covering the following four key areas:
 1.  **SEO (Search Engine Optimization):** Analyze on-page SEO factors. Look for issues with titles, meta descriptions, headings, keyword usage, and mobile-friendliness.
@@ -62,21 +67,15 @@ Please provide a detailed analysis covering the following four key areas:
 3.  **UX and Design:** Evaluate the user experience and design. Comment on navigation clarity, call-to-action effectiveness, visual hierarchy, and overall aesthetic.
 4.  **Security:** Point out potential security vulnerabilities. Suggest best practices like using HTTPS, secure headers, and keeping software up-to-date.
 
-For each area, provide a list of specific, actionable improvement points. Each point should have a clear title and a detailed suggestion. Be concise but thorough.`,
-});
-
-const analyzeWebsiteFlow = ai.defineFlow(
-  {
-    name: 'analyzeWebsiteFlow',
-    inputSchema: AnalyzeWebsiteInputSchema,
-    outputSchema: AnalyzeWebsiteOutputSchema,
-  },
-  async (input) => {
-    // Aquí es donde añadimos el modelo, como segundo argumento
-    const { output } = await prompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
+For each area, provide a list of specific, actionable improvement points. Each point should have a clear title and a detailed suggestion. Be concise but thorough.`;
+    
+    const llmResponse = await ai.generate({
+        model: googleAI.model('gemini-2.5-flash-lite'),
+        prompt: prompt,
+        output: { schema: AnalyzeWebsiteOutputSchema },
+        tools: [googleSearch],
     });
     
-    return output!;
+    return llmResponse.output!;
   }
 );

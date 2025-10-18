@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import {googleAI, googleSearch} from '@genkit-ai/googleai';
 import { z } from 'genkit';
 
 const FindGrantsAndNewsInputSchema = z.object({
@@ -37,38 +37,38 @@ export async function findGrantsAndNews(input: FindGrantsAndNewsInput): Promise<
   return findGrantsAndNewsFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'findGrantsAndNewsPrompt',
-  input: { schema: FindGrantsAndNewsInputSchema },
-  output: { schema: FindGrantsAndNewsOutputSchema },
-  prompt: `You are an expert business consultant specializing in the Spanish market. Your task is to find the most relevant and up-to-date grants, subsidies, and economic news for a specific business profile.
-
-The user's business profile is as follows:
-- Sector: {{{businessSector}}}
-- Location: {{{businessLocation}}}
-- Number of Employees: {{{employeeCount}}}
-- Description: {{{businessDescription}}}
-
-Please perform a search and provide a curated list of:
-1.  **Grants/Subsidies:** Look for national, regional, or local public aid that this type of business could apply for.
-2.  **News:** Find recent economic or business news that could impact or be of interest to this business (e.g., new regulations, market trends, tax changes).
-
-For each item, provide a clear title, a short summary explaining its relevance, and a direct link to the official source or news article. Focus on information from the last 6 months to ensure relevance. Respond ONLY in Spanish.`,
-});
 
 const findGrantsAndNewsFlow = ai.defineFlow(
   {
     name: 'findGrantsAndNewsFlow',
     inputSchema: FindGrantsAndNewsInputSchema,
     outputSchema: FindGrantsAndNewsOutputSchema,
+    tools: [googleSearch]
   },
   async (input) => {
-    // 1. El nombre 'prompt' es correcto.
-    // 2. Añadimos el modelo como segundo argumento.
-    const { output } = await prompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
+
+    const prompt = `You are an expert business consultant specializing in the Spanish market. Your task is to find the most relevant and up-to-date grants, subsidies, and economic news for a specific business profile.
+Use the provided search tool to find real and current information from official government sources (BOE, regional portals) and reputable economic news outlets.
+
+The user's business profile is as follows:
+- Sector: ${input.businessSector}
+- Location: ${input.businessLocation}
+- Number of Employees: ${input.employeeCount}
+- Description: ${input.businessDescription}
+
+Please perform a search and provide a curated list of:
+1.  **Grants/Subsidies:** Look for national, regional, or local public aid that this type of business could apply for.
+2.  **News:** Find recent economic or business news that could impact or be of interest to this business (e.g., new regulations, market trends, tax changes).
+
+For each item, provide a clear title, a short summary explaining its relevance, and a direct link to the official source or news article. Focus on information from the last 6 months to ensure relevance. Respond ONLY in Spanish.`;
+    
+    const llmResponse = await ai.generate({
+        model: googleAI.model('gemini-2.5-flash-lite'),
+        prompt: prompt,
+        output: { schema: FindGrantsAndNewsOutputSchema },
+        tools: [googleSearch],
     });
     
-    return output!;
+    return llmResponse.output!;
   }
 );

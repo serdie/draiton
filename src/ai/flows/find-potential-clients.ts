@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import {googleAI, googleSearch} from '@genkit-ai/googleai';
 import { z } from 'genkit';
 
 const FindPotentialClientsInputSchema = z.object({
@@ -36,16 +36,22 @@ export async function findPotentialClients(input: FindPotentialClientsInput): Pr
   return findPotentialClientsFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'findPotentialClientsPrompt',
-  input: { schema: FindPotentialClientsInputSchema },
-  output: { schema: FindPotentialClientsOutputSchema },
-  prompt: `You are an expert business development consultant. Your task is to identify potential B2B clients for a user based on their business profile.
+
+const findPotentialClientsFlow = ai.defineFlow(
+  {
+    name: 'findPotentialClientsFlow',
+    inputSchema: FindPotentialClientsInputSchema,
+    outputSchema: FindPotentialClientsOutputSchema,
+    tools: [googleSearch]
+  },
+  async (input) => {
+    
+    const prompt = `You are an expert business development consultant. Your task is to identify potential B2B clients for a user based on their business profile. Use the search tool to find real companies.
 
 The user's business profile is as follows:
-- Products and Services Offered: {{{productsAndServices}}}
-- Ideal Client Profile: {{{existingClientProfile}}}
-- Location: {{{companyLocation}}}
+- Products and Services Offered: ${input.productsAndServices}
+- Ideal Client Profile: ${input.existingClientProfile}
+- Location: ${input.companyLocation}
 
 Based on this information, perform a search to find potential companies that would be a good fit as clients. For each potential client, provide:
 1.  **Company Name:** The official name of the company.
@@ -53,22 +59,15 @@ Based on this information, perform a search to find potential companies that wou
 3.  **Reasoning:** A short, clear explanation of why they would be a good client for the user.
 4.  **Website:** The company's official website.
 
-Focus on providing high-quality, relevant leads. Provide the response in Spanish.`,
-});
+Focus on providing high-quality, relevant leads. Provide the response in Spanish.`;
 
-const findPotentialClientsFlow = ai.defineFlow(
-  {
-    name: 'findPotentialClientsFlow',
-    inputSchema: FindPotentialClientsInputSchema,
-    outputSchema: FindPotentialClientsOutputSchema,
-  },
-  async (input) => {
-    // 1. El nombre 'prompt' es correcto.
-    // 2. Añadimos el modelo como segundo argumento.
-    const { output } = await prompt(input, {
-      model: googleAI.model('gemini-2.5-flash-lite'),
+    const llmResponse = await ai.generate({
+        model: googleAI.model('gemini-2.5-flash-lite'),
+        prompt: prompt,
+        output: { schema: FindPotentialClientsOutputSchema },
+        tools: [googleSearch]
     });
     
-    return output!;
+    return llmResponse.output!;
   }
 );
