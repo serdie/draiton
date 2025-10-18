@@ -1,68 +1,61 @@
 /**
- * @fileoverview Firestore Security Rules for Prototyping.
- *
- * Core Philosophy:
- * This ruleset prioritizes strict authorization based on resource ownership, while relaxing data validation to accelerate development. It enforces who can access what, but not the specific shape of the data.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a user-ownership model where users can only read and write data they own, with public read access for certain top-level collections.
  *
  * Data Structure:
- * - User profiles are stored in `/users/{userId}`.
- * - Projects are stored in `/projects/{projectId}`.
- * - Tasks are stored in `/tasks/{taskId}`.
- * - Financial Documents (invoices, quotes, etc.) are stored in `/invoices/{invoiceId}`.
- * - Expenses are stored in `/expenses/{expenseId}`.
- * - Contacts are stored in `/contacts/{contactId}`.
+ * - /users/{userId}: Stores individual user profiles. Only the authenticated user can access their own profile.
+ * - /projects/{projectId}: Stores project data. Only the project owner can create, update, or delete projects. Public read access is allowed.
+ * - /tasks/{taskId}: Stores task data. Only the task owner can create, update, or delete tasks. Public read access is allowed.
+ * - /invoices/{invoiceId}: Stores financial document data. Only the document owner can create, update, or delete documents. Public read access is allowed.
+ * - /expenses/{expenseId}: Stores expense data. Only the expense owner can create, update, or delete expenses. Public read access is allowed.
+ * - /contacts/{contactId}: Stores contact data. Only the contact owner can create, update, or delete contacts. Public read access is allowed.
  *
  * Key Security Decisions:
- * - User listing is disallowed.
- * - Strict owner-only access is enforced for all write operations.
- * - Public read access is NOT enabled for any collection.
+ * - User listing is explicitly disallowed.
+ * - All write operations are protected by an ownership check.
+ * - Public read access is granted to projects, tasks, invoices, expenses and contacts collections, but write access is restricted to the owner.
  *
  * Denormalization for Authorization:
- * - All documents include an `ownerId` field to simplify ownership checks and avoid costly `get()` calls.
+ * - The `ownerId` field is used within projects, tasks, invoices, expenses and contacts documents to enforce ownership. This allows for efficient security checks without additional reads.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Protects user profiles, ensuring only the owner can read and write.
+     * @description Controls access to user profile information.
      * @path /users/{userId}
-     * @allow (create) User with UID 'user123' can create their profile at /users/user123.
-     * @allow (get) User with UID 'user123' can read their profile at /users/user123.
-     * @allow (update) User with UID 'user123' can update their profile at /users/user123.
-     * @allow (delete) User with UID 'user123' can delete their profile at /users/user123.
-     * @deny (create) User with UID 'user456' cannot create a profile at /users/user123.
-     * @deny (get) User with UID 'user456' cannot read the profile at /users/user123.
-     * @deny (update) User with UID 'user456' cannot update the profile at /users/user123.
-     * @deny (delete) User with UID 'user456' cannot delete the profile at /users/user123.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User with UID 'user123' can create their profile.
+     * @allow (get, update, delete) User with UID 'user123' can read, update, and delete their own profile.
+     * @deny (create) User with UID 'user456' cannot create a profile for 'user123'.
+     * @deny (get, update, delete) User with UID 'user456' cannot read, update, or delete 'user123' profile.
+     * @principle Enforces document ownership for user profiles and allows self-creation.
      */
     match /users/{userId} {
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+
+      function isSignedIn() {
+        return request.auth != null;
       }
+
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
     /**
-     * @description Protects projects, ensuring only the owner can read and write.
+     * @description Controls access to project documents.
      * @path /projects/{projectId}
+     * @allow (get, list) Any user can read projects.
      * @allow (create) User with UID 'user123' can create a project with ownerId: 'user123'.
-     * @allow (get) User with UID 'user123' can read a project with ownerId: 'user123'.
-     * @allow (update) User with UID 'user123' can update a project with ownerId: 'user123'.
-     * @allow (delete) User with UID 'user123' can delete a project with ownerId: 'user123'.
+     * @allow (update, delete) User with UID 'user123' can update/delete a project where project.ownerId == 'user123'.
      * @deny (create) User with UID 'user456' cannot create a project with ownerId: 'user123'.
-     * @deny (get) User with UID 'user456' cannot read a project with ownerId: 'user123'.
-     * @deny (update) User with UID 'user456' cannot update a project with ownerId: 'user123'.
-     * @deny (delete) User with UID 'user456' cannot delete a project with ownerId: 'user123'.
-     * @principle Enforces document ownership for all operations.
+     * @deny (update, delete) User with UID 'user456' cannot update/delete a project where project.ownerId == 'user123'.
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /projects/{projectId} {
       function isOwner(ownerId) {
@@ -71,25 +64,22 @@ service cloud.firestore {
       function isExistingOwner(ownerId) {
         return isOwner(ownerId) && resource != null;
       }
-      allow get: if isOwner(resource.data.ownerId);
-      allow list: if isOwner(request.auth.uid);
-      allow create: if isOwner(request.resource.data.ownerId) ;
+
+      allow get, list: if true;
+      allow create: if isOwner(request.resource.data.ownerId);
       allow update: if isExistingOwner(resource.data.ownerId);
       allow delete: if isExistingOwner(resource.data.ownerId);
     }
 
     /**
-     * @description Protects tasks, ensuring only the owner can read and write.
+     * @description Controls access to task documents.
      * @path /tasks/{taskId}
+     * @allow (get, list) Any user can read tasks.
      * @allow (create) User with UID 'user123' can create a task with ownerId: 'user123'.
-     * @allow (get) User with UID 'user123' can read a task with ownerId: 'user123'.
-     * @allow (update) User with UID 'user123' can update a task with ownerId: 'user123'.
-     * @allow (delete) User with UID 'user123' can delete a task with ownerId: 'user123'.
+     * @allow (update, delete) User with UID 'user123' can update/delete a task where task.ownerId == 'user123'.
      * @deny (create) User with UID 'user456' cannot create a task with ownerId: 'user123'.
-     * @deny (get) User with UID 'user456' cannot read a task with ownerId: 'user123'.
-     * @deny (update) User with UID 'user456' cannot update a task with ownerId: 'user123'.
-     * @deny (delete) User with UID 'user456' cannot delete a task with ownerId: 'user123'.
-     * @principle Enforces document ownership for all operations.
+     * @deny (update, delete) User with UID 'user456' cannot update/delete a task where task.ownerId == 'user123'.
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /tasks/{taskId} {
       function isOwner(ownerId) {
@@ -98,26 +88,23 @@ service cloud.firestore {
       function isExistingOwner(ownerId) {
         return isOwner(ownerId) && resource != null;
       }
-      allow get: if isOwner(resource.data.ownerId);
-      allow list: if isOwner(request.auth.uid);
+
+      allow get, list: if true;
       allow create: if isOwner(request.resource.data.ownerId);
       allow update: if isExistingOwner(resource.data.ownerId);
       allow delete: if isExistingOwner(resource.data.ownerId);
     }
 
-     /**
-      * @description Protects invoices, ensuring only the owner can read and write.
-      * @path /invoices/{invoiceId}
-      * @allow (create) User with UID 'user123' can create an invoice with ownerId: 'user123'.
-      * @allow (get) User with UID 'user123' can read an invoice with ownerId: 'user123'.
-      * @allow (update) User with UID 'user123' can update an invoice with ownerId: 'user123'.
-      * @allow (delete) User with UID 'user123' can delete an invoice with ownerId: 'user123'.
-      * @deny (create) User with UID 'user456' cannot create an invoice with ownerId: 'user123'.
-      * @deny (get) User with UID 'user456' cannot read an invoice with ownerId: 'user123'.
-      * @deny (update) User with UID 'user456' cannot update an invoice with ownerId: 'user123'.
-      * @deny (delete) User with UID 'user456' cannot delete an invoice with ownerId: 'user123'.
-      * @principle Enforces document ownership for all operations.
-      */
+    /**
+     * @description Controls access to invoice documents.
+     * @path /invoices/{invoiceId}
+     * @allow (get, list) Any user can read invoices.
+     * @allow (create) User with UID 'user123' can create an invoice with ownerId: 'user123'.
+     * @allow (update, delete) User with UID 'user123' can update/delete an invoice where invoice.ownerId == 'user123'.
+     * @deny (create) User with UID 'user456' cannot create an invoice with ownerId: 'user123'.
+     * @deny (update, delete) User with UID 'user456' cannot update/delete an invoice where invoice.ownerId == 'user123'.
+     * @principle Enforces document ownership for writes, allows public reads.
+     */
     match /invoices/{invoiceId} {
       function isOwner(ownerId) {
         return request.auth.uid == ownerId;
@@ -125,25 +112,22 @@ service cloud.firestore {
       function isExistingOwner(ownerId) {
         return isOwner(ownerId) && resource != null;
       }
-      allow get: if isOwner(resource.data.ownerId);
-      allow list: if isOwner(request.auth.uid);
+
+      allow get, list: if true;
       allow create: if isOwner(request.resource.data.ownerId);
       allow update: if isExistingOwner(resource.data.ownerId);
       allow delete: if isExistingOwner(resource.data.ownerId);
     }
 
     /**
-     * @description Protects expenses, ensuring only the owner can read and write.
+     * @description Controls access to expense documents.
      * @path /expenses/{expenseId}
+     * @allow (get, list) Any user can read expenses.
      * @allow (create) User with UID 'user123' can create an expense with ownerId: 'user123'.
-     * @allow (get) User with UID 'user123' can read an expense with ownerId: 'user123'.
-     * @allow (update) User with UID 'user123' can update an expense with ownerId: 'user123'.
-     * @allow (delete) User with UID 'user123' can delete an expense with ownerId: 'user123'.
+     * @allow (update, delete) User with UID 'user123' can update/delete an expense where expense.ownerId == 'user123'.
      * @deny (create) User with UID 'user456' cannot create an expense with ownerId: 'user123'.
-     * @deny (get) User with UID 'user456' cannot read an expense with ownerId: 'user123'.
-     * @deny (update) User with UID 'user456' cannot update an expense with ownerId: 'user123'.
-     * @deny (delete) User with UID 'user456' cannot delete an expense with ownerId: 'user123'.
-     * @principle Enforces document ownership for all operations.
+     * @deny (update, delete) User with UID 'user456' cannot update/delete an expense where expense.ownerId == 'user123'.
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /expenses/{expenseId} {
       function isOwner(ownerId) {
@@ -152,25 +136,22 @@ service cloud.firestore {
       function isExistingOwner(ownerId) {
         return isOwner(ownerId) && resource != null;
       }
-      allow get: if isOwner(resource.data.ownerId);
-      allow list: if isOwner(request.auth.uid);
+
+      allow get, list: if true;
       allow create: if isOwner(request.resource.data.ownerId);
       allow update: if isExistingOwner(resource.data.ownerId);
       allow delete: if isExistingOwner(resource.data.ownerId);
     }
 
-    /**
-     * @description Protects contacts, ensuring only the owner can read and write.
+        /**
+     * @description Controls access to contact documents.
      * @path /contacts/{contactId}
+     * @allow (get, list) Any user can read contacts.
      * @allow (create) User with UID 'user123' can create a contact with ownerId: 'user123'.
-     * @allow (get) User with UID 'user123' can read a contact with ownerId: 'user123'.
-     * @allow (update) User with UID 'user123' can update a contact with ownerId: 'user123'.
-     * @allow (delete) User with UID 'user123' can delete a contact with ownerId: 'user123'.
+     * @allow (update, delete) User with UID 'user123' can update/delete a contact where contact.ownerId == 'user123'.
      * @deny (create) User with UID 'user456' cannot create a contact with ownerId: 'user123'.
-     * @deny (get) User with UID 'user456' cannot read a contact with ownerId: 'user123'.
-     * @deny (update) User with UID 'user456' cannot update a contact with ownerId: 'user123'.
-     * @deny (delete) User with UID 'user456' cannot delete a contact with ownerId: 'user123'.
-     * @principle Enforces document ownership for all operations.
+     * @deny (update, delete) User with UID 'user456' cannot update/delete a contact where contact.ownerId == 'user123'.
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /contacts/{contactId} {
       function isOwner(ownerId) {
@@ -179,8 +160,8 @@ service cloud.firestore {
       function isExistingOwner(ownerId) {
         return isOwner(ownerId) && resource != null;
       }
-      allow get: if isOwner(resource.data.ownerId);
-      allow list: if isOwner(request.auth.uid);
+
+      allow get, list: if true;
       allow create: if isOwner(request.resource.data.ownerId);
       allow update: if isExistingOwner(resource.data.ownerId);
       allow delete: if isExistingOwner(resource.data.ownerId);
