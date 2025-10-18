@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useContext } from 'react';
@@ -31,25 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FichajeEmpleadoTab } from './fichaje-empleado-tab';
 import { nanoid } from 'nanoid';
-
-
-export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
-
-export type Project = {
-  id: string;
-  ownerId: string;
-  name: string;
-  client: string;
-  description?: string;
-  startDate: Date | null;
-  endDate: Date | null;
-  budget: number | null;
-  status: ProjectStatus;
-  progress?: number;
-  createdAt: Date;
-  clientPortalActive?: boolean;
-  clientPortalId?: string;
-};
+import type { Project, ProjectStatus } from './page';
 
 export const projectStatuses: ProjectStatus[] = ['Planificación', 'En Progreso', 'En Espera', 'Completado', 'Cancelado'];
 
