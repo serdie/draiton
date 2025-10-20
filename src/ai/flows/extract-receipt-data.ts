@@ -1,38 +1,37 @@
-
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for extracting expense data from a receipt image.
- *
- * - extractReceiptData - A function that accepts an image of a receipt and returns the extracted data.
- * - ExtractReceiptDataInput - The input type for the extractReceiptData function.
- * - ExtractReceiptDataOutput - The return type for the extractReceiptData function.
+ * @fileOverview Flujo de Genkit para extraer datos de una imagen de ticket o recibo.
+ * (Versión final corregida, robusta y en español)
  */
 
-import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
+
+// --- ESQUEMAS (Descripciones en español) ---
 
 const ExtractReceiptDataInputSchema = z.object({
   receiptDataUri: z
     .string()
     .describe(
-      "A photo of a receipt, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "Una foto de un ticket o recibo, como data URI (Base64 con MIME type). Formato esperado: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 export type ExtractReceiptDataInput = z.infer<typeof ExtractReceiptDataInputSchema>;
 
+// Ajustamos descripciones a español
 const ExtractReceiptDataOutputSchema = z.object({
-  supplier: z.string().describe('The name of the supplier or store.'),
-  date: z.string().describe('The date of the expense in YYYY-MM-DD format.'),
-  totalAmount: z.number().describe('The total amount of the expense.'),
-  taxAmount: z.number().optional().describe('The tax amount (e.g., IVA, VAT) if available.'),
+  supplier: z.string().describe('El nombre del proveedor o tienda.'),
+  date: z.string().describe('La fecha del gasto en formato AAAA-MM-DD.'),
+  totalAmount: z.number().describe('El importe total del gasto.'),
+  taxAmount: z.number().optional().describe('El importe del impuesto (IVA, opcional).'),
   category: z
     .enum(['Software', 'Oficina', 'Marketing', 'Viajes', 'Suministros', 'Otros'])
-    .describe('A suggested category for the expense.'),
+    .describe('Categoría sugerida para el gasto.'),
   description: z
     .string()
-    .describe('A brief description of the items purchased.'),
+    .describe('Breve descripción de los artículos o servicios comprados.'),
 });
 export type ExtractReceiptDataOutput = z.infer<typeof ExtractReceiptDataOutputSchema>;
 
@@ -40,34 +39,56 @@ export async function extractReceiptData(input: ExtractReceiptDataInput): Promis
   return extractReceiptDataFlow(input);
 }
 
+// --- PROMPT (Instrucciones en español, petición de JSON) ---
 const extractReceiptDataPrompt = ai.definePrompt({
   name: 'extractReceiptDataPrompt',
-  input: {schema: ExtractReceiptDataInputSchema},
-  output: {schema: ExtractReceiptDataOutputSchema},
-  model: googleAI.model('gemini-1.5-flash-latest'),
-  prompt: `You are an expert AI assistant specialized in extracting data from receipts and tickets.
+  input: { schema: ExtractReceiptDataInputSchema },
+  output: { schema: ExtractReceiptDataOutputSchema },
+  prompt: `Eres un asistente experto de IA especializado en extraer datos de tickets y recibos españoles.
 
-You will receive an image of a receipt. Your task is to extract the following information:
-- Supplier Name: The name of the store or provider.
-- Date: The date of the transaction. Provide it in YYYY-MM-DD format.
-- Total Amount: The final total amount paid.
-- Tax Amount: The value of the taxes (like IVA or VAT). If not explicitly found, you can leave it empty.
-- Category: Infer a relevant category from the following options: Software, Oficina, Marketing, Viajes, Suministros, Otros.
-- Description: Create a short summary of the items or services purchased.
+Recibirás una imagen de un ticket. Tu tarea es extraer la siguiente información:
+-   **supplier**: El nombre de la tienda o proveedor.
+-   **date**: La fecha de la transacción. Devuelve en formato AAAA-MM-DD.
+-   **totalAmount**: El importe final total pagado.
+-   **taxAmount**: El valor de los impuestos (como IVA). Si no se encuentra explícitamente, puedes dejarlo vacío.
+-   **category**: Infiere una categoría relevante de las siguientes opciones: Software, Oficina, Marketing, Viajes, Suministros, Otros.
+-   **description**: Crea un breve resumen de los artículos o servicios comprados.
 
-Here is the receipt image: {{media url=receiptDataUri}}
+Aquí está la imagen del ticket: {{media url=receiptDataUri}}
 
-Extract the data and respond in the required JSON format.`,
+Extrae los datos y responde ÚNICAMENTE con el formato JSON requerido.`,
 });
 
+// --- FLUJO CORREGIDO Y ROBUSTO ---
 const extractReceiptDataFlow = ai.defineFlow(
   {
     name: 'extractReceiptDataFlow',
     inputSchema: ExtractReceiptDataInputSchema,
     outputSchema: ExtractReceiptDataOutputSchema,
   },
-  async (input) => {
-    const { output } = await extractReceiptDataPrompt(input);
-    return output!;
+  async (input: ExtractReceiptDataInput) => {
+    try {
+      // 1. Llamamos al prompt correcto y especificamos el modelo
+      const { output } = await extractReceiptDataPrompt(input, {
+        model: googleAI.model('gemini-2.5-flash-lite'),
+      });
+
+      // 2. Validamos la salida con safeParse
+      const parsed = ExtractReceiptDataOutputSchema.safeParse(output);
+
+      if (!parsed.success) {
+        // Error en español
+        console.error('Error de validación de Zod en extractReceiptData:', parsed.error);
+        throw new Error('La IA devolvió los datos del ticket en un formato inesperado.');
+      }
+      
+      return parsed.data; // Devolvemos datos validados
+
+    } catch (error) {
+      // 3. Capturamos cualquier error y lo devolvemos en español
+      console.error(`Error en extractReceiptDataFlow:`, error);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`No se pudieron extraer los datos del ticket. Error: ${message}`);
+    }
   }
 );

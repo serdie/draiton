@@ -1,17 +1,15 @@
-
 'use server';
 
 /**
  * @fileOverview This file defines a Genkit flow for AI-powered website management, allowing users to generate a complete and personalized website template.
- *
- * - aiPoweredWebManagement - A function that handles the website generation process.
- * - AIPoweredWebManagementInput - The input type for the function.
- * - AIPoweredWebManagementOutput - The return type for the function.
+ * (Versión final corregida y robusta)
  */
 
-import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
+
+// --- ESQUEMAS (Sin cambios) ---
 
 const AIPoweredWebManagementInputSchema = z.object({
   businessDescription: z
@@ -30,7 +28,6 @@ const AIPoweredWebManagementInputSchema = z.object({
     .string()
     .describe('Any specific features the user wants to include in the website, such as a blog, contact form, or e-commerce functionality.'),
 });
-
 export type AIPoweredWebManagementInput = z.infer<typeof AIPoweredWebManagementInputSchema>;
 
 const AIPoweredWebManagementOutputSchema = z.object({
@@ -68,18 +65,17 @@ const AIPoweredWebManagementOutputSchema = z.object({
     buttonText: z.string().describe('The text for the contact form submission button (e.g., "Enviar Mensaje").'),
   }).describe('The contact section.'),
 });
-
 export type AIPoweredWebManagementOutput = z.infer<typeof AIPoweredWebManagementOutputSchema>;
 
 export async function aiPoweredWebManagement(input: AIPoweredWebManagementInput): Promise<AIPoweredWebManagementOutput> {
   return aiPoweredWebManagementFlow(input);
 }
 
+// --- PROMPT (Sin cambios, el modelo se añade en el flow) ---
 const prompt = ai.definePrompt({
   name: 'aiPoweredWebManagementPrompt',
-  input: {schema: AIPoweredWebManagementInputSchema},
-  output: {schema: AIPoweredWebManagementOutputSchema},
-  model: googleAI.model('gemini-1.5-flash-latest'),
+  input: { schema: AIPoweredWebManagementInputSchema },
+  output: { schema: AIPoweredWebManagementOutputSchema },
   prompt: `You are an expert web developer and copywriter. Your task is to generate a complete, personalized website template structure based on the user's business information. Generate compelling and professional content for each section.
 
 Business Information:
@@ -89,18 +85,39 @@ Business Information:
 - Example Websites: {{{exampleWebsites}}}
 - Additional Features: {{{additionalFeatures}}}
 
-Based on this, create a full website structure. Be creative and professional. Ensure the content is tailored to the business description provided. For icon keywords, suggest valid icon names from the 'lucide-react' library.
+Based on this, create a full website structure. Be creative and professional. Ensure the content is tailored to the business description provided. For icon keywords, suggest valid icon names from the 'lucide-react' library. Respond ONLY with the JSON structure.
 `,
 });
 
+// --- FLUJO CORREGIDO Y ROBUSTO ---
 const aiPoweredWebManagementFlow = ai.defineFlow(
   {
     name: 'aiPoweredWebManagementFlow',
     inputSchema: AIPoweredWebManagementInputSchema,
     outputSchema: AIPoweredWebManagementOutputSchema,
   },
-  async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+  async (input: AIPoweredWebManagementInput) => { // Añadimos tipo a input
+    try {
+      // 1. Llamamos al prompt especificando el modelo
+      const { output } = await prompt(input, {
+        model: googleAI.model('gemini-2.5-flash-lite'), // Modelo añadido aquí
+      });
+
+      // 2. Validamos la salida con safeParse
+      const parsed = AIPoweredWebManagementOutputSchema.safeParse(output);
+
+      if (!parsed.success) {
+        console.error('Error de Zod en aiPoweredWebManagement:', parsed.error);
+        throw new Error('La IA ha devuelto una estructura de web con formato inesperado.');
+      }
+      
+      return parsed.data; // Devolvemos los datos validados
+
+    } catch (error) {
+      // 3. Capturamos cualquier error
+      console.error(`Error en aiPoweredWebManagementFlow:`, error);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`No se pudo generar la estructura web. Error: ${message}`);
+    }
   }
 );

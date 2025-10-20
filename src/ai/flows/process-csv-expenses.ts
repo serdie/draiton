@@ -1,72 +1,91 @@
-
 'use server';
 
 /**
- * @fileOverview A Genkit flow for processing a CSV file of expenses.
- *
- * - processCsvExpenses - A function that accepts CSV content and returns structured expense data.
- * - ProcessCsvExpensesInput - The input type for the function.
- * - ProcessCsvExpensesOutput - The return type for the function.
+ * @fileOverview Flujo de Genkit para procesar un archivo CSV de gastos.
+ * (Versión final corregida, robusta y en español)
  */
 
 import { ai } from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 
+// --- ESQUEMAS (Descripciones en español) ---
+
 const ProcessCsvExpensesInputSchema = z.object({
-  csvContent: z.string().describe('The full content of the CSV file as a string.'),
+  csvContent: z.string().describe('El contenido completo del archivo CSV como texto.'),
 });
 export type ProcessCsvExpensesInput = z.infer<typeof ProcessCsvExpensesInputSchema>;
 
 const ExpenseSchema = z.object({
-    fecha: z.string().describe('La fecha del gasto en formato YYYY-MM-DD.'),
-    categoria: z.string().describe('La categoría del gasto.'),
-    proveedor: z.string().describe('El nombre del proveedor o tienda.'),
-    descripcion: z.string().describe('Una breve descripción del gasto.'),
-    importe: z.number().describe('El importe total del gasto.'),
-    metodoPago: z.string().describe('El método de pago utilizado.'),
+  fecha: z.string().describe('La fecha del gasto en formato AAAA-MM-DD.'),
+  categoria: z.string().describe('La categoría del gasto.'),
+  proveedor: z.string().describe('El nombre del proveedor o tienda.'),
+  descripcion: z.string().describe('Una breve descripción del gasto.'),
+  importe: z.number().describe('El importe total del gasto (numérico).'),
+  metodoPago: z.string().describe('El método de pago utilizado.'),
 });
 
 const ProcessCsvExpensesOutputSchema = z.object({
-  expenses: z.array(ExpenseSchema).describe('Una lista de los gastos procesados desde el CSV.'),
+  expenses: z.array(ExpenseSchema).describe('Lista de los gastos procesados desde el CSV.'),
 });
 export type ProcessCsvExpensesOutput = z.infer<typeof ProcessCsvExpensesOutputSchema>;
-
 
 export async function processCsvExpenses(input: ProcessCsvExpensesInput): Promise<ProcessCsvExpensesOutput> {
   return processCsvExpensesFlow(input);
 }
 
+// --- PROMPT (Instrucciones en español, el modelo se añade en el flow) ---
 const prompt = ai.definePrompt({
   name: 'processCsvExpensesPrompt',
   input: { schema: ProcessCsvExpensesInputSchema },
   output: { schema: ProcessCsvExpensesOutputSchema },
-  model: googleAI.model('gemini-1.5-flash-latest'),
-  prompt: `You are an expert data processor. Your task is to analyze the provided CSV content, which contains multiple expenses, and convert it into a structured JSON format.
+  prompt: `Eres un experto procesador de datos. Tu tarea es analizar el contenido CSV proporcionado, que contiene múltiples gastos, y convertirlo a un formato JSON estructurado.
 
-The CSV headers are likely to be in Spanish. Common headers might include "Fecha", "Categoría", "Proveedor", "Descripción", "Importe", "Método de pago". Your task is to intelligently map these columns to the required output schema, even if the header names are slightly different.
+Las cabeceras del CSV probablemente estarán en español. Cabeceras comunes podrían ser "Fecha", "Categoría", "Proveedor", "Descripción", "Importe", "Método de pago". Tu tarea es mapear inteligentemente estas columnas al esquema de salida requerido, incluso si los nombres de las cabeceras varían ligeramente.
 
-- Map the date column to "fecha" (in YYYY-MM-DD format).
-- Map the category column to "categoria".
-- Map the supplier/vendor column to "proveedor".
-- Map the description column to "descripcion".
-- Map the amount/total column to "importe" (as a number).
-- Map the payment method column to "metodoPago".
+- Mapea la columna de fecha a "fecha" (en formato AAAA-MM-DD).
+- Mapea la columna de categoría a "categoria".
+- Mapea la columna de proveedor/vendedor a "proveedor".
+- Mapea la columna de descripción a "descripcion".
+- Mapea la columna de importe/total a "importe" (como número).
+- Mapea la columna de método de pago a "metodoPago".
 
-Here is the CSV content:
+Aquí está el contenido del CSV:
 {{{csvContent}}}
 
-Process every row and return the structured JSON array.`,
+Procesa cada fila y devuelve el array JSON estructurado ('expenses'). Responde ÚNICAMENTE con el JSON.`,
 });
 
+// --- FLUJO CORREGIDO Y ROBUSTO ---
 const processCsvExpensesFlow = ai.defineFlow(
   {
     name: 'processCsvExpensesFlow',
     inputSchema: ProcessCsvExpensesInputSchema,
     outputSchema: ProcessCsvExpensesOutputSchema,
   },
-  async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+  async (input: ProcessCsvExpensesInput) => { // Añadimos tipo a input
+    try {
+      // 1. Llamamos al prompt especificando el modelo
+      const { output } = await prompt(input, {
+        model: googleAI.model('gemini-2.5-flash-lite'), // Modelo añadido aquí
+      });
+
+      // 2. Validamos la salida con safeParse
+      const parsed = ProcessCsvExpensesOutputSchema.safeParse(output);
+
+      if (!parsed.success) {
+        // Error en español
+        console.error('Error de Zod en processCsvExpenses:', parsed.error);
+        throw new Error('La IA ha devuelto la lista de gastos con formato inesperado.');
+      }
+      
+      return parsed.data; // Devolvemos los datos validados
+
+    } catch (error) {
+      // 3. Capturamos cualquier error y lo devolvemos en español
+      console.error(`Error en processCsvExpensesFlow:`, error);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`No se pudieron procesar los gastos del CSV. Error: ${message}`);
+    }
   }
 );

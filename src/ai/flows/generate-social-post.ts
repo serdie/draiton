@@ -1,30 +1,29 @@
-
 'use server';
 
 /**
- * @fileOverview A Genkit flow to generate social media post content.
- *
- * - generateSocialPost - A function that takes a post goal and returns AI-generated text.
- * - GenerateSocialPostInput - The input type for the function.
- * - GenerateSocialPostOutput - The return type for the function.
+ * @fileOverview Flujo de Genkit para generar publicaciones para redes sociales.
+ * (Versión final corregida, robusta y en español)
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
+import { z } from 'genkit';
 
+// --- ESQUEMAS (Descripciones en español) ---
 
 const GenerateSocialPostInputSchema = z.object({
-  objective: z.string().describe('The main goal of the social media post (e.g., promote a new product, share a company update, post a tutorial).'),
-  format: z.string().describe('The format for the post (e.g., "Instagram Post", "LinkedIn Article", "Twitter Thread").'),
-  tone: z.string().describe('The desired tone for the post (e.g., professional, funny, inspiring, informative).'),
-  keyInfo: z.string().optional().describe('Any specific key information, links, or hashtags to include.'),
+  targetAudience: z.string().describe('Descripción del público al que se dirige la publicación.'),
+  platform: z.enum(['Facebook', 'Instagram', 'Twitter', 'LinkedIn']).describe('La plataforma de red social objetivo.'),
+  campaignObjective: z.string().describe('El objetivo de la campaña (ej. aumentar interacción, promocionar producto, generar leads).'),
+  keyInformation: z.string().describe('Información clave o mensaje principal que debe contener la publicación.'),
+  tone: z.string().describe('Tono deseado para la publicación (ej. "formal", "divertido", "inspirador").'),
 });
 export type GenerateSocialPostInput = z.infer<typeof GenerateSocialPostInputSchema>;
 
-
 const GenerateSocialPostOutputSchema = z.object({
-    postText: z.string().describe('The full body content of the social media post, including relevant hashtags and calls to action.'),
+  postContent: z.string().describe('El texto completo de la publicación para la red social.'),
+  hashtags: z.array(z.string()).describe('Una lista de hashtags relevantes para la publicación.'),
+  callToAction: z.string().describe('Una llamada a la acción clara para el usuario (ej. "Visita nuestro perfil", "Compra ahora").'),
 });
 export type GenerateSocialPostOutput = z.infer<typeof GenerateSocialPostOutputSchema>;
 
@@ -32,27 +31,52 @@ export async function generateSocialPost(input: GenerateSocialPostInput): Promis
   return generateSocialPostFlow(input);
 }
 
+// --- PROMPT (Instrucciones en español, el modelo se añade en el flow) ---
+const prompt = ai.definePrompt({
+  name: 'generateSocialPostPrompt',
+  input: { schema: GenerateSocialPostInputSchema },
+  output: { schema: GenerateSocialPostOutputSchema },
+  prompt: `Eres un experto en marketing digital y creación de contenido para redes sociales. Tu tarea es generar una publicación atractiva y efectiva para la plataforma especificada.
+
+**Público Objetivo:** {{{targetAudience}}}
+**Plataforma:** {{{platform}}}
+**Objetivo de la Campaña:** {{{campaignObjective}}}
+**Información Clave a Incluir:** {{{keyInformation}}}
+**Tono Deseado:** {{{tone}}}
+
+Genera el 'postContent' (el texto principal de la publicación), una lista de 'hashtags' relevantes y una 'callToAction' clara. El contenido debe ser adecuado para la plataforma, captar la atención del público objetivo y cumplir el objetivo de la campaña. Responde SIEMPRE en español y ÚNICAMENTE con el formato JSON requerido.`,
+});
+
+// --- FLUJO CORREGIDO Y ROBUSTO ---
 const generateSocialPostFlow = ai.defineFlow(
   {
     name: 'generateSocialPostFlow',
     inputSchema: GenerateSocialPostInputSchema,
     outputSchema: GenerateSocialPostOutputSchema,
   },
-  async (input) => {
-    const { output } = await ai.generate({
-        model: googleAI.model('gemini-2.5-flash-lite'),
-        prompt: `Eres un community manager experto en crear contenido viral y efectivo para redes sociales. Tu tarea es escribir un post para redes sociales basado en los siguientes objetivos.
+  async (input: GenerateSocialPostInput) => { // Añadimos tipo a input
+    try {
+      // 1. Llamamos al prompt especificando el modelo
+      const { output } = await prompt(input, {
+        model: googleAI.model('gemini-2.5-flash-lite'), // Modelo añadido aquí
+      });
 
-**Objetivo del Post:** ${input.objective}
-**Formato del Post:** ${input.format}
-**Tono Deseado:** ${input.tone}
-**Información Clave a Incluir (Opcional):** ${input.keyInfo}
+      // 2. Validamos la salida con safeParse
+      const parsed = GenerateSocialPostOutputSchema.safeParse(output);
 
-Basado en esto, genera el texto completo para la publicación. Asegúrate de que sea atractivo, se adapte a la plataforma (formato), y termine con una llamada a la acción clara si es apropiado. Incluye 2-3 hashtags relevantes. Escribe el post en español.`,
-        output: {
-            schema: GenerateSocialPostOutputSchema
-        }
-    });
-    return output!;
+      if (!parsed.success) {
+        // Error en español
+        console.error('Error de Zod en generateSocialPost:', parsed.error);
+        throw new Error('La IA ha devuelto la publicación con formato inesperado.');
+      }
+      
+      return parsed.data; // Devolvemos los datos validados
+
+    } catch (error) {
+      // 3. Capturamos cualquier error y lo devolvemos en español
+      console.error(`Error en generateSocialPostFlow:`, error);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`No se pudo generar la publicación social. Error: ${message}`);
+    }
   }
 );
