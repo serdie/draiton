@@ -147,14 +147,27 @@ export default function DashboardPage() {
                     }));
                 }
 
-                const processFinancialData = (items: (Document | Expense)[], type: 'income' | 'expenses') => {
+                 const processFinancialData = (items: (Document | Expense)[], type: 'income' | 'expenses') => {
                     items.forEach(item => {
                         const itemDate = 'fechaEmision' in item ? item.fechaEmision : item.fecha;
-                        const monthStr = format(itemDate, 'MMM', { locale: es });
-                        const chartIndex = chartDataTemplate.findIndex(d => d.month.toLowerCase() === monthStr.toLowerCase());
-
-                        if (chartIndex !== -1) {
-                            chartDataTemplate[chartIndex][type] += item.importe || (item as Expense).importe;
+                        const itemYear = getYear(itemDate);
+                        const currentYear = getYear(now);
+                        
+                        // Handle multi-year ranges for semestral/anual
+                        if(itemYear < currentYear) {
+                             const monthIndex = getMonth(itemDate);
+                             const monthStr = format(itemDate, 'MMM', { locale: es });
+                             const chartIndex = chartDataTemplate.findIndex(d => d.month.toLowerCase() === monthStr.toLowerCase());
+                             if (chartIndex !== -1) {
+                                chartDataTemplate[chartIndex][type] += item.importe || (item as Expense).importe;
+                            }
+                        } else {
+                            const monthIndex = getMonth(itemDate);
+                            const monthStr = format(itemDate, 'MMM', { locale: es });
+                            const chartIndex = chartDataTemplate.findIndex(d => d.month.toLowerCase() === monthStr.toLowerCase());
+                             if (chartIndex !== -1) {
+                                chartDataTemplate[chartIndex][type] += item.importe || (item as Expense).importe;
+                            }
                         }
                     });
                 };
@@ -187,17 +200,18 @@ export default function DashboardPage() {
                             id: doc.id,
                             type: type,
                             text: textFieldFn(data),
-                            date: data[dateField] as Timestamp,
+                            date: data[dateField],
                         };
                     });
                 };
 
+                // Queries without orderBy to avoid composite index requirement
                 const [invoicesSnap, expensesSnap, projectsSnap, tasksSnap, contactsSnap] = await Promise.all([
-                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), orderBy('fechaEmision', 'desc'), limit(5))),
-                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(5))),
-                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
-                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
-                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
+                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(10))),
+                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), limit(10))),
+                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), limit(10))),
+                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), limit(10))),
+                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), limit(10))),
                 ]);
 
                 const activities = [
@@ -209,6 +223,7 @@ export default function DashboardPage() {
                 ];
                 
                 const sortedActivities = activities
+                    .filter(act => act.date instanceof Timestamp) // Ensure date is a Timestamp before sorting
                     .sort((a, b) => b.date.toMillis() - a.date.toMillis())
                     .slice(0, 10)
                     .map(act => ({
