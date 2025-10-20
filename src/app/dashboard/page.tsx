@@ -150,30 +150,17 @@ export default function DashboardPage() {
                  const processFinancialData = (items: (Document | Expense)[], type: 'income' | 'expenses') => {
                     items.forEach(item => {
                         const itemDate = 'fechaEmision' in item ? item.fechaEmision : item.fecha;
-                        const itemYear = getYear(itemDate);
-                        const currentYear = getYear(now);
-                        
-                        // Handle multi-year ranges for semestral/anual
-                        if(itemYear < currentYear) {
-                             const monthIndex = getMonth(itemDate);
-                             const monthStr = format(itemDate, 'MMM', { locale: es });
-                             const chartIndex = chartDataTemplate.findIndex(d => d.month.toLowerCase() === monthStr.toLowerCase());
-                             if (chartIndex !== -1) {
-                                chartDataTemplate[chartIndex][type] += item.importe || (item as Expense).importe;
-                            }
-                        } else {
-                            const monthIndex = getMonth(itemDate);
-                            const monthStr = format(itemDate, 'MMM', { locale: es });
-                            const chartIndex = chartDataTemplate.findIndex(d => d.month.toLowerCase() === monthStr.toLowerCase());
-                             if (chartIndex !== -1) {
-                                chartDataTemplate[chartIndex][type] += item.importe || (item as Expense).importe;
-                            }
+                        const monthStr = format(itemDate, 'MMM', { locale: es }).toLowerCase();
+                        const chartIndex = chartDataTemplate.findIndex(d => d.month.toLowerCase() === monthStr);
+                        if (chartIndex !== -1) {
+                            chartDataTemplate[chartIndex][type] += item.importe || (item as Expense).importe;
                         }
                     });
                 };
                 
-                processFinancialData(periodInvoices, 'income');
-                processFinancialData(periodExpenses, 'expenses');
+                processFinancialData(allInvoices.filter(doc => doc.fechaEmision >= startDate && doc.fechaEmision <= endDate), 'income');
+                processFinancialData(allExpenses.filter(doc => doc.fecha >= startDate && doc.fecha <= endDate), 'expenses');
+
                 
                 setFinancialChartData(chartDataTemplate as any);
 
@@ -200,20 +187,20 @@ export default function DashboardPage() {
                             id: doc.id,
                             type: type,
                             text: textFieldFn(data),
-                            date: data[dateField],
+                            date: data[dateField], // Keep as Timestamp
                         };
                     });
                 };
 
-                // Queries without orderBy to avoid composite index requirement
+                // Queries with limit but no orderBy
                 const [invoicesSnap, expensesSnap, projectsSnap, tasksSnap, contactsSnap] = await Promise.all([
-                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(10))),
-                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), limit(10))),
-                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), limit(10))),
-                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), limit(10))),
-                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), limit(10))),
+                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(5))),
+                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), limit(5))),
+                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), limit(5))),
+                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), limit(5))),
+                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), limit(5))),
                 ]);
-
+                
                 const activities = [
                     ...processSnapshot(invoicesSnap, 'Ingreso', data => `Factura #${data.numero} para ${data.cliente}`, 'fechaEmision'),
                     ...processSnapshot(expensesSnap, 'Gasto', data => `Gasto de ${data.proveedor} (${data.categoria})`, 'fecha'),
@@ -223,7 +210,7 @@ export default function DashboardPage() {
                 ];
                 
                 const sortedActivities = activities
-                    .filter(act => act.date instanceof Timestamp) // Ensure date is a Timestamp before sorting
+                    .filter(act => act.date instanceof Timestamp)
                     .sort((a, b) => b.date.toMillis() - a.date.toMillis())
                     .slice(0, 10)
                     .map(act => ({
@@ -342,14 +329,14 @@ export default function DashboardPage() {
                         </div>
                     ) : (
                         <>
-                        <div className="p-4 bg-secondary rounded-lg text-center">
+                        <Link href="/dashboard/proyectos" className="block p-4 bg-secondary rounded-lg text-center transition-colors hover:bg-muted">
                             <p className="text-3xl font-bold text-primary">{activeProjects}</p>
                             <p className="text-sm text-muted-foreground">Proyectos Activos</p>
-                        </div>
-                        <div className="p-4 bg-secondary rounded-lg text-center">
+                        </Link>
+                        <Link href="/dashboard/tareas" className="block p-4 bg-secondary rounded-lg text-center transition-colors hover:bg-muted">
                             <p className="text-3xl font-bold text-yellow-500 dark:text-yellow-400">{pendingTasks}</p>
                             <p className="text-sm text-muted-foreground">Tareas Pendientes</p>
-                        </div>
+                        </Link>
                         </>
                     )}
                 </CardContent>
