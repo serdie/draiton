@@ -41,10 +41,11 @@ export function FichajeEmpleadoTab() {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fichajesList: Fichaje[] = [];
             snapshot.forEach(doc => {
+                 const data = doc.data();
                  fichajesList.push({
                     id: doc.id,
-                    ...doc.data(),
-                    timestamp: doc.data().timestamp.toDate(),
+                    ...data,
+                    timestamp: (data.timestamp as Timestamp).toDate(),
                  } as Fichaje)
             });
             setAllFichajes(fichajesList);
@@ -93,7 +94,6 @@ export function FichajeEmpleadoTab() {
                 title: `Fichaje de ${newType} registrado`,
                 description: `Has registrado tu ${newType.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
             });
-            // El listener onSnapshot se encargará de actualizar el estado de la UI (status, lastFichajeTime, etc.)
         } catch (error) {
             console.error("Error al registrar fichaje:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje.' });

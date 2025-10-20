@@ -94,9 +94,9 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
             {period === 'personalizado' && (
                  <Popover>
                     <PopoverTrigger asChild>
-                    <Button id="date" variant={"outline"} className={cn("w-full sm:w-[280px] justify-start text-left font-normal", !customDateRange && "text-muted-foreground")}>
+                    <Button id="date" variant={"outline"} className={cn("w-full sm:w-auto justify-start text-left font-normal", !customDateRange && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {customDateRange?.from ? (customDateRange.to ? (<>{format(customDateRange.from, "LLL dd, y")} - {format(customDateRange.to, "LLL dd, y")}</>) : (format(customDateRange.from, "LLL dd, y"))) : (<span>Elige un rango de fechas</span>)}
+                        {customDateRange?.from ? (customDateRange.to ? (<>{format(customDateRange.from, "LLL dd, y", { locale: es })} - {format(customDateRange.to, "LLL dd, y", { locale: es })}</>) : (format(customDateRange.from, "LLL dd, y", { locale: es }))) : (<span>Elige un rango de fechas</span>)}
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="end">
