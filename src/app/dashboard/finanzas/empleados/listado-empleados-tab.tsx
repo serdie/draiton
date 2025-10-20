@@ -6,10 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PlusCircle, MoreHorizontal, FileSignature, User, Trash2, Loader2 } from 'lucide-react';
-import { AddEmployeeModal } from '../../finanzas/nominas/add-employee-modal';
-import { EditEmployeeModal } from '../../finanzas/nominas/edit-employee-modal';
-import { GeneratePayrollModal } from '../../finanzas/nominas/generate-payroll-modal';
-import type { Employee } from './page';
+import EditEmployeeModal from '../../finanzas/nominas/edit-employee-modal';
+import GeneratePayrollModal from '../../finanzas/nominas/generate-payroll-modal';import type { Employee } from './page';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -20,7 +18,6 @@ import { AuthContext } from '@/context/auth-context';
 
 
 export function ListadoEmpleadosTab() {
-    const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
     const [employeeToGeneratePayroll, setEmployeeToGeneratePayroll] = useState<Employee | null>(null);
     const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
@@ -87,11 +84,6 @@ export function ListadoEmpleadosTab() {
 
     return (
         <>
-            <AddEmployeeModal
-                isOpen={isAddEmployeeModalOpen}
-                onClose={() => setIsAddEmployeeModalOpen(false)}
-                onEmployeeAdded={() => { /* Could trigger a refetch if needed */ }}
-            />
             {employeeToEdit && (
                 <EditEmployeeModal
                     isOpen={!!employeeToEdit}
@@ -123,26 +115,6 @@ export function ListadoEmpleadosTab() {
 
 
             <div className="space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold">Gestión de Empleados y Nóminas</h2>
-                        <p className="text-muted-foreground">
-                            Añade a tus empleados y genera sus nóminas con la ayuda de la IA.
-                        </p>
-                    </div>
-                    <div className="flex flex-col items-end">
-                        <Button onClick={() => setIsAddEmployeeModalOpen(true)} disabled={!canAddEmployee}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Añadir Empleado
-                        </Button>
-                        {isEmpresa && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                                {employees.length}/{employeeLimit} empleados creados.
-                            </p>
-                        )}
-                    </div>
-                </div>
-
                 <Card>
                     <CardHeader>
                         <CardTitle>Lista de Empleados</CardTitle>
