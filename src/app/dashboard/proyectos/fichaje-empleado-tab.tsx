@@ -43,6 +43,9 @@ export function FichajeEmpleadoTab() {
                 setStatus('out');
                 setLastFichajeTime(null);
             }
+        }, (error) => {
+            console.error("Error al obtener el estado de fichaje:", error);
+            setStatus('out');
         });
 
         return () => unsubscribe();
@@ -55,12 +58,13 @@ export function FichajeEmpleadoTab() {
         }
 
         const newType = status === 'out' ? 'Entrada' : 'Salida';
+        setStatus('loading'); // Set to loading state
 
         try {
             await addDoc(collection(db, 'fichajes'), {
                 employeeId: user.uid,
                 employeeName: user.displayName,
-                ownerId: user.companyOwnerId, // Assuming employee users have this field
+                ownerId: (user as any).companyOwnerId,
                 type: newType,
                 timestamp: serverTimestamp(),
             });
@@ -68,9 +72,12 @@ export function FichajeEmpleadoTab() {
                 title: `Fichaje de ${newType} registrado`,
                 description: `Has registrado tu ${newType.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
             });
+            // The onSnapshot listener will automatically update the status and lastFichajeTime
         } catch (error) {
             console.error("Error al registrar fichaje:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje.' });
+            // Revert status on error
+            setStatus(status === 'in' ? 'in' : 'out'); 
         }
     };
 
@@ -92,7 +99,7 @@ export function FichajeEmpleadoTab() {
                 </div>
                  <div className="text-center">
                     <p className="font-semibold text-xl">
-                        {isLoading ? 'Cargando estado...' : (isClockIn ? 'Actualmente DENTRO' : 'Actualmente FUERA')}
+                        {isLoading ? 'Procesando...' : (isClockIn ? 'Actualmente DENTRO' : 'Actualmente FUERA')}
                     </p>
                     {lastFichajeTime && !isLoading && (
                         <p className="text-sm text-muted-foreground">
@@ -107,7 +114,7 @@ export function FichajeEmpleadoTab() {
                     disabled={isLoading}
                 >
                     {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isClockIn ? <LogOut className="mr-2 h-5 w-5"/> : <LogIn className="mr-2 h-5 w-5"/>) }
-                    {isLoading ? 'Cargando...' : (isClockIn ? 'Fichar Salida' : 'Fichar Entrada')}
+                    {isLoading ? 'Registrando...' : (isClockIn ? 'Fichar Salida' : 'Fichar Entrada')}
                 </Button>
             </CardContent>
         </Card>
