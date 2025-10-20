@@ -12,7 +12,7 @@ import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FichajeHistory } from './fichaje-history';
-import type { Fichaje } from './types';
+import type { Fichaje } from '@/app/dashboard/finanzas/empleados/types';
 
 
 type FichajeStatus = 'out' | 'in';
@@ -69,15 +69,23 @@ export function FichajeEmpleadoTab() {
             toast({ variant: 'destructive', title: 'Error de autenticación o acción en progreso.' });
             return;
         }
+        
+        const ownerId = (user as any).companyOwnerId;
+        if (!ownerId) {
+            toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a una empresa.' });
+            return;
+        }
 
         const newType = status === 'out' ? 'Entrada' : 'Salida';
-        setStatus('loading'); // Set to loading state immediately
+        const newStatus: FichajeStatus = newType === 'Entrada' ? 'in' : 'out';
+
+        setStatus('loading');
 
         try {
             await addDoc(collection(db, 'fichajes'), {
                 employeeId: user.uid,
                 employeeName: user.displayName,
-                ownerId: (user as any).companyOwnerId,
+                ownerId: ownerId,
                 type: newType,
                 timestamp: serverTimestamp(),
             });
@@ -85,13 +93,14 @@ export function FichajeEmpleadoTab() {
                 title: `Fichaje de ${newType} registrado`,
                 description: `Has registrado tu ${newType.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
             });
-            // The onSnapshot listener will automatically update the status and list
+            // Update status locally immediately after success
+            setStatus(newStatus);
+            setLastFichajeTime(format(new Date(), "dd MMM, yyyy 'a las' HH:mm", { locale: es }));
         } catch (error) {
             console.error("Error al registrar fichaje:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje.' });
-            // Revert status on error by reading the last valid status from the list
-            const lastType = allFichajes.length > 0 ? allFichajes[0].type : 'Salida';
-            setStatus(lastType === 'Entrada' ? 'in' : 'out');
+            // Revert status on error
+            setStatus(status as FichajeStatus);
         }
     };
 

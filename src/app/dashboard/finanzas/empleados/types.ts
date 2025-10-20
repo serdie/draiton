@@ -3,6 +3,7 @@
 export type Employee = {
     id: string;
     ownerId: string;
+    companyOwnerId: string;
     name: string;
     email: string;
     position: string;
@@ -17,6 +18,7 @@ export type Fichaje = {
     id: string;
     employeeId: string;
     employeeName: string;
+    ownerId: string;
     type: 'Entrada' | 'Salida';
     timestamp: Date;
 }
