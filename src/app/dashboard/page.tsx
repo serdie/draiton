@@ -37,7 +37,7 @@ import {
 import Link from 'next/link';
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
-import { collection, query, where, getDocs, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, Timestamp, type DocumentData, type QuerySnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Document } from './documentos/page';
 import type { Expense } from './gastos/page';
@@ -54,8 +54,8 @@ type ActivityItem = {
     id: string;
     type: 'Gasto' | 'Ingreso' | 'Contacto' | 'Proyecto' | 'Tarea';
     text: string;
+    date: Date;
     time: string;
-    date: Timestamp;
 };
 
 type Period = 'mensual' | 'trimestral' | 'semestral' | 'anual';
@@ -116,7 +116,7 @@ export default function DashboardPage() {
                 // Fetch Invoices
                 const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
                 const invoicesSnapshot = await getDocs(invoicesQuery);
-                const allInvoices = invoicesSnapshot.docs.map(doc => ({...doc.data(), fechaEmision: doc.data().fechaEmision.toDate()}) as Document);
+                const allInvoices = invoicesSnapshot.docs.map(doc => ({...doc.data(), fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document);
                 
                 const filteredInvoices = allInvoices.filter(inv => {
                     const invDate = inv.fechaEmision;
@@ -128,7 +128,7 @@ export default function DashboardPage() {
                 // Fetch Expenses
                 const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
                 const expensesSnapshot = await getDocs(expensesQuery);
-                const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), fecha: doc.data().fecha.toDate()}) as Expense);
+                const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), fecha: (doc.data().fecha as Timestamp).toDate()}) as Expense);
 
                 const filteredExpenses = allExpenses.filter(exp => {
                     const expDate = exp.fecha;
@@ -181,39 +181,24 @@ export default function DashboardPage() {
                 const tasksSnapshot = await getDocs(tasksQuery);
                 setPendingTasks(tasksSnapshot.size);
 
-
                 // Recent Activities
-                const invoicesQueryRecent = query(
-                    collection(db, 'invoices'), 
-                    where('ownerId', '==', user.uid), 
-                    orderBy('fechaEmision', 'desc'), 
-                    limit(5)
-                );
-                const expensesQueryRecent = query(
-                    collection(db, 'expenses'), 
-                    where('ownerId', '==', user.uid), 
-                    orderBy('fecha', 'desc'), 
-                    limit(5)
-                );
-                const projectsQueryRecent = query(
-                    collection(db, 'projects'),
-                    where('ownerId', '==', user.uid),
-                    orderBy('createdAt', 'desc'),
-                    limit(5)
-                );
-                const tasksQueryRecent = query(
-                    collection(db, 'tasks'),
-                    where('ownerId', '==', user.uid),
-                    orderBy('createdAt', 'desc'),
-                    limit(5)
-                );
-                const contactsQueryRecent = query(
-                    collection(db, 'contacts'),
-                    where('ownerId', '==', user.uid),
-                    orderBy('createdAt', 'desc'),
-                    limit(5)
-                );
-
+                const processSnapshot = (
+                    snapshot: QuerySnapshot<DocumentData>,
+                    type: ActivityItem['type'],
+                    textFieldFn: (data: DocumentData) => string,
+                    dateField: string
+                ): Omit<ActivityItem, 'time'>[] => {
+                    return snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        const dateValue = data[dateField];
+                        return {
+                            id: doc.id,
+                            type: type,
+                            text: textFieldFn(data),
+                            date: dateValue instanceof Timestamp ? dateValue.toDate() : new Date(dateValue),
+                        };
+                    });
+                };
 
                 const [
                     invoicesSnap,
@@ -222,56 +207,26 @@ export default function DashboardPage() {
                     tasksSnap,
                     contactsSnap
                 ] = await Promise.all([
-                    getDocs(invoicesQueryRecent),
-                    getDocs(expensesQueryRecent),
-                    getDocs(projectsQueryRecent),
-                    getDocs(tasksQueryRecent),
-                    getDocs(contactsQueryRecent),
+                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), orderBy('fechaEmision', 'desc'), limit(5))),
+                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(5))),
+                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
+                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
+                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5)))
                 ]);
 
-                const activities: ActivityItem[] = [];
-
-                invoicesSnap.forEach(doc => {
-                    const data = doc.data();
-                    activities.push({
-                        id: doc.id, type: 'Ingreso', text: `Factura #${data.numero} para ${data.cliente}`,
-                        date: data.fechaEmision, time: ''
-                    });
-                });
-                expensesSnap.forEach(doc => {
-                    const data = doc.data();
-                    activities.push({
-                        id: doc.id, type: 'Gasto', text: `Gasto de ${data.proveedor} (${data.categoria})`,
-                        date: data.fecha, time: ''
-                    });
-                });
-                projectsSnap.forEach(doc => {
-                    const data = doc.data();
-                    activities.push({
-                        id: doc.id, type: 'Proyecto', text: `Nuevo proyecto: ${data.name}`,
-                        date: data.createdAt, time: ''
-                    });
-                });
-                tasksSnap.forEach(doc => {
-                    const data = doc.data();
-                    activities.push({
-                        id: doc.id, type: 'Tarea', text: `Nueva tarea: ${data.title}`,
-                        date: data.createdAt, time: ''
-                    });
-                });
-                contactsSnap.forEach(doc => {
-                    const data = doc.data();
-                    activities.push({
-                        id: doc.id, type: 'Contacto', text: `Nuevo contacto: ${data.name}`,
-                        date: data.createdAt, time: ''
-                    });
-                });
-
-                const sortedActivities = activities
-                    .sort((a, b) => b.date.toMillis() - a.date.toMillis())
-                    .slice(0, 4)
-                    .map(act => ({...act, time: format(act.date.toDate(), 'dd MMM', { locale: es })}));
+                const activities = [
+                    ...processSnapshot(invoicesSnap, 'Ingreso', data => `Factura #${data.numero} para ${data.cliente}`, 'fechaEmision'),
+                    ...processSnapshot(expensesSnap, 'Gasto', data => `Gasto de ${data.proveedor} (${data.categoria})`, 'fecha'),
+                    ...processSnapshot(projectsSnap, 'Proyecto', data => `Nuevo proyecto: ${data.name}`, 'createdAt'),
+                    ...processSnapshot(tasksSnap, 'Tarea', data => `Nueva tarea: ${data.title}`, 'createdAt'),
+                    ...processSnapshot(contactsSnap, 'Contacto', data => `Nuevo contacto: ${data.name}`, 'createdAt'),
+                ];
                 
+                const sortedActivities = activities
+                    .sort((a, b) => b.date.getTime() - a.date.getTime())
+                    .slice(0, 4)
+                    .map(act => ({...act, time: format(act.date, 'dd MMM', { locale: es })}));
+
                 setRecentActivities(sortedActivities);
 
             } catch (error) {
