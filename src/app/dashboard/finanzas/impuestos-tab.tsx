@@ -37,7 +37,7 @@ const taxModels = {
         { name: 'Modelo 130 (IRPF Estimación Directa)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=130' },
         { name: 'Modelo 131 (IRPF Módulos)', link: '#' },
         { name: 'Modelo 111 (Retenciones IRPF)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=111' },
-        { name: 'Modelo 115 (Retenciones Alquileres)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=115' },
+        { name: 'Modelo 115 (Retenciones Alquileres)', link: '#' },
         { name: 'Modelo 123 (Capital Mobiliario)', link: '#' },
         { name: 'Modelo 309 (Liquidación no periódica IVA)', link: '#' },
         { name: 'Modelo 349 (Operaciones Intracomunitarias)', link: '#' },
@@ -95,43 +95,49 @@ export function ImpuestosTab() {
             return;
         }
 
-        let dateRange: DateRange | undefined;
-        if (period === 'custom') {
-            dateRange = customDateRange;
-        } else {
-            dateRange = getQuarterDateRange(parseInt(period.replace('q','')));
-        }
-        
-        if (!dateRange || !dateRange.from) {
-             setTaxIVA(0);
-             setTaxIRPF(0);
-             return;
-        }
-
         setLoading(true);
-        const { from: startDate, to: endDate = new Date() } = dateRange;
 
-        // Invoices listener
-        const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('fechaEmision', '>=', startDate), where('fechaEmision', '<=', endDate));
-        const unsubscribeInvoices = onSnapshot(invoicesQuery, (snapshot) => {
-            const allInvoices = snapshot.docs.map(doc => ({...doc.data(), fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document);
+        const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid));
+        const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
+
+        const unsubscribeInvoices = onSnapshot(invoicesQuery, (invoicesSnapshot) => {
+            const allInvoices = invoicesSnapshot.docs.map(doc => ({...doc.data(), fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document);
             
-            const totalPaidInPeriod = allInvoices.filter(i => i.estado === 'Pagado').reduce((sum, i) => sum + i.subtotal, 0);
-            const ivaDevengado = allInvoices.reduce((sum, i) => sum + i.impuestos, 0);
-            
-            // Expenses listener (nested to calculate net profit)
-            const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), where('fecha', '>=', startDate), where('fecha', '<=', endDate));
             const unsubscribeExpenses = onSnapshot(expensesQuery, (expensesSnapshot) => {
                 const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), fecha: (doc.data().fecha as Timestamp).toDate()}) as Expense);
-                const totalExpensesInPeriod = allExpenses.reduce((sum, exp) => sum + exp.importe, 0);
+                
+                let dateRange: DateRange | undefined;
+                if (period === 'custom') {
+                    dateRange = customDateRange;
+                } else {
+                    dateRange = getQuarterDateRange(parseInt(period.replace('q','')));
+                }
+                
+                if (!dateRange || !dateRange.from) {
+                    setTaxIVA(0);
+                    setTaxIRPF(0);
+                    setLoading(false);
+                    return;
+                }
+
+                const { from: startDate, to: endDate = new Date() } = dateRange;
+
+                const invoicesInPeriod = allInvoices.filter(inv => inv.fechaEmision >= startDate && inv.fechaEmision <= endDate);
+                const expensesInPeriod = allExpenses.filter(exp => exp.fecha >= startDate && exp.fecha <= endDate);
+
+                const totalPaidInPeriod = invoicesInPeriod.filter(i => i.estado === 'Pagado').reduce((sum, i) => sum + i.subtotal, 0);
+                const ivaDevengado = invoicesInPeriod.reduce((sum, i) => sum + i.impuestos, 0);
+                
+                const totalExpensesInPeriod = expensesInPeriod.reduce((sum, exp) => sum + exp.importe, 0);
                 
                 const netProfit = totalPaidInPeriod - totalExpensesInPeriod;
                 setTaxIRPF(netProfit > 0 ? netProfit * 0.20 : 0);
 
-                const ivaSoportado = allExpenses.reduce((sum, i) => sum + (i.importe * 0.21 / 1.21), 0);
+                const ivaSoportado = expensesInPeriod.reduce((sum, i) => sum + (i.importe * 0.21 / 1.21), 0);
                 setTaxIVA(ivaDevengado - ivaSoportado);
                 setLoading(false);
             });
+
             return () => unsubscribeExpenses();
         });
 
