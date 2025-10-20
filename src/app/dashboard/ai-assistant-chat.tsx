@@ -24,6 +24,8 @@ export function AiAssistantChat() {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
+    const [documentContent, setDocumentContent] = useState<string | null>(null);
+    const [documentName, setDocumentName] = useState<string | null>(null);
 
     const scrollToBottom = () => {
         if (scrollAreaRef.current) {
@@ -42,7 +44,12 @@ export function AiAssistantChat() {
         e.preventDefault();
         if (!input.trim()) return;
 
-        const userMessage: Message = { role: 'user', text: input };
+        let userMessageText = input;
+        if(documentName) {
+            userMessageText = `Archivo adjunto: ${documentName}\n\n${input}`;
+        }
+        const userMessage: Message = { role: 'user', text: userMessageText };
+
         setMessages(prev => [...prev, userMessage]);
         
         const history: MessageData[] = messages.map(msg => ({
@@ -51,7 +58,7 @@ export function AiAssistantChat() {
         }));
 
         startTransition(async () => {
-            const result = await askBusinessAssistantAction(history, input);
+            const result = await askBusinessAssistantAction(history, input, documentContent);
             if (result.response) {
                 setMessages(prev => [...prev, { role: 'model', text: result.response }]);
             } else if (result.error) {
@@ -60,6 +67,8 @@ export function AiAssistantChat() {
         });
 
         setInput('');
+        setDocumentContent(null);
+        setDocumentName(null);
     }
 
     const handleUploadClick = () => {
@@ -69,12 +78,27 @@ export function AiAssistantChat() {
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            // Placeholder for file processing logic
-            toast({
-                title: "Archivo Seleccionado (Simulación)",
-                description: `Has seleccionado "${file.name}". La funcionalidad de análisis de documentos se implementará próximamente.`,
-            });
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target?.result as string;
+                setDocumentContent(text);
+                setDocumentName(file.name);
+                toast({
+                    title: "Archivo cargado",
+                    description: `"${file.name}" está listo para ser analizado. Escribe tu consulta y envíala.`,
+                });
+            };
+            reader.onerror = () => {
+                toast({
+                    variant: "destructive",
+                    title: "Error al leer el archivo",
+                    description: "No se pudo procesar el archivo seleccionado.",
+                });
+            };
+            reader.readAsText(file);
         }
+        // Reset file input to allow selecting the same file again
+        event.target.value = '';
     };
 
   return (
@@ -93,7 +117,7 @@ export function AiAssistantChat() {
                             <Sparkles className="h-5 w-5"/>
                         </div>
                         <p className="text-sm text-secondary-foreground pt-1.5">
-                            ¡Hola! Soy GestorIA. Pregúntame sobre impuestos, facturas, o cómo optimizar tu negocio.
+                            ¡Hola! Soy GestorIA. Pregúntame sobre impuestos, facturas, o sube un documento para que lo analice.
                         </p>
                     </div>
                     {messages.map((msg, index) => (
@@ -103,7 +127,7 @@ export function AiAssistantChat() {
                                 <Sparkles className="h-5 w-5"/>
                                 </div>
                             )}
-                            <p className={`text-sm p-3 rounded-lg max-w-lg ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
+                            <p className={`text-sm p-3 rounded-lg max-w-lg whitespace-pre-wrap ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
                                 {msg.text}
                             </p>
                         </div>
@@ -129,12 +153,12 @@ export function AiAssistantChat() {
                     ref={fileInputRef}
                     onChange={handleFileSelect}
                     className="hidden"
-                    accept=".pdf,.doc,.docx,.txt,.csv"
+                    accept=".txt,.csv,.json,.md"
                 />
                 <Input 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Escribe tu consulta o sube un documento..." 
+                    placeholder={documentName ? `Preguntar sobre ${documentName}` : "Escribe tu consulta o sube un documento..."} 
                     className="pr-24 h-12"
                     disabled={isPending}
                 />
@@ -151,3 +175,5 @@ export function AiAssistantChat() {
     </>
   )
 }
+
+    

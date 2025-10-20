@@ -1,21 +1,19 @@
 'use server';
 
 /**
- * @fileOverview Asistente conversacional de IA (versión sin acceso a datos).
- * (Versión anterior, funcional pero genérica)
+ * @fileOverview Asistente conversacional de IA capaz de analizar documentos.
  */
 
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { MessageData } from 'genkit/model';
-// NO importamos firebase-admin ni defineTool
 
-// --- ESQUEMAS (Versión simple, sin userId) ---
+// --- ESQUEMAS (Con documentContent) ---
 const BusinessAssistantInputSchema = z.object({
-  // NO userId aquí
   history: z.array(z.custom<MessageData>()).describe('El historial de la conversación.'),
   message: z.string().describe('El último mensaje del usuario.'),
+  documentContent: z.string().optional().describe('El contenido de un documento para analizar.'),
 });
 export type BusinessAssistantInput = z.infer<typeof BusinessAssistantInputSchema>;
 
@@ -30,47 +28,52 @@ export async function businessAssistant(
   return businessAssistantFlow(input);
 }
 
-// --- SYSTEM PROMPT (Versión original, sin mencionar herramientas) ---
+// --- SYSTEM PROMPT (Actualizado para mencionar análisis de documentos) ---
 const systemPrompt: MessageData = {
   role: 'system',
   content: [
     {
       text: `Eres GestorIA, un asistente experto en negocios, finanzas, operaciones y marketing para autónomos y pymes en España.
 Tu objetivo es proporcionar respuestas claras, concisas y accionables.
+Si el usuario adjunta el contenido de un documento, basa tus respuestas en ese contenido. Puedes resumirlo, extraer información clave o responder preguntas específicas sobre él.
 NO tienes acceso directo a los datos específicos del usuario (facturas, gastos) a menos que él te los proporcione en la conversación.
-Cuando un usuario haga una pregunta que requiera datos específicos, pídele educadamente esa información. No inventes respuestas si no tienes los datos.
+Cuando un usuario haga una pregunta que requiera datos específicos y no se te hayan proporcionado, pídele educadamente esa información. No inventes respuestas si no tienes los datos.
 Mantén un tono profesional pero cercano. Responde SIEMPRE en español.`
     },
   ],
 };
 
-// --- FLUJO BÁSICO (Sin herramientas) ---
-const businessAssistantFlow = ai.defineFlow( // Usamos ai.defineFlow
+// --- FLUJO (Actualizado para manejar 'documentContent') ---
+const businessAssistantFlow = ai.defineFlow(
   {
     name: 'businessAssistantFlow',
     inputSchema: BusinessAssistantInputSchema,
     outputSchema: BusinessAssistantOutputSchema,
   },
   async (input: BusinessAssistantInput) => {
+    
+    // Construimos el prompt del usuario, incluyendo el contenido del documento si existe.
+    const userMessageContent = [];
+    if (input.documentContent) {
+        userMessageContent.push({ text: `He adjuntado un documento para que lo analices. Aquí está su contenido:\n\n---\n${input.documentContent}\n---\n\nAhora, ten en cuenta este documento para mi siguiente pregunta.` });
+    }
+    userMessageContent.push({ text: input.message });
+
     // Construimos el historial para la IA
     const history: MessageData[] = [
       systemPrompt,
       ...input.history,
-      { role: 'user', content: [{ text: input.message }] },
+      { role: 'user', content: userMessageContent },
     ];
 
     try {
-      // Llamamos a la IA con el modelo y los mensajes
-      // SIN 'tools'
       const response = await ai.generate({
         model: googleAI.model('gemini-2.5-flash-lite'), 
         messages: history,
       });
 
-      // Extraemos el texto de la respuesta (sin paréntesis)
       const text = response.text; 
 
-      // Comprobamos si hubo respuesta
       if (text === undefined || text === '') {
         console.error('La respuesta de la IA vino vacía.');
         throw new Error('El asistente de IA no pudo generar una respuesta esta vez.');
@@ -79,11 +82,11 @@ const businessAssistantFlow = ai.defineFlow( // Usamos ai.defineFlow
       return { response: text };
 
     } catch (error) {
-      // Capturamos cualquier error (API, red, etc.)
-      console.error(`Error en businessAssistantFlow (versión básica):`, error);
+      console.error(`Error en businessAssistantFlow:`, error);
       const message = error instanceof Error ? error.message : String(error);
-      // Devolvemos un error amigable
       throw new Error(`No se pudo obtener respuesta del asistente. Error: ${message}`);
     }
   }
 );
+
+    

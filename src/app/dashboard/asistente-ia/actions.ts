@@ -7,13 +7,16 @@ import { generateBusinessIdeas, GenerateBusinessIdeasOutput } from '@/ai/flows/g
 
 export async function askBusinessAssistantAction(
     history: MessageData[],
-    message: string
+    message: string,
+    documentContent: string | null
 ): Promise<{ response: string | null; error: string | null; }> {
     try {
-        const result = await businessAssistant({ history, message });
+        const result = await businessAssistant({ history, message, documentContent });
         return { response: result.response, error: null };
     } catch (e: any) {
         console.error(e);
         return { response: null, error: 'Ha ocurrido un error al contactar al asistente. Inténtalo de nuevo.' };
     }
 }
+
+    
