@@ -115,30 +115,33 @@ export default function DashboardPage() {
                 }
 
                 // Fetch Invoices
-                const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'), where('fechaEmision', '>=', startDate), where('fechaEmision', '<=', endDate));
+                const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
                 const invoicesSnapshot = await getDocs(invoicesQuery);
-                const allInvoices = invoicesSnapshot.docs.map(doc => ({...doc.data(), fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document);
-                const totalIncome = allInvoices.reduce((acc, doc) => acc + doc.importe, 0);
+                const allInvoices = invoicesSnapshot.docs.map(doc => ({...doc.data(), id: doc.id, fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document & { id: string });
+                const periodInvoices = allInvoices.filter(doc => doc.fechaEmision >= startDate && doc.fechaEmision <= endDate);
+                const totalIncome = periodInvoices.reduce((acc, doc) => acc + doc.importe, 0);
                 setIncome(totalIncome);
                 
                 // Fetch Expenses
-                const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), where('fecha', '>=', startDate), where('fecha', '<=', endDate));
+                const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
                 const expensesSnapshot = await getDocs(expensesQuery);
-                const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), fecha: (doc.data().fecha as Timestamp).toDate()}) as Expense);
-                const totalExpenses = allExpenses.reduce((acc, doc) => acc + doc.importe, 0);
+                const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), id: doc.id, fecha: (doc.data().fecha as Timestamp).toDate()}) as Expense & { id: string });
+                const periodExpenses = allExpenses.filter(doc => doc.fecha >= startDate && doc.fecha <= endDate);
+                const totalExpenses = periodExpenses.reduce((acc, doc) => acc + doc.importe, 0);
                 setExpenses(totalExpenses);
                 
                 // Process chart data
                 let chartDataTemplate: { month: string, income: number, expenses: number }[];
-                if (periodo === 'anual') {
+                 if (periodo === 'anual') {
                     chartDataTemplate = Array.from({ length: 12 }, (_, i) => ({
                         month: format(new Date(now.getFullYear(), i, 1), 'MMM', { locale: es }),
                         income: 0,
                         expenses: 0,
                     }));
-                } else {
-                     chartDataTemplate = Array.from({ length: 6 }, (_, i) => ({
-                        month: format(subMonths(now, 5 - i), 'MMM', { locale: es }),
+                } else { // mensual, trimestral, semestral
+                    const monthsToDisplay = periodo === 'mensual' ? 1 : (periodo === 'trimestral' ? 3 : 6);
+                    chartDataTemplate = Array.from({ length: monthsToDisplay }, (_, i) => ({
+                        month: format(subMonths(now, monthsToDisplay - 1 - i), 'MMM', { locale: es }),
                         income: 0,
                         expenses: 0,
                     }));
@@ -147,16 +150,17 @@ export default function DashboardPage() {
                 const processFinancialData = (items: (Document | Expense)[], type: 'income' | 'expenses') => {
                     items.forEach(item => {
                         const itemDate = 'fechaEmision' in item ? item.fechaEmision : item.fecha;
-                        const chartIndex = chartDataTemplate.findIndex(d => d.month.toLowerCase() === format(itemDate, 'MMM', {locale: es}).toLowerCase());
+                        const monthStr = format(itemDate, 'MMM', { locale: es });
+                        const chartIndex = chartDataTemplate.findIndex(d => d.month.toLowerCase() === monthStr.toLowerCase());
 
                         if (chartIndex !== -1) {
-                            chartDataTemplate[chartIndex][type] += item.importe;
+                            chartDataTemplate[chartIndex][type] += item.importe || (item as Expense).importe;
                         }
                     });
                 };
                 
-                processFinancialData(allInvoices, 'income');
-                processFinancialData(allExpenses, 'expenses');
+                processFinancialData(periodInvoices, 'income');
+                processFinancialData(periodExpenses, 'expenses');
                 
                 setFinancialChartData(chartDataTemplate as any);
 
@@ -179,12 +183,11 @@ export default function DashboardPage() {
                 ) => {
                     return snapshot.docs.map((doc: any) => {
                         const data = doc.data();
-                        const timestamp = data[dateField] as Timestamp;
                         return {
                             id: doc.id,
                             type: type,
                             text: textFieldFn(data),
-                            date: timestamp,
+                            date: data[dateField] as Timestamp,
                         };
                     });
                 };
@@ -205,7 +208,7 @@ export default function DashboardPage() {
                     ...processSnapshot(contactsSnap, 'Contacto', data => `Nuevo contacto: ${data.name}`, 'createdAt'),
                 ];
                 
-                 const sortedActivities = activities
+                const sortedActivities = activities
                     .sort((a, b) => b.date.toMillis() - a.date.toMillis())
                     .slice(0, 10)
                     .map(act => ({
@@ -255,7 +258,6 @@ export default function DashboardPage() {
                             <SelectItem value="trimestral">Este Trimestre</SelectItem>
                             <SelectItem value="semestral">Últimos 6 meses</SelectItem>
                             <SelectItem value="anual">Este Año</SelectItem>
-                            <SelectItem value="personalizado" disabled>Personalizado</SelectItem>
                         </SelectContent>
                     </Select>
                 </CardHeader>
@@ -343,14 +345,14 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                      {loading ? (
-                        <div className="flex justify-center items-center h-[240px]">
+                        <div className="flex justify-center items-center h-[280px]">
                             <Loader2 className="h-6 w-6 animate-spin" />
                         </div>
                      ): (
                         <ScrollArea className="h-[280px]">
                             <ul className="space-y-4">
                                 {recentActivities.map(item => (
-                                    <li key={item.id} className="text-sm flex justify-between gap-2">
+                                    <li key={item.id + item.type} className="text-sm flex justify-between gap-2">
                                         <span className="text-foreground/90 truncate">{item.text}</span>
                                         <span className="text-muted-foreground shrink-0">{item.time}</span>
                                     </li>
