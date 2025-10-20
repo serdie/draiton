@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getFirebaseAuth } from './firebase-admin';
@@ -11,7 +10,15 @@ export async function setSessionCookie(idToken: string) {
     const expiresIn = 60 * 60 * 24 * 14 * 1000;
     const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
 
-    cookies().set('session', sessionCookie, {
+    // --- CORRECCIÓN (con await) ---
+    // 1. Obtenemos el almacén de cookies
+    const cookieStore = await cookies(); 
+    
+    // 2. Leemos (para cumplir con Next.js)
+    cookieStore.get('session');
+    
+    // 3. Escribimos en el almacén
+    cookieStore.set('session', sessionCookie, {
         maxAge: expiresIn,
         httpOnly: true,
         secure: true,
@@ -22,5 +29,13 @@ export async function setSessionCookie(idToken: string) {
 
 
 export async function clearSessionCookie() {
-  cookies().delete('session');
+    // --- CORRECCIÓN (con await) ---
+    // 1. Obtenemos el almacén
+    const cookieStore = await cookies(); 
+
+    // 2. Leemos (para cumplir con Next.js)
+    cookieStore.get('session');
+    
+    // 3. Borramos del almacén
+    cookieStore.delete('session');
 }

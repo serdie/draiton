@@ -20,14 +20,26 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import type { Document } from '../documentos/page';
 import type { Expense } from '../gastos/page';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 
-const taxModels = [
-    { name: 'Modelo 303 (IVA Trimestral)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=303' },
-    { name: 'Modelo 130 (IRPF Trimestral)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=130' },
-    { name: 'Modelo 111 (Retenciones)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=111' },
-    { name: 'Modelo 115 (Alquileres)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=115' },
-];
+const taxModels = {
+    mensuales: [
+        { name: 'Modelo 111 (Retenciones)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=111' },
+        { name: 'Modelo 115 (Alquileres)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=115' },
+    ],
+    trimestrales: [
+        { name: 'Modelo 303 (IVA Trimestral)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=303' },
+        { name: 'Modelo 130 (IRPF Trimestral)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=130' },
+    ],
+    anuales: [
+         { name: 'Modelo 390 (Resumen Anual IVA)', link: '#' },
+         { name: 'Modelo 347 (Operaciones con Terceros)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=347' },
+    ],
+    censales: [
+        { name: 'Modelo 036/037 (Alta/Modificación censal)', link: '#' },
+    ]
+};
 
 type PeriodValue = 'q1' | 'q2' | 'q3' | 'q4' | 'custom';
 
@@ -173,15 +185,61 @@ export function ImpuestosTab() {
                 <CardHeader>
                     <CardTitle>Modelos Tributarios</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-1">
-                   {taxModels.map((model) => (
-                        <div key={model.name} className="flex justify-between items-center p-2 hover:bg-muted rounded-md">
-                            <span className="text-sm">{model.name}</span>
-                            <Button asChild variant="link" className="pr-0">
-                                <Link href={model.link}>Preparar</Link>
-                            </Button>
-                        </div>
-                   ))}
+                <CardContent>
+                    <Accordion type="multiple" className="w-full">
+                        <AccordionItem value="trimestrales">
+                            <AccordionTrigger>Modelos Trimestrales</AccordionTrigger>
+                            <AccordionContent>
+                                {taxModels.trimestrales.map((model) => (
+                                    <div key={model.name} className="flex justify-between items-center py-2">
+                                        <span className="text-sm">{model.name}</span>
+                                        <Button asChild variant="link" size="sm">
+                                            <Link href={model.link}>Preparar</Link>
+                                        </Button>
+                                    </div>
+                                ))}
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="anuales">
+                            <AccordionTrigger>Modelos Anuales y Resúmenes</AccordionTrigger>
+                            <AccordionContent>
+                               {taxModels.anuales.map((model) => (
+                                    <div key={model.name} className="flex justify-between items-center py-2">
+                                        <span className="text-sm">{model.name}</span>
+                                        <Button asChild variant="link" size="sm" disabled={model.link === '#'}>
+                                            <Link href={model.link}>{model.link === '#' ? 'Próximamente' : 'Preparar'}</Link>
+                                        </Button>
+                                    </div>
+                                ))}
+                            </AccordionContent>
+                        </AccordionItem>
+                         <AccordionItem value="mensuales">
+                            <AccordionTrigger>Modelos Mensuales</AccordionTrigger>
+                            <AccordionContent>
+                                {taxModels.mensuales.map((model) => (
+                                    <div key={model.name} className="flex justify-between items-center py-2">
+                                        <span className="text-sm">{model.name}</span>
+                                        <Button asChild variant="link" size="sm">
+                                            <Link href={model.link}>Preparar</Link>
+                                        </Button>
+                                    </div>
+                                ))}
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="censales">
+                            <AccordionTrigger>Modelos Censales (Puntuales)</AccordionTrigger>
+                             <AccordionContent>
+                                {taxModels.censales.map((model) => (
+                                    <div key={model.name} className="flex justify-between items-center py-2">
+                                        <span className="text-sm">{model.name}</span>
+                                        <Button asChild variant="link" size="sm" disabled>
+                                            <Link href="#">Próximamente</Link>
+                                        </Button>
+                                    </div>
+                                ))}
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
                 </CardContent>
             </Card>
         </div>

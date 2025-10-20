@@ -28,7 +28,7 @@ const BusinessAssistantInputSchema = z.object({
 
   message: z.string().describe('El último mensaje del usuario.'),
 
-  documentContent: z.string().optional().describe('El contenido de un documento para analizar.'),
+  documentContent: z.string().nullable().optional().describe('El contenido de un documento para analizar.'),
 
 });
 
