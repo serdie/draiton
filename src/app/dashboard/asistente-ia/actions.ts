@@ -1,4 +1,3 @@
-
 'use server';
 
 import { businessAssistant } from '@/ai/flows/business-assistant-flow';
@@ -18,5 +17,3 @@ export async function askBusinessAssistantAction(
         return { response: null, error: 'Ha ocurrido un error al contactar al asistente. Inténtalo de nuevo.' };
     }
 }
-
-    
