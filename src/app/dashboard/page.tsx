@@ -174,6 +174,12 @@ export default function DashboardPage() {
                 const projectsSnapshot = await getDocs(projectsQuery);
                 setActiveProjects(projectsSnapshot.size);
 
+                 // Fetch Pending Tasks
+                const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid), where('isCompleted', '==', false));
+                const tasksSnapshot = await getDocs(tasksQuery);
+                setPendingTasks(tasksSnapshot.size);
+
+
                  // Recent Activities
                 const lastInvoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(3));
                 const lastExpensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(3));
