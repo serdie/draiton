@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PlusCircle, MoreHorizontal, FileSignature, User, Trash2, Loader2 } from 'lucide-react';
 import { EditEmployeeModal } from '../../finanzas/nominas/edit-employee-modal';
 import { GeneratePayrollModal } from '../../finanzas/nominas/generate-payroll-modal';
-import type { Employee } from './page';
+import type { Employee } from '../empleados/page';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -191,5 +191,3 @@ export function ListadoEmpleadosTab() {
         </>
     );
 }
-
-    
