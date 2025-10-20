@@ -60,6 +60,7 @@ export function FichajeEmpleadoTab() {
             await addDoc(collection(db, 'fichajes'), {
                 employeeId: user.uid,
                 employeeName: user.displayName,
+                ownerId: user.companyOwnerId, // Assuming employee users have this field
                 type: newType,
                 timestamp: serverTimestamp(),
             });
