@@ -9,6 +9,7 @@ import { Sparkles, Send, Loader2, Upload } from 'lucide-react';
 import { type MessageData } from 'genkit/model';
 import { askBusinessAssistantAction } from './asistente-ia/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 
 type Message = {
@@ -21,6 +22,8 @@ export function AiAssistantChat() {
     const [input, setInput] = useState('');
     const [isPending, startTransition] = useTransition();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const { toast } = useToast();
 
     const scrollToBottom = () => {
         if (scrollAreaRef.current) {
@@ -58,6 +61,21 @@ export function AiAssistantChat() {
 
         setInput('');
     }
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            // Placeholder for file processing logic
+            toast({
+                title: "Archivo Seleccionado (Simulación)",
+                description: `Has seleccionado "${file.name}". La funcionalidad de análisis de documentos se implementará próximamente.`,
+            });
+        }
+    };
 
   return (
     <>
@@ -106,6 +124,13 @@ export function AiAssistantChat() {
         </CardContent>
         <CardFooter>
              <form onSubmit={handleSubmit} className="relative w-full">
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.txt,.csv"
+                />
                 <Input 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -114,7 +139,7 @@ export function AiAssistantChat() {
                     disabled={isPending}
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <Button type="button" variant="ghost" size="icon" disabled={isPending}>
+                    <Button type="button" variant="ghost" size="icon" disabled={isPending} onClick={handleUploadClick}>
                         <Upload className="h-5 w-5" />
                     </Button>
                     <Button type="submit" size="icon" disabled={isPending || !input.trim()}>
