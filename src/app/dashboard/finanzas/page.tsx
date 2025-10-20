@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ViewPayrollModal } from './nominas/view-payroll-modal';
-import type { Employee } from './empleados/page';
+import type { Employee } from './empleados/types';
 
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
@@ -71,6 +71,7 @@ export default function FinanzasPage() {
                     name: user.displayName || 'Empleado',
                     email: user.email || '',
                     ownerId: '',
+                    companyOwnerId: '',
                     position: '',
                     nif: '',
                     socialSecurityNumber: '',

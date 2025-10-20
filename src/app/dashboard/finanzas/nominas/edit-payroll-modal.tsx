@@ -1,311 +1,128 @@
 
 'use client';
 
-import { useContext } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { AuthContext } from '@/context/auth-context';
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-} from '@/components/ui/sidebar';
-import { Logo } from '@/components/logo';
-import { UserAvatar } from '@/components/ui/user-avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Settings,
-  LogOut,
-  UserCog,
-  Home,
-  Wallet,
-  Blocks,
-  FlaskConical,
-  Network,
-  User,
-  BookOpen,
-  MessageSquare,
-} from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileNav } from '@/components/ui/mobile-nav';
-import { MobileHeader } from '@/components/ui/mobile-header';
-import { clearSessionCookie } from '@/lib/firebase/auth-actions';
-import { cn } from '@/lib/utils';
-import { TourProvider, useTour } from '@/context/tour-context';
-import { TourSpotlight } from '@/components/tour/tour-spotlight';
-import { tourStepsBase, tourStepsPro, tourStepsFree, tourStepsAdmin } from '@/components/tour/tour-steps';
+import { Label } from '@/components/ui/label';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
+import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-
-function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, isPro, isEmpresa, isEmployee, isFree } = useContext(AuthContext);
-  const pathname = usePathname();
-  const isMobile = useIsMobile();
-  const { startTour } = useTour();
-  
-  const handleLogout = async () => {
-    await signOut(auth);
-    await clearSessionCookie();
-  };
-
-  const handleStartTour = () => {
-    let steps = [...tourStepsBase];
-    if (isAdmin) {
-      steps = [...steps, ...tourStepsPro, ...tourStepsAdmin];
-    } else if (isEmpresa || isPro) {
-      steps = [...steps, ...tourStepsPro];
-    } else if (isFree) {
-        steps = [...steps, ...tourStepsFree]
-    }
-    startTour(steps);
-  };
-
-
-  if (!user) {
-    return null;
-  }
-  
-  const isActive = (href: string) => {
-    return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-  };
-
-  const getPageTitle = () => {
-    if (isEmployee) {
-      if (isActive('/dashboard/finanzas')) return 'Mis Nóminas';
-      if (isActive('/dashboard/proyectos')) return 'Operaciones';
-      if (isActive('/dashboard/configuracion')) return 'Configuración';
-      return 'Escritorio';
-    }
-    if (isActive('/dashboard/finanzas')) return 'Finanzas';
-    if (isActive('/dashboard/proyectos')) return 'Operaciones';
-    if (isActive('/dashboard/asistente-ia')) return 'Asistente IA';
-    if (isActive('/dashboard/gestor-ia')) return 'Herramientas IA';
-    if (isActive('/dashboard/conexiones')) return 'Conexiones';
-    if (isActive('/dashboard/configuracion') || isActive('/dashboard/mi-perfil')) return 'Configuración';
-    if (isActive('/admin/dashboard')) return 'Administración';
-    return 'Escritorio';
-  }
-  
-  const getRoleDisplayName = (role: string | undefined) => {
-    switch (role) {
-      case 'free':
-        return 'Gratis';
-      case 'pro':
-        return 'Autónomo';
-      case 'empresa':
-        return 'Empresa';
-      case 'admin':
-        return 'Admin';
-      case 'employee':
-          return 'Empleado';
-      default:
-        return 'Usuario';
-    }
-  }
-
-  if (isMobile) {
-    return (
-      <div className="flex flex-col h-screen">
-          <MobileHeader title={getPageTitle()} />
-          <main className="flex-1 overflow-y-auto bg-background p-4">
-              {children}
-          </main>
-          <MobileNav />
-          <TourSpotlight />
-      </div>
-    );
-  }
-
-  return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="p-4">
-            <Link href="/dashboard" className="flex items-center gap-2" id="tour-logo">
-                <Logo className="h-6 w-auto" />
-                <span className="font-bold text-lg tracking-tight">GestorIA</span>
-            </Link>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem id="tour-escritorio">
-              <Link href="/dashboard">
-                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Escritorio">
-                  <Home />
-                  <span>Escritorio</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem id="tour-finanzas">
-              <Link href="/dashboard/finanzas">
-                <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
-                  <Wallet />
-                  <span>Finanzas</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem id="tour-operaciones">
-              <Link href="/dashboard/proyectos">
-                <SidebarMenuButton isActive={isActive('/dashboard/proyectos')} tooltip="Operaciones">
-                  <Blocks />
-                  <span>Operaciones</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-
-            {!isEmployee && (
-                 <SidebarMenuItem id="tour-ia">
-                    <Link href="/dashboard/gestor-ia">
-                        <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
-                        <FlaskConical />
-                        <span>Herramientas IA</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            )}
-
-            {!isEmployee && (
-                <SidebarMenuItem>
-                    <Link href="/dashboard/conexiones">
-                        <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
-                        <Network />
-                        <span>Conexiones</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            )}
-            
-            <SidebarMenuItem>
-              <Link href="/dashboard/configuracion">
-                <SidebarMenuButton isActive={isActive('/dashboard/configuracion')} tooltip="Configuración">
-                  <Settings />
-                  <span>Configuración</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-
-             {isAdmin && (
-                <SidebarMenuItem id="tour-admin">
-                    <Link href="/admin/dashboard">
-                    <SidebarMenuButton isActive={isActive('/admin/dashboard')} tooltip="Admin Panel">
-                        <UserCog />
-                        <span>Administración</span>
-                    </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            )}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter className='p-4 space-y-4'>
-          {isFree && (
-            <div id="tour-upgrade" className='p-4 bg-secondary rounded-lg text-center'>
-              <p className='font-bold'>Upgrade a Pro</p>
-              <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
-              <Button asChild size="sm" className="w-full">
-                 <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-              </Button>
-            </div>
-          )}
-        </SidebarFooter>
-      </Sidebar>
-      <div className="flex-1 flex flex-col">
-        <header className="flex h-20 items-center justify-between border-b bg-background px-4 lg:px-8">
-            <div className="text-xl font-semibold">
-              {getPageTitle()}
-            </div>
-            <div className="flex-1 flex justify-end items-center gap-4">
-                <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Buscar proyectos, facturas..." className="pl-10 bg-muted border-muted focus:bg-background" />
-                </div>
-                {user?.role === 'pro' && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
-                {user?.role === 'empresa' && <Badge variant="outline" className={cn('border-purple-400 bg-purple-400/10 text-purple-500 dark:border-purple-400 dark:text-purple-400')}>EMPRESA</Badge>}
-
-                 <Button asChild variant="ghost" size="icon">
-                  <Link href="/dashboard/configuracion">
-                    <Settings className="h-5 w-5"/>
-                  </Link>
-                </Button>
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <div id="tour-perfil" className='flex items-center gap-3 cursor-pointer'>
-                        <UserAvatar user={user} />
-                        <div className="hidden md:flex flex-col items-start">
-                          <span className="font-semibold text-sm">{user?.displayName || 'Usuario'}</span>
-                          <span className="text-xs text-muted-foreground">{getRoleDisplayName(user?.role)}</span>
-                        </div>
-                      </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
-                        <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <Link href="/dashboard">
-                            <DropdownMenuItem>
-                            <Home className="mr-2 h-4 w-4" />
-                            <span>Escritorio</span>
-                            </DropdownMenuItem>
-                        </Link>
-                        <Link href="/dashboard/configuracion">
-                            <DropdownMenuItem>
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Configuración</span>
-                            </DropdownMenuItem>
-                        </Link>
-                        {isAdmin && (
-                          <Link href="/admin/dashboard">
-                            <DropdownMenuItem>
-                              <UserCog className="mr-2 h-4 w-4" />
-                              <span>Admin</span>
-                            </DropdownMenuItem>
-                          </Link>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleStartTour}>
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            <span>Iniciar Tour</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Cerrar sesión</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-        </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/50 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-      <TourSpotlight />
-    </SidebarProvider>
-  );
+interface EditPayrollModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  payroll: GeneratePayrollOutput;
+  onSave: (updatedPayroll: GeneratePayrollOutput) => void;
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function EditPayrollModal({ isOpen, onClose, payroll, onSave }: EditPayrollModalProps) {
+  const [editedPayroll, setEditedPayroll] = useState(payroll);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleNumericChange = (section: 'accruals' | 'deductions', index: number, field: 'amount', value: string) => {
+    const numericValue = parseFloat(value) || 0;
+    const newPayroll = { ...editedPayroll };
+    (newPayroll[section].items[index] as any)[field] = numericValue;
+    recalculateTotals(newPayroll);
+  };
+  
+  const handleConceptChange = (section: 'accruals' | 'deductions', index: number, field: 'concept', value: string) => {
+    const newPayroll = { ...editedPayroll };
+    newPayroll[section].items[index][field] = value;
+    setEditedPayroll(newPayroll);
+  };
+
+  const addItem = (section: 'accruals' | 'deductions') => {
+    const newPayroll = { ...editedPayroll };
+    newPayroll[section].items.push({ concept: 'Nuevo Concepto', amount: 0 });
+    recalculateTotals(newPayroll);
+  }
+  
+  const removeItem = (section: 'accruals' | 'deductions', index: number) => {
+     const newPayroll = { ...editedPayroll };
+     newPayroll[section].items.splice(index, 1);
+     recalculateTotals(newPayroll);
+  }
+
+  const recalculateTotals = (payrollToUpdate: GeneratePayrollOutput) => {
+    const totalAccruals = payrollToUpdate.accruals.items.reduce((sum, item) => sum + item.amount, 0);
+    const totalDeductions = payrollToUpdate.deductions.items.reduce((sum, item) => sum + item.amount, 0);
+    const netPay = totalAccruals - totalDeductions;
+    
+    setEditedPayroll({
+        ...payrollToUpdate,
+        accruals: { ...payrollToUpdate.accruals, total: totalAccruals },
+        deductions: { ...payrollToUpdate.deductions, total: totalDeductions },
+        netPay: netPay,
+    });
+  }
+
+  const handleSave = () => {
+    onSave(editedPayroll);
+    onClose();
+  };
+
   return (
-    <TourProvider>
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
-    </TourProvider>
-  )
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Editar Borrador de Nómina</DialogTitle>
+          <DialogDescription>Ajusta los conceptos y valores de la nómina antes de guardarla.</DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="flex-1 -mr-6 pr-6">
+            <div className="grid grid-cols-2 gap-6 py-4">
+            {/* DEVENGOS */}
+            <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Devengos</h3>
+                {editedPayroll.accruals.items.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                        <Input value={item.concept} onChange={e => handleConceptChange('accruals', index, 'concept', e.target.value)} className="flex-1"/>
+                        <Input type="number" value={item.amount} onChange={e => handleNumericChange('accruals', index, 'amount', e.target.value)} className="w-28 text-right" />
+                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem('accruals', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                    </div>
+                ))}
+                <Button variant="outline" size="sm" onClick={() => addItem('accruals')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Devengo</Button>
+                <div className="flex justify-between font-bold pt-2 border-t">
+                    <span>Total Devengado:</span>
+                    <span>{editedPayroll.accruals.total.toFixed(2)}€</span>
+                </div>
+            </div>
+
+            {/* DEDUCCIONES */}
+            <div className="space-y-4">
+                 <h3 className="font-semibold text-lg">Deducciones</h3>
+                {editedPayroll.deductions.items.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                        <Input value={item.concept} onChange={e => handleConceptChange('deductions', index, 'concept', e.target.value)} className="flex-1"/>
+                        <Input type="number" value={item.amount} onChange={e => handleNumericChange('deductions', index, 'amount', e.target.value)} className="w-28 text-right" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem('deductions', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                    </div>
+                ))}
+                <Button variant="outline" size="sm" onClick={() => addItem('deductions')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Deducción</Button>
+                 <div className="flex justify-between font-bold pt-2 border-t">
+                    <span>Total a Deducir:</span>
+                    <span>{editedPayroll.deductions.total.toFixed(2)}€</span>
+                </div>
+            </div>
+            </div>
+            <div className="mt-4 p-4 bg-muted rounded-md text-right">
+                <span className="text-lg font-bold">LÍQUIDO A PERCIBIR: {editedPayroll.netPay.toFixed(2)}€</span>
+            </div>
+        </ScrollArea>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSave}>Guardar Cambios</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

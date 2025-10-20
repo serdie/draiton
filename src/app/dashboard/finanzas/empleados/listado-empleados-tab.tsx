@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PlusCircle, MoreHorizontal, FileSignature, User, Trash2, Loader2 } from 'lucide-react';
 import { EditEmployeeModal } from '../../finanzas/nominas/edit-employee-modal';
 import { GeneratePayrollModal } from '../../finanzas/nominas/generate-payroll-modal';
-import type { Employee } from '../empleados/page';
+import type { Employee } from '../empleados/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -39,7 +39,7 @@ export function ListadoEmpleadosTab() {
         }
 
         setLoading(true);
-        const q = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
+        const q = query(collection(db, 'employees'), where('companyOwnerId', '==', user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(docSnap => {
@@ -104,7 +104,7 @@ export function ListadoEmpleadosTab() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Esta acción eliminará a <strong>{employeeToDelete?.name}</strong> de la lista de empleados. Esta acción no se puede deshacer.
+                            Esta acción eliminará a <strong>{employeeToDelete?.name}</strong> de la lista de empleados y su cuenta de usuario asociada. Esta acción no se puede deshacer.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

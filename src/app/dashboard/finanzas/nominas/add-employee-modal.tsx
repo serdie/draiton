@@ -1,311 +1,172 @@
 
 'use client';
 
-import { useContext } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { AuthContext } from '@/context/auth-context';
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-} from '@/components/ui/sidebar';
-import { Logo } from '@/components/logo';
-import { UserAvatar } from '@/components/ui/user-avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Settings,
-  LogOut,
-  UserCog,
-  Home,
-  Wallet,
-  Blocks,
-  FlaskConical,
-  Network,
-  User,
-  BookOpen,
-  MessageSquare,
-} from 'lucide-react';
+import { useState, useContext, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileNav } from '@/components/ui/mobile-nav';
-import { MobileHeader } from '@/components/ui/mobile-header';
-import { clearSessionCookie } from '@/lib/firebase/auth-actions';
-import { cn } from '@/lib/utils';
-import { TourProvider, useTour } from '@/context/tour-context';
-import { TourSpotlight } from '@/components/tour/tour-spotlight';
-import { tourStepsBase, tourStepsPro, tourStepsFree, tourStepsAdmin } from '@/components/tour/tour-steps';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { AuthContext } from '@/context/auth-context';
+import { createEmployeeUser } from '@/lib/firebase/admin-actions';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
-
-function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, isPro, isEmpresa, isEmployee, isFree } = useContext(AuthContext);
-  const pathname = usePathname();
-  const isMobile = useIsMobile();
-  const { startTour } = useTour();
-  
-  const handleLogout = async () => {
-    await signOut(auth);
-    await clearSessionCookie();
-  };
-
-  const handleStartTour = () => {
-    let steps = [...tourStepsBase];
-    if (isAdmin) {
-      steps = [...steps, ...tourStepsPro, ...tourStepsAdmin];
-    } else if (isEmpresa || isPro) {
-      steps = [...steps, ...tourStepsPro];
-    } else if (isFree) {
-        steps = [...steps, ...tourStepsFree]
-    }
-    startTour(steps);
-  };
-
-
-  if (!user) {
-    return null;
-  }
-  
-  const isActive = (href: string) => {
-    return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-  };
-
-  const getPageTitle = () => {
-    if (isEmployee) {
-      if (isActive('/dashboard/finanzas')) return 'Mis Nóminas';
-      if (isActive('/dashboard/proyectos')) return 'Operaciones';
-      if (isActive('/dashboard/configuracion')) return 'Configuración';
-      return 'Escritorio';
-    }
-    if (isActive('/dashboard/finanzas')) return 'Finanzas';
-    if (isActive('/dashboard/proyectos')) return 'Operaciones';
-    if (isActive('/dashboard/asistente-ia')) return 'Asistente IA';
-    if (isActive('/dashboard/gestor-ia')) return 'Herramientas IA';
-    if (isActive('/dashboard/conexiones')) return 'Conexiones';
-    if (isActive('/dashboard/configuracion') || isActive('/dashboard/mi-perfil')) return 'Configuración';
-    if (isActive('/admin/dashboard')) return 'Administración';
-    return 'Escritorio';
-  }
-  
-  const getRoleDisplayName = (role: string | undefined) => {
-    switch (role) {
-      case 'free':
-        return 'Gratis';
-      case 'pro':
-        return 'Autónomo';
-      case 'empresa':
-        return 'Empresa';
-      case 'admin':
-        return 'Admin';
-      case 'employee':
-          return 'Empleado';
-      default:
-        return 'Usuario';
-    }
-  }
-
-  if (isMobile) {
-    return (
-      <div className="flex flex-col h-screen">
-          <MobileHeader title={getPageTitle()} />
-          <main className="flex-1 overflow-y-auto bg-background p-4">
-              {children}
-          </main>
-          <MobileNav />
-          <TourSpotlight />
-      </div>
-    );
-  }
-
-  return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="p-4">
-            <Link href="/dashboard" className="flex items-center gap-2" id="tour-logo">
-                <Logo className="h-6 w-auto" />
-                <span className="font-bold text-lg tracking-tight">GestorIA</span>
-            </Link>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem id="tour-escritorio">
-              <Link href="/dashboard">
-                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Escritorio">
-                  <Home />
-                  <span>Escritorio</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem id="tour-finanzas">
-              <Link href="/dashboard/finanzas">
-                <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
-                  <Wallet />
-                  <span>Finanzas</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem id="tour-operaciones">
-              <Link href="/dashboard/proyectos">
-                <SidebarMenuButton isActive={isActive('/dashboard/proyectos')} tooltip="Operaciones">
-                  <Blocks />
-                  <span>Operaciones</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-
-            {!isEmployee && (
-                 <SidebarMenuItem id="tour-ia">
-                    <Link href="/dashboard/gestor-ia">
-                        <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
-                        <FlaskConical />
-                        <span>Herramientas IA</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            )}
-
-            {!isEmployee && (
-                <SidebarMenuItem>
-                    <Link href="/dashboard/conexiones">
-                        <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
-                        <Network />
-                        <span>Conexiones</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            )}
-            
-            <SidebarMenuItem>
-              <Link href="/dashboard/configuracion">
-                <SidebarMenuButton isActive={isActive('/dashboard/configuracion')} tooltip="Configuración">
-                  <Settings />
-                  <span>Configuración</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-
-             {isAdmin && (
-                <SidebarMenuItem id="tour-admin">
-                    <Link href="/admin/dashboard">
-                    <SidebarMenuButton isActive={isActive('/admin/dashboard')} tooltip="Admin Panel">
-                        <UserCog />
-                        <span>Administración</span>
-                    </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            )}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter className='p-4 space-y-4'>
-          {isFree && (
-            <div id="tour-upgrade" className='p-4 bg-secondary rounded-lg text-center'>
-              <p className='font-bold'>Upgrade a Pro</p>
-              <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
-              <Button asChild size="sm" className="w-full">
-                 <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-              </Button>
-            </div>
-          )}
-        </SidebarFooter>
-      </Sidebar>
-      <div className="flex-1 flex flex-col">
-        <header className="flex h-20 items-center justify-between border-b bg-background px-4 lg:px-8">
-            <div className="text-xl font-semibold">
-              {getPageTitle()}
-            </div>
-            <div className="flex-1 flex justify-end items-center gap-4">
-                <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Buscar proyectos, facturas..." className="pl-10 bg-muted border-muted focus:bg-background" />
-                </div>
-                {user?.role === 'pro' && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
-                {user?.role === 'empresa' && <Badge variant="outline" className={cn('border-purple-400 bg-purple-400/10 text-purple-500 dark:border-purple-400 dark:text-purple-400')}>EMPRESA</Badge>}
-
-                 <Button asChild variant="ghost" size="icon">
-                  <Link href="/dashboard/configuracion">
-                    <Settings className="h-5 w-5"/>
-                  </Link>
-                </Button>
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <div id="tour-perfil" className='flex items-center gap-3 cursor-pointer'>
-                        <UserAvatar user={user} />
-                        <div className="hidden md:flex flex-col items-start">
-                          <span className="font-semibold text-sm">{user?.displayName || 'Usuario'}</span>
-                          <span className="text-xs text-muted-foreground">{getRoleDisplayName(user?.role)}</span>
-                        </div>
-                      </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
-                        <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <Link href="/dashboard">
-                            <DropdownMenuItem>
-                            <Home className="mr-2 h-4 w-4" />
-                            <span>Escritorio</span>
-                            </DropdownMenuItem>
-                        </Link>
-                        <Link href="/dashboard/configuracion">
-                            <DropdownMenuItem>
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Configuración</span>
-                            </DropdownMenuItem>
-                        </Link>
-                        {isAdmin && (
-                          <Link href="/admin/dashboard">
-                            <DropdownMenuItem>
-                              <UserCog className="mr-2 h-4 w-4" />
-                              <span>Admin</span>
-                            </DropdownMenuItem>
-                          </Link>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleStartTour}>
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            <span>Iniciar Tour</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Cerrar sesión</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-        </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/50 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-      <TourSpotlight />
-    </SidebarProvider>
-  );
+interface AddEmployeeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onEmployeeAdded: () => void;
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmployeeModalProps) {
+  const { user } = useContext(AuthContext);
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [createdUserInfo, setCreatedUserInfo] = useState<{ message: string; tempPassword?: string } | null>(null);
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [position, setPosition] = useState('');
+  const [nif, setNif] = useState('');
+  const [socialSecurityNumber, setSocialSecurityNumber] = useState('');
+  const [contractType, setContractType] = useState('');
+  const [grossAnnualSalary, setGrossAnnualSalary] = useState('');
+
+  const resetForm = () => {
+    setName('');
+    setEmail('');
+    setPosition('');
+    setNif('');
+    setSocialSecurityNumber('');
+    setContractType('');
+    setGrossAnnualSalary('');
+    setCreatedUserInfo(null);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    startTransition(async () => {
+      const employeeData = {
+        name,
+        email,
+        position,
+        nif,
+        socialSecurityNumber,
+        contractType,
+        grossAnnualSalary: parseFloat(grossAnnualSalary),
+        ownerId: user.uid,
+      };
+
+      try {
+        const result = await createEmployeeUser(employeeData);
+        setCreatedUserInfo({ message: result.message, tempPassword: result.tempPassword });
+        onEmployeeAdded();
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Error al crear empleado',
+          description: error.message || 'No se pudo crear el empleado. Inténtalo de nuevo.',
+        });
+      }
+    });
+  };
+
   return (
-    <TourProvider>
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
-    </TourProvider>
-  )
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>{createdUserInfo ? 'Empleado Creado' : 'Añadir Nuevo Empleado'}</DialogTitle>
+          <DialogDescription>
+            {createdUserInfo
+              ? 'El empleado ha sido añadido a tu empresa y se ha creado su cuenta.'
+              : 'Completa los datos para registrar un nuevo empleado en tu empresa.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        {createdUserInfo ? (
+          <div className="py-4 space-y-4">
+            <Alert>
+              <AlertTitle>¡Éxito!</AlertTitle>
+              <AlertDescription>{createdUserInfo.message}</AlertDescription>
+            </Alert>
+            {createdUserInfo.tempPassword && (
+              <div className="space-y-2">
+                <Label>Contraseña Temporal</Label>
+                <Input readOnly value={createdUserInfo.tempPassword} />
+                <p className="text-xs text-muted-foreground">El empleado deberá usar esta contraseña para su primer inicio de sesión y se le pedirá que la cambie.</p>
+              </div>
+            )}
+            <DialogFooter>
+              <Button onClick={handleClose}>Cerrar</Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto -mr-6 pr-6 py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre Completo</Label>
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Correo Electrónico</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="position">Puesto</Label>
+              <Input id="position" value={position} onChange={(e) => setPosition(e.target.value)} required />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="nif">NIF</Label>
+                    <Input id="nif" value={nif} onChange={(e) => setNif(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="ssn">Nº Seg. Social</Label>
+                    <Input id="ssn" value={socialSecurityNumber} onChange={(e) => setSocialSecurityNumber(e.target.value)} required />
+                </div>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="contract-type">Tipo de Contrato</Label>
+              <Select value={contractType} onValueChange={setContractType} required>
+                <SelectTrigger><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Indefinido">Indefinido</SelectItem>
+                  <SelectItem value="Temporal">Temporal</SelectItem>
+                  <SelectItem value="Formación">Formación</SelectItem>
+                  <SelectItem value="Prácticas">Prácticas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="salary">Salario Bruto Anual (€)</Label>
+              <Input id="salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
+            </div>
+             <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isPending ? 'Creando...' : 'Crear Empleado'}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 }

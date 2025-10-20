@@ -9,7 +9,6 @@ import { FichajesTab } from './fichajes-tab';
 import { Button } from '@/components/ui/button';
 import { AddEmployeeModal } from '../nominas/add-employee-modal';
 import { AuthContext } from '@/context/auth-context';
-import { type Employee } from './types';
 
 
 export function EmpleadosPageContent() {
