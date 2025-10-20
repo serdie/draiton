@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sparkles, Send, Loader2, Calendar as CalendarIcon } from 'lucide-react';
-import { AiAssistantChat } from '../ai-assistant-chat';
+import { AiAssistantChat } from '@/app/dashboard/ai-assistant-chat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
