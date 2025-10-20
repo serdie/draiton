@@ -9,27 +9,36 @@ import { format, startOfWeek, startOfMonth, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Fichaje } from './types';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Calendar as CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import type { DateRange } from 'react-day-picker';
+
 
 interface FichajeHistoryProps {
   fichajes: Fichaje[];
 }
 
-type Period = 'semana' | 'mes' | 'siempre';
+type Period = 'semana' | 'mes' | 'personalizado';
 
 export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
   const [period, setPeriod] = useState<Period>('semana');
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
+
 
   const filteredFichajes = useMemo(() => {
     const now = new Date();
-    let startDate: Date;
+    let startDate: Date | undefined;
+    let endDate: Date | undefined = now;
 
     switch (period) {
       case 'mes':
         startDate = startOfMonth(now);
         break;
-      case 'siempre':
-        startDate = new Date(0); // Epoch
+      case 'personalizado':
+        startDate = customDateRange?.from;
+        endDate = customDateRange?.to ? new Date(new Date(customDateRange.to).setHours(23, 59, 59, 999)) : undefined;
         break;
       case 'semana':
       default:
@@ -37,8 +46,15 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
         break;
     }
 
-    return fichajes.filter(f => f.timestamp >= startDate);
-  }, [fichajes, period]);
+    if (!startDate) return [];
+
+    return fichajes.filter(f => {
+        const timestamp = f.timestamp;
+        const isInRange = timestamp >= startDate! && (endDate ? timestamp <= endDate : true);
+        return isInRange;
+    });
+
+  }, [fichajes, period, customDateRange]);
 
   const handleExport = () => {
     // Basic CSV export logic
@@ -59,22 +75,35 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col md:flex-row md:items-center justify-between">
         <div>
             <CardTitle>Mi Historial de Fichajes</CardTitle>
             <CardDescription>Consulta tus registros de entrada y salida.</CardDescription>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Seleccionar periodo" />
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="semana">Esta semana</SelectItem>
                     <SelectItem value="mes">Este mes</SelectItem>
-                    <SelectItem value="siempre">Siempre</SelectItem>
+                    <SelectItem value="personalizado">Personalizado</SelectItem>
                 </SelectContent>
             </Select>
+            {period === 'personalizado' && (
+                 <Popover>
+                    <PopoverTrigger asChild>
+                    <Button id="date" variant={"outline"} className={cn("w-full sm:w-[280px] justify-start text-left font-normal", !customDateRange && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {customDateRange?.from ? (customDateRange.to ? (<>{format(customDateRange.from, "LLL dd, y")} - {format(customDateRange.to, "LLL dd, y")}</>) : (format(customDateRange.from, "LLL dd, y"))) : (<span>Elige un rango de fechas</span>)}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar initialFocus mode="range" defaultMonth={customDateRange?.from} selected={customDateRange} onSelect={setCustomDateRange} numberOfMonths={2} locale={es}/>
+                    </PopoverContent>
+                </Popover>
+            )}
              <Button variant="outline" size="icon" onClick={handleExport} disabled={filteredFichajes.length === 0}>
                 <Download className="h-4 w-4" />
              </Button>
@@ -117,4 +146,3 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
     </Card>
   );
 }
-
