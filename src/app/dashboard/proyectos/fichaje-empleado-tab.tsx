@@ -12,7 +12,7 @@ import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FichajeHistory } from './fichaje-history';
-import type { Fichaje } from '@/app/dashboard/finanzas/empleados/types';
+import type { Fichaje } from './types';
 
 
 type FichajeStatus = 'out' | 'in';
@@ -77,8 +77,7 @@ export function FichajeEmpleadoTab() {
         }
 
         const newType = status === 'out' ? 'Entrada' : 'Salida';
-        const newStatus: FichajeStatus = newType === 'Entrada' ? 'in' : 'out';
-
+        
         setStatus('loading');
 
         try {
@@ -93,13 +92,11 @@ export function FichajeEmpleadoTab() {
                 title: `Fichaje de ${newType} registrado`,
                 description: `Has registrado tu ${newType.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
             });
-            // Update status locally immediately after success
-            setStatus(newStatus);
-            setLastFichajeTime(format(new Date(), "dd MMM, yyyy 'a las' HH:mm", { locale: es }));
+            // The onSnapshot listener will automatically update the status, so we don't need to set it manually.
         } catch (error) {
             console.error("Error al registrar fichaje:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje.' });
-            // Revert status on error
+            // Revert status on error, now we need to cast status back because 'loading' is not a FichajeStatus
             setStatus(status as FichajeStatus);
         }
     };
