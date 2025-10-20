@@ -55,7 +55,7 @@ type ActivityItem = {
     type: 'Gasto' | 'Ingreso' | 'Contacto' | 'Proyecto' | 'Tarea';
     text: string;
     time: string;
-    date: Date;
+    date: Timestamp;
 };
 
 type Period = 'mensual' | 'trimestral' | 'semestral' | 'anual';
@@ -183,7 +183,7 @@ export default function DashboardPage() {
 
 
                 // Recent Activities
-                const activitiesQuery = query(
+                const invoicesQueryRecent = query(
                     collection(db, 'invoices'), 
                     where('ownerId', '==', user.uid), 
                     orderBy('fechaEmision', 'desc'), 
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                     tasksSnap,
                     contactsSnap
                 ] = await Promise.all([
-                    getDocs(activitiesQuery),
+                    getDocs(invoicesQueryRecent),
                     getDocs(expensesQueryRecent),
                     getDocs(projectsQueryRecent),
                     getDocs(tasksQueryRecent),
@@ -230,53 +230,47 @@ export default function DashboardPage() {
                 ]);
 
                 const activities: ActivityItem[] = [];
-                const safeToDate = (data: any, dateField: string): Date => {
-                    const date = data[dateField];
-                    if (date instanceof Timestamp) return date.toDate();
-                    if (date instanceof Date) return date;
-                    return new Date(); // Fallback
-                };
 
                 invoicesSnap.forEach(doc => {
-                    const data = doc.data() as Document;
+                    const data = doc.data();
                     activities.push({
                         id: doc.id, type: 'Ingreso', text: `Factura #${data.numero} para ${data.cliente}`,
-                        date: safeToDate(data, 'fechaEmision'), time: ''
+                        date: data.fechaEmision, time: ''
                     });
                 });
                 expensesSnap.forEach(doc => {
-                    const data = doc.data() as Expense;
+                    const data = doc.data();
                     activities.push({
                         id: doc.id, type: 'Gasto', text: `Gasto de ${data.proveedor} (${data.categoria})`,
-                        date: safeToDate(data, 'fecha'), time: ''
+                        date: data.fecha, time: ''
                     });
                 });
                 projectsSnap.forEach(doc => {
-                    const data = doc.data() as Project;
+                    const data = doc.data();
                     activities.push({
                         id: doc.id, type: 'Proyecto', text: `Nuevo proyecto: ${data.name}`,
-                        date: safeToDate(data, 'createdAt'), time: ''
+                        date: data.createdAt, time: ''
                     });
                 });
                 tasksSnap.forEach(doc => {
-                    const data = doc.data() as Task;
+                    const data = doc.data();
                     activities.push({
                         id: doc.id, type: 'Tarea', text: `Nueva tarea: ${data.title}`,
-                        date: safeToDate(data, 'createdAt'), time: ''
+                        date: data.createdAt, time: ''
                     });
                 });
                 contactsSnap.forEach(doc => {
-                    const data = doc.data() as Contact;
+                    const data = doc.data();
                     activities.push({
                         id: doc.id, type: 'Contacto', text: `Nuevo contacto: ${data.name}`,
-                        date: safeToDate(data, 'createdAt'), time: ''
+                        date: data.createdAt, time: ''
                     });
                 });
 
                 const sortedActivities = activities
-                    .sort((a, b) => b.date.getTime() - a.date.getTime())
+                    .sort((a, b) => b.date.toMillis() - a.date.toMillis())
                     .slice(0, 4)
-                    .map(act => ({...act, time: format(act.date, 'dd MMM', { locale: es })}));
+                    .map(act => ({...act, time: format(act.date.toDate(), 'dd MMM', { locale: es })}));
                 
                 setRecentActivities(sortedActivities);
 
