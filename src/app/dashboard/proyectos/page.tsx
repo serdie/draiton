@@ -17,7 +17,7 @@ import { KanbanBoard } from './kanban-board';
 import { CreateTaskModal } from '../tareas/create-task-modal';
 import TareasPage from '../tareas/page';
 import InformesPage from '../informes/page';
-import { FichajesTab } from './fichajes-tab';
+import { FichajesTab } from '../finanzas/empleados/fichajes-tab';
 import ContactosPage from '../contactos/page';
 import {
   AlertDialog,
@@ -29,8 +29,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FichajeEmpleadoTab } from './fichaje-empleado-tab';
-import type { Project, ProjectStatus } from './page';
+import { FichajeEmpleadoTab } from '../finanzas/empleados/fichaje-empleado-tab';
+import type { Project } from './page';
+
+export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
+
+export interface Project {
+  id: string;
+  name: string;
+  client: string;
+  description: string;
+  status: ProjectStatus;
+  progress: number;
+  budget: number;
+  startDate: Date | null;
+  endDate: Date | null;
+  ownerId: string;
+  createdAt: Date;
+  clientPortalActive: boolean;
+  clientPortalId: string;
+}
 
 export const projectStatuses: ProjectStatus[] = ['Planificación', 'En Progreso', 'En Espera', 'Completado', 'Cancelado'];
 
