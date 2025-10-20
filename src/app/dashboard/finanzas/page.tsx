@@ -3,13 +3,13 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Coins, Receipt, FileSignature, Loader2, MoreHorizontal, Download, Mail, Trash2, Pencil } from 'lucide-react';
+import { FileText, Coins, Receipt, Users, Loader2, MoreHorizontal, Download, Mail, Trash2, Pencil } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
 import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
 import { AuthContext } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
-import { NominasPageContent } from './nominas/nominas-page-content';
+import { EmpleadosPageContent } from './empleados/page';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ViewPayrollModal } from './nominas/view-payroll-modal';
-import type { Employee } from './nominas/page';
+import type { Employee } from './empleados/page';
 
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
@@ -160,7 +160,7 @@ export default function FinanzasPage() {
             <TabsTrigger value="gastos"><Receipt className="mr-2 h-4 w-4" />Gastos</TabsTrigger>
             <TabsTrigger value="impuestos"><Coins className="mr-2 h-4 w-4" />Impuestos</TabsTrigger>
             {isEmpresa && (
-                 <TabsTrigger value="nominas"><FileSignature className="mr-2 h-4 w-4" />Nóminas</TabsTrigger>
+                 <TabsTrigger value="empleados"><Users className="mr-2 h-4 w-4" />Empleados</TabsTrigger>
             )}
           </TabsList>
           <TabsContent value="documentos" className="mt-6">
@@ -173,8 +173,8 @@ export default function FinanzasPage() {
             <ImpuestosTab />
           </TabsContent>
            {isEmpresa && (
-                <TabsContent value="nominas"  className="mt-6">
-                    <NominasPageContent />
+                <TabsContent value="empleados"  className="mt-6">
+                    <EmpleadosPageContent />
                 </TabsContent>
            )}
         </Tabs>

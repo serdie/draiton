@@ -1,267 +1,310 @@
-
 'use client';
 
-import { useState, useContext } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Sparkles, AlertTriangle, Download, PlusCircle, Trash2, HelpCircle, Save } from 'lucide-react';
-import type { Employee } from './page';
-import { generatePayrollAction, reviewPayrollAction } from './actions';
-import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
-import type { ReviewPayrollOutput } from '@/ai/flows/review-payroll';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+import { useContext } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+} from '@/components/ui/sidebar';
+import { Logo } from '@/components/logo';
+import { UserAvatar } from '@/components/ui/user-avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Settings,
+  LogOut,
+  UserCog,
+  Home,
+  Wallet,
+  Blocks,
+  FlaskConical,
+  Network,
+  User,
+  BookOpen,
+  MessageSquare,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileNav } from '@/components/ui/mobile-nav';
+import { MobileHeader } from '@/components/ui/mobile-header';
+import { clearSessionCookie } from '@/lib/firebase/auth-actions';
+import { cn } from '@/lib/utils';
+import { TourProvider, useTour } from '@/context/tour-context';
+import { TourSpotlight } from '@/components/tour/tour-spotlight';
+import { tourStepsBase, tourStepsPro, tourStepsFree, tourStepsAdmin } from '@/components/tour/tour-steps';
 
-interface GeneratePayrollModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  employee: Employee;
-}
 
-const months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-];
-
-type AdditionalConcept = {
-    id: number;
-    concept: string;
-    amount: string;
-};
-
-export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayrollModalProps) {
-  const { user } = useContext(AuthContext);
-  const { toast } = useToast();
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isReviewing, setIsReviewing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
+  const { user, isAdmin, isPro, isEmpresa, isEmployee, isFree } = useContext(AuthContext);
+  const pathname = usePathname();
+  const isMobile = useIsMobile();
+  const { startTour } = useTour();
   
-  const [payrollData, setPayrollData] = useState<GeneratePayrollOutput | null>(null);
-  const [reviewData, setReviewData] = useState<ReviewPayrollOutput | null>(null);
-  const [period, setPeriod] = useState(`${months[new Date().getMonth()]} ${new Date().getFullYear()}`);
-  const [additionalConcepts, setAdditionalConcepts] = useState<AdditionalConcept[]>([]);
-
-
-  const handleGenerate = async () => {
-    if (!user?.company?.name || !user?.company?.cif) {
-        toast({ variant: 'destructive', title: 'Faltan datos de la empresa', description: 'Por favor, completa el nombre y CIF de tu empresa en la configuración.' });
-        return;
-    }
-    
-    setIsGenerating(true);
-    setPayrollData(null);
-    setReviewData(null);
-
-    const input = {
-        ...employee,
-        employeeName: employee.name,
-        paymentPeriod: period,
-        companyName: user.company.name,
-        cif: user.company.cif,
-        contributionAccountCode: '28/123456789', // Mock data
-        professionalGroup: 'Grupo 1', // Mock data
-        additionalConcepts: additionalConcepts
-            .filter(c => c.concept && c.amount)
-            .map(c => ({ concept: c.concept, amount: parseFloat(c.amount) })),
-    };
-
-    const result = await generatePayrollAction(input);
-
-    if(result.data) {
-        setPayrollData(result.data);
-        toast({ title: 'Nómina Generada', description: 'La IA ha calculado la nómina para el periodo seleccionado.' });
-    } else {
-        toast({ variant: 'destructive', title: 'Error al generar', description: result.error });
-    }
-    
-    setIsGenerating(false);
+  const handleLogout = async () => {
+    await signOut(auth);
+    await clearSessionCookie();
   };
-  
-  const handleReview = async () => {
-    if (!payrollData) return;
-    setIsReviewing(true);
 
-    const result = await reviewPayrollAction({ payrollData });
-
-    if(result.data) {
-        setReviewData(result.data);
-    } else {
-        toast({ variant: 'destructive', title: 'Error en la Revisión', description: result.error });
+  const handleStartTour = () => {
+    let steps = [...tourStepsBase];
+    if (isAdmin) {
+      steps = [...steps, ...tourStepsPro, ...tourStepsAdmin];
+    } else if (isEmpresa || isPro) {
+      steps = [...steps, ...tourStepsPro];
+    } else if (isFree) {
+        steps = [...steps, ...tourStepsFree]
     }
-    
-    setIsReviewing(false);
+    startTour(steps);
+  };
+
+
+  if (!user) {
+    return null;
   }
   
-  const handleSavePayroll = async () => {
-    if (!payrollData || !user) return;
-    setIsSaving(true);
-    
-    const payrollToSave = {
-        ...payrollData,
-        employeeId: employee.id,
-        ownerId: user.uid,
-        status: 'Pagado', // Default status on save
-        employeeName: employee.name,
-        nif: employee.nif,
-        socialSecurityNumber: employee.socialSecurityNumber,
-        createdAt: serverTimestamp()
-    };
+  const isActive = (href: string) => {
+    return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+  };
 
-    try {
-        await addDoc(collection(db, 'payrolls'), payrollToSave);
-        toast({ title: 'Nómina Guardada', description: `La nómina de ${period} se ha guardado en el historial de ${employee.name}.` });
-        onClose();
-    } catch (error) {
-        console.error("Error saving payroll:", error);
-        toast({ variant: 'destructive', title: 'Error al guardar', description: 'No se pudo guardar la nómina.'})
-    } finally {
-        setIsSaving(false);
+  const getPageTitle = () => {
+    if (isEmployee) {
+      if (isActive('/dashboard/finanzas')) return 'Mis Nóminas';
+      if (isActive('/dashboard/proyectos')) return 'Operaciones';
+      if (isActive('/dashboard/configuracion')) return 'Configuración';
+      return 'Escritorio';
+    }
+    if (isActive('/dashboard/finanzas')) return 'Finanzas';
+    if (isActive('/dashboard/proyectos')) return 'Operaciones';
+    if (isActive('/dashboard/asistente-ia')) return 'Asistente IA';
+    if (isActive('/dashboard/gestor-ia')) return 'Herramientas IA';
+    if (isActive('/dashboard/conexiones')) return 'Conexiones';
+    if (isActive('/dashboard/configuracion') || isActive('/dashboard/mi-perfil')) return 'Configuración';
+    if (isActive('/admin/dashboard')) return 'Administración';
+    return 'Escritorio';
+  }
+  
+  const getRoleDisplayName = (role: string | undefined) => {
+    switch (role) {
+      case 'free':
+        return 'Gratis';
+      case 'pro':
+        return 'Autónomo';
+      case 'empresa':
+        return 'Empresa';
+      case 'admin':
+        return 'Admin';
+      case 'employee':
+          return 'Empleado';
+      default:
+        return 'Usuario';
     }
   }
 
-  const addConcept = () => {
-    setAdditionalConcepts(prev => [...prev, { id: Date.now(), concept: '', amount: '' }]);
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-screen">
+          <MobileHeader title={getPageTitle()} />
+          <main className="flex-1 overflow-y-auto bg-background p-4">
+              {children}
+          </main>
+          <MobileNav />
+          <TourSpotlight />
+      </div>
+    );
   }
-
-  const removeConcept = (id: number) => {
-    setAdditionalConcepts(prev => prev.filter(c => c.id !== id));
-  }
-
-  const updateConcept = (id: number, field: 'concept' | 'amount', value: string) => {
-    setAdditionalConcepts(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
-  }
-
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Generar Nómina para {employee.name}</DialogTitle>
-          <DialogDescription>
-            Selecciona el periodo, añade conceptos si es necesario, y la IA calculará la nómina.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4 space-y-4 flex-1 overflow-y-auto pr-6 -mr-6">
-            <div className="space-y-2">
-                <Label htmlFor="period">Periodo de Liquidación</Label>
-                <Input id="period" value={period} onChange={e => setPeriod(e.target.value)} placeholder="Ej: Julio 2024" />
-            </div>
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader className="p-4">
+            <Link href="/dashboard" className="flex items-center gap-2" id="tour-logo">
+                <Logo className="h-6 w-auto" />
+                <span className="font-bold text-lg tracking-tight">GestorIA</span>
+            </Link>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem id="tour-escritorio">
+              <Link href="/dashboard">
+                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Escritorio">
+                  <Home />
+                  <span>Escritorio</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+             <SidebarMenuItem id="tour-finanzas">
+              <Link href="/dashboard/finanzas">
+                <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
+                  <Wallet />
+                  <span>Finanzas</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+             <SidebarMenuItem id="tour-operaciones">
+              <Link href="/dashboard/proyectos">
+                <SidebarMenuButton isActive={isActive('/dashboard/proyectos')} tooltip="Operaciones">
+                  <Blocks />
+                  <span>Operaciones</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
 
-            <div className="space-y-2">
-                <Label>Conceptos Adicionales</Label>
-                {additionalConcepts.map(c => (
-                    <div key={c.id} className="flex items-center gap-2">
-                        <Input placeholder="Concepto (ej. Horas Extra)" value={c.concept} onChange={e => updateConcept(c.id, 'concept', e.target.value)} />
-                        <Input type="number" placeholder="Importe (€)" value={c.amount} onChange={e => updateConcept(c.id, 'amount', e.target.value)} className="w-32"/>
-                        <Button variant="ghost" size="icon" onClick={() => removeConcept(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </div>
-                ))}
-                 <Button variant="outline" size="sm" onClick={addConcept}>
-                    <PlusCircle className="mr-2 h-4 w-4"/>
-                    Añadir Concepto (Horas Extra, Bonus...)
-                </Button>
-            </div>
-            
-            <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
-                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                Generar Nómina
-            </Button>
-            
-            {payrollData && (
-                <div className="p-4 border rounded-lg mt-4 space-y-4">
-                    <h3 className="font-semibold text-lg">Nómina para {payrollData.header.period}</h3>
-                    
-                    {/* Accruals */}
-                    <div>
-                        <h4 className="font-medium">I. DEVENGOS</h4>
-                        <div className="pl-4 mt-2 space-y-1">
-                            {payrollData.accruals.items.map((item, index) => (
-                                <div key={index} className="flex justify-between text-sm">
-                                    <span>{item.concept}</span>
-                                    <span>{item.amount.toFixed(2)}€</span>
-                                </div>
-                            ))}
-                        </div>
-                        <Separator className="my-2" />
-                        <div className="flex justify-between font-semibold text-sm">
-                            <span>A. TOTAL DEVENGADO</span>
-                            <span>{payrollData.accruals.total.toFixed(2)}€</span>
-                        </div>
-                    </div>
-
-                     {/* Deductions */}
-                    <div>
-                        <h4 className="font-medium">II. DEDUCCIONES</h4>
-                         <div className="pl-4 mt-2 space-y-1">
-                            {payrollData.deductions.items.map((item, index) => (
-                                <div key={index} className="flex justify-between text-sm">
-                                    <span>{item.concept}</span>
-                                    <span>{item.amount.toFixed(2)}€</span>
-                                </div>
-                            ))}
-                        </div>
-                        <Separator className="my-2" />
-                        <div className="flex justify-between font-semibold text-sm">
-                            <span>B. TOTAL A DEDUCIR</span>
-                            <span>{payrollData.deductions.total.toFixed(2)}€</span>
-                        </div>
-                    </div>
-
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-bold text-lg text-primary">
-                        <span>LÍQUIDO TOTAL A PERCIBIR (A - B)</span>
-                        <span>{payrollData.netPay.toFixed(2)}€</span>
-                    </div>
-
-                    <Separator />
-
-                    <Button variant="secondary" className="w-full" onClick={handleReview} disabled={isReviewing}>
-                        {isReviewing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <HelpCircle className="mr-2 h-4 w-4" />}
-                        {isReviewing ? 'Analizando...' : 'Revisión con IA'}
-                    </Button>
-
-                     {reviewData && (
-                        <div className="space-y-2 pt-2">
-                           <h4 className="font-semibold">Explicación de la IA:</h4>
-                           {reviewData.explanations.map((item, index) => (
-                               <div key={index} className="p-2 bg-muted rounded-md text-sm">
-                                   <p className="font-medium">{item.concept}</p>
-                                   <p className="text-muted-foreground">{item.explanation}</p>
-                               </div>
-                           ))}
-                        </div>
-                    )}
-                </div>
+            {!isEmployee && (
+                 <SidebarMenuItem id="tour-ia">
+                    <Link href="/dashboard/gestor-ia">
+                        <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
+                        <FlaskConical />
+                        <span>Herramientas IA</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
             )}
-             <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Aviso Importante</AlertTitle>
-                <AlertDescription>
-                    Los cálculos deben ser revisados y validados por un asesor profesional. La nómina podrá ser editada una vez guardada.
-                </AlertDescription>
-            </Alert>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cerrar</Button>
-          <Button onClick={handleSavePayroll} disabled={!payrollData || isSaving}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />}
-            Guardar Nómina
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
+            {!isEmployee && (
+                <SidebarMenuItem>
+                    <Link href="/dashboard/conexiones">
+                        <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
+                        <Network />
+                        <span>Conexiones</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            )}
+            
+            <SidebarMenuItem>
+              <Link href="/dashboard/configuracion">
+                <SidebarMenuButton isActive={isActive('/dashboard/configuracion')} tooltip="Configuración">
+                  <Settings />
+                  <span>Configuración</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+
+             {isAdmin && (
+                <SidebarMenuItem id="tour-admin">
+                    <Link href="/admin/dashboard">
+                    <SidebarMenuButton isActive={isActive('/admin/dashboard')} tooltip="Admin Panel">
+                        <UserCog />
+                        <span>Administración</span>
+                    </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            )}
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter className='p-4 space-y-4'>
+          {isFree && (
+            <div id="tour-upgrade" className='p-4 bg-secondary rounded-lg text-center'>
+              <p className='font-bold'>Upgrade a Pro</p>
+              <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
+              <Button asChild size="sm" className="w-full">
+                 <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+              </Button>
+            </div>
+          )}
+        </SidebarFooter>
+      </Sidebar>
+      <div className="flex-1 flex flex-col">
+        <header className="flex h-20 items-center justify-between border-b bg-background px-4 lg:px-8">
+            <div className="text-xl font-semibold">
+              {getPageTitle()}
+            </div>
+            <div className="flex-1 flex justify-end items-center gap-4">
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Buscar proyectos, facturas..." className="pl-10 bg-muted border-muted focus:bg-background" />
+                </div>
+                {user?.role === 'pro' && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
+                {user?.role === 'empresa' && <Badge variant="outline" className={cn('border-purple-400 bg-purple-400/10 text-purple-500 dark:border-purple-400 dark:text-purple-400')}>EMPRESA</Badge>}
+
+                 <Button asChild variant="ghost" size="icon">
+                  <Link href="/dashboard/configuracion">
+                    <Settings className="h-5 w-5"/>
+                  </Link>
+                </Button>
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div id="tour-perfil" className='flex items-center gap-3 cursor-pointer'>
+                        <UserAvatar user={user} />
+                        <div className="hidden md:flex flex-col items-start">
+                          <span className="font-semibold text-sm">{user?.displayName || 'Usuario'}</span>
+                          <span className="text-xs text-muted-foreground">{getRoleDisplayName(user?.role)}</span>
+                        </div>
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
+                        <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <Link href="/dashboard">
+                            <DropdownMenuItem>
+                            <Home className="mr-2 h-4 w-4" />
+                            <span>Escritorio</span>
+                            </DropdownMenuItem>
+                        </Link>
+                        <Link href="/dashboard/configuracion">
+                            <DropdownMenuItem>
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Configuración</span>
+                            </DropdownMenuItem>
+                        </Link>
+                        {isAdmin && (
+                          <Link href="/admin/dashboard">
+                            <DropdownMenuItem>
+                              <UserCog className="mr-2 h-4 w-4" />
+                              <span>Admin</span>
+                            </DropdownMenuItem>
+                          </Link>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleStartTour}>
+                            <BookOpen className="mr-2 h-4 w-4" />
+                            <span>Iniciar Tour</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Cerrar sesión</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </header>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/50 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+      <TourSpotlight />
+    </SidebarProvider>
   );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <TourProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </TourProvider>
+  )
 }

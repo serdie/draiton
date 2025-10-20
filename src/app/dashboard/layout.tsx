@@ -156,7 +156,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
               <Link href="/dashboard/finanzas">
                 <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
                   <Wallet />
-                  <span>{isEmployee ? 'Nóminas' : 'Finanzas'}</span>
+                  <span>Finanzas</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
