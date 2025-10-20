@@ -94,6 +94,36 @@
             "ownerId": { "type": "string"}
         },
         "required": ["name", "email", "type", "ownerId"]
+    },
+    "Employee": {
+        "title": "Employee",
+        "description": "Represents an employee of a company.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "position": { "type": "string" },
+            "nif": { "type": "string" },
+            "socialSecurityNumber": { "type": "string" },
+            "contractType": { "type": "string", "enum": ["Indefinido", "Temporal", "Formación", "Prácticas"] },
+            "grossAnnualSalary": { "type": "number" },
+            "ownerId": { "type": "string" },
+            "companyOwnerId": { "type": "string" }
+        },
+        "required": ["name", "email", "ownerId", "companyOwnerId"]
+    },
+    "Fichaje": {
+        "title": "Fichaje",
+        "description": "Represents a single clock-in or clock-out event for an employee.",
+        "type": "object",
+        "properties": {
+            "employeeId": { "type": "string" },
+            "employeeName": { "type": "string" },
+            "ownerId": { "type": "string" },
+            "type": { "type": "string", "enum": ["Entrada", "Salida"] },
+            "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["employeeId", "ownerId", "type", "timestamp"]
     }
   },
   "auth": {
@@ -123,6 +153,14 @@
     "/contacts/{contactId}": {
         "schema": { "$ref": "#/entities/Contact" },
         "description": "Stores CRM contacts."
+    },
+    "/employees/{employeeId}": {
+      "schema": { "$ref": "#/entities/Employee" },
+      "description": "Stores employee data, linked to a user account."
+    },
+    "/fichajes/{fichajeId}": {
+      "schema": { "$ref": "#/entities/Fichaje" },
+      "description": "Stores all clock-in and clock-out events."
     }
   }
 }
