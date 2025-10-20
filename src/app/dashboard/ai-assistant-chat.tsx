@@ -5,7 +5,7 @@ import { useState, useTransition, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Sparkles, Send, Loader2 } from 'lucide-react';
+import { Sparkles, Send, Loader2, Upload } from 'lucide-react';
 import { type MessageData } from 'genkit/model';
 import { askBusinessAssistantAction } from './asistente-ia/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -109,13 +109,18 @@ export function AiAssistantChat() {
                 <Input 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Escribe tu consulta..." 
-                    className="pr-12 h-12"
+                    placeholder="Escribe tu consulta o sube un documento..." 
+                    className="pr-24 h-12"
                     disabled={isPending}
                 />
-                <Button type="submit" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2" disabled={isPending}>
-                    <Send className="h-5 w-5" />
-                </Button>
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <Button type="button" variant="ghost" size="icon" disabled={isPending}>
+                        <Upload className="h-5 w-5" />
+                    </Button>
+                    <Button type="submit" size="icon" disabled={isPending || !input.trim()}>
+                        <Send className="h-5 w-5" />
+                    </Button>
+                </div>
             </form>
         </CardFooter>
     </>
