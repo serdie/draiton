@@ -48,12 +48,14 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AiAssistantChat } from './ai-assistant-chat';
+import type { Task } from './tareas/types';
 
 type ActivityItem = {
     id: string;
     type: 'Gasto' | 'Ingreso' | 'Contacto' | 'Proyecto' | 'Tarea';
     text: string;
     time: string;
+    date: Date;
 };
 
 type Period = 'mensual' | 'trimestral' | 'semestral' | 'anual';
@@ -180,36 +182,97 @@ export default function DashboardPage() {
                 setPendingTasks(tasksSnapshot.size);
 
 
-                 // Recent Activities
-                const lastInvoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(3));
-                const lastExpensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(3));
+                // Recent Activities
+                const activitiesQuery = query(
+                    collection(db, 'invoices'), 
+                    where('ownerId', '==', user.uid), 
+                    orderBy('fechaEmision', 'desc'), 
+                    limit(5)
+                );
+                const expensesQueryRecent = query(
+                    collection(db, 'expenses'), 
+                    where('ownerId', '==', user.uid'), 
+                    orderBy('fecha', 'desc'), 
+                    limit(5)
+                );
+                const projectsQueryRecent = query(
+                    collection(db, 'projects'),
+                    where('ownerId', '==', user.uid),
+                    orderBy('createdAt', 'desc'),
+                    limit(5)
+                );
+                const tasksQueryRecent = query(
+                    collection(db, 'tasks'),
+                    where('ownerId', '==', user.uid),
+                    orderBy('createdAt', 'desc'),
+                    limit(5)
+                );
+                const contactsQueryRecent = query(
+                    collection(db, 'contacts'),
+                    where('ownerId', '==', user.uid),
+                    orderBy('createdAt', 'desc'),
+                    limit(5)
+                );
 
-                const [lastInvoicesSnap, lastExpensesSnap] = await Promise.all([
-                    getDocs(lastInvoicesQuery),
-                    getDocs(lastExpensesQuery),
+
+                const [
+                    invoicesSnap,
+                    expensesSnap,
+                    projectsSnap,
+                    tasksSnap,
+                    contactsSnap
+                ] = await Promise.all([
+                    getDocs(activitiesQuery),
+                    getDocs(expensesQueryRecent),
+                    getDocs(projectsQueryRecent),
+                    getDocs(tasksQueryRecent),
+                    getDocs(contactsQueryRecent),
                 ]);
 
                 const activities: ActivityItem[] = [];
-                lastInvoicesSnap.forEach(doc => {
+
+                invoicesSnap.forEach(doc => {
                     const data = doc.data() as Document;
                     activities.push({
-                        id: doc.id,
-                        type: 'Ingreso',
-                        text: `Factura #${data.numero} para ${data.cliente}`,
-                        time: format((data.fechaEmision as any).toDate(), 'dd MMM', { locale: es })
+                        id: doc.id, type: 'Ingreso', text: `Factura #${data.numero} para ${data.cliente}`,
+                        date: (data.fechaEmision as any).toDate(), time: ''
                     });
                 });
-                 lastExpensesSnap.forEach(doc => {
+                expensesSnap.forEach(doc => {
                     const data = doc.data() as Expense;
                     activities.push({
-                        id: doc.id,
-                        type: 'Gasto',
-                        text: `Gasto de ${data.proveedor} (${data.categoria})`,
-                        time: format((data.fecha as any).toDate(), 'dd MMM', { locale: es })
+                        id: doc.id, type: 'Gasto', text: `Gasto de ${data.proveedor} (${data.categoria})`,
+                        date: (data.fecha as any).toDate(), time: ''
                     });
                 });
+                projectsSnap.forEach(doc => {
+                    const data = doc.data() as Project;
+                    activities.push({
+                        id: doc.id, type: 'Proyecto', text: `Nuevo proyecto: ${data.name}`,
+                        date: (data.createdAt as any).toDate(), time: ''
+                    });
+                });
+                tasksSnap.forEach(doc => {
+                    const data = doc.data() as Task;
+                    activities.push({
+                        id: doc.id, type: 'Tarea', text: `Nueva tarea: ${data.title}`,
+                        date: (data.createdAt as any).toDate(), time: ''
+                    });
+                });
+                contactsSnap.forEach(doc => {
+                    const data = doc.data() as Contact;
+                    activities.push({
+                        id: doc.id, type: 'Contacto', text: `Nuevo contacto: ${data.name}`,
+                        date: (data.createdAt as any).toDate(), time: ''
+                    });
+                });
+
+                const sortedActivities = activities
+                    .sort((a, b) => b.date.getTime() - a.date.getTime())
+                    .slice(0, 4)
+                    .map(act => ({...act, time: format(act.date, 'dd MMM', { locale: es })}));
                 
-                setRecentActivities(activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 4));
+                setRecentActivities(sortedActivities);
 
             } catch (error) {
                 console.error("Error fetching dashboard data: ", error);
