@@ -115,27 +115,17 @@ export default function DashboardPage() {
                 }
 
                 // Fetch Invoices
-                const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
+                const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'), where('fechaEmision', '>=', startDate), where('fechaEmision', '<=', endDate));
                 const invoicesSnapshot = await getDocs(invoicesQuery);
                 const allInvoices = invoicesSnapshot.docs.map(doc => ({...doc.data(), fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document);
-                
-                const filteredInvoices = allInvoices.filter(inv => {
-                    const invDate = inv.fechaEmision;
-                    return invDate >= startDate && invDate <= endDate;
-                });
-                const totalIncome = filteredInvoices.reduce((acc, doc) => acc + doc.importe, 0);
+                const totalIncome = allInvoices.reduce((acc, doc) => acc + doc.importe, 0);
                 setIncome(totalIncome);
-
+                
                 // Fetch Expenses
-                const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
+                const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), where('fecha', '>=', startDate), where('fecha', '<=', endDate));
                 const expensesSnapshot = await getDocs(expensesQuery);
                 const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), fecha: (doc.data().fecha as Timestamp).toDate()}) as Expense);
-
-                const filteredExpenses = allExpenses.filter(exp => {
-                    const expDate = exp.fecha;
-                    return expDate >= startDate && expDate <= endDate;
-                });
-                const totalExpenses = filteredExpenses.reduce((acc, doc) => acc + exp.importe, 0);
+                const totalExpenses = allExpenses.reduce((acc, doc) => acc + doc.importe, 0);
                 setExpenses(totalExpenses);
                 
                 // Process chart data
@@ -157,18 +147,10 @@ export default function DashboardPage() {
                 const processFinancialData = (items: (Document | Expense)[], type: 'income' | 'expenses') => {
                     items.forEach(item => {
                         const itemDate = 'fechaEmision' in item ? item.fechaEmision : item.fecha;
-                        if (itemDate >= startDate && itemDate <= endDate) {
-                            const monthIndex = (itemDate.getFullYear() === now.getFullYear())
-                                ? itemDate.getMonth()
-                                : (itemDate.getMonth() + 12 * (now.getFullYear() - itemDate.getFullYear()));
-                            
-                             const chartIndex = periodo === 'anual' 
-                                ? itemDate.getMonth()
-                                : chartDataTemplate.findIndex(d => d.month.toLowerCase() === format(itemDate, 'MMM', {locale: es}).toLowerCase());
+                        const chartIndex = chartDataTemplate.findIndex(d => d.month.toLowerCase() === format(itemDate, 'MMM', {locale: es}).toLowerCase());
 
-                            if (chartIndex !== -1 && chartDataTemplate[chartIndex]) {
-                                chartDataTemplate[chartIndex][type] += item.importe;
-                            }
+                        if (chartIndex !== -1) {
+                            chartDataTemplate[chartIndex][type] += item.importe;
                         }
                     });
                 };
@@ -365,7 +347,7 @@ export default function DashboardPage() {
                             <Loader2 className="h-6 w-6 animate-spin" />
                         </div>
                      ): (
-                        <ScrollArea className="h-[240px]">
+                        <ScrollArea className="h-[280px]">
                             <ul className="space-y-4">
                                 {recentActivities.map(item => (
                                     <li key={item.id} className="text-sm flex justify-between gap-2">
@@ -373,6 +355,9 @@ export default function DashboardPage() {
                                         <span className="text-muted-foreground shrink-0">{item.time}</span>
                                     </li>
                                 ))}
+                                {recentActivities.length === 0 && (
+                                    <p className="text-sm text-muted-foreground text-center pt-10">No hay actividad reciente.</p>
+                                )}
                             </ul>
                         </ScrollArea>
                      )}
