@@ -108,18 +108,18 @@ export default function OperacionesPage() {
     };
 
     const tabsForOwner = [
-        { value: 'proyectos', label: 'Proyectos', icon: HardHat },
-        { value: 'crm', label: 'CRM', icon: User },
-        { value: 'tareas', label: 'Tareas', icon: FileText },
-        { value: 'fichajes', label: 'Fichajes', condition: isEmpresa },
-        { value: 'informes', label: 'Informes', icon: BarChart2 }
+        { value: 'proyectos', label: 'Proyectos', icon: HardHat, component: <KanbanBoard projects={projects} loading={loading} /> },
+        { value: 'crm', label: 'CRM', icon: User, component: <ContactosPage /> },
+        { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
+        { value: 'fichajes', label: 'Fichajes', icon: Clock, condition: isEmpresa, component: <FichajesTab /> },
+        { value: 'informes', label: 'Informes', icon: BarChart2, component: <InformesPage /> }
     ];
-
+    
     const tabsForEmployee = [
-        { value: 'proyectos', label: 'Proyectos', icon: HardHat },
-        { value: 'tareas', label: 'Tareas', icon: FileText },
-        { value: 'fichajes', label: 'Mi Fichaje', icon: Clock },
-        { value: 'informes', label: 'Informes', icon: BarChart2 }
+        { value: 'proyectos', label: 'Proyectos', icon: HardHat, component: <KanbanBoard projects={projects} loading={loading} /> },
+        { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
+        { value: 'fichajes', label: 'Mi Fichaje', icon: Clock, component: <FichajeEmpleadoTab /> },
+        { value: 'informes', label: 'Informes', icon: BarChart2, component: <InformesPage /> }
     ];
 
     const visibleTabs = isEmployee ? tabsForEmployee : tabsForOwner.filter(tab => tab.condition !== false);
@@ -185,22 +185,13 @@ export default function OperacionesPage() {
             </TabsTrigger>
           ))}
         </TabsList>
-
-        <TabsContent value="proyectos" className="mt-6">
-            <KanbanBoard projects={projects} loading={loading} />
-        </TabsContent>
-        <TabsContent value="crm" className="mt-6">
-            <ContactosPage />
-        </TabsContent>
-        <TabsContent value="tareas" className="mt-6">
-            <TareasPage />
-        </TabsContent>
-        <TabsContent value="fichajes" className="mt-6">
-            {isEmployee ? <FichajeEmpleadoTab /> : isEmpresa ? <FichajesTab /> : null}
-        </TabsContent>
-        <TabsContent value="informes" className="mt-6">
-            <InformesPage />
-        </TabsContent>
+        <div className="mt-6">
+            {visibleTabs.map(tab => (
+                <TabsContent key={tab.value} value={tab.value}>
+                    {tab.component}
+                </TabsContent>
+            ))}
+        </div>
       </Tabs>
     </div>
     </>
