@@ -181,37 +181,30 @@ export default function DashboardPage() {
                 const tasksSnapshot = await getDocs(tasksQuery);
                 setPendingTasks(tasksSnapshot.size);
 
-                // Recent Activities
+                // --- START RECENT ACTIVITIES ---
                 const processSnapshot = (
                     snapshot: QuerySnapshot<DocumentData>,
                     type: ActivityItem['type'],
                     textFieldFn: (data: DocumentData) => string,
                     dateField: string
-                ): Omit<ActivityItem, 'time'>[] => {
+                ): { id: string; type: ActivityItem['type']; text: string; date: Timestamp }[] => {
                     return snapshot.docs.map(doc => {
                         const data = doc.data();
-                        const dateValue = data[dateField];
                         return {
                             id: doc.id,
                             type: type,
                             text: textFieldFn(data),
-                            date: dateValue instanceof Timestamp ? dateValue.toDate() : new Date(dateValue),
+                            date: data[dateField] as Timestamp,
                         };
                     });
                 };
-
-                const [
-                    invoicesSnap,
-                    expensesSnap,
-                    projectsSnap,
-                    tasksSnap,
-                    contactsSnap
-                ] = await Promise.all([
-                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), orderBy('fechaEmision', 'desc'), limit(5))),
-                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(5))),
-                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
-                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
-                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5)))
+                
+                const [invoicesSnap, expensesSnap, projectsSnap, tasksSnap, contactsSnap] = await Promise.all([
+                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(5))),
+                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), limit(5))),
+                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), limit(5))),
+                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), limit(5))),
+                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), limit(5)))
                 ]);
 
                 const activities = [
@@ -223,11 +216,17 @@ export default function DashboardPage() {
                 ];
                 
                 const sortedActivities = activities
-                    .sort((a, b) => b.date.getTime() - a.date.getTime())
+                    .filter(act => act.date && act.date.toMillis) // Ensure date is a valid Timestamp
+                    .sort((a, b) => b.date.toMillis() - a.date.toMillis())
                     .slice(0, 4)
-                    .map(act => ({...act, time: format(act.date, 'dd MMM', { locale: es })}));
-
+                    .map(act => ({
+                        ...act,
+                        date: act.date.toDate(),
+                        time: format(act.date.toDate(), 'dd MMM', { locale: es })
+                    }));
+                
                 setRecentActivities(sortedActivities);
+                // --- END RECENT ACTIVITIES ---
 
             } catch (error) {
                 console.error("Error fetching dashboard data: ", error);
