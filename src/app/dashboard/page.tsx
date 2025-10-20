@@ -230,7 +230,8 @@ export default function DashboardPage() {
                 ]);
 
                 const activities: ActivityItem[] = [];
-                const safeToDate = (date: any): Date => {
+                const safeToDate = (data: any, dateField: string): Date => {
+                    const date = data[dateField];
                     if (date instanceof Timestamp) return date.toDate();
                     if (date instanceof Date) return date;
                     return new Date(); // Fallback
@@ -240,35 +241,35 @@ export default function DashboardPage() {
                     const data = doc.data() as Document;
                     activities.push({
                         id: doc.id, type: 'Ingreso', text: `Factura #${data.numero} para ${data.cliente}`,
-                        date: safeToDate(data.fechaEmision), time: ''
+                        date: safeToDate(data, 'fechaEmision'), time: ''
                     });
                 });
                 expensesSnap.forEach(doc => {
                     const data = doc.data() as Expense;
                     activities.push({
                         id: doc.id, type: 'Gasto', text: `Gasto de ${data.proveedor} (${data.categoria})`,
-                        date: safeToDate(data.fecha), time: ''
+                        date: safeToDate(data, 'fecha'), time: ''
                     });
                 });
                 projectsSnap.forEach(doc => {
                     const data = doc.data() as Project;
                     activities.push({
                         id: doc.id, type: 'Proyecto', text: `Nuevo proyecto: ${data.name}`,
-                        date: safeToDate(data.createdAt), time: ''
+                        date: safeToDate(data, 'createdAt'), time: ''
                     });
                 });
                 tasksSnap.forEach(doc => {
                     const data = doc.data() as Task;
                     activities.push({
                         id: doc.id, type: 'Tarea', text: `Nueva tarea: ${data.title}`,
-                        date: safeToDate(data.createdAt), time: ''
+                        date: safeToDate(data, 'createdAt'), time: ''
                     });
                 });
                 contactsSnap.forEach(doc => {
                     const data = doc.data() as Contact;
                     activities.push({
                         id: doc.id, type: 'Contacto', text: `Nuevo contacto: ${data.name}`,
-                        date: safeToDate(data.createdAt), time: ''
+                        date: safeToDate(data, 'createdAt'), time: ''
                     });
                 });
 
