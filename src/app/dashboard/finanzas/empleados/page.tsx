@@ -7,7 +7,7 @@ import { List, Clock, PlusCircle } from 'lucide-react';
 import { ListadoEmpleadosTab } from './listado-empleados-tab';
 import { FichajesTab } from './fichajes-tab';
 import { Button } from '@/components/ui/button';
-import AddEmployeeModal from '../nominas/add-employee-modal';
+import { AddEmployeeModal } from '../nominas/add-employee-modal';
 import { AuthContext } from '@/context/auth-context';
 
 export type Employee = {
