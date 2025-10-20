@@ -191,7 +191,7 @@ export default function DashboardPage() {
                 );
                 const expensesQueryRecent = query(
                     collection(db, 'expenses'), 
-                    where('ownerId', '==', user.uid'), 
+                    where('ownerId', '==', user.uid), 
                     orderBy('fecha', 'desc'), 
                     limit(5)
                 );
@@ -230,40 +230,45 @@ export default function DashboardPage() {
                 ]);
 
                 const activities: ActivityItem[] = [];
+                const safeToDate = (date: any): Date => {
+                    if (date instanceof Timestamp) return date.toDate();
+                    if (date instanceof Date) return date;
+                    return new Date(); // Fallback
+                };
 
                 invoicesSnap.forEach(doc => {
                     const data = doc.data() as Document;
                     activities.push({
                         id: doc.id, type: 'Ingreso', text: `Factura #${data.numero} para ${data.cliente}`,
-                        date: (data.fechaEmision as any).toDate(), time: ''
+                        date: safeToDate(data.fechaEmision), time: ''
                     });
                 });
                 expensesSnap.forEach(doc => {
                     const data = doc.data() as Expense;
                     activities.push({
                         id: doc.id, type: 'Gasto', text: `Gasto de ${data.proveedor} (${data.categoria})`,
-                        date: (data.fecha as any).toDate(), time: ''
+                        date: safeToDate(data.fecha), time: ''
                     });
                 });
                 projectsSnap.forEach(doc => {
                     const data = doc.data() as Project;
                     activities.push({
                         id: doc.id, type: 'Proyecto', text: `Nuevo proyecto: ${data.name}`,
-                        date: (data.createdAt as any).toDate(), time: ''
+                        date: safeToDate(data.createdAt), time: ''
                     });
                 });
                 tasksSnap.forEach(doc => {
                     const data = doc.data() as Task;
                     activities.push({
                         id: doc.id, type: 'Tarea', text: `Nueva tarea: ${data.title}`,
-                        date: (data.createdAt as any).toDate(), time: ''
+                        date: safeToDate(data.createdAt), time: ''
                     });
                 });
                 contactsSnap.forEach(doc => {
                     const data = doc.data() as Contact;
                     activities.push({
                         id: doc.id, type: 'Contacto', text: `Nuevo contacto: ${data.name}`,
-                        date: (data.createdAt as any).toDate(), time: ''
+                        date: safeToDate(data.createdAt), time: ''
                     });
                 });
 
