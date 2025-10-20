@@ -1,5 +1,17 @@
 
-import type { Employee as BaseEmployee } from './page';
+
+export type Employee = {
+    id: string;
+    ownerId: string;
+    name: string;
+    email: string;
+    position: string;
+    nif: string;
+    socialSecurityNumber: string;
+    contractType: 'Indefinido' | 'Temporal' | 'Formación' | 'Prácticas';
+    grossAnnualSalary: number;
+    avatar?: string;
+};
 
 export type Fichaje = {
     id: string;
@@ -7,8 +19,4 @@ export type Fichaje = {
     employeeName: string;
     type: 'Entrada' | 'Salida';
     timestamp: Date;
-}
-
-export type Employee = BaseEmployee & {
-    avatar?: string;
 }

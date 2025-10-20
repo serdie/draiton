@@ -9,18 +9,8 @@ import { FichajesTab } from './fichajes-tab';
 import { Button } from '@/components/ui/button';
 import { AddEmployeeModal } from '../nominas/add-employee-modal';
 import { AuthContext } from '@/context/auth-context';
+import { type Employee } from './types';
 
-export type Employee = {
-    id: string;
-    ownerId: string;
-    name: string;
-    email: string;
-    position: string;
-    nif: string;
-    socialSecurityNumber: string;
-    contractType: 'Indefinido' | 'Temporal' | 'Formación' | 'Prácticas';
-    grossAnnualSalary: number;
-};
 
 export function EmpleadosPageContent() {
     const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
