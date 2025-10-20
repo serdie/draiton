@@ -25,7 +25,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 const taxModels = {
     mensuales: [
-        // Moved to quarterly as it's more common
+        { name: 'Modelo 303 (IVA para REDEME)', link: '#' },
+        { name: 'Modelo 322 (IVA para grupos)', link: '#' },
+        { name: 'Modelo 349 (Operaciones Intracomunitarias)', link: '#' },
+        { name: 'Modelo 353 (IVA para grupos - agregado)', link: '#' },
+        { name: 'Modelo 369 (Regímenes especiales OSS/IOSS)', link: '#' },
+        { name: 'Modelo 380 (Operaciones asimiladas a importaciones)', link: '#' },
     ],
     trimestrales: [
         { name: 'Modelo 303 (IVA Trimestral)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=303' },
@@ -40,14 +45,14 @@ const taxModels = {
     ],
     anuales: [
          { name: 'Modelo 100 (Declaración de la Renta)', link: '#' },
-         { name: 'Modelo 714 (Declaración de Patrimonio)', link: '#' },
          { name: 'Modelo 390 (Resumen Anual IVA)', link: '#' },
          { name: 'Modelo 190 (Resumen Anual Mod. 111)', link: '#' },
          { name: 'Modelo 180 (Resumen Anual Mod. 115)', link: '#' },
-         { name: 'Modelo 188 (Resumen Anual Mod. 123)', link: '#' },
          { name: 'Modelo 347 (Operaciones con Terceros)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=347' },
+         { name: 'Modelo 714 (Declaración de Patrimonio)', link: '#' },
          { name: 'Modelo 720 (Bienes en el extranjero)', link: '#' },
          { name: 'Modelo 721 (Monedas virtuales)', link: '#' },
+         { name: 'Modelo 188 (Resumen Anual Mod. 123)', link: '#' },
          { name: 'Modelo 480 (Primas de seguros)', link: '#' },
     ],
     censales: [
