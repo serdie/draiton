@@ -23,6 +23,7 @@ export function FichajeEmpleadoTab() {
     const [status, setStatus] = useState<FichajeStatus | 'loading'>('loading');
     const [lastFichajeTime, setLastFichajeTime] = useState<string | null>(null);
     const [allFichajes, setAllFichajes] = useState<Fichaje[]>([]);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
@@ -65,8 +66,8 @@ export function FichajeEmpleadoTab() {
     }, [user]);
 
     const handleFichaje = async () => {
-        if (!user || status === 'loading') {
-            toast({ variant: 'destructive', title: 'Error de autenticación o acción en progreso.' });
+        if (!user || status === 'loading' || isProcessing) {
+            toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
             return;
         }
         
@@ -78,7 +79,7 @@ export function FichajeEmpleadoTab() {
 
         const newType = status === 'out' ? 'Entrada' : 'Salida';
         
-        setStatus('loading');
+        setIsProcessing(true);
 
         try {
             await addDoc(collection(db, 'fichajes'), {
@@ -92,12 +93,12 @@ export function FichajeEmpleadoTab() {
                 title: `Fichaje de ${newType} registrado`,
                 description: `Has registrado tu ${newType.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
             });
-            // The onSnapshot listener will automatically update the status, so we don't need to set it manually.
+            // El listener onSnapshot se encargará de actualizar el estado de la UI (status, lastFichajeTime, etc.)
         } catch (error) {
             console.error("Error al registrar fichaje:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje.' });
-            // Revert status on error, now we need to cast status back because 'loading' is not a FichajeStatus
-            setStatus(status as FichajeStatus);
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -119,7 +120,7 @@ export function FichajeEmpleadoTab() {
                     </div>
                     <div className="text-center">
                         <p className="font-semibold text-xl">
-                            {isLoading ? 'Procesando...' : (isClockIn ? 'Actualmente DENTRO' : 'Actualmente FUERA')}
+                            {isLoading ? 'Cargando estado...' : (isClockIn ? 'Actualmente DENTRO' : 'Actualmente FUERA')}
                         </p>
                         {lastFichajeTime && !isLoading && (
                             <p className="text-sm text-muted-foreground">
@@ -131,10 +132,10 @@ export function FichajeEmpleadoTab() {
                         size="lg" 
                         className={`w-full ${isClockIn ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
                         onClick={handleFichaje}
-                        disabled={isLoading}
+                        disabled={isLoading || isProcessing}
                     >
-                        {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isClockIn ? <LogOut className="mr-2 h-5 w-5"/> : <LogIn className="mr-2 h-5 w-5"/>) }
-                        {isLoading ? 'Registrando...' : (isClockIn ? 'Fichar Salida' : 'Fichar Entrada')}
+                        {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isClockIn ? <LogOut className="mr-2 h-5 w-5"/> : <LogIn className="mr-2 h-5 w-5"/>) }
+                        {isProcessing ? 'Registrando...' : (isClockIn ? 'Fichar Salida' : 'Fichar Entrada')}
                     </Button>
                 </CardContent>
             </Card>
