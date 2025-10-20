@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Coins, Receipt, Users, Loader2, MoreHorizontal, Download, Mail, Trash2, Pencil } from 'lucide-react';
+import { FileText, Coins, Receipt, Users, Loader2, MoreHorizontal, Download, Mail, Trash2, Pencil, Clock } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
 import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
@@ -20,6 +20,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Button } from '@/components/ui/button';
 import { ViewPayrollModal } from './nominas/view-payroll-modal';
 import type { Employee } from './empleados/types';
+import { FichajeEmpleadoTab } from './empleados/fichaje-empleado-tab';
 
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
@@ -82,67 +83,78 @@ export default function FinanzasPage() {
         )}
          <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold">Mis Nóminas</h1>
-                <p className="text-muted-foreground">Consulta y descarga tus nóminas mensuales.</p>
+                <h1 className="text-3xl font-bold">Mis Finanzas y Fichajes</h1>
+                <p className="text-muted-foreground">Consulta tus nóminas y gestiona tu jornada laboral.</p>
             </div>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Historial de Nóminas</CardTitle>
-                    <CardDescription>Aquí puedes ver todas tus nóminas recibidas.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {loading ? (
-                         <div className="flex justify-center items-center py-10">
-                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Periodo</TableHead>
-                                    <TableHead>Importe Líquido</TableHead>
-                                    <TableHead>Estado</TableHead>
-                                    <TableHead className="text-right">Acciones</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {payrolls.length > 0 ? payrolls.map((payroll) => (
-                                    <TableRow key={payroll.id}>
-                                        <TableCell className="font-medium">{payroll.header.period}</TableCell>
-                                        <TableCell>{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(payroll.netPay)}</TableCell>
-                                        <TableCell className="text-green-600">Pagada</TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
-                                                        <FileText className="mr-2 h-4 w-4" />
-                                                        Ver Nómina
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
-                                                        <Download className="mr-2 h-4 w-4" />
-                                                        Descargar PDF
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                )) : (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center">
-                                            Aún no has recibido ninguna nómina.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    )}
-                </CardContent>
-            </Card>
+             <Tabs defaultValue="fichajes" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4"/>Mi Fichaje</TabsTrigger>
+                    <TabsTrigger value="nominas"><FileText className="mr-2 h-4 w-4"/>Mis Nóminas</TabsTrigger>
+                </TabsList>
+                <TabsContent value="fichajes" className="mt-6">
+                    <FichajeEmpleadoTab />
+                </TabsContent>
+                <TabsContent value="nominas" className="mt-6">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Historial de Nóminas</CardTitle>
+                            <CardDescription>Aquí puedes ver todas tus nóminas recibidas.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {loading ? (
+                                <div className="flex justify-center items-center py-10">
+                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                </div>
+                            ) : (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Periodo</TableHead>
+                                            <TableHead>Importe Líquido</TableHead>
+                                            <TableHead>Estado</TableHead>
+                                            <TableHead className="text-right">Acciones</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {payrolls.length > 0 ? payrolls.map((payroll) => (
+                                            <TableRow key={payroll.id}>
+                                                <TableCell className="font-medium">{payroll.header.period}</TableCell>
+                                                <TableCell>{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(payroll.netPay)}</TableCell>
+                                                <TableCell className="text-green-600">Pagada</TableCell>
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
+                                                                <FileText className="mr-2 h-4 w-4" />
+                                                                Ver Nómina
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
+                                                                <Download className="mr-2 h-4 w-4" />
+                                                                Descargar PDF
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </TableCell>
+                                            </TableRow>
+                                        )) : (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="h-24 text-center">
+                                                    Aún no has recibido ninguna nómina.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
         </>
     )

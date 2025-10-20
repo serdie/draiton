@@ -61,7 +61,7 @@ export default function OperacionesPage() {
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
     const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
     const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState(isEmployee ? 'fichajes' : 'proyectos');
+    const [activeTab, setActiveTab] = useState(isEmployee ? 'proyectos' : 'proyectos');
     
     useEffect(() => {
         if (!db || !user) {
@@ -118,7 +118,7 @@ export default function OperacionesPage() {
     const tabsForEmployee = [
         { value: 'proyectos', label: 'Proyectos', icon: HardHat, component: <KanbanBoard projects={projects} loading={loading} /> },
         { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
-        { value: 'fichajes', label: 'Mi Fichaje', icon: Clock, component: <FichajeEmpleadoTab /> },
+        // Fichaje se movió a la página de Finanzas para empleados
         { value: 'informes', label: 'Informes', icon: BarChart2, component: <InformesPage /> }
     ];
 
