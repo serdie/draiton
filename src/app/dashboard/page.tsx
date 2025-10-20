@@ -45,7 +45,7 @@ import type { Contact } from './contactos/page';
 import type { Project, ProjectStatus } from './proyectos/page';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subDays } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subDays, getMonth, getYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AiAssistantChat } from './ai-assistant-chat';
 import type { Task } from './tareas/types';
@@ -139,36 +139,42 @@ export default function DashboardPage() {
                 setExpenses(totalExpenses);
                 
                 // Process chart data
-                let chartDataTemplate: { month: string, income: number, expenses: number, year: number, monthNum: number }[];
+                let chartDataTemplate: { month: string, income: number, expenses: number }[];
                 if (periodo === 'anual') {
-                    chartDataTemplate = Array.from({ length: 12 }, (_, i) => {
-                        const d = new Date(now.getFullYear(), i, 1);
-                        return { month: format(d, 'MMM', { locale: es }), income: 0, expenses: 0, year: d.getFullYear(), monthNum: d.getMonth() };
-                    });
+                    chartDataTemplate = Array.from({ length: 12 }, (_, i) => ({
+                        month: format(new Date(now.getFullYear(), i, 1), 'MMM', { locale: es }),
+                        income: 0,
+                        expenses: 0,
+                    }));
                 } else {
-                     chartDataTemplate = Array.from({ length: 6 }, (_, i) => {
-                        const d = subMonths(now, 5 - i);
-                        return { month: format(d, 'MMM', { locale: es }), income: 0, expenses: 0, year: d.getFullYear(), monthNum: d.getMonth() };
-                    });
+                     chartDataTemplate = Array.from({ length: 6 }, (_, i) => ({
+                        month: format(subMonths(now, 5 - i), 'MMM', { locale: es }),
+                        income: 0,
+                        expenses: 0,
+                    }));
                 }
-                
-                filteredInvoices.forEach(inv => {
-                    const invDate = inv.fechaEmision;
-                    const monthStr = format(invDate, 'MMM', { locale: es });
-                    const chartEntry = chartDataTemplate.find(d => d.month === monthStr && d.year === invDate.getFullYear());
-                    if (chartEntry) {
-                        chartEntry.income += inv.importe;
-                    }
-                });
 
-                filteredExpenses.forEach(exp => {
-                    const expDate = exp.fecha;
-                     const monthStr = format(expDate, 'MMM', { locale: es });
-                    const chartEntry = chartDataTemplate.find(d => d.month === monthStr && d.year === expDate.getFullYear());
-                    if (chartEntry) {
-                        chartEntry.expenses += exp.importe;
-                    }
-                });
+                const processFinancialData = (items: (Document | Expense)[], type: 'income' | 'expenses') => {
+                    items.forEach(item => {
+                        const itemDate = 'fechaEmision' in item ? item.fechaEmision : item.fecha;
+                        if (itemDate >= startDate && itemDate <= endDate) {
+                            const monthIndex = (itemDate.getFullYear() === now.getFullYear())
+                                ? itemDate.getMonth()
+                                : (itemDate.getMonth() + 12 * (now.getFullYear() - itemDate.getFullYear()));
+                            
+                             const chartIndex = periodo === 'anual' 
+                                ? itemDate.getMonth()
+                                : chartDataTemplate.findIndex(d => d.month.toLowerCase() === format(itemDate, 'MMM', {locale: es}).toLowerCase());
+
+                            if (chartIndex !== -1 && chartDataTemplate[chartIndex]) {
+                                chartDataTemplate[chartIndex][type] += item.importe;
+                            }
+                        }
+                    });
+                };
+                
+                processFinancialData(allInvoices, 'income');
+                processFinancialData(allExpenses, 'expenses');
                 
                 setFinancialChartData(chartDataTemplate as any);
 
@@ -183,7 +189,7 @@ export default function DashboardPage() {
                 setPendingTasks(tasksSnapshot.size);
 
                 // --- START RECENT ACTIVITIES ---
-                const processSnapshot = (
+                 const processSnapshot = (
                     snapshot: any,
                     type: ActivityItem['type'],
                     textFieldFn: (data: DocumentData) => string,
@@ -191,21 +197,22 @@ export default function DashboardPage() {
                 ) => {
                     return snapshot.docs.map((doc: any) => {
                         const data = doc.data();
+                        const timestamp = data[dateField] as Timestamp;
                         return {
                             id: doc.id,
                             type: type,
                             text: textFieldFn(data),
-                            date: (data[dateField] as Timestamp).toMillis(), // Keep as milliseconds for sorting
+                            date: timestamp,
                         };
                     });
                 };
-                
+
                 const [invoicesSnap, expensesSnap, projectsSnap, tasksSnap, contactsSnap] = await Promise.all([
-                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(10))),
-                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), limit(10))),
-                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), limit(10))),
-                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), limit(10))),
-                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), limit(10)))
+                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), orderBy('fechaEmision', 'desc'), limit(5))),
+                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), orderBy('fecha', 'desc'), limit(5))),
+                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
+                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
+                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5))),
                 ]);
 
                 const activities = [
@@ -216,13 +223,13 @@ export default function DashboardPage() {
                     ...processSnapshot(contactsSnap, 'Contacto', data => `Nuevo contacto: ${data.name}`, 'createdAt'),
                 ];
                 
-                const sortedActivities = activities
-                    .sort((a, b) => b.date - a.date)
+                 const sortedActivities = activities
+                    .sort((a, b) => b.date.toMillis() - a.date.toMillis())
                     .slice(0, 10)
                     .map(act => ({
                         ...act,
-                        date: new Date(act.date),
-                        time: format(new Date(act.date), 'dd MMM', { locale: es })
+                        date: act.date.toDate(),
+                        time: format(act.date.toDate(), 'dd MMM', { locale: es })
                     }));
                 
                 setRecentActivities(sortedActivities);
