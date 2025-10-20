@@ -37,7 +37,7 @@ import {
 import Link from 'next/link';
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
-import { collection, query, where, getDocs, orderBy, limit, Timestamp, type DocumentData, type QuerySnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, Timestamp, type DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Document } from './documentos/page';
 import type { Expense } from './gastos/page';
@@ -49,6 +49,7 @@ import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuart
 import { es } from 'date-fns/locale';
 import { AiAssistantChat } from './ai-assistant-chat';
 import type { Task } from './tareas/types';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type ActivityItem = {
     id: string;
@@ -134,7 +135,7 @@ export default function DashboardPage() {
                     const expDate = exp.fecha;
                     return expDate >= startDate && expDate <= endDate;
                 });
-                const totalExpenses = filteredExpenses.reduce((acc, doc) => acc + doc.importe, 0);
+                const totalExpenses = filteredExpenses.reduce((acc, doc) => acc + exp.importe, 0);
                 setExpenses(totalExpenses);
                 
                 // Process chart data
@@ -183,28 +184,28 @@ export default function DashboardPage() {
 
                 // --- START RECENT ACTIVITIES ---
                 const processSnapshot = (
-                    snapshot: QuerySnapshot<DocumentData>,
+                    snapshot: any,
                     type: ActivityItem['type'],
                     textFieldFn: (data: DocumentData) => string,
                     dateField: string
-                ): { id: string; type: ActivityItem['type']; text: string; date: Timestamp }[] => {
-                    return snapshot.docs.map(doc => {
+                ) => {
+                    return snapshot.docs.map((doc: any) => {
                         const data = doc.data();
                         return {
                             id: doc.id,
                             type: type,
                             text: textFieldFn(data),
-                            date: data[dateField] as Timestamp,
+                            date: (data[dateField] as Timestamp).toMillis(), // Keep as milliseconds for sorting
                         };
                     });
                 };
                 
                 const [invoicesSnap, expensesSnap, projectsSnap, tasksSnap, contactsSnap] = await Promise.all([
-                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(5))),
-                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), limit(5))),
-                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), limit(5))),
-                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), limit(5))),
-                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), limit(5)))
+                    getDocs(query(collection(db, 'invoices'), where('ownerId', '==', user.uid), limit(10))),
+                    getDocs(query(collection(db, 'expenses'), where('ownerId', '==', user.uid), limit(10))),
+                    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid), limit(10))),
+                    getDocs(query(collection(db, 'tasks'), where('ownerId', '==', user.uid), limit(10))),
+                    getDocs(query(collection(db, 'contacts'), where('ownerId', '==', user.uid), limit(10)))
                 ]);
 
                 const activities = [
@@ -216,13 +217,12 @@ export default function DashboardPage() {
                 ];
                 
                 const sortedActivities = activities
-                    .filter(act => act.date && act.date.toMillis) // Ensure date is a valid Timestamp
-                    .sort((a, b) => b.date.toMillis() - a.date.toMillis())
-                    .slice(0, 4)
+                    .sort((a, b) => b.date - a.date)
+                    .slice(0, 10)
                     .map(act => ({
                         ...act,
-                        date: act.date.toDate(),
-                        time: format(act.date.toDate(), 'dd MMM', { locale: es })
+                        date: new Date(act.date),
+                        time: format(new Date(act.date), 'dd MMM', { locale: es })
                     }));
                 
                 setRecentActivities(sortedActivities);
@@ -354,18 +354,20 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                      {loading ? (
-                        <div className="flex justify-center items-center h-[160px]">
+                        <div className="flex justify-center items-center h-[240px]">
                             <Loader2 className="h-6 w-6 animate-spin" />
                         </div>
                      ): (
-                        <ul className="space-y-4">
-                            {recentActivities.map(item => (
-                                 <li key={item.id} className="text-sm flex justify-between gap-2">
-                                    <span className="text-foreground/90 truncate">{item.text}</span>
-                                    <span className="text-muted-foreground shrink-0">{item.time}</span>
-                                </li>
-                            ))}
-                        </ul>
+                        <ScrollArea className="h-[240px]">
+                            <ul className="space-y-4">
+                                {recentActivities.map(item => (
+                                    <li key={item.id} className="text-sm flex justify-between gap-2">
+                                        <span className="text-foreground/90 truncate">{item.text}</span>
+                                        <span className="text-muted-foreground shrink-0">{item.time}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </ScrollArea>
                      )}
                 </CardContent>
             </Card>
