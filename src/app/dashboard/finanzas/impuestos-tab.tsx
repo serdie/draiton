@@ -25,12 +25,17 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 const taxModels = {
     mensuales: [
-        { name: 'Modelo 111 (Retenciones)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=111' },
-        { name: 'Modelo 115 (Alquileres)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=115' },
+        // Moved to quarterly as it's more common
     ],
     trimestrales: [
         { name: 'Modelo 303 (IVA Trimestral)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=303' },
-        { name: 'Modelo 130 (IRPF Trimestral)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=130' },
+        { name: 'Modelo 130 (IRPF Estimación Directa)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=130' },
+        { name: 'Modelo 131 (IRPF Módulos)', link: '#' },
+        { name: 'Modelo 111 (Retenciones IRPF)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=111' },
+        { name: 'Modelo 115 (Retenciones Alquileres)', link: '/dashboard/gestor-ia/asistente-fiscal?modelo=115' },
+        { name: 'Modelo 123 (Capital Mobiliario)', link: '#' },
+        { name: 'Modelo 309 (Liquidación no periódica IVA)', link: '#' },
+        { name: 'Modelo 349 (Operaciones Intracomunitarias)', link: '#' },
     ],
     anuales: [
          { name: 'Modelo 390 (Resumen Anual IVA)', link: '#' },
@@ -93,25 +98,23 @@ export function ImpuestosTab() {
         const { from: startDate, to: endDate = new Date() } = dateRange;
 
         // Invoices listener
-        const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid));
+        const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('fechaEmision', '>=', startDate), where('fechaEmision', '<=', endDate));
         const unsubscribeInvoices = onSnapshot(invoicesQuery, (snapshot) => {
             const allInvoices = snapshot.docs.map(doc => ({...doc.data(), fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document);
-            const periodInvoices = allInvoices.filter(inv => inv.fechaEmision >= startDate && inv.fechaEmision <= endDate);
             
-            const totalPaidInPeriod = periodInvoices.filter(i => i.estado === 'Pagado').reduce((sum, i) => sum + i.subtotal, 0);
-            const ivaDevengado = periodInvoices.reduce((sum, i) => sum + i.impuestos, 0);
+            const totalPaidInPeriod = allInvoices.filter(i => i.estado === 'Pagado').reduce((sum, i) => sum + i.subtotal, 0);
+            const ivaDevengado = allInvoices.reduce((sum, i) => sum + i.impuestos, 0);
             
             // Expenses listener (nested to calculate net profit)
-            const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
+            const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid), where('fecha', '>=', startDate), where('fecha', '<=', endDate));
             const unsubscribeExpenses = onSnapshot(expensesQuery, (expensesSnapshot) => {
                 const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), fecha: (doc.data().fecha as Timestamp).toDate()}) as Expense);
-                const periodExpenses = allExpenses.filter(exp => exp.fecha >= startDate && exp.fecha <= endDate);
-                const totalExpensesInPeriod = periodExpenses.reduce((sum, exp) => sum + exp.importe, 0);
+                const totalExpensesInPeriod = allExpenses.reduce((sum, exp) => sum + exp.importe, 0);
                 
                 const netProfit = totalPaidInPeriod - totalExpensesInPeriod;
                 setTaxIRPF(netProfit > 0 ? netProfit * 0.20 : 0);
 
-                const ivaSoportado = periodExpenses.reduce((sum, i) => sum + (i.importe * 0.21 / 1.21), 0);
+                const ivaSoportado = allExpenses.reduce((sum, i) => sum + (i.importe * 0.21 / 1.21), 0);
                 setTaxIVA(ivaDevengado - ivaSoportado);
                 setLoading(false);
             });
@@ -193,8 +196,8 @@ export function ImpuestosTab() {
                                 {taxModels.trimestrales.map((model) => (
                                     <div key={model.name} className="flex justify-between items-center py-2">
                                         <span className="text-sm">{model.name}</span>
-                                        <Button asChild variant="link" size="sm">
-                                            <Link href={model.link}>Preparar</Link>
+                                        <Button asChild variant="link" size="sm" disabled={model.link === '#'}>
+                                            <Link href={model.link}>{model.link === '#' ? 'Próximamente' : 'Preparar'}</Link>
                                         </Button>
                                     </div>
                                 ))}
@@ -216,14 +219,14 @@ export function ImpuestosTab() {
                          <AccordionItem value="mensuales">
                             <AccordionTrigger>Modelos Mensuales</AccordionTrigger>
                             <AccordionContent>
-                                {taxModels.mensuales.map((model) => (
+                                {taxModels.mensuales.length > 0 ? taxModels.mensuales.map((model) => (
                                     <div key={model.name} className="flex justify-between items-center py-2">
                                         <span className="text-sm">{model.name}</span>
-                                        <Button asChild variant="link" size="sm">
-                                            <Link href={model.link}>Preparar</Link>
+                                        <Button asChild variant="link" size="sm" disabled={model.link === '#'}>
+                                            <Link href={model.link}>{model.link === '#' ? 'Próximamente' : 'Preparar'}</Link>
                                         </Button>
                                     </div>
-                                ))}
+                                )) : <p className="text-sm text-muted-foreground py-2">No hay modelos mensuales comunes para este perfil.</p>}
                             </AccordionContent>
                         </AccordionItem>
                         <AccordionItem value="censales">
