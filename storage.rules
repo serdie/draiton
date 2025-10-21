@@ -1,12 +1,17 @@
-
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Regla para los avatares: permite la lectura a todos y la escritura solo al propietario
+    // Permite a los usuarios leer y escribir en su propia carpeta de avatares.
+    // El tamaño del archivo se limita a 2MB.
     match /avatars/{userId}/{allPaths=**} {
-      allow read;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId && request.resource.size < 2 * 1024 * 1024;
+    }
+    
+    // Regla abierta para otras carpetas, ajusta según sea necesario
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
