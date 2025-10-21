@@ -92,7 +92,7 @@ export function PerfilSettings() {
             <Avatar className="h-20 w-20">
                 <AvatarImage src={user?.photoURL ?? ''} alt="Avatar de usuario" />
                 <AvatarFallback>
-                    {isUploading ? <Loader2 className="h-8 w-8 animate-spin" /> : <User className="h-8 w-8" />}
+                    {isUploading ? <Loader2 className="h-8 w-8 animate-spin" /> : (user?.displayName ? getInitials(user.displayName) : <User className="h-8 w-8" />)}
                 </AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-2">
