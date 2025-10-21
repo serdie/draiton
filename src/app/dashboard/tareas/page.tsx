@@ -30,17 +30,20 @@ export default function TareasPage() {
             return;
         }
 
+        let isMounted = true;
         setLoading(true);
 
         const handleError = (error: any, type: string) => {
-            console.error(`Error fetching ${type}: `, error);
-            toast({ variant: 'destructive', title: 'Error', description: `No se pudieron cargar los ${type}. Revisa los permisos de Firestore.` });
+            if (isMounted) {
+                console.error(`Error fetching ${type}: `, error);
+                toast({ variant: 'destructive', title: 'Error', description: `No se pudieron cargar los ${type}. Revisa los permisos de Firestore.` });
+            }
         };
-        
-        // 1. Subscribe to Tasks
+
         const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid));
-        const tasksUnsubscribe = onSnapshot(tasksQuery, (snapshot) => {
-            const fetchedTasks = snapshot.docs.map(doc => {
+        const tasksUnsubscribe = onSnapshot(tasksQuery, (tasksSnapshot) => {
+            if (!isMounted) return;
+            const fetchedTasks = tasksSnapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
                     id: doc.id,
@@ -50,52 +53,48 @@ export default function TareasPage() {
                 } as Task;
             });
             setTasks(fetchedTasks);
-            
-            // 2. Subscribe to Projects
-            const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
-            const projectsUnsubscribe = onSnapshot(projectsQuery, (snapshot) => {
-                const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-                setProjects(fetchedProjects);
+        }, (error) => handleError(error, 'tareas'));
 
-                // 3. Fetch all users (owner + employees)
-                const fetchUsers = async () => {
-                    const userList = new Map<string, { id: string; name: string; }>();
-                    const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-                    const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
-
-                    try {
-                        const [selfSnapshot, employeesSnapshot] = await Promise.all([getDocs(selfQuery), getDocs(employeesQuery)]);
-                        selfSnapshot.forEach(doc => {
-                            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
-                        });
-                        employeesSnapshot.forEach(doc => {
-                            userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
-                        });
-                        setUsers(Array.from(userList.values()));
-                    } catch (error) {
-                        handleError(error, 'usuarios');
-                    } finally {
-                        setLoading(false); // All data fetching is complete
-                    }
-                };
-
-                fetchUsers();
-
-            }, (error) => {
-                handleError(error, 'proyectos');
-                setLoading(false);
-            });
-
-            // Return cleanup for projects subscription
-            return () => projectsUnsubscribe();
-
-        }, (error) => {
-            handleError(error, 'tareas');
-            setLoading(false);
-        });
+        const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+        const projectsUnsubscribe = onSnapshot(projectsQuery, (projectsSnapshot) => {
+             if (!isMounted) return;
+            const fetchedProjects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+            setProjects(fetchedProjects);
+        }, (error) => handleError(error, 'proyectos'));
         
-        // Return cleanup for tasks subscription
-        return () => tasksUnsubscribe();
+        const fetchUsers = async () => {
+            const userList = new Map<string, { id: string; name: string; }>();
+            const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+            const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+
+            try {
+                const [selfSnapshot, employeesSnapshot] = await Promise.all([getDocs(selfQuery), getDocs(employeesQuery)]);
+                 if (!isMounted) return;
+                selfSnapshot.forEach(doc => {
+                    userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+                });
+                employeesSnapshot.forEach(doc => {
+                    userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+                });
+                setUsers(Array.from(userList.values()));
+            } catch (error) {
+                handleError(error, 'usuarios');
+            }
+        };
+
+        Promise.all([
+           getDocs(tasksQuery),
+           getDocs(projectsQuery),
+           fetchUsers()
+        ]).finally(() => {
+            if (isMounted) setLoading(false);
+        });
+
+        return () => {
+            isMounted = false;
+            tasksUnsubscribe();
+            projectsUnsubscribe();
+        };
 
     }, [user, toast]);
 
