@@ -52,7 +52,7 @@ const nextConfig: NextConfig = {
         hostname: 'firebasestorage.googleapis.com',
         port: '',
         pathname: '/**',
-      },
+      }
     ],
   },
   experimental: {
