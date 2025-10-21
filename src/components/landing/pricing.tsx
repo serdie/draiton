@@ -17,6 +17,7 @@ const freeFeatures = [
 const proFeatures = [
   'Todo lo del plan Gratis',
   'Documentos, Gastos y Contactos Ilimitados',
+  'Gestión de facturas con Verifactu',
   'Proyectos Ilimitados',
   'Marketing IA (Emails, Posts Redes Sociales)',
   'Web IA (Creación y análisis de sitios web)',
