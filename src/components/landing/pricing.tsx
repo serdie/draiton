@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 const freeFeatures = [
   'Panel de control principal',
@@ -72,6 +73,14 @@ export function Pricing() {
         {/* Plan Pro */}
         <Card className="border-accent shadow-lg flex flex-col relative">
           <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Más Popular</Badge>
+           <Image 
+            src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/659d13df531ac2845a273d05_IMAGEN-BLOG.jpg?alt=media&token=f0f4d670-b930-4a9d-b162-cec1d0946c48"
+            alt="Logo Verifactu"
+            width={50}
+            height={50}
+            className="absolute top-4 right-4"
+            data-ai-hint="verifactu logo"
+          />
           <CardHeader>
             <CardTitle>Pro (Autónomo)</CardTitle>
             <CardDescription>Para profesionales que quieren llevar su negocio al siguiente nivel.</CardDescription>
@@ -95,7 +104,15 @@ export function Pricing() {
         </Card>
 
          {/* Plan Empresa */}
-        <Card className="flex flex-col">
+        <Card className="flex flex-col relative">
+            <Image 
+                src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/659d13df531ac2845a273d05_IMAGEN-BLOG.jpg?alt=media&token=f0f4d670-b930-4a9d-b162-cec1d0946c48"
+                alt="Logo Verifactu"
+                width={50}
+                height={50}
+                className="absolute top-4 right-4"
+                data-ai-hint="verifactu logo"
+            />
           <CardHeader>
             <CardTitle>Empresa</CardTitle>
             <CardDescription>Para negocios en crecimiento que necesitan más potencia y colaboración.</CardDescription>
