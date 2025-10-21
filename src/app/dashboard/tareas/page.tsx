@@ -32,68 +32,56 @@ export default function TareasPage() {
             return;
         }
 
-        const fetchAllData = async () => {
-            setLoading(true);
-            try {
-                // Fetch projects
-                const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
-                const projectsUnsubscribe = onSnapshot(projectsQuery, (snapshot) => {
-                    const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-                    setProjects(fetchedProjects);
-                });
+        setLoading(true);
 
-                // Fetch tasks
-                const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid));
-                const tasksUnsubscribe = onSnapshot(tasksQuery, (snapshot) => {
-                    const fetchedTasks = snapshot.docs.map(doc => {
-                        const data = doc.data();
-                        return {
-                            id: doc.id,
-                            ...data,
-                            dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
-                            createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : new Date(),
-                        } as Task;
-                    });
-                    setTasks(fetchedTasks);
-                });
+        const handleError = (error: any, type: string) => {
+            console.error(`Error fetching ${type}: `, error);
+            toast({ variant: 'destructive', title: 'Error', description: `No se pudieron cargar los ${type}. Revisa los permisos de Firestore.` });
+        };
 
-                 // Fetch users: both the owner and their employees
-                const userList = new Map<string, { id: string; name: string; }>();
+        const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+        const projectsUnsubscribe = onSnapshot(projectsQuery, (snapshot) => {
+            const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+            setProjects(fetchedProjects);
+        }, (error) => handleError(error, 'proyectos'));
+        
+        const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid));
+        const tasksUnsubscribe = onSnapshot(tasksQuery, (snapshot) => {
+            const fetchedTasks = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
+                    createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : new Date(),
+                } as Task;
+            });
+            setTasks(fetchedTasks);
+             if (loading) setLoading(false);
+        }, (error) => {
+            handleError(error, 'tareas');
+            if (loading) setLoading(false);
+        });
 
-                const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-                const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+        const userList = new Map<string, { id: string; name: string; }>();
+        const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+        const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
 
-                const [selfSnapshot, employeesSnapshot] = await Promise.all([
-                    getDocs(selfQuery),
-                    getDocs(employeesQuery),
-                ]);
-
+        Promise.all([getDocs(selfQuery), getDocs(employeesQuery)])
+            .then(([selfSnapshot, employeesSnapshot]) => {
                 selfSnapshot.forEach(doc => {
                     userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
                 });
                 employeesSnapshot.forEach(doc => {
                     userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
                 });
-
                 setUsers(Array.from(userList.values()));
+            })
+            .catch((error) => handleError(error, 'usuarios'));
 
-
-                setLoading(false);
-                return () => {
-                    projectsUnsubscribe();
-                    tasksUnsubscribe();
-                };
-            } catch (error) {
-                console.error("Error fetching dashboard data: ", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los datos.' });
-                setLoading(false);
-            }
-        };
-
-        const unsubscribePromise = fetchAllData();
-        
         return () => {
-            unsubscribePromise.then(fn => fn && fn());
+            projectsUnsubscribe();
+            tasksUnsubscribe();
         };
 
     }, [user, toast]);
