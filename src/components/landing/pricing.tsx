@@ -76,8 +76,8 @@ export function Pricing() {
            <Image 
             src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/659d13df531ac2845a273d05_IMAGEN-BLOG.jpg?alt=media&token=f0f4d670-b930-4a9d-b162-cec1d0946c48"
             alt="Logo Verifactu"
-            width={50}
-            height={50}
+            width={70}
+            height={70}
             className="absolute top-4 right-4"
             data-ai-hint="verifactu logo"
           />
@@ -108,8 +108,8 @@ export function Pricing() {
             <Image 
                 src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/659d13df531ac2845a273d05_IMAGEN-BLOG.jpg?alt=media&token=f0f4d670-b930-4a9d-b162-cec1d0946c48"
                 alt="Logo Verifactu"
-                width={50}
-                height={50}
+                width={70}
+                height={70}
                 className="absolute top-4 right-4"
                 data-ai-hint="verifactu logo"
             />
