@@ -56,7 +56,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [clientName, setClientName] = useState(document.cliente);
   const [clientCif, setClientCif] = useState(document.clienteCif || '');
   const [clientAddress, setClientAddress] = useState(document.clienteDireccion || '');
-  const [terminos, setTerminos] = useState(document.terminos || 'Condiciones de pago: 30 días.');
+  const [terminos, setTerminos] = useState(document.terminos ?? 'Condiciones de pago: 30 días.');
   const [saveTerminos, setSaveTerminos] = useState(false);
   const [iban, setIban] = useState(document.iban || '');
   const [saveIban, setSaveIban] = useState(false);
