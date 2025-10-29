@@ -54,7 +54,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [clientCif, setClientCif] = useState(document.clienteCif || '');
   const [clientAddress, setClientAddress] = useState(document.clienteDireccion || '');
   
-  const [isSaving, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   const companyData = user?.company;
@@ -101,7 +101,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsLoading(true);
+    setIsSaving(true);
 
     if (!user) {
       toast({
@@ -109,7 +109,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
         title: 'No estás autenticado',
         description: 'Por favor, inicia sesión para actualizar un documento.',
       });
-      setIsLoading(false);
+      setIsSaving(false);
       return;
     }
 
@@ -145,7 +145,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
       });
     }
 
-    setIsLoading(false);
+    setIsSaving(false);
   }
 
 
@@ -369,10 +369,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </div>
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoading ? "Guardando..." : "Guardar Cambios"}
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving ? "Guardando..." : "Guardar Cambios"}
           </Button>
         </div>
     </form>
