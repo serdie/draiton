@@ -11,10 +11,14 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import type { Document } from '../../documentos/page';
 import type { Expense } from '../../gastos/page';
-import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { FinancialReportModal } from './financial-report-modal';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type Period = 'mensual' | 'trimestral' | 'anual';
+type ReportType = 'p&g' | 'balance' | 'cashflow';
 
 const chartConfig = {
   income: { label: 'Ingresos', color: 'hsl(var(--chart-2))' },
@@ -22,11 +26,12 @@ const chartConfig = {
 };
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ff7300'];
-type ReportType = 'p&g' | 'balance' | 'cashflow';
+
 
 export default function VisionGeneralFinanzasPage() {
     const { user } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
+    const [periodo, setPeriodo] = useState<Period>('trimestral');
     
     // Financial states
     const [netProfit, setNetProfit] = useState(0);
@@ -35,7 +40,7 @@ export default function VisionGeneralFinanzasPage() {
     const [taxIRPF, setTaxIRPF] = useState(0);
 
     // Chart states
-    const [incomeVsExpensesData, setIncomeVsExpensesData] = useState([]);
+    const [incomeVsExpensesData, setIncomeVsExpensesData] = useState<any[]>([]);
     
     // Report Modal State
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -49,63 +54,85 @@ export default function VisionGeneralFinanzasPage() {
         setLoading(true);
 
         const now = new Date();
-        const startOfCurrentQuarter = startOfQuarter(now);
-        const endOfCurrentQuarter = endOfQuarter(now);
+        let startDate: Date;
+        let endDate: Date = endOfMonth(now);
+        let chartMonths = 6;
 
-        // --- Invoices listener ---
+        switch (periodo) {
+            case 'mensual':
+                startDate = startOfMonth(now);
+                chartMonths = 1;
+                break;
+            case 'trimestral':
+                startDate = startOfQuarter(now);
+                endDate = endOfQuarter(now);
+                chartMonths = 3;
+                break;
+            case 'anual':
+                startDate = startOfYear(now);
+                endDate = endOfYear(now);
+                chartMonths = 12;
+                break;
+            default:
+                startDate = startOfQuarter(now);
+                endDate = endOfQuarter(now);
+                chartMonths = 3;
+                break;
+        }
+
         const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid));
         const unsubscribeInvoices = onSnapshot(invoicesQuery, (snapshot) => {
-            const allInvoices = snapshot.docs.map(doc => ({...doc.data(), fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document);
-
-            // Filter for current quarter
-            const quarterInvoices = allInvoices.filter(inv => inv.fechaEmision >= startOfCurrentQuarter && inv.fechaEmision <= endOfCurrentQuarter);
+            const allInvoices = snapshot.docs.map(doc => ({...doc.data(), id: doc.id, fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document & { id: string });
             
-            // Cards calculation
-            const totalPaidInQuarter = quarterInvoices.filter(i => i.estado === 'Pagado').reduce((sum, i) => sum + i.subtotal, 0);
-            const totalPending = allInvoices.filter(i => i.estado === 'Pendiente' || i.estado === 'Enviado').reduce((sum, i) => sum + i.importe, 0);
+            const periodInvoices = allInvoices.filter(inv => inv.fechaEmision >= startDate && inv.fechaEmision <= endDate);
+            
+            const totalPaidInPeriod = periodInvoices.filter(i => i.estado === 'Pagado').reduce((sum, i) => sum + i.subtotal, 0);
+            
+            const totalPending = allInvoices.filter(i => i.estado === 'Pendiente' || i.estado === 'Enviado' || i.estado === 'Emitido').reduce((sum, i) => sum + i.importe, 0);
             setPendingInvoices(totalPending);
 
-            const ivaDevengado = quarterInvoices.reduce((sum, i) => sum + i.impuestos, 0);
-            
+            const ivaDevengado = periodInvoices.reduce((sum, i) => sum + i.impuestos, 0);
 
-            // --- Expenses listener (nested to calculate net profit) ---
             const expensesQuery = query(collection(db, 'expenses'), where('ownerId', '==', user.uid));
             const unsubscribeExpenses = onSnapshot(expensesQuery, (expensesSnapshot) => {
-                const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), fecha: (doc.data().fecha as Timestamp).toDate()}) as Expense);
+                const allExpenses = expensesSnapshot.docs.map(doc => ({...doc.data(), id: doc.id, fecha: (doc.data().fecha as Timestamp).toDate()}) as Expense & { id: string });
 
-                 // Filter for current quarter
-                const quarterExpenses = allExpenses.filter(exp => exp.fecha >= startOfCurrentQuarter && exp.fecha <= endOfCurrentQuarter);
-                const totalExpensesInQuarter = quarterExpenses.reduce((sum, exp) => sum + exp.importe, 0);
+                const periodExpenses = allExpenses.filter(exp => exp.fecha >= startDate && exp.fecha <= endDate);
+                const totalExpensesInPeriod = periodExpenses.reduce((sum, exp) => sum + exp.importe, 0);
                 
-                const calculatedNetProfit = totalPaidInQuarter - totalExpensesInQuarter;
+                const calculatedNetProfit = totalPaidInPeriod - totalExpensesInPeriod;
                 setNetProfit(calculatedNetProfit);
 
                 const baseIRPF = calculatedNetProfit > 0 ? calculatedNetProfit : 0;
-                setTaxIRPF(baseIRPF * 0.20); // 20% estimation
+                setTaxIRPF(baseIRPF * 0.20); 
 
-                const ivaSoportado = quarterExpenses.reduce((sum, i) => sum + (i.importe * 0.21 / 1.21), 0); // Assuming 21% VAT
+                const ivaSoportado = periodExpenses.reduce((sum, i) => sum + (i.importe * 0.21 / 1.21), 0);
                 setTaxIVA(ivaDevengado - ivaSoportado);
 
-
-                // -- Bar Chart Data (last 6 months) --
-                const sixMonthsAgo = startOfMonth(subMonths(now, 5));
-                const monthlyData = Array.from({ length: 6 }, (_, i) => {
-                    const d = subMonths(now, 5 - i);
-                    return { month: format(d, 'MMM', { locale: es }), income: 0, expenses: 0 };
-                });
+                const chartStartDate = startOfMonth(subMonths(now, chartMonths - 1));
+                const chartEndDate = endOfMonth(now);
+                const monthsInterval = eachMonthOfInterval({ start: chartStartDate, end: chartEndDate });
+                const monthlyData = monthsInterval.map(monthStart => ({
+                    month: format(monthStart, 'MMM', { locale: es }),
+                    income: 0,
+                    expenses: 0,
+                }));
 
                 allInvoices.forEach(inv => {
-                    if (inv.fechaEmision >= sixMonthsAgo && inv.estado === 'Pagado') {
-                        const monthIndex = (inv.fechaEmision.getMonth() - sixMonthsAgo.getMonth() + 12) % 12;
-                        if(monthlyData[monthIndex]) monthlyData[monthIndex].income += inv.importe;
+                    if (inv.fechaEmision >= chartStartDate && inv.fechaEmision <= chartEndDate && inv.estado === 'Pagado') {
+                        const monthStr = format(inv.fechaEmision, 'MMM', { locale: es });
+                        const monthData = monthlyData.find(m => m.month === monthStr);
+                        if(monthData) monthData.income += inv.subtotal;
                     }
                 });
                 allExpenses.forEach(exp => {
-                    if (exp.fecha >= sixMonthsAgo) {
-                        const monthIndex = (exp.fecha.getMonth() - sixMonthsAgo.getMonth() + 12) % 12;
-                         if(monthlyData[monthIndex]) monthlyData[monthIndex].expenses += exp.importe;
+                    if (exp.fecha >= chartStartDate && exp.fecha <= chartEndDate) {
+                         const monthStr = format(exp.fecha, 'MMM', { locale: es });
+                        const monthData = monthlyData.find(m => m.month === monthStr);
+                        if(monthData) monthData.expenses += exp.importe;
                     }
                 });
+
                 setIncomeVsExpensesData(monthlyData as any);
                 setLoading(false);
             });
@@ -115,7 +142,7 @@ export default function VisionGeneralFinanzasPage() {
 
         return () => unsubscribeInvoices();
 
-    }, [user]);
+    }, [user, periodo]);
 
     const handleOpenReport = (reportType: ReportType) => {
         setSelectedReport(reportType);
@@ -138,15 +165,29 @@ export default function VisionGeneralFinanzasPage() {
         reportType={selectedReport}
       />
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Visión General Financiera</h1>
-      <p className="text-muted-foreground">
-        Tu centro de mando para la salud económica de tu negocio.
-      </p>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div>
+            <h1 className="text-3xl font-bold">Visión General Financiera</h1>
+            <p className="text-muted-foreground">
+                Tu centro de mando para la salud económica de tu negocio.
+            </p>
+        </div>
+        <Select value={periodo} onValueChange={(value) => setPeriodo(value as Period)}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Seleccionar Periodo" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="mensual">Este Mes</SelectItem>
+                <SelectItem value="trimestral">Este Trimestre</SelectItem>
+                <SelectItem value="anual">Este Año</SelectItem>
+            </SelectContent>
+        </Select>
+      </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Beneficio Neto (Trimestre)</CardTitle>
+                <CardTitle className="text-sm font-medium">Beneficio Neto ({periodo.charAt(0).toUpperCase() + periodo.slice(1)})</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -161,12 +202,12 @@ export default function VisionGeneralFinanzasPage() {
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold">{pendingInvoices.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</div>
-                <p className="text-xs text-muted-foreground">Total por cobrar</p>
+                <p className="text-xs text-muted-foreground">Total por cobrar (todas)</p>
             </CardContent>
         </Card>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Previsión IVA (Trimestre)</CardTitle>
+                <CardTitle className="text-sm font-medium">Previsión IVA ({periodo.charAt(0).toUpperCase() + periodo.slice(1)})</CardTitle>
                 <Percent className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -176,7 +217,7 @@ export default function VisionGeneralFinanzasPage() {
         </Card>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Previsión IRPF (Trimestre)</CardTitle>
+                <CardTitle className="text-sm font-medium">Previsión IRPF ({periodo.charAt(0).toUpperCase() + periodo.slice(1)})</CardTitle>
                 <Scale className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -190,7 +231,7 @@ export default function VisionGeneralFinanzasPage() {
         <Card className="lg:col-span-4">
             <CardHeader>
                 <CardTitle>Ingresos vs. Gastos</CardTitle>
-                <CardDescription>Últimos 6 meses</CardDescription>
+                <CardDescription>Evolución de los últimos meses.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={chartConfig} className="h-[300px] w-full">
