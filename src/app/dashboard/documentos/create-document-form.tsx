@@ -364,7 +364,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-2">
-                        <div className="hidden md:grid md:grid-cols-[1fr_80px_100px_100px_40px] gap-2 font-medium text-muted-foreground text-xs px-2">
+                        <div className="hidden md:grid md:grid-cols-[1fr_180px_100px_100px_40px] gap-2 font-medium text-muted-foreground text-xs px-2">
                             <span>Descripción</span>
                             <span className="text-right">Cant./Unidad</span>
                             <span className="text-right">P. Unit.</span>
@@ -372,12 +372,12 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                             <span></span>
                         </div>
                         {lineItems.map((item) => (
-                            <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_80px_100px_100px_40px] gap-2 items-start border-b pb-2">
+                            <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_180px_100px_100px_40px] gap-2 items-start border-b pb-2">
                                 <Textarea placeholder="Descripción del servicio/producto" value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} rows={1} className="md:h-10" />
                                 <div className="flex gap-1">
                                     <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} className="text-right w-16" min="0"/>
                                     <Select value={item.unit} onValueChange={(value) => handleLineItemChange(item.id, 'unit', value)}>
-                                        <SelectTrigger className="w-[80px] text-xs">
+                                        <SelectTrigger className="flex-1 text-xs">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
