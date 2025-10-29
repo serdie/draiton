@@ -18,14 +18,14 @@ import { AuthContext } from '@/context/auth-context';
 
 interface ListadoEmpleadosTabProps {
     onEditEmployee: (employee: Employee) => void;
+    employees: Employee[];
+    loading: boolean;
 }
 
 
-export function ListadoEmpleadosTab({ onEditEmployee }: ListadoEmpleadosTabProps) {
+export function ListadoEmpleadosTab({ onEditEmployee, employees, loading }: ListadoEmpleadosTabProps) {
     const [employeeToGeneratePayroll, setEmployeeToGeneratePayroll] = useState<Employee | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [loading, setLoading] = useState(true);
     const router = useRouter();
     const { toast } = useToast();
     const { user, isEmpresa } = useContext(AuthContext);
@@ -33,34 +33,6 @@ export function ListadoEmpleadosTab({ onEditEmployee }: ListadoEmpleadosTabProps
     const employeeLimit = 5;
     const canAddEmployee = isEmpresa ? employees.length < employeeLimit : user?.role === 'admin';
 
-
-    useEffect(() => {
-        if (!user) {
-            setLoading(false);
-            return;
-        }
-
-        setLoading(true);
-        const q = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
-        
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedEmployees = snapshot.docs.map(docSnap => {
-                const data = docSnap.data();
-                return {
-                    id: docSnap.id,
-                    ...data,
-                } as Employee;
-            });
-            setEmployees(fetchedEmployees);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching employees:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [user, toast]);
 
     const handleDeleteEmployee = async () => {
         if (!employeeToDelete) return;

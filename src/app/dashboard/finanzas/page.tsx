@@ -72,7 +72,6 @@ export default function FinanzasPage() {
                     name: user.displayName || 'Empleado',
                     email: user.email || '',
                     ownerId: '',
-                    companyOwnerId: '',
                     position: '',
                     nif: '',
                     socialSecurityNumber: '',
