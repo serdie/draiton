@@ -9,6 +9,7 @@ export type DocumentStatus = 'Pagado' | 'Pendiente' | 'Vencido' | 'Enviado' | 'A
 export type LineItem = {
   description: string;
   quantity: number;
+  unit: string;
   unitPrice: number;
   total: number;
 };

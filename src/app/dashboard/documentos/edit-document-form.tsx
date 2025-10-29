@@ -36,13 +36,15 @@ const getDocumentTypeLabel = (type: DocumentType) => {
     }
 }
 
+const units = ['cantidad', 'horas', 'día', 'mes', 'kg', 'minuto', 'palabra', 'paquete', 'tonelada', 'metro', 'm2', 'm3', 'noche', 'km', 'semana', 'litro'];
+
 export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const { user } = useContext(AuthContext);
   const [docType, setDocType] = useState(document.tipo);
   const [docNumber, setDocNumber] = useState(document.numero);
   const [emissionDate, setEmissionDate] = useState<Date | undefined>(document.fechaEmision);
   const [dueDate, setDueDate] = useState<Date | undefined>(document.fechaVto || undefined);
-  const [lineItems, setLineItems] = useState<LineItem[]>(document.lineas.map((line, index) => ({ id: index, ...line })));
+  const [lineItems, setLineItems] = useState<LineItem[]>(document.lineas.map((line, index) => ({ id: index, unit: line.unit || 'cantidad', ...line })));
   const [taxRate, setTaxRate] = useState(document.impuestos && document.subtotal ? (document.impuestos / document.subtotal) * 100 : 21);
   const [status, setStatus] = useState<DocumentStatus>(document.estado);
   const [clientName, setClientName] = useState(document.cliente);
@@ -61,6 +63,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
       quantity: 1,
       unitPrice: 0,
       total: 0,
+      unit: 'cantidad'
     };
     setLineItems([...lineItems, newLine]);
   };
@@ -243,17 +246,27 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
-                    <div className="hidden md:grid md:grid-cols-[1fr_80px_100px_100px_40px] gap-2 font-medium text-muted-foreground text-xs px-2">
+                    <div className="hidden md:grid md:grid-cols-[1fr_180px_100px_100px_40px] gap-2 font-medium text-muted-foreground text-xs px-2">
                         <span>Descripción</span>
-                        <span className="text-right">Cant.</span>
+                        <span className="text-right">Cant./Unidad</span>
                         <span className="text-right">P. Unit.</span>
                         <span className="text-right">Total</span>
                         <span></span>
                     </div>
                     {lineItems.map((item) => (
-                        <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_80px_100px_100px_40px] gap-2 items-start border-b pb-2">
+                        <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_180px_100px_100px_40px] gap-2 items-start border-b pb-2">
                             <Textarea placeholder="Descripción del servicio/producto" value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} rows={1} className="md:h-10" />
-                            <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} className="text-right" min="0"/>
+                            <div className="flex gap-1">
+                                <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} className="text-right w-16" min="0"/>
+                                <Select value={item.unit} onValueChange={(value) => handleLineItemChange(item.id, 'unit', value)}>
+                                    <SelectTrigger className="flex-1 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {units.map(u => <SelectItem key={u} value={u} className="capitalize text-xs">{u}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} className="text-right" min="0" step="0.01"/>
                             <Input value={item.total.toFixed(2)} readOnly className="text-right bg-muted" />
                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-10 w-10" onClick={() => handleRemoveLine(item.id)}>
