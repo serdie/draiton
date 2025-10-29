@@ -8,11 +8,14 @@ import { ListadoEmpleadosTab } from './listado-empleados-tab';
 import { FichajesTab } from './fichajes-tab';
 import { Button } from '@/components/ui/button';
 import { AddEmployeeModal } from '../nominas/add-employee-modal';
+import { EditEmployeeModal } from '../nominas/edit-employee-modal';
 import { AuthContext } from '@/context/auth-context';
+import type { Employee } from './types';
 
 
 export function EmpleadosPageContent() {
     const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
+    const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
     const { user, isEmpresa } = useContext(AuthContext);
 
     return (
@@ -22,6 +25,13 @@ export function EmpleadosPageContent() {
                 onClose={() => setIsAddEmployeeModalOpen(false)}
                 onEmployeeAdded={() => { /* Could trigger a refetch if needed */ }}
             />
+            {employeeToEdit && (
+                 <EditEmployeeModal
+                    isOpen={!!employeeToEdit}
+                    onClose={() => setEmployeeToEdit(null)}
+                    employee={employeeToEdit}
+                />
+            )}
             <div className="space-y-6">
                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
@@ -41,7 +51,7 @@ export function EmpleadosPageContent() {
                         <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4" />Control Horario</TabsTrigger>
                     </TabsList>
                     <TabsContent value="listado" className="mt-6">
-                        <ListadoEmpleadosTab />
+                        <ListadoEmpleadosTab onEditEmployee={setEmployeeToEdit} />
                     </TabsContent>
                     <TabsContent value="fichajes"  className="mt-6">
                         <FichajesTab />

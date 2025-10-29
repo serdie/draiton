@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PlusCircle, MoreHorizontal, FileSignature, User, Trash2, Loader2 } from 'lucide-react';
-import { EditEmployeeModal } from '../../finanzas/nominas/edit-employee-modal';
 import { GeneratePayrollModal } from '../../finanzas/nominas/generate-payroll-modal';
 import type { Employee } from '../empleados/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -17,10 +16,13 @@ import { collection, query, where, onSnapshot, doc, deleteDoc, Timestamp } from 
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 
+interface ListadoEmpleadosTabProps {
+    onEditEmployee: (employee: Employee) => void;
+}
 
-export function ListadoEmpleadosTab() {
+
+export function ListadoEmpleadosTab({ onEditEmployee }: ListadoEmpleadosTabProps) {
     const [employeeToGeneratePayroll, setEmployeeToGeneratePayroll] = useState<Employee | null>(null);
-    const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
@@ -85,13 +87,6 @@ export function ListadoEmpleadosTab() {
 
     return (
         <>
-            {employeeToEdit && (
-                <EditEmployeeModal
-                    isOpen={!!employeeToEdit}
-                    onClose={() => setEmployeeToEdit(null)}
-                    employee={employeeToEdit}
-                />
-            )}
             {employeeToGeneratePayroll && (
                  <GeneratePayrollModal
                     isOpen={!!employeeToGeneratePayroll}
@@ -162,7 +157,7 @@ export function ListadoEmpleadosTab() {
                                                         Ver Historial
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem onClick={() => setEmployeeToEdit(employee)}>
+                                                    <DropdownMenuItem onClick={() => onEditEmployee(employee)}>
                                                         <User className="mr-2 h-4 w-4" />
                                                         Editar Empleado
                                                     </DropdownMenuItem>
