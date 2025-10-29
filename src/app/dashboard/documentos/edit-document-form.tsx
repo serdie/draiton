@@ -62,6 +62,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [showClientEmail, setShowClientEmail] = useState(document.showClientEmail || false);
   const [clientPhone, setClientPhone] = useState(document.clienteTelefono || '');
   const [showClientPhone, setShowClientPhone] = useState(document.showClientPhone || false);
+  const [emisorEmail, setEmisorEmail] = useState(document.emisorEmail || user?.email || '');
+  const [showEmisorEmail, setShowEmisorEmail] = useState(document.showEmisorEmail ?? true);
+  const [emisorPhone, setEmisorPhone] = useState(document.emisorTelefono || user?.company?.phone || '');
+  const [showEmisorPhone, setShowEmisorPhone] = useState(document.showEmisorPhone ?? true);
   const [terminos, setTerminos] = useState(document.terminos ?? '');
   const [saveTerminos, setSaveTerminos] = useState(false);
   const [iban, setIban] = useState(document.iban || '');
@@ -146,8 +150,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
       showClientEmail: showClientEmail,
       clienteTelefono: clientPhone,
       showClientPhone: showClientPhone,
-      emisorEmail: companyData?.email || user.email || '',
-      emisorTelefono: companyData?.phone || '',
+      emisorEmail: emisorEmail,
+      showEmisorEmail: showEmisorEmail,
+      emisorTelefono: emisorPhone,
+      showEmisorPhone: showEmisorPhone,
       fechaEmision: emissionDate!,
       fechaVto: dueDate || null,
       lineas: lineItems.map(({id, ...rest}) => rest),
@@ -230,16 +236,24 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                         <Label>Dirección Emisor</Label>
                         <Textarea value={companyData?.address || 'Tu Dirección, Ciudad, País'} readOnly/>
                     </div>
-                      <div className="grid grid-cols-2 gap-2">
-                            <div>
-                                <Label>Email</Label>
-                                <Input value={user?.email || ''} readOnly />
-                            </div>
-                            <div>
-                                <Label>Teléfono</Label>
-                                <Input value={companyData?.phone || ''} readOnly/>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                            <Label>Email</Label>
+                            <Input value={emisorEmail} onChange={e => setEmisorEmail(e.target.value)} />
+                             <div className="flex items-center space-x-2">
+                                <Checkbox id="show-emisor-email" checked={showEmisorEmail} onCheckedChange={(checked) => setShowEmisorEmail(checked as boolean)} />
+                                <Label htmlFor="show-emisor-email" className="text-xs text-muted-foreground font-normal">Mostrar en PDF</Label>
                             </div>
                         </div>
+                        <div className="space-y-2">
+                            <Label>Teléfono</Label>
+                            <Input value={emisorPhone} onChange={e => setEmisorPhone(e.target.value)} />
+                            <div className="flex items-center space-x-2">
+                                <Checkbox id="show-emisor-phone" checked={showEmisorPhone} onCheckedChange={(checked) => setShowEmisorPhone(checked as boolean)} />
+                                <Label htmlFor="show-emisor-phone" className="text-xs text-muted-foreground font-normal">Mostrar en PDF</Label>
+                            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
              <Card>

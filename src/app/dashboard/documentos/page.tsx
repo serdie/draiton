@@ -26,7 +26,9 @@ export type Document = {
   clienteTelefono?: string;
   showClientPhone?: boolean;
   emisorEmail?: string;
+  showEmisorEmail?: boolean;
   emisorTelefono?: string;
+  showEmisorPhone?: boolean;
   tipo: DocumentType;
   importe: number;
   subtotal: number;

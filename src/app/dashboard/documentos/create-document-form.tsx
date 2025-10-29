@@ -73,6 +73,10 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   const [showClientEmail, setShowClientEmail] = useState(false);
   const [clientPhone, setClientPhone] = useState('');
   const [showClientPhone, setShowClientPhone] = useState(false);
+  const [emisorEmail, setEmisorEmail] = useState(user?.email || '');
+  const [showEmisorEmail, setShowEmisorEmail] = useState(true);
+  const [emisorPhone, setEmisorPhone] = useState(user?.company?.phone || '');
+  const [showEmisorPhone, setShowEmisorPhone] = useState(true);
   const [terminos, setTerminos] = useState(user?.company?.terminos ?? 'Condiciones de pago: 30 días.');
   const [saveTerminos, setSaveTerminos] = useState(false);
   const [iban, setIban] = useState('');
@@ -87,7 +91,10 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
     if (companyData?.iban) {
       setIban(companyData.iban);
     }
-  }, [companyData]);
+    setEmisorEmail(user?.email || '');
+    setEmisorPhone(user?.company?.phone || '');
+  }, [companyData, user]);
+
 
   useEffect(() => {
     setDocType(documentType);
@@ -242,8 +249,10 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         showClientEmail: showClientEmail,
         clienteTelefono: clientPhone,
         showClientPhone: showClientPhone,
-        emisorEmail: companyData?.email || user.email || '',
-        emisorTelefono: companyData?.phone || '',
+        emisorEmail: emisorEmail,
+        showEmisorEmail: showEmisorEmail,
+        emisorTelefono: emisorPhone,
+        showEmisorPhone: showEmisorPhone,
         fechaEmision: emissionDate!,
         fechaVto: dueDate || null,
         lineas: lineItems.map(({id, ...rest}) => rest),
@@ -362,13 +371,21 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                             <Textarea value={companyData?.address || 'Tu Dirección, Ciudad, País'} readOnly/>
                         </div>
                          <div className="grid grid-cols-2 gap-2">
-                            <div>
+                            <div className="space-y-2">
                                 <Label>Email</Label>
-                                <Input value={user?.email || ''} readOnly />
+                                <Input value={emisorEmail} onChange={e => setEmisorEmail(e.target.value)} />
+                                 <div className="flex items-center space-x-2">
+                                    <Checkbox id="show-emisor-email" checked={showEmisorEmail} onCheckedChange={(checked) => setShowEmisorEmail(checked as boolean)} />
+                                    <Label htmlFor="show-emisor-email" className="text-xs text-muted-foreground font-normal">Mostrar en PDF</Label>
+                                </div>
                             </div>
-                            <div>
+                            <div className="space-y-2">
                                 <Label>Teléfono</Label>
-                                <Input value={companyData?.phone || ''} readOnly/>
+                                <Input value={emisorPhone} onChange={e => setEmisorPhone(e.target.value)} />
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="show-emisor-phone" checked={showEmisorPhone} onCheckedChange={(checked) => setShowEmisorPhone(checked as boolean)} />
+                                    <Label htmlFor="show-emisor-phone" className="text-xs text-muted-foreground font-normal">Mostrar en PDF</Label>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

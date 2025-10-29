@@ -157,8 +157,8 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                         <div className="text-xs text-gray-600 mt-1">
                             <p>{companyData?.cif || 'CIF no disponible'}</p>
                             <p className="whitespace-pre-wrap">{companyData?.address || 'Dirección no disponible'}</p>
-                            <p>{document.emisorEmail}</p>
-                            <p>{document.emisorTelefono}</p>
+                            {document.showEmisorEmail && document.emisorEmail && <p>{document.emisorEmail}</p>}
+                            {document.showEmisorPhone && document.emisorTelefono && <p>{document.emisorTelefono}</p>}
                         </div>
                     </div>
                  </header>
