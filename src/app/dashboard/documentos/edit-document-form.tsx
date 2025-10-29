@@ -56,7 +56,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [clientName, setClientName] = useState(document.cliente);
   const [clientCif, setClientCif] = useState(document.clienteCif || '');
   const [clientAddress, setClientAddress] = useState(document.clienteDireccion || '');
-  const [terminos, setTerminos] = useState(document.terminos ?? 'Condiciones de pago: 30 días.');
+  const [terminos, setTerminos] = useState(document.terminos ?? '');
   const [saveTerminos, setSaveTerminos] = useState(false);
   const [iban, setIban] = useState(document.iban || '');
   const [saveIban, setSaveIban] = useState(false);
@@ -390,10 +390,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </div>
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
-          <Button type="submit" disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? "Guardando..." : "Guardar Cambios"}
+          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading ? "Guardando..." : "Guardar Cambios"}
           </Button>
         </div>
     </form>

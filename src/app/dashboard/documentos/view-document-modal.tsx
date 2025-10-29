@@ -189,7 +189,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                         <TableHeader>
                             <TableRow className="bg-muted">
                                 <TableHead className="text-black">Descripción</TableHead>
-                                <TableHead className="text-center text-black">Cant.</TableHead>
+                                <TableHead className="text-center text-black">Cantidad</TableHead>
                                 <TableHead className="text-right text-black">P. Unitario</TableHead>
                                 <TableHead className="text-right text-black">Total</TableHead>
                             </TableRow>
@@ -198,7 +198,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                             {document.lineas && document.lineas.map((line, index) => (
                                 <TableRow key={index} className="border-b">
                                     <TableCell className="font-medium whitespace-pre-wrap">{line.description}</TableCell>
-                                    <TableCell className="text-center">{line.quantity}</TableCell>
+                                    <TableCell className="text-center">{line.quantity} {line.unit}</TableCell>
                                     <TableCell className="text-right">{line.unitPrice.toFixed(2)} {document.moneda}</TableCell>
                                     <TableCell className="text-right">{line.total.toFixed(2)} {document.moneda}</TableCell>
                                 </TableRow>
