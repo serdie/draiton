@@ -163,7 +163,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                     </div>
                      <div className="space-y-2 text-right">
                         <div className="grid grid-cols-2">
-                            <span className="font-semibold">Nº Documento:</span>
+                            <span className="font-semibold">Nº Factura:</span>
                             <span>{document.numero}</span>
                         </div>
                         <div className="grid grid-cols-2">
