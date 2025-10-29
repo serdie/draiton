@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark } from 'lucide-react';
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -302,11 +302,14 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                     <Label htmlFor="irpf-switch">Aplicar retención IRPF (15%)</Label>
                 </div>
                 <Collapsible>
-                    <CollapsibleTrigger className="flex w-full justify-between items-center text-sm font-medium">
-                        Términos y condiciones
-                        <ChevronDown className="h-4 w-4" />
+                    <CollapsibleTrigger className="flex w-full justify-between items-center text-sm font-medium p-3 rounded-lg bg-muted/50 border hover:bg-muted">
+                        <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            Términos y condiciones
+                        </div>
+                        <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2 space-y-4">
+                    <CollapsibleContent className="mt-2 space-y-4 border-t pt-4">
                         <div className="space-y-2">
                             <Label htmlFor="terms" className="text-muted-foreground">Términos y condiciones (Opcional)</Label>
                             <Textarea id="terms" placeholder="Añade información sobre el acuerdo legal con tu cliente." defaultValue="Condiciones de pago: 30 días." />
@@ -318,11 +321,14 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                     </CollapsibleContent>
                 </Collapsible>
                 <Collapsible>
-                    <CollapsibleTrigger className="flex w-full justify-between items-center text-sm font-medium">
-                        Formas de pago
-                        <ChevronDown className="h-4 w-4" />
+                    <CollapsibleTrigger className="flex w-full justify-between items-center text-sm font-medium p-3 rounded-lg bg-muted/50 border hover:bg-muted">
+                        <div className="flex items-center gap-2">
+                            <Landmark className="h-4 w-4" />
+                            Formas de pago
+                        </div>
+                        <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2 space-y-4">
+                    <CollapsibleContent className="mt-2 space-y-4 border-t pt-4">
                         <div className="space-y-2">
                             <Label htmlFor="iban" className="text-muted-foreground">Número de cuenta (IBAN)</Label>
                             <Input id="iban" placeholder="ES00 0000 0000 0000 0000 0000" />
@@ -372,5 +378,3 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
     </form>
   );
 }
-
-    
