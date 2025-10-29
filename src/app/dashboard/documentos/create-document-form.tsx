@@ -31,6 +31,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, 
 import { db } from '@/lib/firebase/config';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type LineItem = DocLineItem & {
   id: number;
@@ -69,7 +70,9 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   const [clientCif, setClientCif] = useState('');
   const [clientAddress, setClientAddress] = useState('');
   const [clientEmail, setClientEmail] = useState('');
+  const [showClientEmail, setShowClientEmail] = useState(false);
   const [clientPhone, setClientPhone] = useState('');
+  const [showClientPhone, setShowClientPhone] = useState(false);
   const [terminos, setTerminos] = useState(user?.company?.terminos ?? 'Condiciones de pago: 30 días.');
   const [saveTerminos, setSaveTerminos] = useState(false);
   const [iban, setIban] = useState('');
@@ -133,8 +136,6 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
       setClientName(initialData.clientName || '');
       setClientCif(initialData.clientCif || '');
       setClientAddress(initialData.clientAddress || '');
-      setClientEmail(initialData.clientEmail || '');
-      setClientPhone(initialData.clientPhone || '');
       setTaxRate(initialData.taxRate || 21);
 
       if (initialData.lineItems && initialData.lineItems.length > 0) {
@@ -157,7 +158,9 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         setClientCif('');
         setClientAddress('');
         setClientEmail('');
+        setShowClientEmail(false);
         setClientPhone('');
+        setShowClientPhone(false);
         setEmissionDate(new Date());
         setDueDate(undefined);
         setTaxRate(21);
@@ -236,7 +239,9 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         clienteCif: clientCif,
         clienteDireccion: clientAddress,
         clienteEmail: clientEmail,
+        showClientEmail: showClientEmail,
         clienteTelefono: clientPhone,
+        showClientPhone: showClientPhone,
         emisorEmail: companyData?.email || user.email || '',
         emisorTelefono: companyData?.phone || '',
         fechaEmision: emissionDate!,
@@ -359,7 +364,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                          <div className="grid grid-cols-2 gap-2">
                             <div>
                                 <Label>Email</Label>
-                                <Input value={companyData?.email || user?.email || ''} readOnly />
+                                <Input value={user?.email || ''} readOnly />
                             </div>
                             <div>
                                 <Label>Teléfono</Label>
@@ -386,13 +391,21 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                             <Textarea placeholder="Dirección Completa del Cliente" value={clientAddress} onChange={e => setClientAddress(e.target.value)}/>
                         </div>
                          <div className="grid grid-cols-2 gap-2">
-                            <div>
+                            <div className="space-y-2">
                                 <Label>Email</Label>
                                 <Input placeholder="Email del cliente" value={clientEmail} onChange={e => setClientEmail(e.target.value)}/>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="show-email" checked={showClientEmail} onCheckedChange={(checked) => setShowClientEmail(checked as boolean)} />
+                                    <Label htmlFor="show-email" className="text-xs text-muted-foreground font-normal">Mostrar en PDF</Label>
+                                </div>
                             </div>
-                             <div>
+                             <div className="space-y-2">
                                 <Label>Teléfono</Label>
                                 <Input placeholder="Teléfono del cliente" value={clientPhone} onChange={e => setClientPhone(e.target.value)}/>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="show-phone" checked={showClientPhone} onCheckedChange={(checked) => setShowClientPhone(checked as boolean)} />
+                                    <Label htmlFor="show-phone" className="text-xs text-muted-foreground font-normal">Mostrar en PDF</Label>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

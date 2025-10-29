@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { DocumentosContent } from './documentos-content';
@@ -20,6 +21,12 @@ export type Document = {
   cliente: string;
   clienteCif?: string;
   clienteDireccion?: string;
+  clienteEmail?: string;
+  showClientEmail?: boolean;
+  clienteTelefono?: string;
+  showClientPhone?: boolean;
+  emisorEmail?: string;
+  emisorTelefono?: string;
   tipo: DocumentType;
   importe: number;
   subtotal: number;
