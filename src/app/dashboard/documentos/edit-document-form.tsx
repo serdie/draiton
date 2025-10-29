@@ -317,6 +317,22 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                         </div>
                     </CollapsibleContent>
                 </Collapsible>
+                <Collapsible>
+                    <CollapsibleTrigger className="flex w-full justify-between items-center text-sm font-medium">
+                        Formas de pago
+                        <ChevronDown className="h-4 w-4" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2 space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="iban" className="text-muted-foreground">Número de cuenta (IBAN)</Label>
+                            <Input id="iban" placeholder="ES00 0000 0000 0000 0000 0000" />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Switch id="save-iban" />
+                            <Label htmlFor="save-iban" className="text-xs text-muted-foreground">Establecer como forma de pago predeterminada</Label>
+                        </div>
+                    </CollapsibleContent>
+                </Collapsible>
             </div>
 
             <div className="flex flex-col items-end space-y-2">

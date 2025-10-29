@@ -419,7 +419,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                         <Switch id="irpf-switch" checked={applyIrpf} onCheckedChange={setApplyIrpf} />
                         <Label htmlFor="irpf-switch">Aplicar retención IRPF (15%)</Label>
                     </div>
-                    <Collapsible>
+                     <Collapsible>
                         <CollapsibleTrigger className="flex w-full justify-between items-center text-sm font-medium">
                             Términos y condiciones
                             <ChevronDown className="h-4 w-4" />
@@ -433,6 +433,22 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                                 <Switch id="save-terms" />
                                 <Label htmlFor="save-terms" className="text-xs text-muted-foreground">Establecer como términos y condiciones predeterminados</Label>
                            </div>
+                        </CollapsibleContent>
+                    </Collapsible>
+                     <Collapsible>
+                        <CollapsibleTrigger className="flex w-full justify-between items-center text-sm font-medium">
+                            Formas de pago
+                            <ChevronDown className="h-4 w-4" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-2 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="iban" className="text-muted-foreground">Número de cuenta (IBAN)</Label>
+                                <Input id="iban" placeholder="ES00 0000 0000 0000 0000 0000" />
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Switch id="save-iban" />
+                                <Label htmlFor="save-iban" className="text-xs text-muted-foreground">Establecer como forma de pago predeterminada</Label>
+                            </div>
                         </CollapsibleContent>
                     </Collapsible>
                 </div>
