@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useContext, useRef } from 'react';
@@ -18,7 +19,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Document, DocumentType, DocumentStatus } from './page';
 import { cn } from '@/lib/utils';
-import { Printer, QrCode, Download, Loader2, Landmark, FileText } from 'lucide-react';
+import { Printer, QrCode, Download, Loader2, Landmark, FileText, Mail, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import jsPDF from 'jspdf';
@@ -164,6 +165,8 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                         <p className="font-bold text-base">{document.cliente}</p>
                         <p className="text-gray-600 whitespace-pre-wrap">{document.clienteDireccion}</p>
                         {document.clienteCif && <p className="text-gray-600">CIF/NIF: {document.clienteCif}</p>}
+                        {document.clienteEmail && <p className="flex items-center gap-2 text-gray-600"><Mail className="h-3 w-3"/> {document.clienteEmail}</p>}
+                        {document.clienteTelefono && <p className="flex items-center gap-2 text-gray-600"><Phone className="h-3 w-3"/> {document.clienteTelefono}</p>}
                     </div>
                      <div className="space-y-2 text-right">
                         <div className="grid grid-cols-2">

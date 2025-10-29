@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useContext } from 'react';
@@ -56,6 +57,8 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [clientName, setClientName] = useState(document.cliente);
   const [clientCif, setClientCif] = useState(document.clienteCif || '');
   const [clientAddress, setClientAddress] = useState(document.clienteDireccion || '');
+  const [clientEmail, setClientEmail] = useState(document.clienteEmail || '');
+  const [clientPhone, setClientPhone] = useState(document.clienteTelefono || '');
   const [terminos, setTerminos] = useState(document.terminos ?? '');
   const [saveTerminos, setSaveTerminos] = useState(false);
   const [iban, setIban] = useState(document.iban || '');
@@ -70,7 +73,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
     if (!iban && companyData?.iban) {
       setIban(companyData.iban);
     }
-  }, [iban, companyData]);
+    if (terminos === '' && companyData?.terminos) {
+      setTerminos(companyData.terminos);
+    }
+  }, [iban, terminos, companyData]);
 
 
   const handleAddLine = () => {
@@ -107,10 +113,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   
   const { subtotal, taxAmount, irpfAmount, total } = useMemo(() => {
     const subtotal = lineItems.reduce((acc, item) => acc + item.total, 0);
-    const taxAmount = (subtotal * taxRate) / 100;
+    const taxAmountValue = taxRate === 0 ? 0 : (subtotal * taxRate) / 100;
     const irpfAmount = applyIrpf ? subtotal * 0.15 : 0;
-    const total = subtotal + taxAmount - irpfAmount;
-    return { subtotal, taxAmount, irpfAmount, total };
+    const total = subtotal + taxAmountValue - irpfAmount;
+    return { subtotal, taxAmount: taxAmountValue, irpfAmount, total };
   }, [lineItems, taxRate, applyIrpf]);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -133,6 +139,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
       cliente: clientName,
       clienteCif: clientCif,
       clienteDireccion: clientAddress,
+      clienteEmail: clientEmail,
+      clienteTelefono: clientPhone,
+      emisorEmail: companyData?.email || user.email || '',
+      emisorTelefono: companyData?.phone || '',
       fechaEmision: emissionDate!,
       fechaVto: dueDate || null,
       lineas: lineItems.map(({id, ...rest}) => rest),
@@ -148,6 +158,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
     if (saveIban) {
         const userDocRef = doc(db, 'users', user.uid);
         await updateDoc(userDocRef, { 'company.iban': iban });
+    }
+    if (saveTerminos) {
+        const userDocRef = doc(db, 'users', user.uid);
+        await updateDoc(userDocRef, { 'company.terminos': terminos });
     }
 
     const result = await updateDocumentAction(document.id, documentData);
@@ -211,6 +225,16 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                         <Label>Dirección Emisor</Label>
                         <Textarea value={companyData?.address || 'Tu Dirección, Ciudad, País'} readOnly/>
                     </div>
+                      <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <Label>Email</Label>
+                                <Input value={companyData?.email || user?.email || ''} readOnly />
+                            </div>
+                            <div>
+                                <Label>Teléfono</Label>
+                                <Input value={companyData?.phone || ''} readOnly/>
+                            </div>
+                        </div>
                 </CardContent>
             </Card>
              <Card>
@@ -229,6 +253,16 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                     <div>
                         <Label>Dirección Cliente</Label>
                         <Textarea placeholder="Dirección Completa del Cliente" value={clientAddress} onChange={e => setClientAddress(e.target.value)}/>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div>
+                            <Label>Email</Label>
+                            <Input placeholder="Email del cliente" value={clientEmail} onChange={e => setClientEmail(e.target.value)}/>
+                        </div>
+                        <div>
+                            <Label>Teléfono</Label>
+                            <Input placeholder="Teléfono del cliente" value={clientPhone} onChange={e => setClientPhone(e.target.value)}/>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

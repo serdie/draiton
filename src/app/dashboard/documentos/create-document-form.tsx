@@ -68,7 +68,9 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   const [clientName, setClientName] = useState('');
   const [clientCif, setClientCif] = useState('');
   const [clientAddress, setClientAddress] = useState('');
-  const [terminos, setTerminos] = useState('Condiciones de pago: 30 días.');
+  const [clientEmail, setClientEmail] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [terminos, setTerminos] = useState(user?.company?.terminos ?? 'Condiciones de pago: 30 días.');
   const [saveTerminos, setSaveTerminos] = useState(false);
   const [iban, setIban] = useState('');
   const [saveIban, setSaveIban] = useState(false);
@@ -131,6 +133,8 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
       setClientName(initialData.clientName || '');
       setClientCif(initialData.clientCif || '');
       setClientAddress(initialData.clientAddress || '');
+      setClientEmail(initialData.clientEmail || '');
+      setClientPhone(initialData.clientPhone || '');
       setTaxRate(initialData.taxRate || 21);
 
       if (initialData.lineItems && initialData.lineItems.length > 0) {
@@ -152,6 +156,8 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         setClientName('');
         setClientCif('');
         setClientAddress('');
+        setClientEmail('');
+        setClientPhone('');
         setEmissionDate(new Date());
         setDueDate(undefined);
         setTaxRate(21);
@@ -192,10 +198,10 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   
   const { subtotal, taxAmount, irpfAmount, total } = useMemo(() => {
     const subtotal = lineItems.reduce((acc, item) => acc + item.total, 0);
-    const taxAmount = (subtotal * taxRate) / 100;
+    const taxAmountValue = taxRate === 0 ? 0 : (subtotal * taxRate) / 100;
     const irpfAmount = applyIrpf ? subtotal * 0.15 : 0;
-    const total = subtotal + taxAmount - irpfAmount;
-    return { subtotal, taxAmount, irpfAmount, total };
+    const total = subtotal + taxAmountValue - irpfAmount;
+    return { subtotal, taxAmount: taxAmountValue, irpfAmount, total };
   }, [lineItems, taxRate, applyIrpf]);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -229,6 +235,10 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         cliente: clientName,
         clienteCif: clientCif,
         clienteDireccion: clientAddress,
+        clienteEmail: clientEmail,
+        clienteTelefono: clientPhone,
+        emisorEmail: companyData?.email || user.email || '',
+        emisorTelefono: companyData?.phone || '',
         fechaEmision: emissionDate!,
         fechaVto: dueDate || null,
         lineas: lineItems.map(({id, ...rest}) => rest),
@@ -251,6 +261,10 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
             const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, { 'company.iban': iban });
         }
+        if (saveTerminos) {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, { 'company.terminos': terminos });
+        }
 
         const contactsRef = collection(db, 'contacts');
         const q = query(contactsRef, where('name', '==', clientName), where('ownerId', '==', user.uid));
@@ -263,8 +277,8 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                 company: '',
                 cif: clientCif,
                 address: clientAddress,
-                email: '',
-                phone: '',
+                email: clientEmail,
+                phone: clientPhone,
                 type: 'Cliente',
                 notes: `Contacto creado automáticamente desde el documento ${docNumber}`,
                 createdAt: serverTimestamp(),
@@ -342,6 +356,16 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                             <Label>Dirección Emisor</Label>
                             <Textarea value={companyData?.address || 'Tu Dirección, Ciudad, País'} readOnly/>
                         </div>
+                         <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <Label>Email</Label>
+                                <Input value={companyData?.email || user?.email || ''} readOnly />
+                            </div>
+                            <div>
+                                <Label>Teléfono</Label>
+                                <Input value={companyData?.phone || ''} readOnly/>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
                  <Card>
@@ -360,6 +384,16 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                         <div>
                             <Label>Dirección Cliente</Label>
                             <Textarea placeholder="Dirección Completa del Cliente" value={clientAddress} onChange={e => setClientAddress(e.target.value)}/>
+                        </div>
+                         <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <Label>Email</Label>
+                                <Input placeholder="Email del cliente" value={clientEmail} onChange={e => setClientEmail(e.target.value)}/>
+                            </div>
+                             <div>
+                                <Label>Teléfono</Label>
+                                <Input placeholder="Teléfono del cliente" value={clientPhone} onChange={e => setClientPhone(e.target.value)}/>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
