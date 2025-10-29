@@ -24,7 +24,7 @@ import { AuthContext } from '@/context/auth-context';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useState } from 'react';
-import { UserAvatar } from '@/components/ui/user-avatar';
+import Image from 'next/image';
 
 
 interface ViewDocumentModalProps {
@@ -142,7 +142,13 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
              <div ref={printableAreaRef} id="printable-area" className="p-6 bg-white text-black text-sm">
                  <header className="grid grid-cols-2 gap-8 mb-8 pb-4 border-b-2 border-primary">
                     <div className="flex items-center">
-                        <UserAvatar user={user} />
+                        {companyData?.logoUrl ? (
+                            <Image src={companyData.logoUrl} alt="Logo de la empresa" width={120} height={120} className="object-contain" />
+                        ) : (
+                            <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center">
+                                <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                            </div>
+                        )}
                     </div>
                     <div className="text-right">
                         <h2 className="font-bold text-base">{companyData?.name || 'Tu Empresa S.L.'}</h2>

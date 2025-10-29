@@ -11,6 +11,7 @@ export type CompanySettings = {
     address?: string;
     brandColor?: string;
     iban?: string;
+    logoUrl?: string;
 }
 
 export type UserProfileData = {

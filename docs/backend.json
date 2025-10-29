@@ -19,7 +19,8 @@
             "cif": { "type": "string" },
             "address": { "type": "string" },
             "brandColor": { "type": "string" },
-            "iban": { "type": "string" }
+            "iban": { "type": "string" },
+            "logoUrl": { "type": "string", "format": "uri" }
           }
         }
       },

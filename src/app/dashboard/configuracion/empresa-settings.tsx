@@ -1,24 +1,29 @@
 
 'use client';
 
-import { useContext, useState } from 'react';
+import { useContext, useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Image as ImageIcon, Loader2, Save } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Save, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
+import Image from 'next/image';
+import { uploadCompanyLogo } from '@/lib/firebase/storage-actions';
 
 export function EmpresaSettings() {
     const { user } = useContext(AuthContext);
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [logoPreview, setLogoPreview] = useState(user?.company?.logoUrl || null);
 
     const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -41,6 +46,7 @@ export function EmpresaSettings() {
             address: formData.get('companyAddress') as string,
             brandColor: formData.get('brandColor') as string,
             iban: formData.get('companyIban') as string,
+            logoUrl: logoPreview || '',
         };
 
         try {
@@ -65,10 +71,44 @@ export function EmpresaSettings() {
         }
     };
     
+    const triggerFileSelect = () => fileInputRef.current?.click();
+
+    const handleLogoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !user) return;
+
+        setIsUploading(true);
+        try {
+            const downloadURL = await uploadCompanyLogo(user.uid, file);
+            setLogoPreview(downloadURL);
+            
+            // Immediately update the logo URL in the database
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, {
+                'company.logoUrl': downloadURL,
+            });
+
+            toast({
+                title: 'Logo Subido',
+                description: 'El logo de tu empresa ha sido actualizado.',
+            });
+        } catch (error) {
+            console.error('Error al subir el logo:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'No se pudo subir la imagen. Inténtalo de nuevo.',
+            });
+        } finally {
+            setIsUploading(false);
+        }
+    };
+    
     const companyData = user?.company as CompanySettings | undefined;
 
   return (
     <Card>
+      <input type="file" ref={fileInputRef} onChange={handleLogoChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
       <CardHeader>
         <CardTitle>Configuración de la Empresa</CardTitle>
         <CardDescription>Configura los detalles de tu empresa, marca y plantillas de facturas.</CardDescription>
@@ -104,16 +144,29 @@ export function EmpresaSettings() {
                 <h3 className="font-medium text-lg">Branding para Facturas</h3>
                 <p className="text-sm text-muted-foreground">Personaliza el aspecto de tus documentos.</p>
                 <div className="flex items-center gap-6">
-                    <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center">
-                        <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                    <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center relative overflow-hidden">
+                        {isUploading ? (
+                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        ) : logoPreview ? (
+                            <Image src={logoPreview} alt="Logo de la empresa" fill className="object-contain" />
+                        ) : (
+                            <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                        )}
                     </div>
                      <div className="flex flex-col gap-2">
                         <p className="font-medium">Logo de la Empresa</p>
-                        <p className="text-xs text-muted-foreground">Sube un archivo PNG o JPG (max 2MB).</p>
-                        <Button size="sm" variant="outline" type="button" disabled>
-                            <Upload className="h-4 w-4 mr-2"/>
-                            Subir Logo (Próximamente)
-                        </Button>
+                        <p className="text-xs text-muted-foreground">Sube un archivo PNG, JPG o WEBP (max 2MB).</p>
+                         <div className="flex gap-2">
+                            <Button size="sm" variant="outline" type="button" onClick={triggerFileSelect} disabled={isUploading}>
+                                <Upload className="h-4 w-4 mr-2"/>
+                                {logoPreview ? 'Cambiar Logo' : 'Subir Logo'}
+                            </Button>
+                             {logoPreview && (
+                                <Button size="sm" variant="ghost" type="button" className="text-destructive" onClick={() => setLogoPreview(null)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
                  <div className="space-y-2 max-w-xs">
@@ -129,7 +182,7 @@ export function EmpresaSettings() {
             <Separator />
 
             <div className="flex justify-start">
-                <Button type="submit" disabled={isSaving}>
+                <Button type="submit" disabled={isSaving || isUploading}>
                     {isSaving ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
