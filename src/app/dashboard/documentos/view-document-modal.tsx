@@ -24,6 +24,7 @@ import { AuthContext } from '@/context/auth-context';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useState } from 'react';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 
 interface ViewDocumentModalProps {
@@ -116,7 +117,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
     }
   };
   
-  if (!isOpen || !document) return null;
+  if (!isOpen || !document || !user) return null;
 
 
   return (
@@ -138,56 +139,57 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
             </div>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto pr-2 -mr-6 py-4 space-y-6 bg-background">
-             <div ref={printableAreaRef} id="printable-area" className="p-6">
-                 <div className="grid grid-cols-1 @lg:grid-cols-2 gap-6 mb-8">
-                    <div className="space-y-1">
-                        <h3 className="font-semibold text-base">Emisor</h3>
-                        <p className="font-bold">{companyData?.name || 'Tu Empresa S.L.'}</p>
-                        <p>{companyData?.cif || 'Y12345672'}</p>
-                        <p>{companyData?.address || 'Tu Dirección, Ciudad, País'}</p>
+             <div ref={printableAreaRef} id="printable-area" className="p-6 bg-white text-black text-sm">
+                 <header className="grid grid-cols-2 gap-8 mb-8 pb-4 border-b-2 border-primary">
+                    <div className="flex items-center">
+                        <UserAvatar user={user} />
                     </div>
-                    <div className="flex flex-col items-start @lg:items-end gap-4">
-                        <div className="text-center text-muted-foreground">
-                            <QrCode className="h-20 w-20 mx-auto text-foreground" />
-                            <p className="text-xs font-semibold mt-1">Factura Electronica</p>
-                        </div>
-                         <div className="space-y-1 @lg:text-right">
-                            <h3 className="font-semibold text-base">Cliente</h3>
-                            <p className="font-bold">{document.cliente}</p>
-                            <p>{document.clienteCif}</p>
-                            <p>{document.clienteDireccion}</p>
+                    <div className="text-right">
+                        <h2 className="font-bold text-base">{companyData?.name || 'Tu Empresa S.L.'}</h2>
+                        <p className="text-xs">{companyData?.address || 'Tu Dirección, Ciudad, País'}</p>
+                        <p className="text-xs">CIF: {companyData?.cif || 'Y12345672'}</p>
+                        <div className="mt-4">
+                           <QrCode className="h-16 w-16 ml-auto" />
                         </div>
                     </div>
-                </div>
+                 </header>
 
-                <div className="grid grid-cols-2 @md:grid-cols-4 gap-4 rounded-lg border p-4 my-6">
-                    <div>
-                        <p className="text-muted-foreground">Nº Documento</p>
-                        <p className="font-semibold">{document.numero}</p>
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                     <div className="space-y-1">
+                        <h3 className="font-semibold text-base mb-1">Factura a:</h3>
+                        <p className="font-bold">{document.cliente}</p>
+                        <p>{document.clienteDireccion}</p>
+                        <p>CIF/NIF: {document.clienteCif}</p>
                     </div>
-                    <div>
-                        <p className="text-muted-foreground">Fecha Emisión</p>
-                        <p className="font-semibold">{format(document.fechaEmision, "dd/MM/yyyy", { locale: es })}</p>
-                    </div>
-                    <div>
-                        <p className="text-muted-foreground">Fecha Vencimiento</p>
-                        <p className="font-semibold">{document.fechaVto ? format(document.fechaVto, "dd/MM/yyyy", { locale: es }) : 'N/A'}</p>
+                     <div className="space-y-2 text-right">
+                        <div className="grid grid-cols-2">
+                            <span className="font-semibold">Nº Documento:</span>
+                            <span>{document.numero}</span>
+                        </div>
+                        <div className="grid grid-cols-2">
+                            <span className="font-semibold">Fecha Emisión:</span>
+                            <span>{format(document.fechaEmision, "dd/MM/yyyy", { locale: es })}</span>
+                        </div>
+                        <div className="grid grid-cols-2">
+                            <span className="font-semibold">Fecha Vencimiento:</span>
+                            <span>{document.fechaVto ? format(document.fechaVto, "dd/MM/yyyy", { locale: es }) : 'N/A'}</span>
+                        </div>
                     </div>
                 </div>
 
                 <div>
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead>Descripción</TableHead>
-                                <TableHead className="text-center">Cant.</TableHead>
-                                <TableHead className="text-right">P. Unitario</TableHead>
-                                <TableHead className="text-right">Total</TableHead>
+                            <TableRow className="bg-muted">
+                                <TableHead className="text-black">Descripción</TableHead>
+                                <TableHead className="text-center text-black">Cant.</TableHead>
+                                <TableHead className="text-right text-black">P. Unitario</TableHead>
+                                <TableHead className="text-right text-black">Total</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {document.lineas && document.lineas.map((line, index) => (
-                                <TableRow key={index}>
+                                <TableRow key={index} className="border-b">
                                     <TableCell className="font-medium">{line.description}</TableCell>
                                     <TableCell className="text-center">{line.quantity}</TableCell>
                                     <TableCell className="text-right">{line.unitPrice.toFixed(2)} {document.moneda}</TableCell>
@@ -199,16 +201,16 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                 </div>
                 
                  <div className="flex justify-end pt-8">
-                    <div className="w-full max-w-sm space-y-2">
+                    <div className="w-full max-w-xs space-y-2">
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Subtotal</span>
+                            <span className="text-gray-600">Subtotal</span>
                             <span>{document.subtotal.toFixed(2)} {document.moneda}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Impuestos</span>
+                            <span className="text-gray-600">IVA</span>
                             <span>{document.impuestos.toFixed(2)} {document.moneda}</span>
                         </div>
-                        <Separator />
+                        <Separator className="bg-gray-300"/>
                         <div className="flex justify-between text-base font-bold">
                             <span>Total</span>
                             <span>{document.importe.toFixed(2)} {document.moneda}</span>
@@ -216,27 +218,26 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                     </div>
                 </div>
                 
-                <div className="border-t mt-8 pt-6 space-y-6 text-xs text-muted-foreground">
+                 <footer className="border-t mt-8 pt-6 space-y-6 text-xs text-gray-500">
                     {document.iban && (
                         <div className="space-y-1">
-                            <h4 className="font-semibold text-foreground text-sm flex items-center gap-2"><Landmark className="h-4 w-4"/> Forma de pago</h4>
+                            <h4 className="font-semibold text-black text-sm flex items-center gap-2"><Landmark className="h-4 w-4"/> Forma de pago</h4>
                             <p>Transferencia bancaria al siguiente IBAN:</p>
                             <p className="font-mono">{document.iban}</p>
                         </div>
                     )}
                      {document.terminos && (
                         <div className="space-y-1">
-                            <h4 className="font-semibold text-foreground text-sm flex items-center gap-2"><FileText className="h-4 w-4"/> Términos y condiciones</h4>
+                            <h4 className="font-semibold text-black text-sm flex items-center gap-2"><FileText className="h-4 w-4"/> Términos y condiciones</h4>
                             <p>{document.terminos}</p>
                         </div>
                     )}
-                    <Separator/>
+                    <Separator className="bg-gray-300"/>
                      <div className="space-y-1 text-center">
-                         <h4 className="font-semibold text-foreground text-sm">Datos del emisor</h4>
+                         <h4 className="font-semibold text-black text-sm">Datos del emisor</h4>
                          <p>{companyData?.name} - {companyData?.cif} - {companyData?.address}</p>
                      </div>
-                </div>
-
+                </footer>
             </div>
         </div>
         <DialogFooter className="print:hidden p-6 border-t">
