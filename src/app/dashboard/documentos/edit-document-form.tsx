@@ -50,7 +50,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [emissionDate, setEmissionDate] = useState<Date | undefined>(document.fechaEmision);
   const [dueDate, setDueDate] = useState<Date | undefined>(document.fechaVto || undefined);
   const [lineItems, setLineItems] = useState<LineItem[]>(document.lineas.map((line, index) => ({ id: index, unit: line.unit || 'cantidad', ...line })));
-  const [taxRate, setTaxRate] = useState(typeof document.impuestos === 'number' && document.subtotal ? (document.impuestos / document.subtotal) * 100 : 21);
+  const [taxRate, setTaxRate] = useState(document.subtotal > 0 ? (document.impuestos / document.subtotal) * 100 : 21);
   const [applyIrpf, setApplyIrpf] = useState(false); // Asumimos que no está aplicado por defecto al editar
   const [status, setStatus] = useState<DocumentStatus>(document.estado);
   const [clientName, setClientName] = useState(document.cliente);
@@ -390,10 +390,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </div>
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoading ? "Guardando..." : "Guardar Cambios"}
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving ? "Guardando..." : "Guardar Cambios"}
           </Button>
         </div>
     </form>
