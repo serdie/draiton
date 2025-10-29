@@ -25,6 +25,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Checkbox } from '@/components/ui/checkbox';
+import { provincias } from '@/lib/provincias';
 
 
 type LineItem = DocLineItem & { id: number };
@@ -57,7 +58,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [status, setStatus] = useState<DocumentStatus>(document.estado);
   const [clientName, setClientName] = useState(document.cliente);
   const [clientCif, setClientCif] = useState(document.clienteCif || '');
-  const [clientAddress, setClientAddress] = useState(document.clienteDireccion || '');
+  const [clientAddress, setClientAddress] = useState(document.clienteDireccion || {});
   const [clientEmail, setClientEmail] = useState(document.clienteEmail || '');
   const [showClientEmail, setShowClientEmail] = useState(document.showClientEmail || false);
   const [clientPhone, setClientPhone] = useState(document.clienteTelefono || '');
@@ -234,7 +235,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                     </div>
                     <div>
                         <Label>Dirección Emisor</Label>
-                        <Textarea value={companyData?.address || 'Tu Dirección, Ciudad, País'} readOnly/>
+                        <Textarea value={companyData?.address ? `${companyData.address.addressLine1}, ${companyData.address.city}, ${companyData.address.country}`: 'Tu Dirección, Ciudad, País'} readOnly/>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-2">
@@ -269,9 +270,23 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                         <Label>CIF/NIF Cliente</Label>
                         <Input placeholder="CIF/NIF del Cliente" value={clientCif} onChange={e => setClientCif(e.target.value)}/>
                     </div>
-                    <div>
+                    <div className="space-y-2">
                         <Label>Dirección Cliente</Label>
-                        <Textarea placeholder="Dirección Completa del Cliente" value={clientAddress} onChange={e => setClientAddress(e.target.value)}/>
+                        <div className="space-y-2 rounded-md border p-4">
+                            <Input placeholder="Línea 1 de la dirección" value={clientAddress.addressLine1 || ''} onChange={e => setClientAddress(prev => ({...prev, addressLine1: e.target.value}))} />
+                            <Input placeholder="Línea 2 (Opcional)" value={clientAddress.addressLine2 || ''} onChange={e => setClientAddress(prev => ({...prev, addressLine2: e.target.value}))} />
+                            <div className="grid grid-cols-2 gap-2">
+                                <Input placeholder="Ciudad" value={clientAddress.city || ''} onChange={e => setClientAddress(prev => ({...prev, city: e.target.value}))} />
+                                <Input placeholder="Código Postal" value={clientAddress.postalCode || ''} onChange={e => setClientAddress(prev => ({...prev, postalCode: e.target.value}))} />
+                            </div>
+                             <Select value={clientAddress.province || ''} onValueChange={value => setClientAddress(prev => ({...prev, province: value}))}>
+                                <SelectTrigger><SelectValue placeholder="Provincia" /></SelectTrigger>
+                                <SelectContent>
+                                    {provincias.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Input placeholder="País" value={clientAddress.country || 'España'} onChange={e => setClientAddress(prev => ({...prev, country: e.target.value}))} />
+                        </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-2">
