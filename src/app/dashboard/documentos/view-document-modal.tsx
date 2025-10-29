@@ -45,6 +45,7 @@ const getBadgeClass = (estado?: DocumentStatus) => {
       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'vencido':
     case 'rechazado':
+    case 'impagada':
       return 'bg-red-100 text-red-800 border-red-200';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -196,7 +197,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                         <TableBody>
                             {document.lineas && document.lineas.map((line, index) => (
                                 <TableRow key={index} className="border-b">
-                                    <TableCell className="font-medium">{line.description}</TableCell>
+                                    <TableCell className="font-medium whitespace-pre-wrap">{line.description}</TableCell>
                                     <TableCell className="text-center">{line.quantity}</TableCell>
                                     <TableCell className="text-right">{line.unitPrice.toFixed(2)} {document.moneda}</TableCell>
                                     <TableCell className="text-right">{line.total.toFixed(2)} {document.moneda}</TableCell>
