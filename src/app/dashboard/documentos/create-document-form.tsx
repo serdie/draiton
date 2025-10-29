@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2 } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown } from 'lucide-react';
 import { format, parseISO, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -29,6 +29,7 @@ import type { Document, LineItem as DocLineItem } from './page';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Switch } from '@/components/ui/switch';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 type LineItem = DocLineItem & {
   id: number;
@@ -403,7 +404,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                              <Label>Moneda</Label>
@@ -418,10 +419,22 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                         <Switch id="irpf-switch" checked={applyIrpf} onCheckedChange={setApplyIrpf} />
                         <Label htmlFor="irpf-switch">Aplicar retención IRPF (15%)</Label>
                     </div>
-                     <div>
-                        <Label>Notas Adicionales / Términos</Label>
-                        <Textarea defaultValue="Condiciones de pago: 30 días." />
-                    </div>
+                    <Collapsible>
+                        <CollapsibleTrigger className="flex w-full justify-between items-center text-sm font-medium">
+                            Términos y condiciones
+                            <ChevronDown className="h-4 w-4" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-2 space-y-4">
+                           <div className="space-y-2">
+                                <Label htmlFor="terms" className="text-muted-foreground">Términos y condiciones (Opcional)</Label>
+                                <Textarea id="terms" placeholder="Añade información sobre el acuerdo legal con tu cliente." defaultValue="Condiciones de pago: 30 días." />
+                           </div>
+                           <div className="flex items-center space-x-2">
+                                <Switch id="save-terms" />
+                                <Label htmlFor="save-terms" className="text-xs text-muted-foreground">Establecer como términos y condiciones predeterminados</Label>
+                           </div>
+                        </CollapsibleContent>
+                    </Collapsible>
                 </div>
 
                 <div className="flex flex-col items-end space-y-2">
@@ -463,3 +476,5 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
       </form>
   );
 }
+
+    
