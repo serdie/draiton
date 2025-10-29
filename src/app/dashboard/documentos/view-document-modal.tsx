@@ -154,6 +154,12 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                     </div>
                     <div className="text-right">
                         <h2 className="font-bold text-lg">{companyData?.name || 'Tu Empresa S.L.'}</h2>
+                        <div className="text-xs text-gray-600 mt-1">
+                            <p>{companyData?.cif || 'CIF no disponible'}</p>
+                            <p className="whitespace-pre-wrap">{companyData?.address || 'Dirección no disponible'}</p>
+                            <p>{document.emisorEmail}</p>
+                            <p>{document.emisorTelefono}</p>
+                        </div>
                     </div>
                  </header>
 
