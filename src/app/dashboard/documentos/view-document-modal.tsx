@@ -18,7 +18,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Document, DocumentType, DocumentStatus } from './page';
 import { cn } from '@/lib/utils';
-import { Printer, QrCode, Download, Loader2 } from 'lucide-react';
+import { Printer, QrCode, Download, Loader2, Landmark } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import jsPDF from 'jspdf';
@@ -198,7 +198,29 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                     </Table>
                 </div>
                 
-                <div className="flex justify-end items-end pt-8">
+                 <div className="flex justify-between items-end pt-8">
+                     <div className="w-1/2 space-y-4 text-xs text-muted-foreground">
+                        {document.iban && (
+                            <div className="space-y-1">
+                                <h4 className="font-semibold text-foreground text-sm flex items-center gap-2"><Landmark className="h-4 w-4"/> Forma de pago</h4>
+                                <p>Transferencia bancaria al siguiente IBAN:</p>
+                                <p className="font-mono">{document.iban}</p>
+                            </div>
+                        )}
+                        {document.terminos && (
+                            <div className="space-y-1">
+                                <h4 className="font-semibold text-foreground text-sm">Términos y condiciones</h4>
+                                <p>{document.terminos}</p>
+                            </div>
+                        )}
+                         <Separator className="my-4"/>
+                         <div className="space-y-1">
+                             <h4 className="font-semibold text-foreground text-sm">Datos del emisor</h4>
+                             <p>{companyData?.name}</p>
+                             <p>{companyData?.cif}</p>
+                             <p>{companyData?.address}</p>
+                         </div>
+                    </div>
                     <div className="w-full max-w-sm space-y-2">
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Subtotal</span>
