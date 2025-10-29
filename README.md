@@ -9,9 +9,11 @@ Para que la subida de archivos (avatares, logos, etc.) funcione correctamente, e
 Ejecuta el siguiente comando en tu terminal para aplicar la configuración necesaria. Asegúrate de reemplazar `<YOUR_FIREBASE_PROJECT_ID>` con el ID de tu proyecto de Firebase.
 
 ```bash
-gcloud storage buckets update gs://<YOUR_FIREBASE_PROJECT_ID>.appspot.com --cors-file=./storage.cors.json
+gcloud storage buckets update gs://<YOUR_FIREBASE_PROJECT_ID>.appspot.com --cors-file=cors.json
 ```
 
 ---
 
 To get started, take a look at src/app/page.tsx.
+
+```
