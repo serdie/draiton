@@ -114,11 +114,18 @@ export default function DashboardPage() {
                         break;
                 }
 
-                // Fetch Invoices
-                const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid), where('estado', '==', 'Pagado'));
+                // Fetch Invoices - CORREGIDO: Ahora incluye todas las facturas que no son borradores o canceladas.
+                const invoicesQuery = query(collection(db, 'invoices'), where('ownerId', '==', user.uid));
                 const invoicesSnapshot = await getDocs(invoicesQuery);
                 const allInvoices = invoicesSnapshot.docs.map(doc => ({...doc.data(), id: doc.id, fechaEmision: (doc.data().fechaEmision as Timestamp).toDate()}) as Document & { id: string });
-                const periodInvoices = allInvoices.filter(doc => doc.fechaEmision >= startDate && doc.fechaEmision <= endDate);
+                
+                const periodInvoices = allInvoices.filter(doc => 
+                    doc.fechaEmision >= startDate && 
+                    doc.fechaEmision <= endDate &&
+                    doc.estado !== 'Borrador' &&
+                    doc.estado !== 'Cancelado'
+                );
+
                 const totalIncome = periodInvoices.reduce((acc, doc) => acc + doc.importe, 0);
                 setIncome(totalIncome);
                 
@@ -158,8 +165,8 @@ export default function DashboardPage() {
                     });
                 };
                 
-                processFinancialData(allInvoices.filter(doc => doc.fechaEmision >= startDate && doc.fechaEmision <= endDate), 'income');
-                processFinancialData(allExpenses.filter(doc => doc.fecha >= startDate && doc.fecha <= endDate), 'expenses');
+                processFinancialData(periodInvoices, 'income');
+                processFinancialData(periodExpenses, 'expenses');
 
                 
                 setFinancialChartData(chartDataTemplate as any);
@@ -375,12 +382,13 @@ export default function DashboardPage() {
                 <CardContent className="grid grid-cols-2 gap-2">
                     <Button variant="outline" asChild><Link href="/dashboard/documentos"><FileText className="mr-2"/>Factura</Link></Button>
                     <Button variant="outline" asChild><Link href="/dashboard/proyectos"><Briefcase className="mr-2"/>Proyecto</Link></Button>
-                    <Button variant="outline" asChild><Link href="/dashboard/contactos"><UserPlus className="mr-2"/>Contacto</Link></Button>
-                    <Button variant="outline" asChild><Link href="/dashboard/gastos"><Landmark className="mr-2"/>Gasto</Link></Button>
+                    <Button variant="outline" as Child><Link href="/dashboard/contactos"><UserPlus className="mr-2"/>Contacto</Link></Button>
+                    <Button variant="outline" as Child><Link href="/dashboard/gastos"><Landmark className="mr-2"/>Gasto</Link></Button>
                 </CardContent>
             </Card>
         </aside>
      </div>
     </div>
   );
-}
+
+    
