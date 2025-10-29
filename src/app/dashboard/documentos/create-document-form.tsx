@@ -32,6 +32,8 @@ import { db } from '@/lib/firebase/config';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
+import { provincias } from '@/lib/provincias';
+import { type Address } from '@/lib/firebase/user-settings-actions';
 
 type LineItem = DocLineItem & {
   id: number;
@@ -68,7 +70,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   const [status, setStatus] = useState<DocumentStatus>('Borrador');
   const [clientName, setClientName] = useState('');
   const [clientCif, setClientCif] = useState('');
-  const [clientAddress, setClientAddress] = useState('');
+  const [clientAddress, setClientAddress] = useState<Address>({ country: 'España' });
   const [clientEmail, setClientEmail] = useState('');
   const [showClientEmail, setShowClientEmail] = useState(false);
   const [clientPhone, setClientPhone] = useState('');
@@ -142,7 +144,16 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
 
       setClientName(initialData.clientName || '');
       setClientCif(initialData.clientCif || '');
-      setClientAddress(initialData.clientAddress || '');
+      
+      // Simple address string to address object conversion
+      if (initialData.clientAddress) {
+          setClientAddress({
+            addressLine1: initialData.clientAddress.split(',')[0] || '',
+            city: initialData.clientAddress.split(',')[1]?.trim() || '',
+            country: 'España'
+          });
+      }
+
       setTaxRate(initialData.taxRate || 21);
 
       if (initialData.lineItems && initialData.lineItems.length > 0) {
@@ -163,7 +174,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         setLineItems([{ id: 1, description: '', quantity: 1, unitPrice: 0, total: 0, unit: 'cantidad' }])
         setClientName('');
         setClientCif('');
-        setClientAddress('');
+        setClientAddress({ country: 'España' });
         setClientEmail('');
         setShowClientEmail(false);
         setClientPhone('');
@@ -368,7 +379,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                         </div>
                         <div>
                             <Label>Dirección Emisor</Label>
-                            <Textarea value={companyData?.address || 'Tu Dirección, Ciudad, País'} readOnly/>
+                            <Textarea value={companyData?.address ? `${companyData.address.addressLine1}, ${companyData.address.city}`: 'Tu Dirección, Ciudad, País'} readOnly/>
                         </div>
                          <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-2">
@@ -403,9 +414,23 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                             <Label>CIF/NIF Cliente</Label>
                             <Input placeholder="CIF/NIF del Cliente" value={clientCif} onChange={e => setClientCif(e.target.value)}/>
                         </div>
-                        <div>
+                        <div className="space-y-2">
                             <Label>Dirección Cliente</Label>
-                            <Textarea placeholder="Dirección Completa del Cliente" value={clientAddress} onChange={e => setClientAddress(e.target.value)}/>
+                            <div className="space-y-2 rounded-md border p-4">
+                               <Input placeholder="Línea 1 de la dirección" value={clientAddress.addressLine1 || ''} onChange={e => setClientAddress(prev => ({...prev, addressLine1: e.target.value}))} />
+                               <Input placeholder="Línea 2 (Opcional)" value={clientAddress.addressLine2 || ''} onChange={e => setClientAddress(prev => ({...prev, addressLine2: e.target.value}))} />
+                                <div className="grid grid-cols-2 gap-2">
+                                   <Input placeholder="Ciudad" value={clientAddress.city || ''} onChange={e => setClientAddress(prev => ({...prev, city: e.target.value}))} />
+                                   <Input placeholder="Código Postal" value={clientAddress.postalCode || ''} onChange={e => setClientAddress(prev => ({...prev, postalCode: e.target.value}))} />
+                                </div>
+                                <Select value={clientAddress.province || ''} onValueChange={value => setClientAddress(prev => ({...prev, province: value}))}>
+                                    <SelectTrigger><SelectValue placeholder="Provincia" /></SelectTrigger>
+                                    <SelectContent>
+                                        {provincias.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                               <Input placeholder="País" value={clientAddress.country || 'España'} onChange={e => setClientAddress(prev => ({...prev, country: e.target.value}))} />
+                            </div>
                         </div>
                          <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-2">
