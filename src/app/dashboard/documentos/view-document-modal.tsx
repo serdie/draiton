@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useContext, useRef } from 'react';
@@ -17,7 +18,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Document, DocumentType, DocumentStatus } from './page';
 import { cn } from '@/lib/utils';
-import { Printer, QrCode, Download, Loader2, ImageIcon, Landmark, FileText } from 'lucide-react';
+import { Printer, QrCode, Download, Loader2, Landmark, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import jsPDF from 'jspdf';
@@ -146,7 +147,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                             <Image src={companyData.logoUrl} alt="Logo de la empresa" width={120} height={60} className="object-contain" />
                         ) : (
                             <div className="w-24 h-16 bg-gray-100 rounded-md flex items-center justify-center">
-                                <ImageIcon className="h-8 w-8 text-gray-400" />
+                                <FileText className="h-8 w-8 text-gray-400" />
                             </div>
                         )}
                     </div>
@@ -238,6 +239,11 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                         </div>
                     )}
                 </footer>
+                
+                {/* Emitter info footer */}
+                <div className="text-center mt-16 pt-4 border-t text-xs text-gray-500">
+                    <p>{companyData?.name} - CIF/NIF: {companyData?.cif} - {companyData?.address}</p>
+                </div>
             </div>
         </div>
         <DialogFooter className="print:hidden p-6 border-t">
