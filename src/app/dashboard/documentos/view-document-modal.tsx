@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useRef } from 'react';
@@ -18,7 +17,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Document, DocumentType, DocumentStatus } from './page';
 import { cn } from '@/lib/utils';
-import { Printer, QrCode, Download, Loader2, Landmark, FileText, ImageIcon } from 'lucide-react';
+import { Printer, QrCode, Download, Loader2, ImageIcon, Landmark, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import jsPDF from 'jspdf';
