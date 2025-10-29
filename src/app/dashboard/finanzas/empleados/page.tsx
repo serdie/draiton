@@ -8,7 +8,7 @@ import { ListadoEmpleadosTab } from './listado-empleados-tab';
 import { FichajesTab } from './fichajes-tab';
 import { Button } from '@/components/ui/button';
 import { AddEmployeeModal } from '../nominas/add-employee-modal';
-import { EditEmployeeModal } from '../nominas/edit-employee-modal';
+import { EditEmployeeModal } from './edit-employee-modal';
 import { AuthContext } from '@/context/auth-context';
 import type { Employee } from './types';
 

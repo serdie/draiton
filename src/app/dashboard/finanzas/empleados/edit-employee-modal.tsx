@@ -18,7 +18,7 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { Employee } from '../empleados/types';
+import type { Employee } from './types';
 
 interface EditEmployeeModalProps {
   isOpen: boolean;
@@ -111,7 +111,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
             </div>
              <div className="space-y-2">
               <Label htmlFor="edit-contract-type">Tipo de Contrato</Label>
-              <Select value={contractType} onValueChange={(v) => setContractType(v)} required>
+              <Select value={contractType} onValueChange={(v) => setContractType(v as any)} required>
                 <SelectTrigger><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Indefinido">Indefinido</SelectItem>
