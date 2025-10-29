@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useContext } from 'react';
@@ -39,6 +40,7 @@ interface CreateDocumentFormProps {
   onClose: () => void;
   documentType: DocumentType;
   initialData?: ExtractInvoiceDataOutput;
+  documents: Document[];
 }
 
 const getDocumentTypeLabel = (type: DocumentType) => {
@@ -53,7 +55,7 @@ const getDocumentTypeLabel = (type: DocumentType) => {
 const units = ['cantidad', 'horas', 'día', 'mes', 'kg', 'minuto', 'palabra', 'paquete', 'tonelada', 'metro', 'm2', 'm3', 'noche', 'km', 'semana', 'litro'];
 
 
-export function CreateDocumentForm({ onClose, documentType, initialData }: CreateDocumentFormProps) {
+export function CreateDocumentForm({ onClose, documentType, initialData, documents }: CreateDocumentFormProps) {
   const { user } = useContext(AuthContext);
   const [docType, setDocType] = useState(documentType);
   const [docNumber, setDocNumber] = useState('');
@@ -87,16 +89,34 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
   }, [documentType]);
   
   useEffect(() => {
-    const prefix = {
-        'factura': 'FACT',
-        'presupuesto': 'PRES',
-        'nota-credito': 'NC',
-        'recurrente': 'RECU'
-    }[docType];
-    const year = new Date().getFullYear();
-    const randomId = Math.floor(Math.random() * 900) + 100;
-    setDocNumber(`${prefix}-${year}-${String(randomId).padStart(3, '0')}`);
-  }, [docType]);
+    if (initialData) return; // Do not generate number if we are filling from OCR
+
+    const prefixMap = {
+      factura: "FACT",
+      presupuesto: "PRES",
+      "nota-credito": "NC",
+      recurrente: "RECU",
+    };
+    const prefix = prefixMap[docType];
+    const currentYear = new Date().getFullYear();
+
+    const relevantDocs = documents
+      .filter(
+        (doc) =>
+          doc.tipo === docType &&
+          new Date(doc.fechaEmision).getFullYear() === currentYear &&
+          doc.numero.startsWith(`${prefix}-${currentYear}-`)
+      )
+      .map((doc) => {
+        const parts = doc.numero.split("-");
+        return parseInt(parts[parts.length - 1], 10);
+      });
+
+    const lastNumber = relevantDocs.length > 0 ? Math.max(...relevantDocs) : 0;
+    const newNumber = (lastNumber + 1).toString().padStart(3, "0");
+    setDocNumber(`${prefix}-${currentYear}-${newNumber}`);
+  }, [docType, documents, initialData]);
+
 
   useEffect(() => {
     if (initialData) {

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useContext, useCallback } from 'react';
@@ -339,6 +340,7 @@ export function DocumentosContent() {
             onClose={handleCloseCreateModal} 
             documentType={activeTab}
             initialData={initialDataForForm}
+            documents={documents}
         />
       )}
       {docToEdit && (
