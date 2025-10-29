@@ -26,7 +26,7 @@ import { type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
 import Link from 'next/link';
 import type { Document, LineItem as DocLineItem } from './page';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -66,11 +66,21 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
   const [clientName, setClientName] = useState('');
   const [clientCif, setClientCif] = useState('');
   const [clientAddress, setClientAddress] = useState('');
+  const [terminos, setTerminos] = useState('Condiciones de pago: 30 días.');
+  const [saveTerminos, setSaveTerminos] = useState(false);
+  const [iban, setIban] = useState('');
+  const [saveIban, setSaveIban] = useState(false);
   
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   
   const companyData = user?.company;
+
+  useEffect(() => {
+    if (companyData?.iban) {
+      setIban(companyData.iban);
+    }
+  }, [companyData]);
 
   useEffect(() => {
     setDocType(documentType);
@@ -207,34 +217,38 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
         importe: total,
         estado: status,
         moneda: 'EUR',
+        terminos: terminos,
+        iban: iban,
     };
 
     try {
-        // Guardar el documento
         await addDoc(collection(db, "invoices"), {
             ...documentData,
             fechaCreacion: serverTimestamp(),
         });
+        
+        if (saveIban) {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, { 'company.iban': iban });
+        }
 
-        // Comprobar y crear contacto si no existe
         const contactsRef = collection(db, 'contacts');
         const q = query(contactsRef, where('name', '==', clientName), where('ownerId', '==', user.uid));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            const newContactData = {
+            await addDoc(contactsRef, {
                 ownerId: user.uid,
                 name: clientName,
-                company: '', // Se puede dejar en blanco o intentar inferirlo
+                company: '',
                 cif: clientCif,
                 address: clientAddress,
-                email: '', // El formulario de factura no tiene email de cliente
+                email: '',
                 phone: '',
                 type: 'Cliente',
                 notes: `Contacto creado automáticamente desde el documento ${docNumber}`,
                 createdAt: serverTimestamp(),
-            };
-            await addDoc(contactsRef, newContactData);
+            });
             toast({
                 title: 'Documento y Contacto Creados',
                 description: `El documento ${docNumber} se ha guardado y se ha añadido a ${clientName} a tus contactos.`,
@@ -430,10 +444,10 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                         <CollapsibleContent className="mt-2 space-y-4 border-t pt-4">
                            <div className="space-y-2">
                                 <Label htmlFor="terms" className="text-muted-foreground">Términos y condiciones (Opcional)</Label>
-                                <Textarea id="terms" placeholder="Añade información sobre el acuerdo legal con tu cliente." defaultValue="Condiciones de pago: 30 días." />
+                                <Textarea id="terms" placeholder="Añade información sobre el acuerdo legal con tu cliente." value={terminos} onChange={e => setTerminos(e.target.value)} />
                            </div>
                            <div className="flex items-center space-x-2">
-                                <Switch id="save-terms" />
+                                <Switch id="save-terms" checked={saveTerminos} onCheckedChange={setSaveTerminos} />
                                 <Label htmlFor="save-terms" className="text-xs text-muted-foreground">Establecer como términos y condiciones predeterminados</Label>
                            </div>
                         </CollapsibleContent>
@@ -449,10 +463,10 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                         <CollapsibleContent className="mt-2 space-y-4 border-t pt-4">
                             <div className="space-y-2">
                                 <Label htmlFor="iban" className="text-muted-foreground">Número de cuenta (IBAN)</Label>
-                                <Input id="iban" placeholder="ES00 0000 0000 0000 0000 0000" />
+                                <Input id="iban" placeholder="ES00 0000 0000 0000 0000 0000" value={iban} onChange={e => setIban(e.target.value)} />
                             </div>
                             <div className="flex items-center space-x-2">
-                                <Switch id="save-iban" />
+                                <Switch id="save-iban" checked={saveIban} onCheckedChange={setSaveIban} />
                                 <Label htmlFor="save-iban" className="text-xs text-muted-foreground">Establecer como forma de pago predeterminada</Label>
                             </div>
                         </CollapsibleContent>

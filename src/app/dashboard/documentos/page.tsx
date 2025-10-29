@@ -30,6 +30,8 @@ export type Document = {
   numero: string;
   lineas: LineItem[];
   moneda: string;
+  terminos?: string;
+  iban?: string;
 };
 
 export default function DocumentosPage() {

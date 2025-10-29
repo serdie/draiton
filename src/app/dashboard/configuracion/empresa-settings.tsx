@@ -40,6 +40,7 @@ export function EmpresaSettings() {
             cif: formData.get('companyCif') as string,
             address: formData.get('companyAddress') as string,
             brandColor: formData.get('brandColor') as string,
+            iban: formData.get('companyIban') as string,
         };
 
         try {
@@ -89,6 +90,10 @@ export function EmpresaSettings() {
                 <div className="space-y-2">
                     <Label htmlFor="companyAddress">Dirección Fiscal</Label>
                     <Textarea id="companyAddress" name="companyAddress" placeholder="Calle Falsa 123, 28080 Madrid, España" defaultValue={companyData?.address}/>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="companyIban">Número de cuenta (IBAN)</Label>
+                    <Input id="companyIban" name="companyIban" placeholder="ES00 0000 0000 0000 0000 0000" defaultValue={companyData?.iban}/>
                 </div>
             </div>
             

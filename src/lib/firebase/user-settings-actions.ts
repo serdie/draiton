@@ -10,6 +10,7 @@ export type CompanySettings = {
     cif?: string;
     address?: string;
     brandColor?: string;
+    iban?: string;
 }
 
 export type UserProfileData = {
