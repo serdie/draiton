@@ -38,6 +38,7 @@ const contactFormSchema = z.object({
   phone: z.string().optional(),
   company: z.string().optional(),
   cif: z.string().optional(),
+  address: z.string().optional(),
   type: z.enum(['Cliente', 'Proveedor', 'Lead', 'Colaborador']),
   notes: z.string().optional(),
 });
@@ -60,6 +61,7 @@ export function EditContactForm({ contact, onClose }: { contact: Contact, onClos
       phone: contact.phone || '',
       company: contact.company || '',
       cif: contact.cif || '',
+      address: contact.address || '',
       type: contact.type || 'Cliente',
       notes: contact.notes || '',
     },
@@ -158,6 +160,22 @@ export function EditContactForm({ contact, onClose }: { contact: Contact, onClos
               <FormLabel>CIF/NIF</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: B12345678" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Dirección</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Calle Falsa 123, 28001, Madrid"
+                  className="resize-none"
+                  {...field}
+                />
               </FormControl>
             </FormItem>
           )}

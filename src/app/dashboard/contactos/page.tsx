@@ -31,6 +31,7 @@ export type Contact = {
   email: string;
   company: string;
   cif: string;
+  address: string;
   phone: string;
   type: ContactType;
   notes?: string;

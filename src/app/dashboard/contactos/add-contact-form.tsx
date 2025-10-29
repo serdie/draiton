@@ -38,6 +38,7 @@ const contactFormSchema = z.object({
   phone: z.string().optional(),
   company: z.string().optional(),
   cif: z.string().optional(),
+  address: z.string().optional(),
   type: z.enum(['Cliente', 'Proveedor', 'Lead', 'Colaborador']),
   notes: z.string().optional(),
 });
@@ -61,6 +62,7 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
       phone: '',
       company: '',
       cif: '',
+      address: '',
       type: 'Cliente',
       notes: '',
     },
@@ -172,6 +174,22 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
               <FormLabel>CIF/NIF</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: B12345678" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Dirección</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Calle Falsa 123, 28001, Madrid"
+                  className="resize-none"
+                  {...field}
+                />
               </FormControl>
             </FormItem>
           )}

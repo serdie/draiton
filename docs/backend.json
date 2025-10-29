@@ -104,6 +104,8 @@
             "email": { "type": "string", "format": "email"},
             "phone": { "type": "string"},
             "company": { "type": "string"},
+            "cif": { "type": "string" },
+            "address": { "type": "string" },
             "type": { "type": "string", "enum": ["Cliente", "Proveedor", "Lead", "Colaborador"]},
             "ownerId": { "type": "string"}
         },
