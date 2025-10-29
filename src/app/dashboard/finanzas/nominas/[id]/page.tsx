@@ -47,10 +47,17 @@ export default function EmployeePayrollHistoryPage() {
       
        const monthOrder = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         payrollsList.sort((a, b) => {
-            const [monthA, yearA] = a.header.period.split(' ');
-            const [monthB, yearB] = b.header.period.split(' ');
-            const dateA = new Date(parseInt(yearA), monthOrder.indexOf(monthA));
-            const dateB = new Date(parseInt(yearB), monthOrder.indexOf(monthB));
+            const [monthAStr, yearAStr] = a.header.period.split(' ');
+            const [monthBStr, yearBStr] = b.header.period.split(' ');
+            
+            const monthA = monthOrder.indexOf(monthAStr);
+            const yearA = parseInt(yearAStr);
+            const monthB = monthOrder.indexOf(monthBStr);
+            const yearB = parseInt(yearBStr);
+
+            const dateA = new Date(yearA, monthA);
+            const dateB = new Date(yearB, monthB);
+            
             return dateB.getTime() - dateA.getTime();
         });
 
@@ -77,7 +84,7 @@ export default function EmployeePayrollHistoryPage() {
     return (
         <div className="text-center">
             <p>No se pudo cargar la información del empleado.</p>
-             <Button onClick={() => router.push('/dashboard/finanzas/empleados')} className="mt-4">
+             <Button onClick={() => router.push('/dashboard/finanzas?tab=empleados')} className="mt-4">
                 Volver a Empleados
              </Button>
         </div>
