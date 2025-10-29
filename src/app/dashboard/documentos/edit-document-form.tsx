@@ -51,7 +51,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [clientCif, setClientCif] = useState(document.clienteCif || '');
   const [clientAddress, setClientAddress] = useState(document.clienteDireccion || '');
   
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const companyData = user?.company;
@@ -97,7 +97,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsSaving(true);
+    setIsLoading(true);
 
     if (!user) {
       toast({
@@ -105,7 +105,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
         title: 'No estás autenticado',
         description: 'Por favor, inicia sesión para actualizar un documento.',
       });
-      setIsSaving(false);
+      setIsLoading(false);
       return;
     }
 
@@ -141,7 +141,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
       });
     }
 
-    setIsSaving(false);
+    setIsLoading(false);
   }
 
 
@@ -246,27 +246,26 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
-                    <div className="hidden md:grid md:grid-cols-[1fr_180px_100px_100px_40px] gap-2 font-medium text-muted-foreground text-xs px-2">
+                    <div className="hidden md:grid md:grid-cols-[1fr_80px_120px_120px_120px_40px] gap-2 font-medium text-muted-foreground text-xs px-2">
                         <span>Descripción</span>
-                        <span className="text-right">Cant./Unidad</span>
-                        <span className="text-right">P. Unit.</span>
+                        <span className="text-right">Cantidad</span>
+                        <span className="text-center">Unidad</span>
+                        <span className="text-right">Precio/Unidad</span>
                         <span className="text-right">Total</span>
                         <span></span>
                     </div>
                     {lineItems.map((item) => (
-                        <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_180px_100px_100px_40px] gap-2 items-start border-b pb-2">
+                        <div key={item.id} className="grid grid-cols-1 md:grid-cols-[1fr_80px_120px_120px_120px_40px] gap-2 items-start border-b pb-2">
                             <Textarea placeholder="Descripción del servicio/producto" value={item.description} onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)} rows={1} className="md:h-10" />
-                            <div className="flex gap-1">
-                                <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} className="text-right w-16" min="0"/>
-                                <Select value={item.unit} onValueChange={(value) => handleLineItemChange(item.id, 'unit', value)}>
-                                    <SelectTrigger className="flex-1 text-xs">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {units.map(u => <SelectItem key={u} value={u} className="capitalize text-xs">{u}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                             <Input type="number" value={item.quantity} onChange={(e) => handleLineItemChange(item.id, 'quantity', Number(e.target.value))} className="text-right" min="0"/>
+                            <Select value={item.unit} onValueChange={(value) => handleLineItemChange(item.id, 'unit', value)}>
+                                <SelectTrigger className="text-xs">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {units.map(u => <SelectItem key={u} value={u} className="capitalize text-xs">{u}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                             <Input type="number" value={item.unitPrice} onChange={(e) => handleLineItemChange(item.id, 'unitPrice', Number(e.target.value))} className="text-right" min="0" step="0.01"/>
                             <Input value={item.total.toFixed(2)} readOnly className="text-right bg-muted" />
                             <Button type="button" variant="ghost" size="icon" className="text-destructive h-10 w-10" onClick={() => handleRemoveLine(item.id)}>
