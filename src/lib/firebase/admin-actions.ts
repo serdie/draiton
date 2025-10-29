@@ -113,10 +113,8 @@ export async function createEmployeeUser(employeeData: {
   }, { merge: true });
 
   const employeeDocRef = db.collection('employees').doc(userRecord.uid); 
-  const { ownerId, ...restOfEmployeeData } = employeeData;
   await employeeDocRef.set({
-    ...restOfEmployeeData,
-    companyOwnerId: ownerId, 
+    ...employeeData,
     userId: userRecord.uid,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
