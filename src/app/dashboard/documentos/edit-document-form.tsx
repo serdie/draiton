@@ -50,7 +50,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [emissionDate, setEmissionDate] = useState<Date | undefined>(document.fechaEmision);
   const [dueDate, setDueDate] = useState<Date | undefined>(document.fechaVto || undefined);
   const [lineItems, setLineItems] = useState<LineItem[]>(document.lineas.map((line, index) => ({ id: index, unit: line.unit || 'cantidad', ...line })));
-  const [taxRate, setTaxRate] = useState(document.impuestos && document.subtotal ? (document.impuestos / document.subtotal) * 100 : 21);
+  const [taxRate, setTaxRate] = useState(typeof document.impuestos === 'number' && document.subtotal ? (document.impuestos / document.subtotal) * 100 : 21);
   const [applyIrpf, setApplyIrpf] = useState(false); // Asumimos que no está aplicado por defecto al editar
   const [status, setStatus] = useState<DocumentStatus>(document.estado);
   const [clientName, setClientName] = useState(document.cliente);
@@ -383,7 +383,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                 </div>
                 <div className="w-[240px] space-y-1 text-right p-4 bg-muted rounded-md">
                     <div className="flex justify-between"><span>Subtotal:</span><span>{subtotal.toFixed(2)} EUR</span></div>
-                    <div className="flex justify-between"><span>Impuestos ({taxRate}%):</span><span>{taxAmount.toFixed(2)} EUR</span></div>
+                    <div className="flex justify-between"><span>IVA ({taxRate}%):</span><span>{taxAmount.toFixed(2)} EUR</span></div>
                     {applyIrpf && <div className="flex justify-between text-destructive"><span>IRPF (15%):</span><span>-{irpfAmount.toFixed(2)} EUR</span></div>}
                     <div className="font-bold text-lg flex justify-between"><span>Total:</span><span>{total.toFixed(2)} EUR</span></div>
                 </div>
