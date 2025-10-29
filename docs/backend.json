@@ -1,5 +1,19 @@
+
 {
   "entities": {
+    "Address": {
+      "title": "Address",
+      "description": "Represents a structured address.",
+      "type": "object",
+      "properties": {
+        "addressLine1": { "type": "string" },
+        "addressLine2": { "type": "string" },
+        "city": { "type": "string" },
+        "province": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
     "UserProfile": {
       "title": "User Profile",
       "description": "Represents a user's profile in the system.",
@@ -17,10 +31,12 @@
           "properties": {
             "name": { "type": "string" },
             "cif": { "type": "string" },
-            "address": { "type": "string" },
+            "address": { "$ref": "#/entities/Address" },
             "brandColor": { "type": "string" },
             "iban": { "type": "string" },
-            "logoUrl": { "type": "string", "format": "uri" }
+            "logoUrl": { "type": "string", "format": "uri" },
+            "phone": { "type": "string" },
+            "terminos": { "type": "string" }
           }
         }
       },
@@ -105,7 +121,7 @@
             "phone": { "type": "string"},
             "company": { "type": "string"},
             "cif": { "type": "string" },
-            "address": { "type": "string" },
+            "address": { "$ref": "#/entities/Address" },
             "type": { "type": "string", "enum": ["Cliente", "Proveedor", "Lead", "Colaborador"]},
             "ownerId": { "type": "string"}
         },

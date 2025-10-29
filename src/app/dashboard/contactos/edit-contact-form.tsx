@@ -30,7 +30,17 @@ import { db } from '@/lib/firebase/config';
 import type { Contact } from './page';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { provincias } from '@/lib/provincias';
 
+
+const addressSchema = z.object({
+    addressLine1: z.string().optional(),
+    addressLine2: z.string().optional(),
+    city: z.string().optional(),
+    province: z.string().optional(),
+    postalCode: z.string().optional(),
+    country: z.string().optional(),
+});
 
 const contactFormSchema = z.object({
   name: z.string().min(1, { message: 'El nombre es obligatorio.' }),
@@ -38,7 +48,7 @@ const contactFormSchema = z.object({
   phone: z.string().optional(),
   company: z.string().optional(),
   cif: z.string().optional(),
-  address: z.string().optional(),
+  address: addressSchema.optional(),
   type: z.enum(['Cliente', 'Proveedor', 'Lead', 'Colaborador']),
   notes: z.string().optional(),
 });
@@ -61,7 +71,14 @@ export function EditContactForm({ contact, onClose }: { contact: Contact, onClos
       phone: contact.phone || '',
       company: contact.company || '',
       cif: contact.cif || '',
-      address: contact.address || '',
+      address: contact.address || {
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        province: '',
+        postalCode: '',
+        country: 'España',
+      },
       type: contact.type || 'Cliente',
       notes: contact.notes || '',
     },
@@ -164,22 +181,40 @@ export function EditContactForm({ contact, onClose }: { contact: Contact, onClos
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Dirección</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Calle Falsa 123, 28001, Madrid"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+        
+        <div className="space-y-2">
+            <FormLabel>Dirección</FormLabel>
+            <div className="space-y-2 rounded-md border p-4">
+                <FormField control={form.control} name="address.addressLine1" render={({ field }) => (
+                    <FormItem><FormControl><Input placeholder="Línea 1 de la dirección" {...field} /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="address.addressLine2" render={({ field }) => (
+                    <FormItem><FormControl><Input placeholder="Línea 2 (Opcional)" {...field} /></FormControl></FormItem>
+                )} />
+                <div className="grid grid-cols-2 gap-2">
+                    <FormField control={form.control} name="address.city" render={({ field }) => (
+                        <FormItem><FormControl><Input placeholder="Ciudad" {...field} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="address.postalCode" render={({ field }) => (
+                        <FormItem><FormControl><Input placeholder="Código Postal" {...field} /></FormControl></FormItem>
+                    )} />
+                </div>
+                 <FormField control={form.control} name="address.province" render={({ field }) => (
+                    <FormItem>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Provincia" /></SelectTrigger></FormControl>
+                            <SelectContent><SelectContent>
+                                {provincias.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                            </SelectContent></SelectContent>
+                        </Select>
+                    </FormItem>
+                )} />
+                 <FormField control={form.control} name="address.country" render={({ field }) => (
+                    <FormItem><FormControl><Input placeholder="País" {...field} /></FormControl></FormItem>
+                )} />
+            </div>
+        </div>
+
         <FormField
           control={form.control}
           name="type"

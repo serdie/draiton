@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useContext, useRef } from 'react';
@@ -26,6 +25,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useState } from 'react';
 import Image from 'next/image';
+import type { Address } from '@/lib/firebase/user-settings-actions';
 
 
 interface ViewDocumentModalProps {
@@ -59,8 +59,22 @@ const getDocumentTypeLabel = (type?: DocumentType) => {
         case 'presupuesto': return 'Presupuesto';
         case 'nota-credito': return 'Nota de Crédito';
         case 'recurrente': return 'Factura Recurrente';
+        default: return 'Documento';
     }
 }
+
+const formatAddress = (address?: Address) => {
+    if (!address) return 'Dirección no disponible';
+    const parts = [
+        address.addressLine1,
+        address.addressLine2,
+        address.city,
+        address.province,
+        address.postalCode,
+        address.country,
+    ];
+    return parts.filter(Boolean).join(', ');
+};
 
 export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentModalProps) {
   const { toast } = useToast();
@@ -156,7 +170,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                         <h2 className="font-bold text-lg">{companyData?.name || 'Tu Empresa S.L.'}</h2>
                         <div className="text-xs text-gray-600 mt-1">
                             <p>{companyData?.cif || 'CIF no disponible'}</p>
-                            <p className="whitespace-pre-wrap">{companyData?.address || 'Dirección no disponible'}</p>
+                            <p className="whitespace-pre-wrap">{formatAddress(companyData?.address)}</p>
                             {document.showEmisorEmail && document.emisorEmail && <p>{document.emisorEmail}</p>}
                             {document.showEmisorPhone && document.emisorTelefono && <p>{document.emisorTelefono}</p>}
                         </div>
@@ -167,7 +181,7 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                      <div className="space-y-1">
                         <h3 className="font-semibold text-gray-500 text-xs uppercase tracking-wider mb-2">Factura a:</h3>
                         <p className="font-bold text-base">{document.cliente}</p>
-                        <p className="text-gray-600 whitespace-pre-wrap">{document.clienteDireccion}</p>
+                        <p className="text-gray-600 whitespace-pre-wrap">{formatAddress(document.clienteDireccion)}</p>
                         {document.clienteCif && <p className="text-gray-600">CIF/NIF: {document.clienteCif}</p>}
                         {document.showClientEmail && document.clienteEmail && <p className="flex items-center gap-2 text-gray-600"><Mail className="h-3 w-3"/> {document.clienteEmail}</p>}
                         {document.showClientPhone && document.clienteTelefono && <p className="flex items-center gap-2 text-gray-600"><Phone className="h-3 w-3"/> {document.clienteTelefono}</p>}
@@ -247,9 +261,8 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                     )}
                 </footer>
                 
-                {/* Emitter info footer */}
                 <div className="text-center mt-16 pt-4 border-t text-xs text-gray-500">
-                    <p>{companyData?.name} - CIF/NIF: {companyData?.cif} - {companyData?.address}</p>
+                    <p>{companyData?.name} - CIF/NIF: {companyData?.cif} - {formatAddress(companyData?.address)}</p>
                 </div>
             </div>
         </div>

@@ -5,13 +5,24 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "./config";
 
 
+export type Address = {
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    province?: string;
+    postalCode?: string;
+    country?: string;
+};
+
 export type CompanySettings = {
     name?: string;
     cif?: string;
-    address?: string;
+    address?: Address;
     brandColor?: string;
     iban?: string;
     logoUrl?: string;
+    terminos?: string;
+    phone?: string;
 }
 
 export type UserProfileData = {

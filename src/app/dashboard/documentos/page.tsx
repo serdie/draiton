@@ -1,8 +1,8 @@
 
-
 'use client';
 
 import { DocumentosContent } from './documentos-content';
+import { type Address } from '@/lib/firebase/user-settings-actions';
 
 export type DocumentType = 'factura' | 'presupuesto' | 'nota-credito' | 'recurrente';
 export type DocumentStatus = 'Pagado' | 'Pendiente' | 'Vencido' | 'Enviado' | 'Aceptado' | 'Rechazado' | 'Emitido' | 'Aplicado' | 'Borrador' | 'Activo' | 'Pausado' | 'Impagada';
@@ -20,7 +20,7 @@ export type Document = {
   ownerId: string;
   cliente: string;
   clienteCif?: string;
-  clienteDireccion?: string;
+  clienteDireccion?: Address;
   clienteEmail?: string;
   showClientEmail?: boolean;
   clienteTelefono?: string;

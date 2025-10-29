@@ -13,9 +13,12 @@ import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
+import type { CompanySettings, Address } from '@/lib/firebase/user-settings-actions';
 import Image from 'next/image';
 import { uploadCompanyLogo } from '@/lib/firebase/storage-actions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { provincias } from '@/lib/provincias';
+
 
 export function EmpresaSettings() {
     const { user } = useContext(AuthContext);
@@ -40,10 +43,20 @@ export function EmpresaSettings() {
         }
 
         const formData = new FormData(event.currentTarget);
+        
+        const addressData: Address = {
+            addressLine1: formData.get('addressLine1') as string,
+            addressLine2: formData.get('addressLine2') as string,
+            city: formData.get('city') as string,
+            province: formData.get('province') as string,
+            postalCode: formData.get('postalCode') as string,
+            country: formData.get('country') as string,
+        }
+        
         const companyData: CompanySettings = {
             name: formData.get('companyName') as string,
             cif: formData.get('companyCif') as string,
-            address: formData.get('companyAddress') as string,
+            address: addressData,
             brandColor: formData.get('brandColor') as string,
             iban: formData.get('companyIban') as string,
             logoUrl: logoPreview || '',
@@ -82,7 +95,6 @@ export function EmpresaSettings() {
             const downloadURL = await uploadCompanyLogo(user.uid, file);
             setLogoPreview(downloadURL);
             
-            // Immediately update the logo URL in the database
             const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, {
                 'company.logoUrl': downloadURL,
@@ -104,7 +116,8 @@ export function EmpresaSettings() {
         }
     };
     
-    const companyData = user?.company as CompanySettings | undefined;
+    const companyData = user?.company;
+    const addressData = user?.company?.address;
 
   return (
     <Card>
@@ -127,9 +140,21 @@ export function EmpresaSettings() {
                     <Label htmlFor="companyCif">CIF / NIF</Label>
                     <Input id="companyCif" name="companyCif" placeholder="B12345678" defaultValue={companyData?.cif} />
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="companyAddress">Dirección Fiscal</Label>
-                    <Textarea id="companyAddress" name="companyAddress" placeholder="Calle Falsa 123, 28080 Madrid, España" defaultValue={companyData?.address}/>
+                 <div className="space-y-2">
+                    <Label>Dirección Fiscal</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input name="addressLine1" placeholder="Dirección, línea 1" defaultValue={addressData?.addressLine1} />
+                        <Input name="addressLine2" placeholder="Línea 2 (opcional)" defaultValue={addressData?.addressLine2} />
+                        <Input name="city" placeholder="Ciudad" defaultValue={addressData?.city} />
+                        <Input name="postalCode" placeholder="Código Postal" defaultValue={addressData?.postalCode} />
+                         <Select name="province" defaultValue={addressData?.province}>
+                            <SelectTrigger><SelectValue placeholder="Provincia" /></SelectTrigger>
+                            <SelectContent>
+                                {provincias.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <Input name="country" placeholder="País" defaultValue={addressData?.country || 'España'} />
+                    </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="companyIban">Número de cuenta (IBAN)</Label>

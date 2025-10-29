@@ -21,6 +21,14 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AddContactOptionsModal } from './add-contact-options-modal';
 
+type Address = {
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    province?: string;
+    postalCode?: string;
+    country?: string;
+};
 
 export type ContactType = 'Cliente' | 'Proveedor' | 'Lead' | 'Colaborador';
 
@@ -31,7 +39,7 @@ export type Contact = {
   email: string;
   company: string;
   cif: string;
-  address: string;
+  address?: Address;
   phone: string;
   type: ContactType;
   notes?: string;
