@@ -28,6 +28,7 @@ import Link from 'next/link';
 import type { Document, LineItem as DocLineItem } from './page';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { Switch } from '@/components/ui/switch';
 
 type LineItem = DocLineItem & {
   id: number;
@@ -59,6 +60,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [taxRate, setTaxRate] = useState(21);
+  const [applyIrpf, setApplyIrpf] = useState(false);
   const [status, setStatus] = useState<DocumentStatus>('Borrador');
   const [clientName, setClientName] = useState('');
   const [clientCif, setClientCif] = useState('');
@@ -157,12 +159,13 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
     setLineItems(updatedItems);
   };
   
-  const { subtotal, taxAmount, total } = useMemo(() => {
+  const { subtotal, taxAmount, irpfAmount, total } = useMemo(() => {
     const subtotal = lineItems.reduce((acc, item) => acc + item.total, 0);
     const taxAmount = (subtotal * taxRate) / 100;
-    const total = subtotal + taxAmount;
-    return { subtotal, taxAmount, total };
-  }, [lineItems, taxRate]);
+    const irpfAmount = applyIrpf ? subtotal * 0.15 : 0;
+    const total = subtotal + taxAmount - irpfAmount;
+    return { subtotal, taxAmount, irpfAmount, total };
+  }, [lineItems, taxRate, applyIrpf]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -411,6 +414,10 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                              <Input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} />
                         </div>
                     </div>
+                    <div className="flex items-center space-x-2 pt-2">
+                        <Switch id="irpf-switch" checked={applyIrpf} onCheckedChange={setApplyIrpf} />
+                        <Label htmlFor="irpf-switch">Aplicar retención IRPF (15%)</Label>
+                    </div>
                      <div>
                         <Label>Notas Adicionales / Términos</Label>
                         <Textarea defaultValue="Condiciones de pago: 30 días." />
@@ -439,6 +446,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData }: Creat
                     <div className="w-[240px] space-y-1 text-right p-4 bg-muted rounded-md">
                         <div className="flex justify-between"><span>Subtotal:</span><span>{subtotal.toFixed(2)} EUR</span></div>
                         <div className="flex justify-between"><span>Impuestos ({taxRate}%):</span><span>{taxAmount.toFixed(2)} EUR</span></div>
+                        {applyIrpf && <div className="flex justify-between text-destructive"><span>IRPF (15%):</span><span>-{irpfAmount.toFixed(2)} EUR</span></div>}
                         <div className="font-bold text-lg flex justify-between"><span>Total:</span><span>{total.toFixed(2)} EUR</span></div>
                     </div>
                 </div>

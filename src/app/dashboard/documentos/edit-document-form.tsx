@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { updateDocumentAction } from '@/lib/firebase/document-actions';
 import { AuthContext } from '@/context/auth-context';
 import Link from 'next/link';
+import { Switch } from '@/components/ui/switch';
 
 type LineItem = DocLineItem & { id: number };
 
@@ -46,6 +47,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [dueDate, setDueDate] = useState<Date | undefined>(document.fechaVto || undefined);
   const [lineItems, setLineItems] = useState<LineItem[]>(document.lineas.map((line, index) => ({ id: index, unit: line.unit || 'cantidad', ...line })));
   const [taxRate, setTaxRate] = useState(document.impuestos && document.subtotal ? (document.impuestos / document.subtotal) * 100 : 21);
+  const [applyIrpf, setApplyIrpf] = useState(false); // Asumimos que no está aplicado por defecto al editar
   const [status, setStatus] = useState<DocumentStatus>(document.estado);
   const [clientName, setClientName] = useState(document.cliente);
   const [clientCif, setClientCif] = useState(document.clienteCif || '');
@@ -88,12 +90,13 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
     setLineItems(updatedItems);
   };
   
-  const { subtotal, taxAmount, total } = useMemo(() => {
+  const { subtotal, taxAmount, irpfAmount, total } = useMemo(() => {
     const subtotal = lineItems.reduce((acc, item) => acc + item.total, 0);
     const taxAmount = (subtotal * taxRate) / 100;
-    const total = subtotal + taxAmount;
-    return { subtotal, taxAmount, total };
-  }, [lineItems, taxRate]);
+    const irpfAmount = applyIrpf ? subtotal * 0.15 : 0;
+    const total = subtotal + taxAmount - irpfAmount;
+    return { subtotal, taxAmount, irpfAmount, total };
+  }, [lineItems, taxRate, applyIrpf]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -293,6 +296,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                          <Input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} />
                     </div>
                 </div>
+                <div className="flex items-center space-x-2 pt-2">
+                    <Switch id="irpf-switch" checked={applyIrpf} onCheckedChange={setApplyIrpf} />
+                    <Label htmlFor="irpf-switch">Aplicar retención IRPF (15%)</Label>
+                </div>
                  <div>
                     <Label>Notas Adicionales / Términos</Label>
                     <Textarea defaultValue="Condiciones de pago: 30 días." />
@@ -321,6 +328,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                 <div className="w-[240px] space-y-1 text-right p-4 bg-muted rounded-md">
                     <div className="flex justify-between"><span>Subtotal:</span><span>{subtotal.toFixed(2)} EUR</span></div>
                     <div className="flex justify-between"><span>Impuestos ({taxRate}%):</span><span>{taxAmount.toFixed(2)} EUR</span></div>
+                    {applyIrpf && <div className="flex justify-between text-destructive"><span>IRPF (15%):</span><span>-{irpfAmount.toFixed(2)} EUR</span></div>}
                     <div className="font-bold text-lg flex justify-between"><span>Total:</span><span>{total.toFixed(2)} EUR</span></div>
                 </div>
             </div>
