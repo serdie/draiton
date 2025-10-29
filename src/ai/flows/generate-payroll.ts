@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -12,7 +13,7 @@ import {
     GeneratePayrollInputSchema, 
     GeneratePayrollOutputSchema,
     type GeneratePayrollInput,
-    type GeneratePayrollOutput
+    type GeneratePayrollOutput 
 } from '@/ai/schemas/payroll-schemas'; // Asumimos schemas importados de aquí
 
 // --- CONSTANTES DE COTIZACIÓN Y RETENCIÓN (¡IMPORTANTE! Actualizar según legislación vigente) ---
@@ -180,3 +181,5 @@ const generatePayrollFlow = ai.defineFlow(
     }
   }
 );
+
+    
