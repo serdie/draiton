@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useContext, useTransition } from 'react';
+import { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,16 +14,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Sparkles, Wand2, FileSignature, AlertCircle, Terminal, Download, Pencil } from 'lucide-react';
+import { Loader2, Sparkles, FileSignature, AlertCircle, Trash2, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
-import { generatePayroll, reviewPayroll } from './actions';
+import { generatePayrollAction } from './actions';
 import { type Employee } from '../empleados/types';
-import type { GeneratePayrollOutput, ReviewPayrollOutput } from '@/ai/schemas/payroll-schemas';
+import type { GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { ViewPayrollModal } from './view-payroll-modal';
 import { EditPayrollModal } from './edit-payroll-modal';
-import { nanoid } from 'nanoid';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
@@ -32,6 +31,12 @@ interface GeneratePayrollModalProps {
   onClose: () => void;
   employee: Employee;
 }
+
+type AdditionalConcept = {
+  id: number;
+  concept: string;
+  amount: string;
+};
 
 const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const currentYear = new Date().getFullYear();
@@ -43,10 +48,35 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
   const [isSaving, setIsSaving] = useState(false);
   
   const [period, setPeriod] = useState(`${months[new Date().getMonth()]} ${currentYear}`);
+  const [additionalConcepts, setAdditionalConcepts] = useState<AdditionalConcept[]>([]);
   const [generatedPayroll, setGeneratedPayroll] = useState<GeneratePayrollOutput | null>(null);
-  const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
-  const [payrollToEdit, setPayrollToEdit] = useState<GeneratePayrollOutput | null>(null);
 
+  const resetState = () => {
+    setIsGenerating(false);
+    setIsSaving(false);
+    setGeneratedPayroll(null);
+    setAdditionalConcepts([]);
+    setPeriod(`${months[new Date().getMonth()]} ${currentYear}`);
+  };
+
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+
+  const addConcept = () => {
+    setAdditionalConcepts([...additionalConcepts, { id: Date.now(), concept: '', amount: '' }]);
+  };
+
+  const removeConcept = (id: number) => {
+    setAdditionalConcepts(additionalConcepts.filter(c => c.id !== id));
+  };
+
+  const handleConceptChange = (id: number, field: 'concept' | 'amount', value: string) => {
+    setAdditionalConcepts(
+      additionalConcepts.map(c => (c.id === id ? { ...c, [field]: value } : c))
+    );
+  };
 
   const handleGenerate = async () => {
     if (!user || !user.company) {
@@ -56,22 +86,29 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
     setIsGenerating(true);
     setGeneratedPayroll(null);
 
+    const conceptsForAI = additionalConcepts
+      .filter(c => c.concept && c.amount)
+      .map(c => ({
+        concept: c.concept,
+        amount: parseFloat(c.amount) || 0
+      }));
+
     const input = {
         employeeName: employee.name,
         nif: employee.nif,
         socialSecurityNumber: employee.socialSecurityNumber,
         contractType: employee.contractType,
-        professionalGroup: 'Grupo 1 - Ingenieros y Licenciados', // Placeholder
+        professionalGroup: 'Grupo 1 - Ingenieros y Licenciados',
         grossAnnualSalary: employee.grossAnnualSalary,
         paymentPeriod: period,
         companyName: user.company.name || 'Nombre Empresa no configurado',
         cif: user.company.cif || 'CIF no configurado',
-        contributionAccountCode: '28/1234567/89', // Placeholder
-        additionalConcepts: [],
+        contributionAccountCode: '28/1234567/89',
+        additionalConcepts: conceptsForAI,
     };
 
     try {
-        const result = await generatePayroll(input);
+        const result = await generatePayrollAction(input);
         if (result.error) {
              toast({ variant: 'destructive', title: 'Error al generar', description: result.error });
         } else {
@@ -91,15 +128,15 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
       
       const payrollData = {
           ...generatedPayroll,
-          employeeId: employee.id, // Link to employee
-          ownerId: user?.uid, // Link to business owner
+          employeeId: employee.id,
+          ownerId: user?.uid,
           createdAt: serverTimestamp(),
       };
 
       try {
         await addDoc(collection(db, "payrolls"), payrollData);
         toast({ title: 'Nómina Guardada', description: `La nómina de ${period} para ${employee.name} ha sido guardada.` });
-        onClose();
+        handleClose();
       } catch (error) {
         console.error("Error al guardar la nómina:", error);
         toast({ variant: 'destructive', title: 'Error', description: 'No se pudo guardar la nómina en la base de datos.' });
@@ -108,85 +145,85 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
       }
   }
 
-
   return (
-    <>
-      {payrollToView && <ViewPayrollModal isOpen={!!payrollToView} onClose={() => setPayrollToView(null)} payroll={payrollToView} employee={employee} />}
-      {payrollToEdit && <EditPayrollModal isOpen={!!payrollToEdit} onClose={() => setPayrollToEdit(null)} payroll={payrollToEdit} onSave={setGeneratedPayroll} />}
-
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Generar Nómina para {employee.name}</DialogTitle>
-            <DialogDescription>
-              Selecciona el periodo y deja que la IA genere un borrador de la nómina.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-4 space-y-4">
-            <div className="flex items-end gap-2">
-                <div className="flex-1 space-y-2">
-                    <Label htmlFor="period">Periodo de Liquidación</Label>
-                    <Select value={period} onValueChange={setPeriod}>
-                        <SelectTrigger id="period">
-                        <SelectValue placeholder="Selecciona un mes" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {months.map(month => (
-                            <SelectItem key={month} value={`${month} ${currentYear}`}>{month} {currentYear}</SelectItem>
-                        ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <Button onClick={handleGenerate} disabled={isGenerating}>
-                    {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
-                    Generar
-                </Button>
-            </div>
-
-             {generatedPayroll ? (
-                <div className="space-y-4 pt-4">
-                    <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Borrador Generado</AlertTitle>
-                        <AlertDescription>
-                            Esto es un borrador. Revisa todos los campos y edita si es necesario. Los cálculos de IRPF y cotizaciones son una estimación.
-                        </AlertDescription>
-                    </Alert>
-
-                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex justify-between items-center">
-                                <span>Nómina de {generatedPayroll.header.period}</span>
-                                <div className="flex gap-2">
-                                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setPayrollToEdit(generatedPayroll)}><Pencil className="h-4 w-4" /></Button>
-                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setPayrollToView(generatedPayroll)}><Download className="h-4 w-4" /></Button>
-                                </div>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-sm space-y-2">
-                            <div className="flex justify-between"><span className="text-muted-foreground">Total Devengado:</span> <span className="font-medium">{generatedPayroll.accruals.total.toFixed(2)}€</span></div>
-                            <div className="flex justify-between"><span className="text-muted-foreground">Total Deducciones:</span> <span className="font-medium">{generatedPayroll.deductions.total.toFixed(2)}€</span></div>
-                            <div className="flex justify-between font-bold text-base border-t pt-2 mt-2"><span >Líquido a Percibir:</span> <span>{generatedPayroll.netPay.toFixed(2)}€</span></div>
-                        </CardContent>
-                    </Card>
-                </div>
-            ) : (
-                 <div className="flex items-center justify-center text-center text-muted-foreground h-48 border border-dashed rounded-lg">
-                    {isGenerating ? <Loader2 className="h-8 w-8 animate-spin" /> : <p>Aquí aparecerá el borrador de la nómina...</p>}
-                 </div>
-            )}
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Generar Nómina para {employee.name}</DialogTitle>
+          <DialogDescription>
+            Selecciona el periodo, añade conceptos si es necesario, y la IA calculará la nómina.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="py-4 space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="period">Periodo de Liquidación</Label>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger id="period">
+                <SelectValue placeholder="Selecciona un mes" />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map(month => (
+                  <SelectItem key={month} value={`${month} ${currentYear}`}>{month} {currentYear}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
-            <Button onClick={handleSavePayroll} disabled={!generatedPayroll || isSaving}>
-                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                Guardar Nómina
+          <div className="space-y-2">
+            <Label>Conceptos Adicionales</Label>
+            <div className="space-y-2">
+              {additionalConcepts.map(item => (
+                <div key={item.id} className="flex items-center gap-2">
+                  <Input 
+                    placeholder="Concepto (ej. Horas Extra)" 
+                    value={item.concept}
+                    onChange={(e) => handleConceptChange(item.id, 'concept', e.target.value)}
+                    className="flex-1"
+                  />
+                  <Input 
+                    type="number" 
+                    placeholder="Importe" 
+                    value={item.amount}
+                    onChange={(e) => handleConceptChange(item.id, 'amount', e.target.value)}
+                    className="w-28 text-right" 
+                  />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeConcept(item.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" onClick={addConcept}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Añadir Concepto (Horas Extra, Bonus...)
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          </div>
+          
+          <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
+              {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+              Generar Nómina
+          </Button>
+
+          {generatedPayroll && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Aviso Importante</AlertTitle>
+              <AlertDescription>
+                Los cálculos deben ser revisados y validados por un asesor profesional. La nómina podrá ser editada una vez guardada.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} disabled={isSaving}>Cerrar</Button>
+          <Button onClick={handleSavePayroll} disabled={!generatedPayroll || isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+              Guardar Nómina
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
