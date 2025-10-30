@@ -32,8 +32,8 @@ const PayrollItemSchema = z.object({
     concept: z.string().describe('Nombre del concepto (ej. "Salario Base").'),
     quantity: z.number().describe('Unidades (ej. 30 días).'),
     price: z.number().describe('Precio por unidad (ej. salario diario).'),
-    accrual: z.number().nullable().optional().describe('Importe del devengo (si aplica).'),
-    deduction: z.number().nullable().optional().describe('Importe de la deducción (si aplica).'),
+    accrual: z.number().nullable().default(null).describe('Importe del devengo (si aplica).'),
+    deduction: z.number().nullable().default(null).describe('Importe de la deducción (si aplica).'),
 });
 
 const AccrualsDeductionsSchema = z.object({

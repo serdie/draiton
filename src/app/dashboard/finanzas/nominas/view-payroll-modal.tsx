@@ -33,6 +33,25 @@ interface ViewPayrollModalProps {
   onSaveSuccess?: () => void;
 }
 
+// Helper function to sanitize data for Firestore
+const sanitizeForFirestore = (data: any) => {
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeForFirestore(item));
+  }
+  if (data !== null && typeof data === 'object') {
+    const sanitizedObject: { [key: string]: any } = {};
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        const value = data[key];
+        sanitizedObject[key] = value === undefined ? null : sanitizeForFirestore(value);
+      }
+    }
+    return sanitizedObject;
+  }
+  return data;
+};
+
+
 export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, employee, onSaveSuccess }: ViewPayrollModalProps) {
     const { user } = useContext(AuthContext);
     const { toast } = useToast();
@@ -76,9 +95,11 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
           ownerId: user.uid,
           createdAt: serverTimestamp(),
       };
+      
+      const sanitizedData = sanitizeForFirestore(payrollData);
 
       try {
-        await addDoc(collection(db, "payrolls"), payrollData);
+        await addDoc(collection(db, "payrolls"), sanitizedData);
         toast({ title: 'Nómina Guardada', description: `La nómina de ${currentPayroll.header.paymentPeriod} para ${employee.name} ha sido guardada.` });
         if(onSaveSuccess) onSaveSuccess();
       } catch (error) {
@@ -142,7 +163,7 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
                     </div>
                 </div>
                  <div className="flex justify-between border-b py-2 text-xs">
-                     <p><span className="font-semibold">Periodo Liquidación:</span> {currentPayroll.header.period}</p>
+                     <p><span className="font-semibold">Periodo Liquidación:</span> {currentPayroll.header.paymentPeriod}</p>
                      <p><span className="font-semibold">Total Días:</span> {currentPayroll.header.totalDays}</p>
                  </div>
 
@@ -245,5 +266,3 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
     </>
   );
 }
-
-    
