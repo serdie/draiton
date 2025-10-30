@@ -5,7 +5,7 @@ import { useState, useEffect, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, MoreHorizontal, FileSignature, User, Trash2, Loader2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, FileSignature, User, Trash2, Loader2, Pencil } from 'lucide-react';
 import { GeneratePayrollModal } from '../../finanzas/nominas/generate-payroll-modal';
 import type { Employee } from '../empleados/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -17,13 +17,12 @@ import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 
 interface ListadoEmpleadosTabProps {
-    onEditEmployee: (employee: Employee) => void;
     employees: Employee[];
     loading: boolean;
 }
 
 
-export function ListadoEmpleadosTab({ onEditEmployee, employees, loading }: ListadoEmpleadosTabProps) {
+export function ListadoEmpleadosTab({ employees, loading }: ListadoEmpleadosTabProps) {
     const [employeeToGeneratePayroll, setEmployeeToGeneratePayroll] = useState<Employee | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
     const router = useRouter();
@@ -129,8 +128,8 @@ export function ListadoEmpleadosTab({ onEditEmployee, employees, loading }: List
                                                         Ver Historial
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem onClick={() => onEditEmployee(employee)}>
-                                                        <User className="mr-2 h-4 w-4" />
+                                                    <DropdownMenuItem onClick={() => router.push(`/dashboard/finanzas/empleados/${employee.id}`)}>
+                                                        <Pencil className="mr-2 h-4 w-4" />
                                                         Editar Empleado
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => setEmployeeToDelete(employee)} className="text-destructive focus:text-destructive">
