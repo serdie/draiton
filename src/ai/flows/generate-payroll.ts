@@ -15,6 +15,8 @@ import {
     type GeneratePayrollInput,
     type GeneratePayrollOutput 
 } from '@/ai/schemas/payroll-schemas'; // Asumimos schemas importados de aquí
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 // --- CONSTANTES DE COTIZACIÓN Y RETENCIÓN (¡IMPORTANTE! Actualizar según legislación vigente) ---
 const TIPO_CONTINGENCIAS_COMUNES = 0.0480; // Aprox. 4.80% (verificar BOE para el año actual)
@@ -48,6 +50,8 @@ const GeneratePayrollPromptInputSchema = GeneratePayrollInputSchema.extend({
       deduccionIrpf: z.number(),
       totalDeducciones: z.number(),
       liquidoAPercibir: z.number(),
+      antiguedad: z.string(),
+      periodoLiquidacionDetallado: z.string(),
   }).describe("Objeto que contiene todos los importes ya calculados por el sistema.")
 });
 
@@ -60,6 +64,7 @@ const prompt = ai.definePrompt({
 **Datos de la Empresa:**
 - Nombre: {{{companyName}}}
 - CIF: {{{cif}}}
+- Dirección: {{{companyAddress}}}
 - Código Cuenta Cotización: {{{contributionAccountCode}}}
 
 **Datos del Empleado:**
@@ -67,6 +72,7 @@ const prompt = ai.definePrompt({
 - NIF: {{{nif}}}
 - Nº Afiliación S.S.: {{{socialSecurityNumber}}}
 - Grupo Profesional: {{{professionalGroup}}}
+- Puesto/Categoría: {{{position}}}
 - Tipo de Contrato: {{{contractType}}}
 - Salario Bruto Anual: {{{grossAnnualSalary}}}
 
@@ -95,9 +101,13 @@ const prompt = ai.definePrompt({
 - Deducción IRPF: {{{calculatedData.deduccionIrpf}}} (Estimado como {{{calculatedData.tipoIrpfEstimado}}}% de Base IRPF)
 - **Total Deducciones:** {{{calculatedData.totalDeducciones}}}
 - **Líquido a Percibir:** {{{calculatedData.liquidoAPercibir}}}
+- Antigüedad: {{{calculatedData.antiguedad}}}
+- Periodo Liquidación Detallado: {{{calculatedData.periodoLiquidacionDetallado}}}
+
 
 **Tu Tarea:**
 Rellena la estructura JSON de salida (\`GeneratePayrollOutputSchema\`) utilizando los datos y cálculos proporcionados.
+- En \`header\`, completa TODOS los campos, incluyendo los de la empresa y el empleado. Usa los datos proporcionados.
 - En \`accruals.items\`, incluye el Salario Base, la Prorrata y los Conceptos Adicionales.
 - En \`deductions.items\`, incluye las Contingencias Comunes, Desempleo, Formación Profesional e IRPF.
 Asegúrate de que todos los importes coinciden exactamente con los valores de 'CÁLCULOS REALIZADOS'. Sé preciso y claro. Responde ÚNICAMENTE con el JSON.`,
@@ -133,6 +143,14 @@ const generatePayrollFlow = ai.defineFlow(
         const totalDeducciones = deduccionCC + deduccionDesempleo + deduccionFP + deduccionIrpf;
         const liquidoAPercibir = totalDevengado - totalDeducciones;
 
+        const antiguedad = input.hireDate ? format(new Date(input.hireDate), "dd MMM yyyy", { locale: es }) : 'N/A';
+        const [monthName, year] = input.paymentPeriod.split(' ');
+        const monthIndex = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].indexOf(monthName);
+        const startDate = new Date(parseInt(year), monthIndex, 1);
+        const endDate = new Date(parseInt(year), monthIndex + 1, 0);
+        const periodoLiquidacionDetallado = `Del ${format(startDate, 'dd/MM/yyyy')} al ${format(endDate, 'dd/MM/yyyy')}`;
+
+
         calculatedData = {
           salarioMensual,
           prorrataPagasExtra,
@@ -149,6 +167,8 @@ const generatePayrollFlow = ai.defineFlow(
           deduccionIrpf,
           totalDeducciones,
           liquidoAPercibir,
+          antiguedad,
+          periodoLiquidacionDetallado,
         };
 
     } catch (calcError) {

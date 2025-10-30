@@ -12,10 +12,13 @@ export const GeneratePayrollInputSchema = z.object({
   socialSecurityNumber: z.string().describe('Social Security affiliation number of the employee.'),
   contractType: z.enum(['Indefinido', 'Temporal', 'Formación', 'Prácticas']).describe('Type of contract.'),
   professionalGroup: z.string().describe('Professional category or group.'),
+  position: z.string().describe('El puesto del trabajador (ej. Comercial, Gerente).'),
+  hireDate: z.string().optional().describe('La fecha de contratación del empleado.'),
   grossAnnualSalary: z.number().describe('The total gross annual salary of the employee.'),
   paymentPeriod: z.string().describe('The month and year for the payslip (e.g., "Julio 2024").'),
   companyName: z.string().describe('The legal name of the company.'),
   cif: z.string().describe('The CIF of the company.'),
+  companyAddress: z.string().describe('La dirección fiscal de la empresa.'),
   contributionAccountCode: z.string().describe('The company\'s Social Security Contribution Account Code (Código de Cuenta de Cotización).'),
   additionalConcepts: z.array(AdditionalConceptSchema).optional().describe('An optional list of additional concepts to include in the accruals (devengos).'),
 });
@@ -29,8 +32,15 @@ const PayrollItemSchema = z.object({
 export const GeneratePayrollOutputSchema = z.object({
   header: z.object({
     companyName: z.string(),
+    companyCif: z.string(),
+    companyAddress: z.string(),
+    contributionAccountCode: z.string(),
     employeeName: z.string(),
-    period: z.string(),
+    employeeNif: z.string(),
+    employeeSocialSecurityNumber: z.string(),
+    employeeCategory: z.string(),
+    employeeSeniority: z.string().describe('Fecha de antigüedad, ej: "20 NOV 23"'),
+    paymentPeriod: z.string().describe('Periodo de liquidación detallado, ej: "Del 01/10/2024 al 31/10/2024"'),
   }),
   accruals: z.object({
     items: z.array(PayrollItemSchema).describe('List of salary accruals (devengos).'),

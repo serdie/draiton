@@ -95,12 +95,15 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         nif: employee.nif,
         socialSecurityNumber: employee.socialSecurityNumber,
         contractType: employee.contractType,
-        professionalGroup: 'Grupo 1 - Ingenieros y Licenciados',
+        professionalGroup: 'Grupo 1 - Ingenieros y Licenciados', // Placeholder
+        position: employee.position,
+        hireDate: (employee.hireDate as any)?.toDate().toISOString(), // Assuming hireDate is a Firestore Timestamp
         grossAnnualSalary: employee.grossAnnualSalary,
         paymentPeriod: period,
         companyName: user.company.name || 'Nombre Empresa no configurado',
         cif: user.company.cif || 'CIF no configurado',
-        contributionAccountCode: '28/1234567/89',
+        companyAddress: user.company.address ? `${user.company.address.addressLine1}, ${user.company.address.city}, ${user.company.address.postalCode}` : 'Dirección no configurada',
+        contributionAccountCode: '28/1234567/89', // Placeholder
         additionalConcepts: conceptsForAI,
     };
 
