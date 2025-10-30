@@ -130,8 +130,8 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         const result = await generatePayrollAction(input);
         if (result.error) {
              toast({ variant: 'destructive', title: 'Error al generar', description: result.error });
-        } else {
-            setGeneratedPayroll(result.data);
+        } else if (result.data) {
+            setGeneratedPayroll({ ...result.data, header: { ...result.data.header, paymentPeriod: period } });
         }
     } catch(e) {
         toast({ variant: 'destructive', title: 'Error', description: 'No se pudo contactar con el servicio de IA.' });
