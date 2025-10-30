@@ -25,6 +25,7 @@ import { ViewPayrollModal } from './view-payroll-modal';
 import { EditPayrollModal } from './edit-payroll-modal';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { Separator } from '@/components/ui/separator';
 
 interface GeneratePayrollModalProps {
   isOpen: boolean;
@@ -98,12 +99,12 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         nif: employee.nif,
         socialSecurityNumber: employee.socialSecurityNumber,
         contractType: employee.contractType,
-        professionalGroup: 'Grupo 1 - Ingenieros y Licenciados',
+        professionalGroup: 'Grupo 1 - Ingenieros y Licenciados', // Esto podría ser un campo del empleado
         grossAnnualSalary: employee.grossAnnualSalary,
         paymentPeriod: period,
         companyName: user.company.name || 'Nombre Empresa no configurado',
         cif: user.company.cif || 'CIF no configurado',
-        contributionAccountCode: '28/1234567/89',
+        contributionAccountCode: '28/1234567/89', // Ejemplo
         additionalConcepts: conceptsForAI,
     };
 
@@ -171,7 +172,7 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
           </div>
           
           <div className="space-y-2">
-            <Label>Conceptos Adicionales</Label>
+            <Label>Conceptos Adicionales (Opcional)</Label>
             <div className="space-y-2">
               {additionalConcepts.map(item => (
                 <div key={item.id} className="flex items-center gap-2">
@@ -196,9 +197,17 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
             </div>
             <Button variant="outline" size="sm" onClick={addConcept}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Añadir Concepto (Horas Extra, Bonus...)
+              Añadir Concepto
             </Button>
           </div>
+
+          <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Aviso Importante</AlertTitle>
+              <AlertDescription>
+                Los cálculos deben ser revisados y validados por un asesor profesional. La nómina podrá ser editada una vez guardada.
+              </AlertDescription>
+          </Alert>
           
           <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
               {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
@@ -206,13 +215,24 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
           </Button>
 
           {generatedPayroll && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Aviso Importante</AlertTitle>
-              <AlertDescription>
-                Los cálculos deben ser revisados y validados por un asesor profesional. La nómina podrá ser editada una vez guardada.
-              </AlertDescription>
-            </Alert>
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="font-semibold text-center">Borrador de Nómina Generado</h3>
+              <div className="p-4 rounded-lg bg-muted space-y-2 text-sm">
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Devengado:</span>
+                    <span className="font-semibold">{generatedPayroll.accruals.total.toFixed(2)}€</span>
+                </div>
+                 <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Deducciones:</span>
+                    <span className="font-semibold">{generatedPayroll.deductions.total.toFixed(2)}€</span>
+                </div>
+                 <Separator className="my-2"/>
+                 <div className="flex justify-between font-bold text-base">
+                    <span>Líquido a Percibir:</span>
+                    <span>{generatedPayroll.netPay.toFixed(2)}€</span>
+                </div>
+              </div>
+            </div>
           )}
         </div>
         
