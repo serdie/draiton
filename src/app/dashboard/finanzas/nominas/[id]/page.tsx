@@ -135,8 +135,8 @@ export default function EmployeePayrollHistoryPage() {
                   payrolls.map((payroll) => (
                     <TableRow key={payroll.id}>
                       <TableCell className="font-medium">{payroll.header.period}</TableCell>
-                      <TableCell>{payroll.accruals.total.toFixed(2)}€</TableCell>
-                      <TableCell>{payroll.deductions.total.toFixed(2)}€</TableCell>
+                      <TableCell>{payroll.summary.totalAccruals.toFixed(2)}€</TableCell>
+                      <TableCell>{payroll.summary.totalDeductions.toFixed(2)}€</TableCell>
                       <TableCell className="font-semibold">{payroll.netPay.toFixed(2)}€</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => setPayrollToView(payroll)}>
