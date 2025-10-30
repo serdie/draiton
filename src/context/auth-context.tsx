@@ -81,19 +81,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           photoURL: p.photoURL,
         }));
 
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-                uid: firebaseUser.uid,
-                displayName: firebaseUser.displayName,
-                email: firebaseUser.email,
-                photoURL: firebaseUser.photoURL,
-                role: 'free',
-                createdAt: serverTimestamp(),
-                providerData: freshProviderData,
-            });
-        } else {
-            await updateDoc(userDocRef, { providerData: freshProviderData });
+        try {
+            const userDoc = await getDoc(userDocRef);
+            if (!userDoc.exists()) {
+                await setDoc(userDocRef, {
+                    uid: firebaseUser.uid,
+                    displayName: firebaseUser.displayName,
+                    email: firebaseUser.email,
+                    photoURL: firebaseUser.photoURL,
+                    role: 'free',
+                    createdAt: serverTimestamp(),
+                    providerData: freshProviderData,
+                });
+            } else {
+                await updateDoc(userDocRef, { providerData: freshProviderData });
+            }
+        } catch (error) {
+             console.error("Error syncing user profile:", error);
+             // Continue loading user even if sync fails, but log the error
         }
 
 
@@ -139,10 +144,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (user && isAuthPage) {
       router.push('/dashboard');
-    }
-
-    if (!user && pathname !== '/' && !isAuthPage) {
-        router.push('/');
     }
     
   }, [user, loading, pathname, router]);
