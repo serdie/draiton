@@ -25,6 +25,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { updateEmployeeAction } from '@/lib/firebase/admin-actions';
+
 
 interface EditEmployeeModalProps {
   isOpen: boolean;
@@ -83,24 +85,19 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
         hireDate: hireDate || null,
       };
 
-      try {
-        const employeeRef = doc(db, "employees", employee.id);
-        await updateDoc(employeeRef, updatedData);
+      const result = await updateEmployeeAction(employee.id, updatedData);
 
-        const userRef = doc(db, "users", employee.id);
-        await updateDoc(userRef, { displayName: name, email: email });
-        
-        toast({
+      if (result.success) {
+         toast({
           title: 'Empleado Actualizado',
           description: `Los datos de ${name} se han guardado correctamente.`,
         });
         onClose();
-
-      } catch (error: any) {
-        toast({
+      } else {
+         toast({
           variant: 'destructive',
           title: 'Error al actualizar',
-          description: error.message || 'No se pudo actualizar el empleado.',
+          description: result.error || 'No se pudo actualizar el empleado.',
         });
       }
     });

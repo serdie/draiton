@@ -123,3 +123,43 @@ export async function createEmployeeUser(employeeData: {
 
   return { uid: userRecord.uid, tempPassword, message };
 }
+
+
+export async function updateEmployeeAction(employeeId: string, updatedData: any): Promise<{ success: boolean; error?: string }> {
+    const { db, auth } = getFirebaseAuth();
+
+    try {
+        const employeeRef = db.collection('employees').doc(employeeId);
+        const userRef = db.collection('users').doc(employeeId);
+        
+        // El objeto de datos que llega puede tener `email` y `name` en el nivel superior,
+        // que deben ir al documento de usuario, no al de empleado.
+        const { name, email, ...employeeSpecificData } = updatedData;
+
+        const batch = db.batch();
+
+        // Actualizar el documento del empleado
+        batch.update(employeeRef, employeeSpecificData);
+        
+        // Actualizar el documento de usuario
+        if (name || email) {
+            const userUpdatePayload: { [key: string]: any } = {};
+            if (name) userUpdatePayload.displayName = name;
+            if (email) userUpdatePayload.email = email;
+            batch.update(userRef, userUpdatePayload);
+        }
+
+        await batch.commit();
+        
+        // Actualizar el usuario en Firebase Authentication también si el email cambió
+        if (email) {
+            await auth.updateUser(employeeId, { email });
+        }
+
+        return { success: true };
+
+    } catch (error: any) {
+        console.error("Error al actualizar empleado:", error);
+        return { success: false, error: 'No se pudo actualizar el empleado en el servidor.' };
+    }
+}
