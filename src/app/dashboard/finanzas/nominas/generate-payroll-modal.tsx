@@ -22,7 +22,7 @@ import { type Employee } from '../empleados/types';
 import type { GeneratePayrollOutput, ReviewPayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { ViewPayrollModal } from './view-payroll-modal';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 interface GeneratePayrollModalProps {
@@ -90,6 +90,23 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         amount: parseFloat(c.amount) || 0
       }));
 
+    // Handle hireDate format, which might be a Date or a Firestore Timestamp
+    let hireDateString = '';
+    if (employee.hireDate) {
+        // Check if it's a Firestore Timestamp object
+        if (employee.hireDate instanceof Timestamp) {
+            hireDateString = employee.hireDate.toDate().toISOString();
+        } 
+        // If it's already a Date object (or a string that can be parsed)
+        else if (employee.hireDate instanceof Date) {
+            hireDateString = employee.hireDate.toISOString();
+        }
+        else {
+             hireDateString = new Date(employee.hireDate).toISOString();
+        }
+    }
+
+
     const input = {
         employeeName: employee.name,
         nif: employee.nif,
@@ -97,7 +114,7 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         contractType: employee.contractType,
         professionalGroup: 'Grupo 1 - Ingenieros y Licenciados', // Placeholder
         position: employee.position,
-        hireDate: (employee.hireDate as any)?.toDate ? (employee.hireDate as any).toDate().toISOString() : employee.hireDate,
+        hireDate: hireDateString,
         grossAnnualSalary: employee.grossAnnualSalary,
         paymentPeriod: period,
         paymentFrequency: employee.paymentFrequency || 'Mensual',
