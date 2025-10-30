@@ -70,6 +70,7 @@ export async function deleteAuthUser(uid: string): Promise<void> {
 export async function createEmployeeUser(employeeData: {
   email: string;
   name: string;
+  phone?: string;
   ownerId: string;
   position: string;
   nif: string;
@@ -95,7 +96,7 @@ export async function createEmployeeUser(employeeData: {
         emailVerified: true,
         password: tempPassword,
         displayName: employeeData.name,
-        disabled: false,
+        photoURL: '', // Provide a default or leave empty
       });
       message = `Se ha creado un usuario para ${employeeData.name}. Contraseña temporal: ${tempPassword}`;
     } else {
@@ -134,12 +135,12 @@ export async function updateEmployeeAction(employeeId: string, updatedData: any)
         
         // El objeto de datos que llega puede tener `email` y `name` en el nivel superior,
         // que deben ir al documento de usuario, no al de empleado.
-        const { name, email, ...employeeSpecificData } = updatedData;
+        const { name, email, phone, ...employeeSpecificData } = updatedData;
 
         const batch = db.batch();
 
         // Actualizar el documento del empleado
-        batch.update(employeeRef, employeeSpecificData);
+        batch.update(employeeRef, {...employeeSpecificData, phone: phone || null });
         
         // Actualizar el documento de usuario
         if (name || email) {
@@ -154,6 +155,9 @@ export async function updateEmployeeAction(employeeId: string, updatedData: any)
         // Actualizar el usuario en Firebase Authentication también si el email cambió
         if (email) {
             await auth.updateUser(employeeId, { email });
+        }
+         if (name) {
+            await auth.updateUser(employeeId, { displayName: name });
         }
 
         return { success: true };

@@ -41,6 +41,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
   // Form state initialized from employee prop
   const [name, setName] = useState(employee.name);
   const [email, setEmail] = useState(employee.email);
+  const [phone, setPhone] = useState(employee.phone || '');
   const [position, setPosition] = useState(employee.position);
   const [nif, setNif] = useState(employee.nif);
   const [socialSecurityNumber, setSocialSecurityNumber] = useState(employee.socialSecurityNumber);
@@ -56,6 +57,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
   useEffect(() => {
     setName(employee.name);
     setEmail(employee.email);
+    setPhone(employee.phone || '');
     setPosition(employee.position);
     setNif(employee.nif);
     setSocialSecurityNumber(employee.socialSecurityNumber);
@@ -79,6 +81,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
       const updatedData = {
         name,
         email,
+        phone,
         position,
         nif,
         socialSecurityNumber,
@@ -121,9 +124,15 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
               <Label htmlFor="edit-name">Nombre Completo</Label>
               <Input id="edit-name" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">Correo Electrónico</Label>
-              <Input id="edit-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Correo Electrónico</Label>
+                <Input id="edit-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">Teléfono</Label>
+                <Input id="edit-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </div>
             </div>
              <div className="space-y-2">
               <Label htmlFor="edit-position">Puesto</Label>

@@ -40,6 +40,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [position, setPosition] = useState('');
   const [nif, setNif] = useState('');
   const [socialSecurityNumber, setSocialSecurityNumber] = useState('');
@@ -52,6 +53,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const resetForm = () => {
     setName('');
     setEmail('');
+    setPhone('');
     setPosition('');
     setNif('');
     setSocialSecurityNumber('');
@@ -75,6 +77,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
       const employeeData = {
         name,
         email,
+        phone,
         position,
         nif,
         socialSecurityNumber,
@@ -138,9 +141,15 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
               <Label htmlFor="name">Nombre Completo</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                <Label htmlFor="email">Correo Electrónico</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                 <div className="space-y-2">
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                </div>
             </div>
              <div className="space-y-2">
               <Label htmlFor="position">Puesto</Label>

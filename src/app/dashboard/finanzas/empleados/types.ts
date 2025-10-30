@@ -5,6 +5,7 @@ export type Employee = {
     ownerId: string;
     name: string;
     email: string;
+    phone?: string;
     position: string;
     nif: string;
     socialSecurityNumber: string;
