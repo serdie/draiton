@@ -68,9 +68,7 @@ const prompt = ai.definePrompt({
 {{/if}}
 
 **CÁLCULOS REALIZADOS (Usa estos valores EXACTOS para rellenar la salida):**
-\`\`\`json
 {{{calculatedData}}}
-\`\`\`
 
 **Tu Tarea:**
 1.  Rellena la estructura JSON de salida (\`GeneratePayrollOutputSchema\`).
@@ -116,11 +114,15 @@ const generatePayrollFlow = ai.defineFlow(
         const liquidoAPercibir = totalDevengado - totalDeducciones;
 
         const antiguedad = input.hireDate ? format(new Date(input.hireDate), "dd MMM yyyy", { locale: es }) : 'N/A';
+        
+        // CORRECCIÓN: Usar 30 días para nóminas mensuales por defecto
         const [monthName, year] = input.paymentPeriod.split(' ');
         const monthIndex = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].indexOf(monthName);
         const startDate = new Date(parseInt(year), monthIndex, 1);
         const endDate = new Date(parseInt(year), monthIndex + 1, 0);
-        const periodoLiquidacionDetallado = `Del ${format(startDate, 'dd/MM/yyyy')} al ${format(endDate, 'dd/MM/yyyy')}`;
+        
+        const totalDays = input.paymentFrequency === 'Mensual' ? 30 : endDate.getDate();
+        const periodoLiquidacionDetallado = `Del ${format(startDate, 'dd/MM/yyyy')} al ${format(endDate, 'dd/MM/yyyy')} (${totalDays} días)`;
 
 
         calculatedData = {
@@ -141,6 +143,7 @@ const generatePayrollFlow = ai.defineFlow(
           liquidoAPercibir,
           antiguedad,
           periodoLiquidacionDetallado,
+          totalDays,
         };
 
     } catch (calcError) {
