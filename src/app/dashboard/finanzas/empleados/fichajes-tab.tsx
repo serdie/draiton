@@ -28,7 +28,7 @@ export function FichajesTab() {
     useEffect(() => {
         if (!user) return;
 
-        const employeesQuery = query(collection(db, 'employees'), where('companyOwnerId', '==', user.uid));
+        const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
