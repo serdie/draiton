@@ -34,16 +34,18 @@ interface ViewPayrollModalProps {
 }
 
 // Helper function to sanitize data for Firestore
-const sanitizeForFirestore = (data: any) => {
+const sanitizeForFirestore = (data: any): any => {
+  if (data === undefined) {
+    return null;
+  }
   if (Array.isArray(data)) {
     return data.map(item => sanitizeForFirestore(item));
   }
-  if (data !== null && typeof data === 'object') {
+  if (data !== null && typeof data === 'object' && !(data instanceof Date)) {
     const sanitizedObject: { [key: string]: any } = {};
     for (const key in data) {
       if (Object.prototype.hasOwnProperty.call(data, key)) {
-        const value = data[key];
-        sanitizedObject[key] = value === undefined ? null : sanitizeForFirestore(value);
+        sanitizedObject[key] = sanitizeForFirestore(data[key]);
       }
     }
     return sanitizedObject;

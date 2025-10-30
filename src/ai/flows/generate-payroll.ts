@@ -76,8 +76,8 @@ const prompt = ai.definePrompt({
 1.  Rellena la estructura JSON de salida (\`GeneratePayrollOutputSchema\`).
 2.  En \`header\`, completa TODOS los campos usando los datos proporcionados.
 3.  En \`accruals.items\`, crea una línea para cada devengo: Salario Base, Prorrata Pagas Extra (si aplica), y los conceptos adicionales.
-    - Para "Salario Base", usa el código '001', la cuantía de días calculada y el precio/día calculado para que el total coincida.
-    - Para "Prorrata Pagas Extra", si aplica, usa el código '002', la cuantía de 2.00 (dos pagas) y el precio de la prorrata mensual.
+    - Para "Salario Base", usa el código '001', la cuantía de '30.00' días y el precio/día calculado para que el total coincida con 'salarioBaseMensual'.
+    - Para "Prorrata Pagas Extra", si aplica, usa el código '002', la cuantía '2.00' (dos pagas) y el precio correspondiente al valor de la prorrata mensual.
 4. En \`deductions.items\`, crea una línea para cada deducción: Contingencias Comunes, Desempleo, Formación Profesional e IRPF. Usa los importes calculados. Para el IRPF, indica el tipo de retención.
 5.  Calcula los totales de devengos y deducciones en los campos \`total\` de cada sección.
 6.  Asegúrate de que el \`netPay\` coincide con el calculado.
@@ -98,18 +98,17 @@ const generatePayrollFlow = ai.defineFlow(
     // --- PASO 1: CÁLCULOS EN TYPESCRIPT ---
     let calculatedData: any = {};
     try {
-        const salarioBaseAnual = input.proratedExtraPays ? input.grossAnnualSalary : (input.grossAnnualSalary / 14) * 12;
-        const salarioBaseMensual = salarioBaseAnual / 12;
+        const salarioAnual = input.grossAnnualSalary;
+        const salarioBaseMensual = salarioAnual / 14;
 
-        const pagasExtraAnuales = input.grossAnnualSalary - salarioBaseAnual;
-        const prorrataPagasExtraMensual = input.proratedExtraPays ? pagasExtraAnuales / 12 : 0;
+        const prorrataPagasExtraMensual = input.proratedExtraPays ? (salarioBaseMensual * 2) / 12 : 0;
         
         const totalConceptosAdicionales = input.additionalConcepts?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
-        const totalDevengado = salarioBaseMensual + totalConceptosAdicionales;
+        const totalDevengado = salarioBaseMensual + prorrataPagasExtraMensual + totalConceptosAdicionales;
 
-        const bccc = totalDevengado + prorrataPagasExtraMensual;
-        const bccp = bccc; 
-        const baseIrpf = bccc;
+        const bccc = totalDevengado;
+        const bccp = totalDevengado;
+        const baseIrpf = totalDevengado;
 
         const deduccionCC = bccc * TIPO_CONTINGENCIAS_COMUNES;
         const tipoDesempleo = input.contractType === 'Indefinido' ? TIPO_DESEMPLEO_INDEFINIDO : TIPO_DESEMPLEO_TEMPORAL;
@@ -118,7 +117,7 @@ const generatePayrollFlow = ai.defineFlow(
         const deduccionIrpf = baseIrpf * TIPO_IRPF_ESTIMADO; 
         
         const totalDeducciones = deduccionCC + deduccionDesempleo + deduccionFP + deduccionIrpf;
-        const liquidoAPercibir = bccc - totalDeducciones;
+        const liquidoAPercibir = totalDevengado - totalDeducciones;
 
         const antiguedad = input.hireDate ? format(new Date(input.hireDate), "dd MMM yyyy", { locale: es }) : 'N/A';
         
@@ -127,7 +126,7 @@ const generatePayrollFlow = ai.defineFlow(
         const startDate = new Date(parseInt(year), monthIndex, 1);
         const endDate = new Date(parseInt(year), monthIndex + 1, 0);
         
-        const totalDays = input.paymentFrequency === 'Mensual' ? 30 : endDate.getDate();
+        const totalDays = 30; // Siempre 30 días para nómina mensual
         const periodoLiquidacionDetallado = `Del ${format(startDate, 'dd/MM/yyyy')} al ${format(endDate, 'dd/MM/yyyy')} (${totalDays} días)`;
 
 
@@ -171,7 +170,7 @@ const generatePayrollFlow = ai.defineFlow(
 
       const parsed = GeneratePayrollOutputSchema.safeParse(output);
       if (!parsed.success) {
-        console.error('Error de Zod en generatePayroll:', parsed.error);
+        console.error('Error de Zod en generatePayroll:', parsed.error.flatten());
         throw new Error('La IA ha devuelto una nómina con formato inesperado.');
       }
       return parsed.data;
@@ -183,5 +182,4 @@ const generatePayrollFlow = ai.defineFlow(
     }
   }
 );
-
     
