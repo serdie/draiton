@@ -5,33 +5,68 @@ service cloud.firestore {
 
     // Helper function to check ownership
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    // By default, deny all reads and writes
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    // Allow users to read and update their own profile, but not delete it or create others.
-    // Allow any authenticated user to read a user's public data (displayName, photoURL)
+    // Allow users to read and update their own profile
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if isOwner(userId) && request.resource.data.uid == userId;
-      allow update: if isOwner(userId);
-      allow delete: if false;
+      allow read, update: if isOwner(userId);
+      // Allow authenticated users to read other users' basic info for assignments
+      allow list: if request.auth != null;
+    }
+
+    // Allow users to manage their own projects
+    match /projects/{projectId} {
+      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
+      // Composite index for dashboard query
+      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
     }
     
-    // Generic rule for collections where documents have an 'ownerId'
-    // This applies to projects, tasks, invoices, expenses, contacts, employees, fichajes
-    match /{collection}/{docId} {
-        allow read, write: if request.auth != null && isOwner(request.resource.data.ownerId); // For create, update, delete
-        allow read, write: if request.auth != null && isOwner(get(after docId).data.ownerId); // For read
+    // Allow users to manage their own tasks
+    match /tasks/{taskId} {
+      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
+      // Allow list for project-specific and user-specific queries
+      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
     }
 
-    // Specific rule for Projects to allow querying by status
-    match /projects/{projectId} {
-       allow read, write: if request.auth != null && isOwner(resource.data.ownerId);
+    // Allow users to manage their own invoices and financial documents
+    match /invoices/{invoiceId} {
+      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
+      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
+    }
+    
+    // Allow users to manage their own expenses
+    match /expenses/{expenseId} {
+      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
+      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
+    }
+    
+    // Allow users to manage their own contacts
+    match /contacts/{contactId} {
+      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
+      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
+    }
+
+    // Allow users to manage their own employees
+    match /employees/{employeeId} {
+      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
+      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
+    }
+
+    // Allow a company owner to read all clock-ins for their company.
+    // Allow an employee to read their own clock-ins.
+    match /fichajes/{fichajeId} {
+      allow read: if request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyOwnerId == resource.data.ownerId || request.auth.uid == resource.data.employeeId);
+      allow create: if isOwner(request.resource.data.ownerId);
+      allow list: if request.auth != null && request.query.where.size() > 0 && (
+          (request.query.where[0][0] == "ownerId" && request.query.where[0][2] == request.auth.uid) ||
+          (request.query.where[0][0] == "employeeId" && request.query.where[0][2] == request.auth.uid)
+      );
+    }
+    
+    // Default deny all other requests
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
