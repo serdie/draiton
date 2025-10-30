@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { type Employee } from '@/app/dashboard/finanzas/empleados/types';
 import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
@@ -27,13 +27,15 @@ export default function EmployeePayrollHistoryPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Retrieve employee data from sessionStorage
-    const storedEmployee = sessionStorage.getItem('selectedEmployee');
-    if (storedEmployee) {
-      const parsedEmployee = JSON.parse(storedEmployee);
-      if(parsedEmployee.id === employeeId) {
-        setEmployee(parsedEmployee);
-      }
+    // Retrieve employee data from sessionStorage safely
+    if (typeof window !== 'undefined') {
+        const storedEmployee = sessionStorage.getItem('selectedEmployee');
+        if (storedEmployee) {
+          const parsedEmployee = JSON.parse(storedEmployee);
+          if(parsedEmployee.id === employeeId) {
+            setEmployee(parsedEmployee);
+          }
+        }
     }
     
     if (!employeeId) {
@@ -49,13 +51,15 @@ export default function EmployeePayrollHistoryPage() {
       
        const monthOrder = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         payrollsList.sort((a, b) => {
-            const [monthAStr, yearAStr] = a.header.period.split(' ');
-            const [monthBStr, yearBStr] = b.header.period.split(' ');
+            const [monthAStr, yearAStr] = (a.header?.period || '').split(' ');
+            const [monthBStr, yearBStr] = (b.header?.period || '').split(' ');
             
             const monthA = monthOrder.indexOf(monthAStr);
             const yearA = parseInt(yearAStr);
             const monthB = monthOrder.indexOf(monthBStr);
             const yearB = parseInt(yearBStr);
+
+            if (isNaN(yearA) || isNaN(yearB) || monthA < 0 || monthB < 0) return 0;
 
             const dateA = new Date(yearA, monthA);
             const dateB = new Date(yearB, monthB);
