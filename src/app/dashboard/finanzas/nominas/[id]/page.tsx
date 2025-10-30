@@ -51,8 +51,8 @@ export default function EmployeePayrollHistoryPage() {
       
        const monthOrder = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         payrollsList.sort((a, b) => {
-            const [monthAStr, yearAStr] = (a.header?.period || '').split(' ');
-            const [monthBStr, yearBStr] = (b.header?.period || '').split(' ');
+            const [monthAStr, yearAStr] = (a.header?.paymentPeriod || '').split(' ');
+            const [monthBStr, yearBStr] = (b.header?.paymentPeriod || '').split(' ');
             
             const monthA = monthOrder.indexOf(monthAStr);
             const yearA = parseInt(yearAStr);
@@ -140,7 +140,7 @@ export default function EmployeePayrollHistoryPage() {
                 {payrolls.length > 0 ? (
                   payrolls.map((payroll) => (
                     <TableRow key={payroll.id}>
-                      <TableCell className="font-medium">{payroll.header?.period || 'Periodo no especificado'}</TableCell>
+                      <TableCell className="font-medium">{payroll.header?.paymentPeriod || 'Periodo no especificado'}</TableCell>
                       <TableCell>{(payroll.summary?.totalAccruals ?? 0).toFixed(2)}€</TableCell>
                       <TableCell>{(payroll.summary?.totalDeductions ?? 0).toFixed(2)}€</TableCell>
                       <TableCell className="font-semibold">{(payroll.netPay ?? 0).toFixed(2)}€</TableCell>
