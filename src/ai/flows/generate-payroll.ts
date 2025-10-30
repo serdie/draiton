@@ -68,14 +68,16 @@ const prompt = ai.definePrompt({
 {{/if}}
 
 **CÁLCULOS REALIZADOS (Usa estos valores EXACTOS para rellenar la salida):**
+\`\`\`json
 {{{calculatedData}}}
+\`\`\`
 
 **Tu Tarea:**
 1.  Rellena la estructura JSON de salida (\`GeneratePayrollOutputSchema\`).
 2.  En \`header\`, completa TODOS los campos usando los datos proporcionados.
 3.  En \`body.items\`, crea una línea para cada devengo y deducción. Incluye código, cuantía (ej. 30 para días), precio (ej. salario/30) y los totales.
-    - **Devengos:** Salario Base, Prorrata Pagas Extra (si aplica), y los conceptos adicionales.
-    - **Deducciones:** Contingencias Comunes, Desempleo, MEI, Formación Profesional e IRPF.
+    - **Devengos:** Salario Base, Prorrata Pagas Extra (si aplica), y los conceptos adicionales. Para "Prorrata Pagas Extra", la cuantía debe ser 2.00 y el precio el valor calculado de la prorrata mensual.
+    - **Deducciones:** Contingencias Comunes, Desempleo, y Formación Profesional. Para el IRPF, indica el tipo de retención.
 4.  Calcula los totales de devengos y deducciones en \`summary\`.
 5.  Asegúrate de que el \`netPay\` coincide con el calculado.
 6.  Completa la sección de bases de cotización.
@@ -95,10 +97,11 @@ const generatePayrollFlow = ai.defineFlow(
     // --- PASO 1: CÁLCULOS EN TYPESCRIPT ---
     let calculatedData: any = {};
     try {
-        const salarioMensual = input.grossAnnualSalary / 12; // Asumimos 12 pagas
-        const prorrataPagasExtra = 0; // Simplificación: Asumimos 12 pagas, no hay prorrata.
+        const salarioBaseMensual = input.grossAnnualSalary / 14; // El salario base se calcula sobre 14 pagas
+        const prorrataPagasExtra = input.proratedExtraPays ? (salarioBaseMensual * 2) / 12 : 0;
+        
         const totalConceptosAdicionales = input.additionalConcepts?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
-        const totalDevengado = salarioMensual + prorrataPagasExtra + totalConceptosAdicionales;
+        const totalDevengado = salarioBaseMensual + prorrataPagasExtra + totalConceptosAdicionales;
 
         const bccc = totalDevengado; 
         const bccp = totalDevengado; 
@@ -115,7 +118,6 @@ const generatePayrollFlow = ai.defineFlow(
 
         const antiguedad = input.hireDate ? format(new Date(input.hireDate), "dd MMM yyyy", { locale: es }) : 'N/A';
         
-        // CORRECCIÓN: Usar 30 días para nóminas mensuales por defecto
         const [monthName, year] = input.paymentPeriod.split(' ');
         const monthIndex = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].indexOf(monthName);
         const startDate = new Date(parseInt(year), monthIndex, 1);
@@ -126,7 +128,7 @@ const generatePayrollFlow = ai.defineFlow(
 
 
         calculatedData = {
-          salarioMensual,
+          salarioBaseMensual,
           prorrataPagasExtra,
           totalConceptosAdicionales,
           totalDevengado,
