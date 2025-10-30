@@ -32,8 +32,8 @@ const PayrollItemSchema = z.object({
     concept: z.string().describe('Nombre del concepto (ej. "Salario Base").'),
     quantity: z.number().describe('Unidades (ej. 30 días).'),
     price: z.number().describe('Precio por unidad (ej. salario diario).'),
-    accrual: z.number().optional().describe('Importe del devengo (si aplica).'),
-    deduction: z.number().optional().describe('Importe de la deducción (si aplica).'),
+    accrual: z.number().nullable().describe('Importe del devengo (si aplica).'),
+    deduction: z.number().nullable().describe('Importe de la deducción (si aplica).'),
 });
 
 const AccrualsDeductionsSchema = z.object({
@@ -55,9 +55,6 @@ export const GeneratePayrollOutputSchema = z.object({
     employeeSeniority: z.string().describe('Fecha de antigüedad, ej: "20 NOV 23"'),
     paymentPeriod: z.string().describe('Periodo de liquidación detallado, ej: "Del 01/10/2024 al 31/10/2024"'),
     totalDays: z.number().describe('Total de días del periodo, ej. 30'),
-  }),
-  body: z.object({
-    items: z.array(PayrollItemSchema).describe('Lista detallada de todos los conceptos de la nómina.'),
   }),
   accruals: AccrualsDeductionsSchema,
   deductions: AccrualsDeductionsSchema,
