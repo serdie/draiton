@@ -200,6 +200,11 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
               Añadir Concepto
             </Button>
           </div>
+          
+          <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
+              {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+              Generar Nómina
+          </Button>
 
           <Alert>
               <AlertCircle className="h-4 w-4" />
@@ -208,11 +213,6 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
                 Los cálculos deben ser revisados y validados por un asesor profesional. La nómina podrá ser editada una vez guardada.
               </AlertDescription>
           </Alert>
-          
-          <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
-              {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
-              Generar Nómina
-          </Button>
 
           {generatedPayroll && (
             <div className="space-y-4 pt-4 border-t">
