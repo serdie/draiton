@@ -147,45 +147,47 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
                  </div>
 
                 {/* --- BODY --- */}
-                <div className="mt-4 grid grid-cols-2 gap-x-8">
-                   <div>
-                       <h4 className="font-semibold text-center mb-2">DEVENGOS</h4>
-                        <Table>
-                           <TableHeader>
-                               <TableRow>
-                                    <TableHead className="text-black w-6/12">Concepto</TableHead>
-                                    <TableHead className="text-black text-right">Importe</TableHead>
-                               </TableRow>
-                           </TableHeader>
-                            <TableBody>
-                                {currentPayroll.accruals.items.map((item, index) => (
-                                    <TableRow key={`accrual-${index}`}>
-                                        <TableCell>{item.concept}</TableCell>
-                                        <TableCell className="text-right">{item.accrual?.toFixed(2)}€</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                   </div>
-                   <div>
-                        <h4 className="font-semibold text-center mb-2">DEDUCCIONES</h4>
-                        <Table>
-                            <TableHeader>
-                               <TableRow>
-                                    <TableHead className="text-black w-6/12">Concepto</TableHead>
-                                    <TableHead className="text-black text-right">Importe</TableHead>
-                               </TableRow>
-                           </TableHeader>
-                            <TableBody>
-                                 {currentPayroll.deductions.items.map((item, index) => (
-                                    <TableRow key={`deduction-${index}`}>
-                                        <TableCell>{item.concept}</TableCell>
-                                        <TableCell className="text-right">{item.deduction?.toFixed(2)}€</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                   </div>
+                <div className="mt-4">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="text-black font-semibold w-[60px]">Código</TableHead>
+                                <TableHead className="text-black font-semibold">Concepto</TableHead>
+                                <TableHead className="text-black font-semibold text-right">Cuantía</TableHead>
+                                <TableHead className="text-black font-semibold text-right">Precio</TableHead>
+                                <TableHead className="text-black font-semibold text-right">Devengo</TableHead>
+                                <TableHead className="text-black font-semibold text-right">Deducción</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow className="bg-gray-50">
+                                <TableCell colSpan={6} className="font-bold text-black py-1">I. DEVENGOS</TableCell>
+                            </TableRow>
+                             {currentPayroll.accruals.items.map((item, index) => (
+                                <TableRow key={`accrual-${index}`}>
+                                    <TableCell>{item.code}</TableCell>
+                                    <TableCell>{item.concept}</TableCell>
+                                    <TableCell className="text-right">{item.quantity.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right">{item.price.toFixed(2)}€</TableCell>
+                                    <TableCell className="text-right font-medium">{item.accrual?.toFixed(2)}€</TableCell>
+                                    <TableCell></TableCell>
+                                </TableRow>
+                            ))}
+                             <TableRow className="bg-gray-50">
+                                <TableCell colSpan={6} className="font-bold text-black py-1">II. DEDUCCIONES</TableCell>
+                            </TableRow>
+                            {currentPayroll.deductions.items.map((item, index) => (
+                                <TableRow key={`deduction-${index}`}>
+                                    <TableCell>{item.code}</TableCell>
+                                    <TableCell>{item.concept}</TableCell>
+                                    <TableCell className="text-right">{item.quantity > 0 ? item.quantity.toFixed(2) : ''}</TableCell>
+                                    <TableCell className="text-right">{item.price > 0 ? `${item.price.toFixed(2)}%` : ''}</TableCell>
+                                    <TableCell></TableCell>
+                                    <TableCell className="text-right font-medium">{item.deduction?.toFixed(2)}€</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </div>
                 
                 {/* --- FOOTER --- */}
@@ -243,3 +245,5 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
     </>
   );
 }
+
+    

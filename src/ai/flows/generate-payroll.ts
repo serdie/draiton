@@ -32,7 +32,7 @@ export async function generatePayroll(input: GeneratePayrollInput): Promise<Gene
 
 
 const GeneratePayrollPromptInputSchema = GeneratePayrollInputSchema.extend({
-  calculatedData: z.any().describe("Objeto que contiene todos los importes ya calculados por el sistema.")
+  calculatedData: z.string().describe("Objeto JSON como string que contiene todos los importes ya calculados por el sistema.")
 });
 
 const prompt = ai.definePrompt({
@@ -75,12 +75,13 @@ const prompt = ai.definePrompt({
 **Tu Tarea:**
 1.  Rellena la estructura JSON de salida (\`GeneratePayrollOutputSchema\`).
 2.  En \`header\`, completa TODOS los campos usando los datos proporcionados.
-3.  En \`body.items\`, crea una línea para cada devengo y deducción. Incluye código, cuantía (ej. 30 para días), precio (ej. salario/30) y los totales.
-    - **Devengos:** Salario Base, Prorrata Pagas Extra (si aplica), y los conceptos adicionales. Para "Prorrata Pagas Extra", la cuantía debe ser 2.00 y el precio el valor calculado de la prorrata mensual.
-    - **Deducciones:** Contingencias Comunes, Desempleo, y Formación Profesional. Para el IRPF, indica el tipo de retención.
-4.  Calcula los totales de devengos y deducciones en \`summary\`.
-5.  Asegúrate de que el \`netPay\` coincide con el calculado.
-6.  Completa la sección de bases de cotización.
+3.  En \`accruals.items\`, crea una línea para cada devengo: Salario Base, Prorrata Pagas Extra (si aplica), y los conceptos adicionales.
+    - Para "Salario Base", usa el código '001', la cuantía de días calculada y el precio/día calculado para que el total coincida.
+    - Para "Prorrata Pagas Extra", si aplica, usa el código '002', la cuantía de 2.00 (dos pagas) y el precio de la prorrata mensual.
+4. En \`deductions.items\`, crea una línea para cada deducción: Contingencias Comunes, Desempleo, Formación Profesional e IRPF. Usa los importes calculados. Para el IRPF, indica el tipo de retención.
+5.  Calcula los totales de devengos y deducciones en los campos \`total\` de cada sección.
+6.  Asegúrate de que el \`netPay\` coincide con el calculado.
+7.  Completa la sección de bases de cotización.
 
 Sé preciso y profesional. Responde ÚNICAMENTE con el JSON.`,
 });
@@ -97,15 +98,18 @@ const generatePayrollFlow = ai.defineFlow(
     // --- PASO 1: CÁLCULOS EN TYPESCRIPT ---
     let calculatedData: any = {};
     try {
-        const salarioBaseMensual = input.grossAnnualSalary / 14; // El salario base se calcula sobre 14 pagas
-        const prorrataPagasExtra = input.proratedExtraPays ? (salarioBaseMensual * 2) / 12 : 0;
+        const salarioBaseAnual = input.proratedExtraPays ? input.grossAnnualSalary : (input.grossAnnualSalary / 14) * 12;
+        const salarioBaseMensual = salarioBaseAnual / 12;
+
+        const pagasExtraAnuales = input.grossAnnualSalary - salarioBaseAnual;
+        const prorrataPagasExtraMensual = input.proratedExtraPays ? pagasExtraAnuales / 12 : 0;
         
         const totalConceptosAdicionales = input.additionalConcepts?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
-        const totalDevengado = salarioBaseMensual + prorrataPagasExtra + totalConceptosAdicionales;
+        const totalDevengado = salarioBaseMensual + totalConceptosAdicionales;
 
-        const bccc = totalDevengado; 
-        const bccp = totalDevengado; 
-        const baseIrpf = totalDevengado;
+        const bccc = totalDevengado + prorrataPagasExtraMensual;
+        const bccp = bccc; 
+        const baseIrpf = bccc;
 
         const deduccionCC = bccc * TIPO_CONTINGENCIAS_COMUNES;
         const tipoDesempleo = input.contractType === 'Indefinido' ? TIPO_DESEMPLEO_INDEFINIDO : TIPO_DESEMPLEO_TEMPORAL;
@@ -114,7 +118,7 @@ const generatePayrollFlow = ai.defineFlow(
         const deduccionIrpf = baseIrpf * TIPO_IRPF_ESTIMADO; 
         
         const totalDeducciones = deduccionCC + deduccionDesempleo + deduccionFP + deduccionIrpf;
-        const liquidoAPercibir = totalDevengado - totalDeducciones;
+        const liquidoAPercibir = bccc - totalDeducciones;
 
         const antiguedad = input.hireDate ? format(new Date(input.hireDate), "dd MMM yyyy", { locale: es }) : 'N/A';
         
@@ -129,7 +133,8 @@ const generatePayrollFlow = ai.defineFlow(
 
         calculatedData = {
           salarioBaseMensual,
-          prorrataPagasExtra,
+          salarioDiario: salarioBaseMensual / 30,
+          prorrataPagasExtraMensual,
           totalConceptosAdicionales,
           totalDevengado,
           bccc,
@@ -178,3 +183,5 @@ const generatePayrollFlow = ai.defineFlow(
     }
   }
 );
+
+    
