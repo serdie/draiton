@@ -23,7 +23,7 @@ import type { Employee } from './types';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface EditEmployeeModalProps {
@@ -44,9 +44,11 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
   const [socialSecurityNumber, setSocialSecurityNumber] = useState(employee.socialSecurityNumber);
   const [contractType, setContractType] = useState(employee.contractType);
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
-  const [hireDate, setHireDate] = useState<Date | undefined>(
-    employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : employee.hireDate
-  );
+  const [hireDate, setHireDate] = useState<Date | undefined>(() => {
+    if (!employee.hireDate) return undefined;
+    const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
+    return isValid(date) ? date : undefined;
+  });
 
   useEffect(() => {
     setName(employee.name);
@@ -56,7 +58,14 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
     setSocialSecurityNumber(employee.socialSecurityNumber);
     setContractType(employee.contractType);
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
-    setHireDate(employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : employee.hireDate);
+    if (employee.hireDate) {
+      const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
+       if (isValid(date)) {
+        setHireDate(date);
+      }
+    } else {
+        setHireDate(undefined);
+    }
   }, [employee]);
   
   const handleUpdate = (e: React.FormEvent) => {
@@ -71,7 +80,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
         socialSecurityNumber,
         contractType,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
-        hireDate,
+        hireDate: hireDate || null,
       };
 
       try {
