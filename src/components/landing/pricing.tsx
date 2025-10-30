@@ -79,6 +79,7 @@ export function Pricing() {
             width={100}
             height={100}
             className="absolute top-4 right-4"
+            style={{ height: 'auto' }}
             data-ai-hint="verifactu logo"
           />
           <CardHeader>
@@ -111,6 +112,7 @@ export function Pricing() {
                 width={100}
                 height={100}
                 className="absolute top-4 right-4"
+                style={{ height: 'auto' }}
                 data-ai-hint="verifactu logo"
             />
           <CardHeader>

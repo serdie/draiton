@@ -1,0 +1,107 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check ownership
+    function isOwner(resource) {
+      return request.auth != null && request.auth.uid == resource.data.ownerId;
+    }
+
+    // Helper function to check if the user is an employee of the company
+    function isEmployeeOf(companyOwnerId) {
+       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyOwnerId == companyOwnerId;
+    }
+
+    // Helper function to check if the user is the owner of the company
+    function isCompanyOwner(resource) {
+      return request.auth != null && request.auth.uid == resource.data.companyOwnerId;
+    }
+    
+    // Regla para perfiles de usuario:
+    // - Cualquiera puede crear su propio perfil.
+    // - Solo el propio usuario puede leer o actualizar su perfil.
+    match /users/{userId} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      // Permite a los dueños de empresa leer los datos de sus empleados
+      allow list: if request.auth != null;
+    }
+
+    // Regla para proyectos:
+    // - Solo el propietario puede gestionar sus proyectos.
+    match /projects/{projectId} {
+      allow read, write: if isOwner(resource);
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      // Permite listar los proyectos del usuario
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
+    }
+
+    // Regla para tareas:
+    // - Solo el propietario puede gestionar sus tareas.
+    match /tasks/{taskId} {
+      allow read, write: if isOwner(resource);
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+       // Permite listar las tareas del usuario
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
+    }
+
+    // Regla para facturas, presupuestos, etc.
+    match /invoices/{invoiceId} {
+      allow read, write: if isOwner(resource);
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+       // Permite listar los documentos del usuario
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
+    }
+
+    // Regla para gastos
+    match /expenses/{expenseId} {
+      allow read, write: if isOwner(resource);
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+       // Permite listar los gastos del usuario
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
+    }
+    
+    // Regla para contactos (CRM)
+    match /contacts/{contactId} {
+      allow read, write: if isOwner(resource);
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      // Permite listar los contactos del usuario
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
+    }
+
+    // Regla para empleados:
+    // - El dueño de la empresa puede gestionar a sus empleados.
+    // - Un empleado puede leer sus propios datos.
+    match /employees/{employeeId} {
+      allow read: if request.auth != null && (request.auth.uid == employeeId || request.auth.uid == resource.data.ownerId);
+      allow write: if request.auth != null && request.auth.uid == resource.data.ownerId; // Solo el dueño crea/actualiza/borra
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
+    }
+
+    // Regla para fichajes (control horario)
+    // - Un empleado puede crear sus propios fichajes.
+    // - El dueño de la empresa puede leer todos los fichajes de sus empleados.
+    match /fichajes/{fichajeId} {
+      allow create: if request.auth != null && request.resource.data.employeeId == request.auth.uid;
+      allow read: if request.auth != null && (isOwner(resource) || request.auth.uid == resource.data.employeeId);
+      allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
+    }
+    
+    // Regla para nóminas
+    // - El dueño de la empresa puede gestionar las nóminas
+    // - El empleado puede leer sus propias nóminas
+    match /payrolls/{payrollId} {
+        allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+        allow read: if request.auth != null && (isOwner(resource) || request.auth.uid == resource.data.employeeId);
+        allow write: if isOwner(resource);
+        allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
+    }
+
+    // Deniega por defecto cualquier otro acceso que no coincida con las reglas anteriores.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
