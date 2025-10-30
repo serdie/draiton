@@ -10,7 +10,7 @@ export const GeneratePayrollInputSchema = z.object({
   employeeName: z.string().describe('Full name of the employee.'),
   nif: z.string().describe('NIF/NIE of the employee.'),
   socialSecurityNumber: z.string().describe('Social Security affiliation number of the employee.'),
-  contractType: z.string().describe('Type of contract (e.g., Indefinido, Temporal).'),
+  contractType: z.enum(['Indefinido', 'Temporal', 'Formación', 'Prácticas']).describe('Type of contract.'),
   professionalGroup: z.string().describe('Professional category or group.'),
   grossAnnualSalary: z.number().describe('The total gross annual salary of the employee.'),
   paymentPeriod: z.string().describe('The month and year for the payslip (e.g., "Julio 2024").'),

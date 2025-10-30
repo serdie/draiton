@@ -14,18 +14,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Sparkles, FileSignature, AlertCircle, Trash2, PlusCircle } from 'lucide-react';
+import { Loader2, Sparkles, FileSignature, AlertCircle, Trash2, PlusCircle, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
-import { generatePayrollAction } from './actions';
+import { generatePayrollAction, reviewPayrollAction } from './actions';
 import { type Employee } from '../empleados/types';
-import type { GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
+import type { GeneratePayrollOutput, ReviewPayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { ViewPayrollModal } from './view-payroll-modal';
-import { EditPayrollModal } from './edit-payroll-modal';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Separator } from '@/components/ui/separator';
 
 interface GeneratePayrollModalProps {
   isOpen: boolean;
@@ -46,7 +44,6 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
   const { user } = useContext(AuthContext);
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   
   const [period, setPeriod] = useState(`${months[new Date().getMonth()]} ${currentYear}`);
   const [additionalConcepts, setAdditionalConcepts] = useState<AdditionalConcept[]>([]);
@@ -54,7 +51,6 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
 
   const resetState = () => {
     setIsGenerating(false);
-    setIsSaving(false);
     setGeneratedPayroll(null);
     setAdditionalConcepts([]);
     setPeriod(`${months[new Date().getMonth()]} ${currentYear}`);
@@ -99,12 +95,12 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         nif: employee.nif,
         socialSecurityNumber: employee.socialSecurityNumber,
         contractType: employee.contractType,
-        professionalGroup: 'Grupo 1 - Ingenieros y Licenciados', // Esto podría ser un campo del empleado
+        professionalGroup: 'Grupo 1 - Ingenieros y Licenciados',
         grossAnnualSalary: employee.grossAnnualSalary,
         paymentPeriod: period,
         companyName: user.company.name || 'Nombre Empresa no configurado',
         cif: user.company.cif || 'CIF no configurado',
-        contributionAccountCode: '28/1234567/89', // Ejemplo
+        contributionAccountCode: '28/1234567/89',
         additionalConcepts: conceptsForAI,
     };
 
@@ -114,7 +110,6 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
              toast({ variant: 'destructive', title: 'Error al generar', description: result.error });
         } else {
             setGeneratedPayroll(result.data);
-             toast({ title: 'Nómina generada con IA', description: 'Revisa el borrador de la nómina antes de guardarla.' });
         }
     } catch(e) {
         toast({ variant: 'destructive', title: 'Error', description: 'No se pudo contactar con el servicio de IA.' });
@@ -122,31 +117,17 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
     setIsGenerating(false);
   };
   
-  const handleSavePayroll = async () => {
-      if (!generatedPayroll) return;
-
-      setIsSaving(true);
-      
-      const payrollData = {
-          ...generatedPayroll,
-          employeeId: employee.id,
-          ownerId: user?.uid,
-          createdAt: serverTimestamp(),
-      };
-
-      try {
-        await addDoc(collection(db, "payrolls"), payrollData);
-        toast({ title: 'Nómina Guardada', description: `La nómina de ${period} para ${employee.name} ha sido guardada.` });
-        handleClose();
-      } catch (error) {
-        console.error("Error al guardar la nómina:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'No se pudo guardar la nómina en la base de datos.' });
-      } finally {
-        setIsSaving(false);
-      }
-  }
-
   return (
+    <>
+    {generatedPayroll && (
+        <ViewPayrollModal 
+            isOpen={!!generatedPayroll}
+            onClose={() => setGeneratedPayroll(null)}
+            payroll={generatedPayroll}
+            employee={employee}
+            onSaveSuccess={handleClose}
+        />
+    )}
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
@@ -213,37 +194,13 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
                 Los cálculos deben ser revisados y validados por un asesor profesional. La nómina podrá ser editada una vez guardada.
               </AlertDescription>
           </Alert>
-
-          {generatedPayroll && (
-            <div className="space-y-4 pt-4 border-t">
-              <h3 className="font-semibold text-center">Borrador de Nómina Generado</h3>
-              <div className="p-4 rounded-lg bg-muted space-y-2 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Devengado:</span>
-                    <span className="font-semibold">{generatedPayroll.accruals.total.toFixed(2)}€</span>
-                </div>
-                 <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Deducciones:</span>
-                    <span className="font-semibold">{generatedPayroll.deductions.total.toFixed(2)}€</span>
-                </div>
-                 <Separator className="my-2"/>
-                 <div className="flex justify-between font-bold text-base">
-                    <span>Líquido a Percibir:</span>
-                    <span>{generatedPayroll.netPay.toFixed(2)}€</span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isSaving}>Cerrar</Button>
-          <Button onClick={handleSavePayroll} disabled={!generatedPayroll || isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-              Guardar Nómina
-          </Button>
+          <Button variant="outline" onClick={handleClose}>Cerrar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
