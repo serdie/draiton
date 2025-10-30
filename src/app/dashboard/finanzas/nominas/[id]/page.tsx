@@ -3,17 +3,34 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { type Employee } from '@/app/dashboard/finanzas/empleados/types';
 import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, ArrowLeft, FileText, MoreHorizontal, Download } from 'lucide-react';
+import { Loader2, ArrowLeft, FileText, MoreHorizontal, Download, Trash2, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { ViewPayrollModal } from '../view-payroll-modal';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { EditPayrollModal } from '../edit-payroll-modal';
 
 export default function EmployeePayrollHistoryPage() {
   const router = useRouter();
@@ -24,6 +41,8 @@ export default function EmployeePayrollHistoryPage() {
   const [payrolls, setPayrolls] = useState<(GeneratePayrollOutput & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
+  const [payrollToEdit, setPayrollToEdit] = useState<(GeneratePayrollOutput & { id: string }) | null>(null);
+  const [payrollToDelete, setPayrollToDelete] = useState<(GeneratePayrollOutput & { id: string }) | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,7 +58,7 @@ export default function EmployeePayrollHistoryPage() {
     }
     
     if (!employeeId) {
-      router.push('/dashboard/finanzas');
+      router.push('/dashboard/finanzas?tab=empleados');
       return;
     }
 
@@ -82,6 +101,26 @@ export default function EmployeePayrollHistoryPage() {
     return () => unsubscribe();
   }, [employeeId, router, toast]);
 
+  const handleDeletePayroll = async () => {
+    if (!payrollToDelete) return;
+    try {
+        await deleteDoc(doc(db, "payrolls", payrollToDelete.id));
+        toast({ title: 'Nómina Eliminada', description: `La nómina para ${payrollToDelete.header.paymentPeriod} ha sido eliminada.` });
+    } catch (error) {
+        console.error("Error al eliminar la nómina:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudo eliminar la nómina.' });
+    } finally {
+        setPayrollToDelete(null);
+    }
+  }
+
+  const handleSaveEditedPayroll = (updatedPayroll: GeneratePayrollOutput) => {
+    // This function can be used to update the local state if needed,
+    // but onSnapshot should handle it automatically.
+    // For now, we just close the modal.
+    setPayrollToEdit(null);
+  }
+
   if (loading) {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -107,6 +146,28 @@ export default function EmployeePayrollHistoryPage() {
           employee={employee}
         />
       )}
+      {payrollToEdit && employee && (
+        <EditPayrollModal
+          isOpen={!!payrollToEdit}
+          onClose={() => setPayrollToEdit(null)}
+          payroll={payrollToEdit}
+          onSave={handleSaveEditedPayroll}
+        />
+      )}
+      <AlertDialog open={!!payrollToDelete} onOpenChange={(open) => !open && setPayrollToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Esta acción eliminará la nómina de <strong>{payrollToDelete?.header.paymentPeriod}</strong> para {employee.name}. Esta acción no se puede deshacer.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeletePayroll} className="bg-destructive hover:bg-destructive/90">Eliminar</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
@@ -145,9 +206,27 @@ export default function EmployeePayrollHistoryPage() {
                       <TableCell>{(payroll.summary?.totalDeductions ?? 0).toFixed(2)}€</TableCell>
                       <TableCell className="font-semibold">{(payroll.netPay ?? 0).toFixed(2)}€</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => setPayrollToView(payroll)}>
-                           <FileText className="h-4 w-4" />
-                        </Button>
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Ver Nómina
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setPayrollToEdit(payroll)}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setPayrollToDelete(payroll)} className="text-destructive focus:text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Eliminar
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
