@@ -71,7 +71,7 @@ export async function createEmployeeUser(employeeData: {
   email: string;
   name: string;
   phone?: string;
-  ownerId: string;
+  ownerId: string; // The company owner's UID
   position: string;
   nif: string;
   socialSecurityNumber: string;
