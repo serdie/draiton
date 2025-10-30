@@ -97,9 +97,11 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
         contractType: employee.contractType,
         professionalGroup: 'Grupo 1 - Ingenieros y Licenciados', // Placeholder
         position: employee.position,
-        hireDate: (employee.hireDate as any)?.toDate().toISOString(), // Assuming hireDate is a Firestore Timestamp
+        hireDate: (employee.hireDate as any)?.toDate ? (employee.hireDate as any).toDate().toISOString() : employee.hireDate,
         grossAnnualSalary: employee.grossAnnualSalary,
         paymentPeriod: period,
+        paymentFrequency: employee.paymentFrequency || 'Mensual',
+        proratedExtraPays: employee.proratedExtraPays ?? true,
         companyName: user.company.name || 'Nombre Empresa no configurado',
         cif: user.company.cif || 'CIF no configurado',
         companyAddress: user.company.address ? `${user.company.address.addressLine1}, ${user.company.address.city}, ${user.company.address.postalCode}` : 'Dirección no configurada',
