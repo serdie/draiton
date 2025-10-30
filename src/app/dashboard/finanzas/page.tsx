@@ -10,7 +10,7 @@ import { ImpuestosTab } from './impuestos-tab';
 import { AuthContext } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 import { EmpleadosPageContent } from './empleados/page';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, type Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import type { GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
