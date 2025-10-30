@@ -136,7 +136,7 @@ export default function EmployeePayrollHistoryPage() {
                 {payrolls.length > 0 ? (
                   payrolls.map((payroll) => (
                     <TableRow key={payroll.id}>
-                      <TableCell className="font-medium">{payroll.header.period}</TableCell>
+                      <TableCell className="font-medium">{payroll.header?.period || 'Periodo no especificado'}</TableCell>
                       <TableCell>{(payroll.summary?.totalAccruals ?? 0).toFixed(2)}€</TableCell>
                       <TableCell>{(payroll.summary?.totalDeductions ?? 0).toFixed(2)}€</TableCell>
                       <TableCell className="font-semibold">{(payroll.netPay ?? 0).toFixed(2)}€</TableCell>
