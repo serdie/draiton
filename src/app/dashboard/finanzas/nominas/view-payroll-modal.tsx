@@ -142,7 +142,7 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
                     </div>
                 </div>
                  <div className="flex justify-between border-b py-2 text-xs">
-                     <p><span className="font-semibold">Periodo Liquidación:</span> {currentPayroll.header.paymentPeriod}</p>
+                     <p><span className="font-semibold">Periodo Liquidación:</span> {currentPayroll.header.period}</p>
                      <p><span className="font-semibold">Total Días:</span> {currentPayroll.header.totalDays}</p>
                  </div>
 
@@ -240,5 +240,6 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
