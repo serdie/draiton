@@ -1,231 +1,41 @@
-/**
- * @file Firebase Security Rules for Firestore.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model.  Most collections are secured such that only the owner (the authenticated user whose UID matches the `ownerId` field in the document) can create, read, update, or delete documents.  User profiles are self-creatable, meaning a user can create their own profile document upon sign-up.
- *
- * Data Structure:
- * - /users/{userId}: Stores user profile data.  `userId` must match the authenticated user's UID.
- * - /projects/{projectId}: Stores project data. Each document must have an `ownerId` field matching the user who created it.
- * - /tasks/{taskId}: Stores task data. Each document must have an `ownerId` and `assigneeId` field.
- * - /invoices/{invoiceId}: Stores invoice data. Each document must have an `ownerId` field.
- * - /expenses/{expenseId}: Stores expense data. Each document must have an `ownerId` field.
- * - /contacts/{contactId}: Stores contact data. Each document must have an `ownerId` field.
- * - /employees/{employeeId}: Stores employee data. Each document must have `ownerId` and `companyOwnerId` fields.
- * - /fichajes/{fichajeId}: Stores clock-in/clock-out records. Each document must have an `ownerId` field.
- *
- * Key Security Decisions:
- * - User listing is disabled.
- * - Default security posture for ambiguous relationships is strict owner-only access.
- *
- * Denormalization for Authorization:
- * This ruleset assumes that all documents that need authorization checks have an `ownerId` field that stores the UID of the owning user. This is essential for efficient security rules that don't require expensive `get()` operations.
- */
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Controls access to user profile documents.
-     * @path /users/{userId}
-     * @allow (create) Authenticated user can create their own profile.
-     * @allow (get, update, delete) Authenticated user can read, update, and delete their own profile.
-     * @deny (create) Non-authenticated user cannot create a profile.
-     * @deny (update, delete) Authenticated user cannot modify another user's profile.
-     * @principle Enforces document ownership; users can only manage their own profiles.
-     */
+    // Helper function to check ownership
+    function isOwner(ownerId) {
+      return request.auth != null && request.auth.uid == ownerId;
+    }
+
+    // Users can only read and update their own profile.
+    // User documents are created server-side or on signup.
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
-      allow update: if isOwner(userId) && resource.data.uid == userId;
-      allow delete: if isOwner(userId) && resource.data.uid == userId;
+      allow read, update: if isOwner(userId);
+      allow create: if request.auth != null && request.auth.uid == userId;
     }
-
-    /**
-     * @description Controls access to project documents.
-     * @path /projects/{projectId}
-     * @allow (create) Authenticated user can create a project with their UID as the ownerId.
-     * @allow (get, list, update, delete) Authenticated user can read, update, and delete projects they own.
-     * @deny (create) Non-authenticated user cannot create a project.
-     * @deny (update, delete) Authenticated user cannot modify another user's project.
-     * @principle Enforces document ownership for writes.
-     */
-    match /projects/{projectId} {
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isExistingOwner(ownerId) {
-        return isOwner(ownerId) && resource != null;
-      }
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.ownerId);
-      allow delete: if isExistingOwner(resource.data.ownerId);
+    
+    // Generic rule for collections where documents have an ownerId field.
+    // Users can do anything with documents they own.
+    match /{collection}/{docId} {
+      allow read, write: if request.auth != null && isOwner(request.resource.data.ownerId);
     }
-
-    /**
-     * @description Controls access to task documents.
-     * @path /tasks/{taskId}
-     * @allow (create) Authenticated user can create a task with their UID as the ownerId.
-     * @allow (get, list, update, delete) Authenticated user can read, update, and delete tasks they own.
-     * @deny (create) Non-authenticated user cannot create a task.
-     * @deny (update, delete) Authenticated user cannot modify another user's task.
-     * @principle Enforces document ownership for writes.
-     */
-    match /tasks/{taskId} {
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isExistingOwner(ownerId) {
-        return isOwner(ownerId) && resource != null;
-      }
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.ownerId);
-      allow delete: if isExistingOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Controls access to invoice documents.
-     * @path /invoices/{invoiceId}
-     * @allow (create) Authenticated user can create an invoice with their UID as the ownerId.
-     * @allow (get, list, update, delete) Authenticated user can read, update, and delete invoices they own.
-     * @deny (create) Non-authenticated user cannot create an invoice.
-     * @deny (update, delete) Authenticated user cannot modify another user's invoice.
-     * @principle Enforces document ownership for writes.
-     */
-    match /invoices/{invoiceId} {
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isExistingOwner(ownerId) {
-        return isOwner(ownerId) && resource != null;
-      }
-      allow get: if isOwner(resource.data.ownerId);
-      allow list: if isOwner(resource.data.ownerId);
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.ownerId);
-      allow delete: if isExistingOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Controls access to expense documents.
-     * @path /expenses/{expenseId}
-     * @allow (create) Authenticated user can create an expense with their UID as the ownerId.
-     * @allow (get, list, update, delete) Authenticated user can read, update, and delete expenses they own.
-     * @deny (create) Non-authenticated user cannot create an expense.
-     * @deny (update, delete) Authenticated user cannot modify another user's expense.
-     * @principle Enforces document ownership for writes.
-     */
-    match /expenses/{expenseId} {
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isExistingOwner(ownerId) {
-        return isOwner(ownerId) && resource != null;
-      }
-      allow get: if isOwner(resource.data.ownerId);
-      allow list: if isOwner(resource.data.ownerId);
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.ownerId);
-      allow delete: if isExistingOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Controls access to contact documents.
-     * @path /contacts/{contactId}
-     * @allow (create) Authenticated user can create a contact with their UID as the ownerId.
-     * @allow (get, list, update, delete) Authenticated user can read, update, and delete contacts they own.
-     * @deny (create) Non-authenticated user cannot create a contact.
-     * @deny (update, delete) Authenticated user cannot modify another user's contact.
-     */
-    match /contacts/{contactId} {
-        function isOwner(ownerId) {
-            return request.auth.uid == ownerId;
-        }
-        function isSignedIn() {
-            return request.auth != null;
-        }
-        function isExistingOwner(ownerId) {
-            return isOwner(ownerId) && resource != null;
-        }
-        allow get: if isOwner(resource.data.ownerId);
-        allow list: if isOwner(resource.data.ownerId);
-        allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-        allow update: if isExistingOwner(resource.data.ownerId);
-        allow delete: if isExistingOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Controls access to employee documents.
-     * @path /employees/{employeeId}
-     * @allow (create) Authenticated user can create an employee with their UID as the ownerId.
-     * @allow (get, list, update, delete) Authenticated user can read, update, and delete employees they own.
-     * @deny (create) Non-authenticated user cannot create an employee.
-     * @deny (update, delete) Authenticated user cannot modify another user's employee.
-     * @principle Enforces document ownership for writes.
-     */
+    
+    // Specific rule for employees, who are owned by a company.
     match /employees/{employeeId} {
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isExistingOwner(ownerId) {
-        return isOwner(ownerId) && resource != null;
-      }
-      allow get: if isOwner(resource.data.ownerId);
-      allow list: if isOwner(resource.data.ownerId);
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.ownerId);
-      allow delete: if isExistingOwner(resource.data.ownerId);
+        allow read, write: if request.auth != null && isOwner(request.resource.data.companyOwnerId);
     }
 
-    /**
-     * @description Controls access to fichaje documents (clock-in/clock-out records).
-     * @path /fichajes/{fichajeId}
-     * @allow (create) Authenticated user can create a fichaje with their UID as the ownerId.
-     * @allow (get, list, update, delete) Authenticated user can read, update, and delete fichajes they own.
-     * @deny (create) Non-authenticated user cannot create a fichaje.
-     * @deny (update, delete) Authenticated user cannot modify another user's fichaje.
-     */
+    // Fichajes can be created by the employee, but read by the owner.
     match /fichajes/{fichajeId} {
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isExistingOwner(ownerId) {
-        return isOwner(ownerId) && resource != null;
-      }
-      allow get: if isOwner(resource.data.ownerId);
-      allow list: if isOwner(resource.data.ownerId);
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.ownerId);
-      allow delete: if isExistingOwner(resource.data.ownerId);
+        allow create: if request.auth != null && isOwner(request.resource.data.employeeId);
+        allow read, update, delete: if request.auth != null && isOwner(get(/databases/$(database)/documents/employees/$(request.resource.data.employeeId)).data.companyOwnerId);
+    }
+    
+    // Payrolls can be read by the employee, but created/managed by the owner.
+    match /payrolls/{payrollId} {
+      allow read: if request.auth != null && isOwner(resource.data.employeeId);
+      allow create, update, delete: if request.auth != null && isOwner(resource.data.ownerId);
     }
   }
 }
