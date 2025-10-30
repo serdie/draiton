@@ -34,7 +34,7 @@ export function EmpleadosPageContent() {
         }
 
         setLoading(true);
-        const q = query(collection(db, 'employees'), where('companyOwnerId', '==', user.uid));
+        const q = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(docSnap => {
