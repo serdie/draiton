@@ -17,6 +17,8 @@ import { format, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { updateEmployeeAction } from '@/lib/firebase/admin-actions';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
+import { EmployeePortalCard } from './employee-portal-card';
 
 interface EditEmployeeFormProps {
   onClose: () => void;
@@ -179,11 +181,16 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
             <Label htmlFor="edit-salary">Salario Bruto Anual (€)</Label>
             <Input id="edit-salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
         </div>
-            <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2">
             <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
             <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra en la nómina mensual</Label>
         </div>
-            <div className="flex justify-end gap-2 pt-4">
+        
+        <Separator className="my-6" />
+
+        <EmployeePortalCard employee={employee} />
+        
+        <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
             Cancelar
             </Button>

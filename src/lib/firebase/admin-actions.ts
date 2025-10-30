@@ -1,9 +1,9 @@
 
-
 'use server';
 
 import admin from 'firebase-admin';
 import { getFirebaseAuth } from './firebase-admin';
+import { nanoid } from 'nanoid';
 
 type UserUpdateData = {
     displayName: string;
@@ -80,6 +80,7 @@ export async function createEmployeeUser(employeeData: {
   hireDate?: Date;
   paymentFrequency: string;
   proratedExtraPays: boolean;
+  companyOwnerId?: string; // For admin simulation
 }): Promise<{ uid: string; tempPassword?: string; message: string }> {
   const { auth, db } = getFirebaseAuth();
   
@@ -112,7 +113,7 @@ export async function createEmployeeUser(employeeData: {
       displayName: employeeData.name,
       email: employeeData.email,
       role: 'employee',
-      companyOwnerId: employeeData.ownerId, 
+      companyOwnerId: employeeData.companyOwnerId || employeeData.ownerId, 
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       providerData: [{ providerId: 'password' }],
   }, { merge: true });
@@ -122,6 +123,8 @@ export async function createEmployeeUser(employeeData: {
     ...employeeData,
     userId: userRecord.uid,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    employeePortalActive: false,
+    employeePortalId: nanoid(12),
   }, { merge: true });
 
   return { uid: userRecord.uid, tempPassword, message };

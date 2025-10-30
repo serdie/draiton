@@ -144,9 +144,11 @@
             "proratedExtraPays": { "type": "boolean" },
             "hireDate": { "type": "string", "format": "date-time" },
             "ownerId": { "type": "string" },
-            "companyOwnerId": { "type": "string" }
+            "companyOwnerId": { "type": "string" },
+            "employeePortalActive": { "type": "boolean", "description": "Whether the employee portal is active." },
+            "employeePortalId": { "type": "string", "description": "A unique ID for the employee portal URL." }
         },
-        "required": ["name", "email", "ownerId", "companyOwnerId"]
+        "required": ["name", "email", "ownerId", "companyOwnerId", "employeePortalActive", "employeePortalId"]
     },
     "Fichaje": {
         "title": "Fichaje",
