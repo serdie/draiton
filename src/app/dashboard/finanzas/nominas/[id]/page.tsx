@@ -43,7 +43,9 @@ export default function EmployeePayrollHistoryPage() {
 
     const payrollsQuery = query(collection(db, 'payrolls'), where('employeeId', '==', employeeId));
     const unsubscribe = onSnapshot(payrollsQuery, (snapshot) => {
-      const payrollsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratePayrollOutput & { id: string }));
+      const payrollsList = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as GeneratePayrollOutput & { id: string }))
+        .filter(payroll => payroll.header); // Ensure basic structure exists
       
        const monthOrder = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         payrollsList.sort((a, b) => {
@@ -135,9 +137,9 @@ export default function EmployeePayrollHistoryPage() {
                   payrolls.map((payroll) => (
                     <TableRow key={payroll.id}>
                       <TableCell className="font-medium">{payroll.header.period}</TableCell>
-                      <TableCell>{payroll.summary.totalAccruals.toFixed(2)}€</TableCell>
-                      <TableCell>{payroll.summary.totalDeductions.toFixed(2)}€</TableCell>
-                      <TableCell className="font-semibold">{payroll.netPay.toFixed(2)}€</TableCell>
+                      <TableCell>{(payroll.summary?.totalAccruals ?? 0).toFixed(2)}€</TableCell>
+                      <TableCell>{(payroll.summary?.totalDeductions ?? 0).toFixed(2)}€</TableCell>
+                      <TableCell className="font-semibold">{(payroll.netPay ?? 0).toFixed(2)}€</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => setPayrollToView(payroll)}>
                            <FileText className="h-4 w-4" />
