@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -5,66 +6,73 @@ service cloud.firestore {
 
     // Helper function to check ownership
     function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
 
-    // Allow users to read and update their own profile
+    // Users can only read and update their own profile.
     match /users/{userId} {
       allow read, update: if isOwner(userId);
-      // Allow authenticated users to read other users' basic info for assignments
+      // Allow authenticated users to read other users' basic info for assignment, but not sensitive data.
       allow list: if request.auth != null;
     }
 
-    // Allow users to manage their own projects
+    // Projects can only be managed by their owner.
     match /projects/{projectId} {
-      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
-      // Composite index for dashboard query
-      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
+      allow read, write, delete, create: if isOwner(request.resource.data.ownerId);
+      // Allow list for owner's projects
+      allow list: if request.auth.uid == request.query.where.ownerId;
     }
     
-    // Allow users to manage their own tasks
+    match /projects/{projectId} {
+        allow list: if request.auth != null && request.query.where.clientPortalId == resource.data.clientPortalId && resource.data.clientPortalActive == true;
+    }
+
+    // Tasks can only be managed by their owner.
     match /tasks/{taskId} {
-      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
-      // Allow list for project-specific and user-specific queries
-      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
+      allow read, write, delete, create: if isOwner(request.resource.data.ownerId);
+       allow list: if request.auth.uid == request.query.where.ownerId;
     }
-
-    // Allow users to manage their own invoices and financial documents
+    
+    // Invoices can only be managed by their owner.
     match /invoices/{invoiceId} {
-      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
-      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
+      allow read, write, delete, create: if isOwner(request.resource.data.ownerId);
+       allow list: if request.auth.uid == request.query.where.ownerId;
     }
     
-    // Allow users to manage their own expenses
+    // Expenses can only be managed by their owner.
     match /expenses/{expenseId} {
-      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
-      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
+      allow read, write, delete, create: if isOwner(request.resource.data.ownerId);
+       allow list: if request.auth.uid == request.query.where.ownerId;
     }
-    
-    // Allow users to manage their own contacts
+
+    // Contacts can only be managed by their owner.
     match /contacts/{contactId} {
-      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
-      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
-    }
-
-    // Allow users to manage their own employees
-    match /employees/{employeeId} {
-      allow create, read, update, delete: if isOwner(resource.data.ownerId) || isOwner(request.resource.data.ownerId);
-      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid;
-    }
-
-    // Allow a company owner to read all clock-ins for their company.
-    // Allow an employee to read their own clock-ins.
-    match /fichajes/{fichajeId} {
-      allow read: if request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyOwnerId == resource.data.ownerId || request.auth.uid == resource.data.employeeId);
-      allow create: if isOwner(request.resource.data.ownerId);
-      allow list: if request.auth != null && request.query.where.size() > 0 && (
-          (request.query.where[0][0] == "ownerId" && request.query.where[0][2] == request.auth.uid) ||
-          (request.query.where[0][0] == "employeeId" && request.query.where[0][2] == request.auth.uid)
-      );
+      allow read, write, delete, create: if isOwner(request.resource.data.ownerId);
+      allow list: if request.auth.uid == request.query.where.ownerId;
     }
     
-    // Default deny all other requests
+    // Employees can only be managed by the company owner.
+    match /employees/{employeeId} {
+      allow read, write, create, delete: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
+    }
+
+    // Clock-in/out records
+    match /fichajes/{fichajeId} {
+        // Employees can create their own records.
+        allow create: if request.auth.uid == request.resource.data.employeeId;
+        // The company owner or the employee themselves can read the records.
+        allow read: if isOwner(request.resource.data.ownerId) || isOwner(request.resource.data.employeeId);
+        allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
+    }
+    
+    // Payrolls
+    match /payrolls/{payrollId} {
+      allow create, read, write, delete: if isOwner(request.resource.data.ownerId);
+      allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
+    }
+
+    // Default deny rule: Deny access to all other paths
     match /{document=**} {
       allow read, write: if false;
     }
