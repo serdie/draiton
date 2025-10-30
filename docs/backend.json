@@ -139,6 +139,7 @@
             "socialSecurityNumber": { "type": "string" },
             "contractType": { "type": "string", "enum": ["Indefinido", "Temporal", "Formación", "Prácticas"] },
             "grossAnnualSalary": { "type": "number" },
+            "hireDate": { "type": "string", "format": "date-time" },
             "ownerId": { "type": "string" },
             "companyOwnerId": { "type": "string" }
         },

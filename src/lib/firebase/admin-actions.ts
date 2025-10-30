@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import admin from 'firebase-admin';
@@ -75,6 +76,7 @@ export async function createEmployeeUser(employeeData: {
   socialSecurityNumber: string;
   contractType: string;
   grossAnnualSalary: number;
+  hireDate?: Date;
 }): Promise<{ uid: string; tempPassword?: string; message: string }> {
   const { auth, db } = getFirebaseAuth();
   

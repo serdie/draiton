@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,11 +15,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Employee } from './types';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface EditEmployeeModalProps {
   isOpen: boolean;
@@ -38,6 +44,20 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
   const [socialSecurityNumber, setSocialSecurityNumber] = useState(employee.socialSecurityNumber);
   const [contractType, setContractType] = useState(employee.contractType);
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
+  const [hireDate, setHireDate] = useState<Date | undefined>(
+    employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : employee.hireDate
+  );
+
+  useEffect(() => {
+    setName(employee.name);
+    setEmail(employee.email);
+    setPosition(employee.position);
+    setNif(employee.nif);
+    setSocialSecurityNumber(employee.socialSecurityNumber);
+    setContractType(employee.contractType);
+    setGrossAnnualSalary(String(employee.grossAnnualSalary));
+    setHireDate(employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : employee.hireDate);
+  }, [employee]);
   
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +71,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
         socialSecurityNumber,
         contractType,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
+        hireDate,
       };
 
       try {
@@ -108,6 +129,23 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
                     <Label htmlFor="edit-ssn">Nº Seg. Social</Label>
                     <Input id="edit-ssn" value={socialSecurityNumber} onChange={(e) => setSocialSecurityNumber(e.target.value)} required />
                 </div>
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="hire-date">Fecha de Contratación</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn("w-full justify-start text-left font-normal", !hireDate && "text-muted-foreground")}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {hireDate ? format(hireDate, "PPP", { locale: es }) : <span>Selecciona una fecha</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={hireDate} onSelect={setHireDate} initialFocus />
+                    </PopoverContent>
+                </Popover>
             </div>
              <div className="space-y-2">
               <Label htmlFor="edit-contract-type">Tipo de Contrato</Label>
