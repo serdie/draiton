@@ -32,25 +32,7 @@ export async function generatePayroll(input: GeneratePayrollInput): Promise<Gene
 
 
 const GeneratePayrollPromptInputSchema = GeneratePayrollInputSchema.extend({
-  calculatedData: z.object({
-      salarioMensual: z.number(),
-      prorrataPagasExtra: z.number(),
-      totalConceptosAdicionales: z.number(),
-      totalDevengado: z.number(),
-      bccc: z.number(),
-      bccp: z.number(),
-      baseIrpf: z.number(),
-      deduccionCC: z.number(),
-      tipoDesempleo: z.number(),
-      deduccionDesempleo: z.number(),
-      deduccionFP: z.number(),
-      tipoIrpfEstimado: z.number(),
-      deduccionIrpf: z.number(),
-      totalDeducciones: z.number(),
-      liquidoAPercibir: z.number(),
-      antiguedad: z.string(),
-      periodoLiquidacionDetallado: z.string(),
-  }).describe("Objeto que contiene todos los importes ya calculados por el sistema.")
+  calculatedData: z.any().describe("Objeto que contiene todos los importes ya calculados por el sistema.")
 });
 
 const prompt = ai.definePrompt({
@@ -87,7 +69,7 @@ const prompt = ai.definePrompt({
 
 **CÁLCULOS REALIZADOS (Usa estos valores EXACTOS para rellenar la salida):**
 \`\`\`json
-{{{JSON.stringify calculatedData}}}
+{{{calculatedData}}}
 \`\`\`
 
 **Tu Tarea:**
@@ -168,7 +150,12 @@ const generatePayrollFlow = ai.defineFlow(
 
     // --- PASO 2: LLAMADA A LA IA (SOLO PARA FORMATEAR JSON) ---
     try {
-      const { output } = await prompt({ ...input, calculatedData }, {
+      const promptInput = {
+        ...input,
+        calculatedData: JSON.stringify(calculatedData, null, 2)
+      };
+
+      const { output } = await prompt(promptInput, {
         model: googleAI.model('gemini-2.5-flash-lite'),
       });
 
