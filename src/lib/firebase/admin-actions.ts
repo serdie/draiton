@@ -78,6 +78,8 @@ export async function createEmployeeUser(employeeData: {
   contractType: string;
   grossAnnualSalary: number;
   hireDate?: Date;
+  paymentFrequency: string;
+  proratedExtraPays: boolean;
 }): Promise<{ uid: string; tempPassword?: string; message: string }> {
   const { auth, db } = getFirebaseAuth();
   
@@ -135,12 +137,12 @@ export async function updateEmployeeAction(employeeId: string, updatedData: any)
         
         // El objeto de datos que llega puede tener `email` y `name` en el nivel superior,
         // que deben ir al documento de usuario, no al de empleado.
-        const { name, email, phone, ...employeeSpecificData } = updatedData;
+        const { name, email, ...employeeSpecificData } = updatedData;
 
         const batch = db.batch();
 
         // Actualizar el documento del empleado
-        batch.update(employeeRef, {...employeeSpecificData, phone: phone || null });
+        batch.update(employeeRef, employeeSpecificData);
         
         // Actualizar el documento de usuario
         if (name || email) {

@@ -25,6 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface AddEmployeeModalProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [grossAnnualSalary, setGrossAnnualSalary] = useState('');
   const [hireDate, setHireDate] = useState<Date | undefined>();
   const [paymentFrequency, setPaymentFrequency] = useState('Mensual');
+  const [proratedExtraPays, setProratedExtraPays] = useState(true);
 
 
   const resetForm = () => {
@@ -61,6 +63,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     setGrossAnnualSalary('');
     setHireDate(undefined);
     setPaymentFrequency('Mensual');
+    setProratedExtraPays(true);
     setCreatedUserInfo(null);
   };
 
@@ -84,6 +87,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         contractType,
         paymentFrequency,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
+        proratedExtraPays,
         hireDate,
         ownerId: user.uid,
       };
@@ -212,6 +216,10 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
              <div className="space-y-2">
               <Label htmlFor="salary">Salario Bruto Anual (€)</Label>
               <Input id="salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
+              <Label htmlFor="prorated-pays" className="text-sm font-normal">Prorratear pagas extra en la nómina mensual</Label>
             </div>
              <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>

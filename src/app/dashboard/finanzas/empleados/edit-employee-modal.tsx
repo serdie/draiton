@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { format, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { updateEmployeeAction } from '@/lib/firebase/admin-actions';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 interface EditEmployeeModalProps {
@@ -48,6 +49,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
   const [contractType, setContractType] = useState(employee.contractType);
   const [paymentFrequency, setPaymentFrequency] = useState(employee.paymentFrequency || 'Mensual');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
+  const [proratedExtraPays, setProratedExtraPays] = useState(employee.proratedExtraPays ?? true);
   const [hireDate, setHireDate] = useState<Date | undefined>(() => {
     if (!employee.hireDate) return undefined;
     const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
@@ -64,6 +66,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
     setContractType(employee.contractType);
     setPaymentFrequency(employee.paymentFrequency || 'Mensual');
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
+    setProratedExtraPays(employee.proratedExtraPays ?? true);
     if (employee.hireDate) {
       const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
        if (isValid(date)) {
@@ -88,6 +91,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
         contractType,
         paymentFrequency,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
+        proratedExtraPays,
         hireDate: hireDate || null,
       };
 
@@ -195,6 +199,10 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
              <div className="space-y-2">
               <Label htmlFor="edit-salary">Salario Bruto Anual (€)</Label>
               <Input id="edit-salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
+            </div>
+             <div className="flex items-center space-x-2">
+                <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
+                <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra en la nómina mensual</Label>
             </div>
              <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>

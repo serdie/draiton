@@ -18,6 +18,7 @@ export const GeneratePayrollInputSchema = z.object({
   grossAnnualSalary: z.number().describe('The total gross annual salary of the employee.'),
   paymentPeriod: z.string().describe('The month and year for the payslip (e.g., "Julio 2024").'),
   paymentFrequency: z.string().describe('Frecuencia de pago (ej. "Mensual")'),
+  proratedExtraPays: z.boolean().describe('Whether the extra pays are prorated monthly.'),
   companyName: z.string().describe('The legal name of the company.'),
   cif: z.string().describe('The CIF of the company.'),
   companyAddress: z.string().describe('La dirección fiscal de la empresa.'),
