@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from '@/components/ui/table';
 import { Download, Loader2, HelpCircle, Save } from 'lucide-react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import autoTable from 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
 import { type GeneratePayrollOutput, type ReviewPayrollOutput } from '@/ai/schemas/payroll-schemas';
 import type { Employee } from '../empleados/types';
@@ -66,18 +66,92 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
     const [currentPayroll, setCurrentPayroll] = useState(initialPayroll);
 
     const handleDownloadPdf = async () => {
-        const element = printableAreaRef.current;
-        if (!element) return;
         setIsDownloading(true);
-
         try {
-            const canvas = await html2canvas(element, { scale: 2 });
-            const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const margin = 15;
+            let cursorY = 20;
+
+            // Header
+            pdf.setFontSize(18);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('NÓMINA', margin, cursorY);
+            pdf.setFontSize(10);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Periodo: ${currentPayroll.header.paymentPeriod}`, pageWidth - margin, cursorY, { align: 'right' });
+            cursorY += 10;
+
+            // Company and Employee Data
+            autoTable(pdf, {
+                startY: cursorY,
+                body: [
+                    [
+                        { content: 'EMPRESA', styles: { fontStyle: 'bold', fillColor: '#f2f2f2' } },
+                        { content: 'TRABAJADOR', styles: { fontStyle: 'bold', fillColor: '#f2f2f2' } }
+                    ],
+                    [
+                        `${currentPayroll.header.companyName}\nCIF: ${currentPayroll.header.companyCif}\nCCC: ${currentPayroll.header.contributionAccountCode}`,
+                        `${currentPayroll.header.employeeName}\nNIF: ${currentPayroll.header.employeeNif}\nNº S.S.: ${currentPayroll.header.employeeSocialSecurityNumber}\nCategoría: ${currentPayroll.header.employeeCategory}`
+                    ]
+                ],
+                theme: 'grid',
+                styles: { cellPadding: 2, fontSize: 8 },
+            });
+
+            cursorY = (pdf as any).lastAutoTable.finalY + 10;
+
+            // Accruals and Deductions Tables
+            const accrualsBody = currentPayroll.accruals.items.map(item => [
+                item.code, item.concept, item.quantity.toFixed(2), item.price.toFixed(2) + '€', item.accrual?.toFixed(2) + '€'
+            ]);
+            accrualsBody.push([{ content: 'TOTAL DEVENGOS', colSpan: 4, styles: { fontStyle: 'bold' } }, { content: currentPayroll.summary.totalAccruals.toFixed(2) + '€', styles: { fontStyle: 'bold' } }]);
+            
+            const deductionsBody = currentPayroll.deductions.items.map(item => [
+                item.code, item.concept, item.quantity > 0 ? item.quantity.toFixed(2) : '', item.price > 0 ? `${item.price.toFixed(2)}%` : '', item.deduction?.toFixed(2) + '€'
+            ]);
+            deductionsBody.push([{ content: 'TOTAL A DEDUCIR', colSpan: 4, styles: { fontStyle: 'bold' } }, { content: currentPayroll.summary.totalDeductions.toFixed(2) + '€', styles: { fontStyle: 'bold' } }]);
+            
+            autoTable(pdf, {
+                startY: cursorY,
+                head: [['Cód.', 'Concepto', 'Cant.', 'Precio', 'Importe']],
+                body: accrualsBody,
+                theme: 'striped',
+                headStyles: { fillColor: '#e0e0e0', textColor: '#000' },
+                didDrawPage: (data) => { cursorY = data.cursor?.y || cursorY; }
+            });
+             cursorY = (pdf as any).lastAutoTable.finalY + 5;
+
+             autoTable(pdf, {
+                startY: cursorY,
+                head: [['Cód.', 'Concepto', 'Base', 'Tipo', 'Importe']],
+                body: deductionsBody,
+                theme: 'striped',
+                 headStyles: { fillColor: '#e0e0e0', textColor: '#000' },
+                didDrawPage: (data) => { cursorY = data.cursor?.y || cursorY; }
+            });
+            cursorY = (pdf as any).lastAutoTable.finalY + 10;
+
+            // Net Pay
+            pdf.setFontSize(12);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('LÍQUIDO A PERCIBIR', pageWidth - margin - 60, cursorY);
+            pdf.text(`${currentPayroll.netPay.toFixed(2)}€`, pageWidth - margin, cursorY, { align: 'right' });
+            cursorY += 10;
+
+            // Contribution Bases
+            pdf.setFontSize(8);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('BASES DE COTIZACIÓN Y RETENCIÓN IRPF', margin, cursorY);
+            cursorY += 5;
+            const basesText = 
+`B.C.C.C: ${currentPayroll.contributionBases.commonContingencies.toFixed(2)}€      B.C.C.P.: ${currentPayroll.contributionBases.professionalContingencies.toFixed(2)}€      Base IRPF: ${currentPayroll.contributionBases.irpfWithholding.toFixed(2)}€      % IRPF: ${currentPayroll.contributionBases.irpfPercentage.toFixed(2)}%`;
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(basesText, margin, cursorY);
+
+
             pdf.save(`nomina-${currentPayroll.header.paymentPeriod.replace(/\s+/g, '-')}-${currentPayroll.header.employeeName}.pdf`);
+
         } catch (error) {
             console.error("Error al generar PDF:", error);
             toast({ variant: 'destructive', title: 'Error de descarga', description: 'No se pudo generar el PDF.' });
@@ -94,7 +168,7 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
       const payrollData = {
           ...currentPayroll,
           employeeId: employee.id,
-          ownerId: isAdmin ? user.uid : employee.ownerId, // Use admin's UID if admin, otherwise employee's owner
+          ownerId: isAdmin ? user.uid : (employee as any).ownerId,
           createdAt: serverTimestamp(),
       };
       
