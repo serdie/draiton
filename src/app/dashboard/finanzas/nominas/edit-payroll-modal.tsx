@@ -28,41 +28,48 @@ export function EditPayrollModal({ isOpen, onClose, payroll, onSave }: EditPayro
   const [editedPayroll, setEditedPayroll] = useState(payroll);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleNumericChange = (section: 'accruals' | 'deductions', index: number, field: 'amount', value: string) => {
+  const handleNumericChange = (section: 'accruals' | 'deductions', index: number, field: 'accrual' | 'deduction', value: string) => {
     const numericValue = parseFloat(value) || 0;
     const newPayroll = { ...editedPayroll };
-    (newPayroll[section].items[index] as any)[field] = numericValue;
+    (newPayroll.body.items[index] as any)[field] = numericValue;
     recalculateTotals(newPayroll);
   };
   
   const handleConceptChange = (section: 'accruals' | 'deductions', index: number, field: 'concept', value: string) => {
     const newPayroll = { ...editedPayroll };
-    newPayroll[section].items[index][field] = value;
+    newPayroll.body.items[index][field] = value;
     setEditedPayroll(newPayroll);
   };
 
   const addItem = (section: 'accruals' | 'deductions') => {
     const newPayroll = { ...editedPayroll };
-    newPayroll[section].items.push({ concept: 'Nuevo Concepto', amount: 0 });
+    const newItem = {
+      code: '999',
+      concept: 'Nuevo Concepto',
+      quantity: 0,
+      price: 0,
+      accrual: section === 'accruals' ? 0 : undefined,
+      deduction: section === 'deductions' ? 0 : undefined,
+    };
+    newPayroll.body.items.push(newItem);
     recalculateTotals(newPayroll);
   }
   
   const removeItem = (section: 'accruals' | 'deductions', index: number) => {
      const newPayroll = { ...editedPayroll };
-     newPayroll[section].items.splice(index, 1);
+     newPayroll.body.items.splice(index, 1);
      recalculateTotals(newPayroll);
   }
 
   const recalculateTotals = (payrollToUpdate: GeneratePayrollOutput) => {
-    const totalAccruals = payrollToUpdate.accruals.items.reduce((sum, item) => sum + item.amount, 0);
-    const totalDeductions = payrollToUpdate.deductions.items.reduce((sum, item) => sum + item.amount, 0);
+    const totalAccruals = payrollToUpdate.body.items.reduce((sum, item) => sum + (item.accrual || 0), 0);
+    const totalDeductions = payrollToUpdate.body.items.reduce((sum, item) => sum + (item.deduction || 0), 0);
     const netPay = totalAccruals - totalDeductions;
     
     setEditedPayroll({
         ...payrollToUpdate,
-        accruals: { ...payrollToUpdate.accruals, total: totalAccruals },
-        deductions: { ...payrollToUpdate.deductions, total: totalDeductions },
-        netPay: netPay,
+        summary: { totalAccruals, totalDeductions },
+        netPay,
     });
   }
 
@@ -80,37 +87,27 @@ export function EditPayrollModal({ isOpen, onClose, payroll, onSave }: EditPayro
         </DialogHeader>
         <ScrollArea className="flex-1 -mr-6 pr-6">
             <div className="grid grid-cols-2 gap-6 py-4">
-            {/* DEVENGOS */}
+            {/* DEVENGOS y DEDUCCIONES */}
             <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Devengos</h3>
-                {editedPayroll.accruals.items.map((item, index) => (
+                <h3 className="font-semibold text-lg">Conceptos de la Nómina</h3>
+                 {editedPayroll.body.items.map((item, index) => (
                     <div key={index} className="flex items-center gap-2">
-                        <Input value={item.concept} onChange={e => handleConceptChange('accruals', index, 'concept', e.target.value)} className="flex-1"/>
-                        <Input type="number" value={item.amount} onChange={e => handleNumericChange('accruals', index, 'amount', e.target.value)} className="w-28 text-right" />
-                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem('accruals', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                        <Input value={item.concept} onChange={e => handleConceptChange(item.accrual !== undefined ? 'accruals' : 'deductions', index, 'concept', e.target.value)} className="flex-1"/>
+                        <Input type="number" value={item.accrual ?? item.deduction ?? 0} onChange={e => handleNumericChange(item.accrual !== undefined ? 'accruals' : 'deductions', index, item.accrual !== undefined ? 'accrual' : 'deduction', e.target.value)} className="w-28 text-right" />
+                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem(item.accrual !== undefined ? 'accruals' : 'deductions', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                     </div>
                 ))}
-                <Button variant="outline" size="sm" onClick={() => addItem('accruals')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Devengo</Button>
-                <div className="flex justify-between font-bold pt-2 border-t">
-                    <span>Total Devengado:</span>
-                    <span>{editedPayroll.accruals.total.toFixed(2)}€</span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => addItem('accruals')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Devengo</Button>
+                  <Button variant="outline" size="sm" onClick={() => addItem('deductions')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Deducción</Button>
                 </div>
-            </div>
-
-            {/* DEDUCCIONES */}
-            <div className="space-y-4">
-                 <h3 className="font-semibold text-lg">Deducciones</h3>
-                {editedPayroll.deductions.items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                        <Input value={item.concept} onChange={e => handleConceptChange('deductions', index, 'concept', e.target.value)} className="flex-1"/>
-                        <Input type="number" value={item.amount} onChange={e => handleNumericChange('deductions', index, 'amount', e.target.value)} className="w-28 text-right" />
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem('deductions', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                    </div>
-                ))}
-                <Button variant="outline" size="sm" onClick={() => addItem('deductions')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Deducción</Button>
                  <div className="flex justify-between font-bold pt-2 border-t">
+                    <span>Total Devengado:</span>
+                    <span>{editedPayroll.summary.totalAccruals.toFixed(2)}€</span>
+                </div>
+                <div className="flex justify-between font-bold">
                     <span>Total a Deducir:</span>
-                    <span>{editedPayroll.deductions.total.toFixed(2)}€</span>
+                    <span>{editedPayroll.summary.totalDeductions.toFixed(2)}€</span>
                 </div>
             </div>
             </div>

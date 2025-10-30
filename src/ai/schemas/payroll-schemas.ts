@@ -36,6 +36,12 @@ const PayrollItemSchema = z.object({
     deduction: z.number().optional().describe('Importe de la deducción (si aplica).'),
 });
 
+const AccrualsDeductionsSchema = z.object({
+    items: z.array(PayrollItemSchema),
+    total: z.number(),
+});
+
+
 export const GeneratePayrollOutputSchema = z.object({
   header: z.object({
     companyName: z.string(),
@@ -53,6 +59,8 @@ export const GeneratePayrollOutputSchema = z.object({
   body: z.object({
     items: z.array(PayrollItemSchema).describe('Lista detallada de todos los conceptos de la nómina.'),
   }),
+  accruals: AccrualsDeductionsSchema,
+  deductions: AccrualsDeductionsSchema,
   summary: z.object({
     totalAccruals: z.number().describe('Total devengado.'),
     totalDeductions: z.number().describe('Total a deducir.'),
