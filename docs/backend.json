@@ -138,6 +138,7 @@
             "nif": { "type": "string" },
             "socialSecurityNumber": { "type": "string" },
             "contractType": { "type": "string", "enum": ["Indefinido", "Temporal", "Formación", "Prácticas"] },
+            "paymentFrequency": { "type": "string", "enum": ["Mensual", "Diario", "Semanal", "Quincenal", "Personalizar"] },
             "grossAnnualSalary": { "type": "number" },
             "hireDate": { "type": "string", "format": "date-time" },
             "ownerId": { "type": "string" },

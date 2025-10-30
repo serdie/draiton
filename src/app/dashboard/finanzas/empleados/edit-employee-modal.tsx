@@ -45,6 +45,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
   const [nif, setNif] = useState(employee.nif);
   const [socialSecurityNumber, setSocialSecurityNumber] = useState(employee.socialSecurityNumber);
   const [contractType, setContractType] = useState(employee.contractType);
+  const [paymentFrequency, setPaymentFrequency] = useState(employee.paymentFrequency || 'Mensual');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
   const [hireDate, setHireDate] = useState<Date | undefined>(() => {
     if (!employee.hireDate) return undefined;
@@ -59,6 +60,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
     setNif(employee.nif);
     setSocialSecurityNumber(employee.socialSecurityNumber);
     setContractType(employee.contractType);
+    setPaymentFrequency(employee.paymentFrequency || 'Mensual');
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
     if (employee.hireDate) {
       const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
@@ -81,6 +83,7 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
         nif,
         socialSecurityNumber,
         contractType,
+        paymentFrequency,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
         hireDate: hireDate || null,
       };
@@ -153,17 +156,32 @@ export function EditEmployeeModal({ isOpen, onClose, employee }: EditEmployeeMod
                     </PopoverContent>
                 </Popover>
             </div>
-             <div className="space-y-2">
-              <Label htmlFor="edit-contract-type">Tipo de Contrato</Label>
-              <Select value={contractType} onValueChange={(v) => setContractType(v as any)} required>
-                <SelectTrigger><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Indefinido">Indefinido</SelectItem>
-                  <SelectItem value="Temporal">Temporal</SelectItem>
-                  <SelectItem value="Formación">Formación</SelectItem>
-                  <SelectItem value="Prácticas">Prácticas</SelectItem>
-                </SelectContent>
-              </Select>
+             <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="edit-contract-type">Tipo de Contrato</Label>
+                    <Select value={contractType} onValueChange={(v) => setContractType(v as any)} required>
+                        <SelectTrigger><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="Indefinido">Indefinido</SelectItem>
+                        <SelectItem value="Temporal">Temporal</SelectItem>
+                        <SelectItem value="Formación">Formación</SelectItem>
+                        <SelectItem value="Prácticas">Prácticas</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="payment-frequency">Frecuencia de Pago</Label>
+                     <Select value={paymentFrequency} onValueChange={setPaymentFrequency} required>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Mensual">Mensual</SelectItem>
+                            <SelectItem value="Diario">Diario</SelectItem>
+                            <SelectItem value="Semanal">Semanal</SelectItem>
+                            <SelectItem value="Quincenal">Quincenal</SelectItem>
+                            <SelectItem value="Personalizar">Personalizar</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
              <div className="space-y-2">
               <Label htmlFor="edit-salary">Salario Bruto Anual (€)</Label>

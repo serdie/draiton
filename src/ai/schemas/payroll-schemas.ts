@@ -26,8 +26,12 @@ export const GeneratePayrollInputSchema = z.object({
 export type GeneratePayrollInput = z.infer<typeof GeneratePayrollInputSchema>;
 
 const PayrollItemSchema = z.object({
-    concept: z.string().describe('The concept of the accrual or deduction (e.g., "Salario Base", "Contingencias Comunes").'),
-    amount: z.number().describe('The monetary amount for this concept.'),
+    code: z.string().describe('Código del concepto (ej. "001").'),
+    concept: z.string().describe('Nombre del concepto (ej. "Salario Base").'),
+    quantity: z.number().describe('Unidades (ej. 30 días).'),
+    price: z.number().describe('Precio por unidad (ej. salario diario).'),
+    accrual: z.number().optional().describe('Importe del devengo (si aplica).'),
+    deduction: z.number().optional().describe('Importe de la deducción (si aplica).'),
 });
 
 export const GeneratePayrollOutputSchema = z.object({
@@ -42,14 +46,14 @@ export const GeneratePayrollOutputSchema = z.object({
     employeeCategory: z.string(),
     employeeSeniority: z.string().describe('Fecha de antigüedad, ej: "20 NOV 23"'),
     paymentPeriod: z.string().describe('Periodo de liquidación detallado, ej: "Del 01/10/2024 al 31/10/2024"'),
+    totalDays: z.number().describe('Total de días del periodo, ej. 30'),
   }),
-  accruals: z.object({
-    items: z.array(PayrollItemSchema).describe('List of salary accruals (devengos).'),
-    total: z.number().describe('Total accrued amount.'),
+  body: z.object({
+    items: z.array(PayrollItemSchema).describe('Lista detallada de todos los conceptos de la nómina.'),
   }),
-  deductions: z.object({
-    items: z.array(PayrollItemSchema).describe('List of deductions to be made.'),
-    total: z.number().describe('Total amount to be deducted.'),
+  summary: z.object({
+    totalAccruals: z.number().describe('Total devengado.'),
+    totalDeductions: z.number().describe('Total a deducir.'),
   }),
   netPay: z.number().describe('The final net amount to be paid to the employee (Líquido a percibir).'),
   contributionBases: z.object({

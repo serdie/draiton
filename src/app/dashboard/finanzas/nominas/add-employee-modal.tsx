@@ -46,6 +46,8 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [contractType, setContractType] = useState('');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState('');
   const [hireDate, setHireDate] = useState<Date | undefined>();
+  const [paymentFrequency, setPaymentFrequency] = useState('Mensual');
+
 
   const resetForm = () => {
     setName('');
@@ -56,6 +58,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     setContractType('');
     setGrossAnnualSalary('');
     setHireDate(undefined);
+    setPaymentFrequency('Mensual');
     setCreatedUserInfo(null);
   };
 
@@ -76,6 +79,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         nif,
         socialSecurityNumber,
         contractType,
+        paymentFrequency,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
         hireDate,
         ownerId: user.uid,
@@ -169,17 +173,32 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
                     </PopoverContent>
                 </Popover>
             </div>
-             <div className="space-y-2">
-              <Label htmlFor="contract-type">Tipo de Contrato</Label>
-              <Select value={contractType} onValueChange={setContractType} required>
-                <SelectTrigger><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Indefinido">Indefinido</SelectItem>
-                  <SelectItem value="Temporal">Temporal</SelectItem>
-                  <SelectItem value="Formación">Formación</SelectItem>
-                  <SelectItem value="Prácticas">Prácticas</SelectItem>
-                </SelectContent>
-              </Select>
+             <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                <Label htmlFor="contract-type">Tipo de Contrato</Label>
+                <Select value={contractType} onValueChange={setContractType} required>
+                    <SelectTrigger><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="Indefinido">Indefinido</SelectItem>
+                    <SelectItem value="Temporal">Temporal</SelectItem>
+                    <SelectItem value="Formación">Formación</SelectItem>
+                    <SelectItem value="Prácticas">Prácticas</SelectItem>
+                    </SelectContent>
+                </Select>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="payment-frequency">Frecuencia de Pago</Label>
+                     <Select value={paymentFrequency} onValueChange={setPaymentFrequency} required>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Mensual">Mensual</SelectItem>
+                            <SelectItem value="Diario">Diario</SelectItem>
+                            <SelectItem value="Semanal">Semanal</SelectItem>
+                            <SelectItem value="Quincenal">Quincenal</SelectItem>
+                            <SelectItem value="Personalizar">Personalizar</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
              <div className="space-y-2">
               <Label htmlFor="salary">Salario Bruto Anual (€)</Label>

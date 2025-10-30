@@ -9,7 +9,9 @@ export type Employee = {
     nif: string;
     socialSecurityNumber: string;
     contractType: 'Indefinido' | 'Temporal' | 'Formación' | 'Prácticas';
+    paymentFrequency: 'Mensual' | 'Diario' | 'Semanal' | 'Quincenal' | 'Personalizar';
     grossAnnualSalary: number;
+    hireDate?: Date;
     avatar?: string;
 };
 

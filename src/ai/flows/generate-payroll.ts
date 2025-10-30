@@ -14,7 +14,7 @@ import {
     GeneratePayrollOutputSchema,
     type GeneratePayrollInput,
     type GeneratePayrollOutput 
-} from '@/ai/schemas/payroll-schemas'; // Asumimos schemas importados de aquí
+} from '@/ai/schemas/payroll-schemas'; 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -30,9 +30,7 @@ export async function generatePayroll(input: GeneratePayrollInput): Promise<Gene
   return generatePayrollFlow(input);
 }
 
-// --- PROMPT (Ahora recibe datos calculados y se centra en explicar/formatear) ---
 
-// Extendemos el schema de entrada del prompt para incluir los datos calculados
 const GeneratePayrollPromptInputSchema = GeneratePayrollInputSchema.extend({
   calculatedData: z.object({
       salarioMensual: z.number(),
@@ -57,7 +55,7 @@ const GeneratePayrollPromptInputSchema = GeneratePayrollInputSchema.extend({
 
 const prompt = ai.definePrompt({
   name: 'generatePayrollPrompt',
-  input: { schema: GeneratePayrollPromptInputSchema }, // Usamos el schema extendido
+  input: { schema: GeneratePayrollPromptInputSchema }, 
   output: { schema: GeneratePayrollOutputSchema },
   prompt: `Eres un experto asesor laboral en España. Tu tarea es generar una nómina detallada en formato JSON, utilizando los datos de la empresa, del empleado y los cálculos YA REALIZADOS que se te proporcionan.
 
@@ -88,32 +86,24 @@ const prompt = ai.definePrompt({
 {{/if}}
 
 **CÁLCULOS REALIZADOS (Usa estos valores EXACTOS para rellenar la salida):**
-- Salario Mensual Base: {{{calculatedData.salarioMensual}}}
-- Prorrata Pagas Extra: {{{calculatedData.prorrataPagasExtra}}}
-- Total Conceptos Adicionales: {{{calculatedData.totalConceptosAdicionales}}}
-- **Total Devengado:** {{{calculatedData.totalDevengado}}}
-- BCCC: {{{calculatedData.bccc}}}
-- BCCP: {{{calculatedData.bccp}}}
-- Base IRPF: {{{calculatedData.baseIrpf}}}
-- Deducción Contingencias Comunes: {{{calculatedData.deduccionCC}}} (Calculado como ${TIPO_CONTINGENCIAS_COMUNES*100}% de BCCC)
-- Deducción Desempleo: {{{calculatedData.deduccionDesempleo}}} (Calculado como {{{calculatedData.tipoDesempleo}}}% de BCCP)
-- Deducción Formación Profesional: {{{calculatedData.deduccionFP}}} (Calculado como ${TIPO_FORMACION_PROFESIONAL*100}% de BCCP)
-- Deducción IRPF: {{{calculatedData.deduccionIrpf}}} (Estimado como {{{calculatedData.tipoIrpfEstimado}}}% de Base IRPF)
-- **Total Deducciones:** {{{calculatedData.totalDeducciones}}}
-- **Líquido a Percibir:** {{{calculatedData.liquidoAPercibir}}}
-- Antigüedad: {{{calculatedData.antiguedad}}}
-- Periodo Liquidación Detallado: {{{calculatedData.periodoLiquidacionDetallado}}}
-
+\`\`\`json
+{{{JSON.stringify calculatedData}}}
+\`\`\`
 
 **Tu Tarea:**
-Rellena la estructura JSON de salida (\`GeneratePayrollOutputSchema\`) utilizando los datos y cálculos proporcionados.
-- En \`header\`, completa TODOS los campos, incluyendo los de la empresa y el empleado. Usa los datos proporcionados.
-- En \`accruals.items\`, incluye el Salario Base, la Prorrata y los Conceptos Adicionales.
-- En \`deductions.items\`, incluye las Contingencias Comunes, Desempleo, Formación Profesional e IRPF.
-Asegúrate de que todos los importes coinciden exactamente con los valores de 'CÁLCULOS REALIZADOS'. Sé preciso y claro. Responde ÚNICAMENTE con el JSON.`,
+1.  Rellena la estructura JSON de salida (\`GeneratePayrollOutputSchema\`).
+2.  En \`header\`, completa TODOS los campos usando los datos proporcionados.
+3.  En \`body.items\`, crea una línea para cada devengo y deducción. Incluye código, cuantía (ej. 30 para días), precio (ej. salario/30) y los totales.
+    - **Devengos:** Salario Base, Prorrata Pagas Extra (si aplica), y los conceptos adicionales.
+    - **Deducciones:** Contingencias Comunes, Desempleo, MEI, Formación Profesional e IRPF.
+4.  Calcula los totales de devengos y deducciones en \`summary\`.
+5.  Asegúrate de que el \`netPay\` coincide con el calculado.
+6.  Completa la sección de bases de cotización.
+
+Sé preciso y profesional. Responde ÚNICAMENTE con el JSON.`,
 });
 
-// --- FLUJO CORREGIDO Y ROBUSTO (CON CÁLCULOS EXTERNALIZADOS) ---
+
 const generatePayrollFlow = ai.defineFlow(
   {
     name: 'generatePayrollFlow',

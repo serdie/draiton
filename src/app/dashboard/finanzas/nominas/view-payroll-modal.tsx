@@ -18,7 +18,6 @@ import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 import { type GeneratePayrollOutput, type ReviewPayrollOutput } from '@/ai/schemas/payroll-schemas';
 import type { Employee } from '../empleados/types';
-import { Logo } from '@/components/logo';
 import { reviewPayrollAction } from './actions';
 import { AuthContext } from '@/context/auth-context';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
@@ -112,81 +111,63 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
         <div className="flex-1 overflow-y-auto -mr-6 pr-6 py-4" ref={printableAreaRef}>
              <div className="p-6 border rounded-lg bg-background text-sm text-black">
                 {/* --- HEADER --- */}
-                <div className="grid grid-cols-2 gap-4 border-b pb-4">
+                <div className="grid grid-cols-2 gap-4 border-b pb-4 text-xs">
                     <div>
-                        <p className="font-bold">{payroll.header.companyName}</p>
+                        <p className="font-bold text-base">{payroll.header.companyName}</p>
                         <p>{payroll.header.companyAddress}</p>
                         <p>CIF: {payroll.header.companyCif}</p>
                         <p>CCC: {payroll.header.contributionAccountCode}</p>
                     </div>
                     <div className="text-right">
-                        <p><span className="font-semibold">RECIBO DE SALARIO</span></p>
-                        <p><span className="font-semibold">Periodo:</span> {payroll.header.paymentPeriod}</p>
+                        <p className="font-bold text-base">{payroll.header.employeeName}</p>
+                        <p>NIF/DNI: {payroll.header.employeeNif}</p>
+                        <p>Nº S.S.: {payroll.header.employeeSocialSecurityNumber}</p>
+                        <p>Categoría: {payroll.header.employeeCategory}</p>
+                        <p>Antigüedad: {payroll.header.employeeSeniority}</p>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4 border-b py-2">
-                     <div>
-                        <p className="font-bold">{payroll.header.employeeName}</p>
-                        <p>NIF: {payroll.header.employeeNif}</p>
-                        <p>Nº AFIL. S.S.: {payroll.header.employeeSocialSecurityNumber}</p>
-                     </div>
-                     <div className="text-right">
-                         <p><span className="font-semibold">Categoría:</span> {payroll.header.employeeCategory}</p>
-                         <p><span className="font-semibold">Antigüedad:</span> {payroll.header.employeeSeniority}</p>
-                     </div>
-                </div>
+                 <div className="flex justify-between border-b py-2 text-xs">
+                     <p><span className="font-semibold">Periodo Liquidación:</span> {payroll.header.paymentPeriod}</p>
+                     <p><span className="font-semibold">Total Días:</span> {payroll.header.totalDays}</p>
+                 </div>
 
                 {/* --- BODY --- */}
                 <div className="mt-4">
-                    <h4 className="font-bold text-center text-base mb-2">I. DEVENGOS</h4>
-                    <Table>
-                         <TableHeader>
-                            <TableRow>
-                                <TableHead className="text-black">Concepto</TableHead>
-                                <TableHead className="text-right text-black">Importe</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {payroll.accruals.items.map((item, index) => (
-                            <TableRow key={`accrual-${index}`}>
-                                <TableCell>{item.concept}</TableCell>
-                                <TableCell className="text-right">{item.amount.toFixed(2)}€</TableCell>
-                            </TableRow>
-                            ))}
-                            <TableRow className="font-bold bg-muted">
-                                <TableCell>A. TOTAL DEVENGADO</TableCell>
-                                <TableCell className="text-right">{payroll.accruals.total.toFixed(2)}€</TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
-                
-                 <div className="mt-4">
-                    <h4 className="font-bold text-center text-base mb-2">II. DEDUCCIONES</h4>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="text-black">Concepto</TableHead>
-                                <TableHead className="text-right text-black">Importe</TableHead>
+                                <TableHead className="text-black w-1/12">Cód.</TableHead>
+                                <TableHead className="text-black w-5/12">Concepto</TableHead>
+                                <TableHead className="text-black text-center w-1/12">Cuantía</TableHead>
+                                <TableHead className="text-black text-right w-2/12">Precio</TableHead>
+                                <TableHead className="text-black text-right w-2/12">Devengos</TableHead>
+                                <TableHead className="text-black text-right w-2/12">Deducciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {payroll.deductions.items.map((item, index) => (
-                            <TableRow key={`deduction-${index}`}>
+                            {payroll.body.items.map((item, index) => (
+                            <TableRow key={index}>
+                                <TableCell className="font-mono text-xs">{item.code}</TableCell>
                                 <TableCell>{item.concept}</TableCell>
-                                <TableCell className="text-right">{item.amount.toFixed(2)}€</TableCell>
+                                <TableCell className="text-center">{item.quantity.toFixed(2)}</TableCell>
+                                <TableCell className="text-right">{item.price.toFixed(2)}€</TableCell>
+                                <TableCell className="text-right font-medium">{item.accrual?.toFixed(2)}€</TableCell>
+                                <TableCell className="text-right font-medium">{item.deduction?.toFixed(2)}€</TableCell>
                             </TableRow>
                             ))}
-                            <TableRow className="font-bold bg-muted">
-                                <TableCell>B. TOTAL A DEDUCIR</TableCell>
-                                <TableCell className="text-right">{payroll.deductions.total.toFixed(2)}€</TableCell>
-                            </TableRow>
                         </TableBody>
                     </Table>
                 </div>
                 
-                 <div className="text-xl font-bold flex justify-between mt-6 border-t-2 border-primary pt-2">
-                    <span>LÍQUIDO TOTAL A PERCIBIR (A - B)</span>
+                {/* --- FOOTER --- */}
+                 <div className="mt-4 grid grid-cols-4 gap-2 text-xs border-t pt-2">
+                    <div className="font-bold">Totales</div>
+                    <div></div>
+                    <div className="text-right font-bold">{payroll.summary.totalAccruals.toFixed(2)}€</div>
+                    <div className="text-right font-bold">{payroll.summary.totalDeductions.toFixed(2)}€</div>
+                </div>
+                 <div className="text-lg font-bold flex justify-between mt-6 border-t-2 border-primary pt-2">
+                    <span>LÍQUIDO TOTAL A PERCIBIR</span>
                     <span>{payroll.netPay.toFixed(2)}€</span>
                 </div>
             </div>
