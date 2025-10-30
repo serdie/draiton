@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 interface EditPayrollModalProps {
   isOpen: boolean;
@@ -28,19 +29,25 @@ export function EditPayrollModal({ isOpen, onClose, payroll, onSave }: EditPayro
   const [editedPayroll, setEditedPayroll] = useState(payroll);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleNumericChange = (section: 'accruals' | 'deductions', index: number, field: 'accrual' | 'deduction', value: string) => {
-    const numericValue = parseFloat(value) || 0;
+  const handleItemChange = (
+    section: 'accruals' | 'deductions',
+    index: number,
+    field: 'concept' | 'accrual' | 'deduction',
+    value: string
+  ) => {
     const newPayroll = { ...editedPayroll };
-    (newPayroll.body.items[index] as any)[field] = numericValue;
-    recalculateTotals(newPayroll);
+    const items = newPayroll[section].items;
+
+    if (field === 'concept') {
+      items[index].concept = value;
+    } else {
+      (items[index] as any)[field] = parseFloat(value) || 0;
+    }
+    
+    setEditedPayroll(newPayroll);
+    recalculateTotals();
   };
   
-  const handleConceptChange = (section: 'accruals' | 'deductions', index: number, field: 'concept', value: string) => {
-    const newPayroll = { ...editedPayroll };
-    newPayroll.body.items[index][field] = value;
-    setEditedPayroll(newPayroll);
-  };
-
   const addItem = (section: 'accruals' | 'deductions') => {
     const newPayroll = { ...editedPayroll };
     const newItem = {
@@ -51,29 +58,36 @@ export function EditPayrollModal({ isOpen, onClose, payroll, onSave }: EditPayro
       accrual: section === 'accruals' ? 0 : undefined,
       deduction: section === 'deductions' ? 0 : undefined,
     };
-    newPayroll.body.items.push(newItem);
-    recalculateTotals(newPayroll);
+    newPayroll[section].items.push(newItem);
+    setEditedPayroll(newPayroll);
+    recalculateTotals();
   }
   
   const removeItem = (section: 'accruals' | 'deductions', index: number) => {
      const newPayroll = { ...editedPayroll };
-     newPayroll.body.items.splice(index, 1);
-     recalculateTotals(newPayroll);
+     newPayroll[section].items.splice(index, 1);
+     setEditedPayroll(newPayroll);
+     recalculateTotals();
   }
 
-  const recalculateTotals = (payrollToUpdate: GeneratePayrollOutput) => {
-    const totalAccruals = payrollToUpdate.body.items.reduce((sum, item) => sum + (item.accrual || 0), 0);
-    const totalDeductions = payrollToUpdate.body.items.reduce((sum, item) => sum + (item.deduction || 0), 0);
-    const netPay = totalAccruals - totalDeductions;
-    
-    setEditedPayroll({
-        ...payrollToUpdate,
-        summary: { totalAccruals, totalDeductions },
-        netPay,
+  const recalculateTotals = () => {
+    setEditedPayroll(prev => {
+        const totalAccruals = prev.accruals.items.reduce((sum, item) => sum + (item.accrual || 0), 0);
+        const totalDeductions = prev.deductions.items.reduce((sum, item) => sum + (item.deduction || 0), 0);
+        const netPay = totalAccruals - totalDeductions;
+        
+        return {
+            ...prev,
+            accruals: { ...prev.accruals, total: totalAccruals },
+            deductions: { ...prev.deductions, total: totalDeductions },
+            summary: { totalAccruals, totalDeductions },
+            netPay,
+        };
     });
   }
 
   const handleSave = () => {
+    recalculateTotals(); // Final recalculation before saving
     onSave(editedPayroll);
     onClose();
   };
@@ -87,29 +101,41 @@ export function EditPayrollModal({ isOpen, onClose, payroll, onSave }: EditPayro
         </DialogHeader>
         <ScrollArea className="flex-1 -mr-6 pr-6">
             <div className="grid grid-cols-2 gap-6 py-4">
-            {/* DEVENGOS y DEDUCCIONES */}
-            <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Conceptos de la Nómina</h3>
-                 {editedPayroll.body.items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                        <Input value={item.concept} onChange={e => handleConceptChange(item.accrual !== undefined ? 'accruals' : 'deductions', index, 'concept', e.target.value)} className="flex-1"/>
-                        <Input type="number" value={item.accrual ?? item.deduction ?? 0} onChange={e => handleNumericChange(item.accrual !== undefined ? 'accruals' : 'deductions', index, item.accrual !== undefined ? 'accrual' : 'deduction', e.target.value)} className="w-28 text-right" />
-                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem(item.accrual !== undefined ? 'accruals' : 'deductions', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                    </div>
-                ))}
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => addItem('accruals')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Devengo</Button>
-                  <Button variant="outline" size="sm" onClick={() => addItem('deductions')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Deducción</Button>
+                {/* DEVENGOS */}
+                <div className="space-y-2">
+                    <h3 className="font-semibold text-center mb-2">DEVENGOS</h3>
+                    {editedPayroll.accruals.items.map((item, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                            <Input value={item.concept} onChange={e => handleItemChange('accruals', index, 'concept', e.target.value)} className="flex-1"/>
+                            <Input type="number" value={item.accrual} onChange={e => handleItemChange('accruals', index, 'accrual', e.target.value)} className="w-28 text-right" />
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem('accruals', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                        </div>
+                    ))}
+                     <Button variant="outline" size="sm" onClick={() => addItem('accruals')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Devengo</Button>
                 </div>
-                 <div className="flex justify-between font-bold pt-2 border-t">
-                    <span>Total Devengado:</span>
-                    <span>{editedPayroll.summary.totalAccruals.toFixed(2)}€</span>
-                </div>
-                <div className="flex justify-between font-bold">
-                    <span>Total a Deducir:</span>
-                    <span>{editedPayroll.summary.totalDeductions.toFixed(2)}€</span>
+                {/* DEDUCCIONES */}
+                 <div className="space-y-2">
+                    <h3 className="font-semibold text-center mb-2">DEDUCCIONES</h3>
+                    {editedPayroll.deductions.items.map((item, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                            <Input value={item.concept} onChange={e => handleItemChange('deductions', index, 'concept', e.target.value)} className="flex-1"/>
+                            <Input type="number" value={item.deduction} onChange={e => handleItemChange('deductions', index, 'deduction', e.target.value)} className="w-28 text-right" />
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem('deductions', index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                        </div>
+                    ))}
+                    <Button variant="outline" size="sm" onClick={() => addItem('deductions')}><PlusCircle className="mr-2 h-4 w-4"/>Añadir Deducción</Button>
                 </div>
             </div>
+            <Separator className="my-4" />
+             <div className="grid grid-cols-2 gap-x-8 text-sm">
+                <div className="flex justify-between font-bold">
+                    <span>TOTAL DEVENGADO</span>
+                    <span>{editedPayroll.accruals.total.toFixed(2)}€</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                    <span>TOTAL A DEDUCIR</span>
+                    <span>{editedPayroll.deductions.total.toFixed(2)}€</span>
+                </div>
             </div>
             <div className="mt-4 p-4 bg-muted rounded-md text-right">
                 <span className="text-lg font-bold">LÍQUIDO A PERCIBIR: {editedPayroll.netPay.toFixed(2)}€</span>

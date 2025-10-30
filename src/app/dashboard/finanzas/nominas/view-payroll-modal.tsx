@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from '@/components/ui/table';
-import { Download, Loader2, HelpCircle } from 'lucide-react';
+import { Download, Loader2, HelpCircle, Save } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,7 @@ import { AuthContext } from '@/context/auth-context';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { EditPayrollModal } from './edit-payroll-modal';
 
 interface ViewPayrollModalProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ interface ViewPayrollModalProps {
   onSaveSuccess?: () => void;
 }
 
-export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuccess }: ViewPayrollModalProps) {
+export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, employee, onSaveSuccess }: ViewPayrollModalProps) {
     const { user } = useContext(AuthContext);
     const { toast } = useToast();
     const printableAreaRef = useRef<HTMLDivElement>(null);
@@ -40,6 +41,8 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
     const [isSaving, setIsSaving] = useState(false);
     const [review, setReview] = useState<ReviewPayrollOutput | null>(null);
     const [isReviewing, setIsReviewing] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentPayroll, setCurrentPayroll] = useState(initialPayroll);
 
     const handleDownloadPdf = async () => {
         const element = printableAreaRef.current;
@@ -53,7 +56,7 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`nomina-${payroll.header.paymentPeriod.replace(/\s+/g, '-')}-${payroll.header.employeeName}.pdf`);
+            pdf.save(`nomina-${currentPayroll.header.paymentPeriod.replace(/\s+/g, '-')}-${currentPayroll.header.employeeName}.pdf`);
         } catch (error) {
             console.error("Error al generar PDF:", error);
             toast({ variant: 'destructive', title: 'Error de descarga', description: 'No se pudo generar el PDF.' });
@@ -63,12 +66,12 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
     };
     
     const handleSavePayroll = async () => {
-      if (!payroll || !user) return;
+      if (!currentPayroll || !user) return;
 
       setIsSaving(true);
       
       const payrollData = {
-          ...payroll,
+          ...currentPayroll,
           employeeId: employee.id,
           ownerId: user.uid,
           createdAt: serverTimestamp(),
@@ -76,7 +79,7 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
 
       try {
         await addDoc(collection(db, "payrolls"), payrollData);
-        toast({ title: 'Nómina Guardada', description: `La nómina de ${payroll.header.paymentPeriod} para ${employee.name} ha sido guardada.` });
+        toast({ title: 'Nómina Guardada', description: `La nómina de ${currentPayroll.header.paymentPeriod} para ${employee.name} ha sido guardada.` });
         if(onSaveSuccess) onSaveSuccess();
       } catch (error) {
         console.error("Error al guardar la nómina:", error);
@@ -89,7 +92,7 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
     const handleReview = async () => {
         setIsReviewing(true);
         setReview(null);
-        const result = await reviewPayrollAction(payroll);
+        const result = await reviewPayrollAction(currentPayroll);
         if (result.data) {
             setReview(result.data);
         } else {
@@ -98,7 +101,19 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
         setIsReviewing(false);
     };
 
+    const handleSaveEditedPayroll = (updatedPayroll: GeneratePayrollOutput) => {
+        setCurrentPayroll(updatedPayroll);
+        setIsEditing(false);
+    }
+
   return (
+    <>
+    <EditPayrollModal 
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+        payroll={currentPayroll}
+        onSave={handleSaveEditedPayroll}
+    />
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
@@ -113,62 +128,82 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
                 {/* --- HEADER --- */}
                 <div className="grid grid-cols-2 gap-4 border-b pb-4 text-xs">
                     <div>
-                        <p className="font-bold text-base">{payroll.header.companyName}</p>
-                        <p>{payroll.header.companyAddress}</p>
-                        <p>CIF: {payroll.header.companyCif}</p>
-                        <p>CCC: {payroll.header.contributionAccountCode}</p>
+                        <p className="font-bold text-base">{currentPayroll.header.companyName}</p>
+                        <p>{currentPayroll.header.companyAddress}</p>
+                        <p>CIF: {currentPayroll.header.companyCif}</p>
+                        <p>CCC: {currentPayroll.header.contributionAccountCode}</p>
                     </div>
                     <div className="text-right">
-                        <p className="font-bold text-base">{payroll.header.employeeName}</p>
-                        <p>NIF/DNI: {payroll.header.employeeNif}</p>
-                        <p>Nº S.S.: {payroll.header.employeeSocialSecurityNumber}</p>
-                        <p>Categoría: {payroll.header.employeeCategory}</p>
-                        <p>Antigüedad: {payroll.header.employeeSeniority}</p>
+                        <p className="font-bold text-base">{currentPayroll.header.employeeName}</p>
+                        <p>NIF/DNI: {currentPayroll.header.employeeNif}</p>
+                        <p>Nº S.S.: {currentPayroll.header.employeeSocialSecurityNumber}</p>
+                        <p>Categoría: {currentPayroll.header.employeeCategory}</p>
+                        <p>Antigüedad: {currentPayroll.header.employeeSeniority}</p>
                     </div>
                 </div>
                  <div className="flex justify-between border-b py-2 text-xs">
-                     <p><span className="font-semibold">Periodo Liquidación:</span> {payroll.header.paymentPeriod}</p>
-                     <p><span className="font-semibold">Total Días:</span> {payroll.header.totalDays}</p>
+                     <p><span className="font-semibold">Periodo Liquidación:</span> {currentPayroll.header.paymentPeriod}</p>
+                     <p><span className="font-semibold">Total Días:</span> {currentPayroll.header.totalDays}</p>
                  </div>
 
                 {/* --- BODY --- */}
-                <div className="mt-4">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="text-black w-1/12">Cód.</TableHead>
-                                <TableHead className="text-black w-5/12">Concepto</TableHead>
-                                <TableHead className="text-black text-center w-1/12">Cuantía</TableHead>
-                                <TableHead className="text-black text-right w-2/12">Precio</TableHead>
-                                <TableHead className="text-black text-right w-2/12">Devengos</TableHead>
-                                <TableHead className="text-black text-right w-2/12">Deducciones</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {payroll.body.items.map((item, index) => (
-                            <TableRow key={index}>
-                                <TableCell className="font-mono text-xs">{item.code}</TableCell>
-                                <TableCell>{item.concept}</TableCell>
-                                <TableCell className="text-center">{item.quantity.toFixed(2)}</TableCell>
-                                <TableCell className="text-right">{item.price.toFixed(2)}€</TableCell>
-                                <TableCell className="text-right font-medium">{item.accrual?.toFixed(2)}€</TableCell>
-                                <TableCell className="text-right font-medium">{item.deduction?.toFixed(2)}€</TableCell>
-                            </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                <div className="mt-4 grid grid-cols-2 gap-x-8">
+                   <div>
+                       <h4 className="font-semibold text-center mb-2">DEVENGOS</h4>
+                        <Table>
+                           <TableHeader>
+                               <TableRow>
+                                    <TableHead className="text-black w-6/12">Concepto</TableHead>
+                                    <TableHead className="text-black text-right">Importe</TableHead>
+                               </TableRow>
+                           </TableHeader>
+                            <TableBody>
+                                {currentPayroll.accruals.items.map((item, index) => (
+                                    <TableRow key={`accrual-${index}`}>
+                                        <TableCell>{item.concept}</TableCell>
+                                        <TableCell className="text-right">{item.accrual?.toFixed(2)}€</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                   </div>
+                   <div>
+                        <h4 className="font-semibold text-center mb-2">DEDUCCIONES</h4>
+                        <Table>
+                            <TableHeader>
+                               <TableRow>
+                                    <TableHead className="text-black w-6/12">Concepto</TableHead>
+                                    <TableHead className="text-black text-right">Importe</TableHead>
+                               </TableRow>
+                           </TableHeader>
+                            <TableBody>
+                                 {currentPayroll.deductions.items.map((item, index) => (
+                                    <TableRow key={`deduction-${index}`}>
+                                        <TableCell>{item.concept}</TableCell>
+                                        <TableCell className="text-right">{item.deduction?.toFixed(2)}€</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                   </div>
                 </div>
                 
                 {/* --- FOOTER --- */}
-                 <div className="mt-4 grid grid-cols-4 gap-2 text-xs border-t pt-2">
-                    <div className="font-bold">Totales</div>
-                    <div></div>
-                    <div className="text-right font-bold">{payroll.summary.totalAccruals.toFixed(2)}€</div>
-                    <div className="text-right font-bold">{payroll.summary.totalDeductions.toFixed(2)}€</div>
+                 <div className="mt-4 grid grid-cols-2 gap-x-8 text-sm">
+                    <div className="flex justify-between font-bold border-t pt-2">
+                        <span>TOTAL DEVENGADO</span>
+                        <span>{currentPayroll.summary.totalAccruals.toFixed(2)}€</span>
+                    </div>
+                    <div className="flex justify-between font-bold border-t pt-2">
+                        <span>TOTAL A DEDUCIR</span>
+                        <span>{currentPayroll.summary.totalDeductions.toFixed(2)}€</span>
+                    </div>
                 </div>
-                 <div className="text-lg font-bold flex justify-between mt-6 border-t-2 border-primary pt-2">
-                    <span>LÍQUIDO TOTAL A PERCIBIR</span>
-                    <span>{payroll.netPay.toFixed(2)}€</span>
+                 <div className="text-lg font-bold flex justify-end mt-6 border-t-2 border-primary pt-2">
+                    <div className="flex justify-between w-1/2">
+                        <span>LÍQUIDO TOTAL A PERCIBIR</span>
+                        <span>{currentPayroll.netPay.toFixed(2)}€</span>
+                    </div>
                 </div>
             </div>
             
@@ -190,6 +225,7 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
                 {isReviewing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <HelpCircle className="mr-2 h-4 w-4"/>}
                 {isReviewing ? 'Revisando...' : 'Revisión con IA'}
             </Button>
+            <Button variant="secondary" onClick={() => setIsEditing(true)}>Editar Nómina</Button>
             <div className="flex-grow"/>
           <Button variant="outline" onClick={handleDownloadPdf} disabled={isDownloading}>
             {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
@@ -197,7 +233,7 @@ export function ViewPayrollModal({ isOpen, onClose, payroll, employee, onSaveSuc
           </Button>
           {onSaveSuccess && (
             <Button onClick={handleSavePayroll} disabled={isSaving}>
-              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               Guardar Nómina
             </Button>
           )}
