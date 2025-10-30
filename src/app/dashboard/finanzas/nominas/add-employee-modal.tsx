@@ -83,8 +83,12 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
 
       try {
         const result = await createEmployeeUser(employeeData as any);
-        setCreatedUserInfo({ message: result.message, tempPassword: result.tempPassword });
-        onEmployeeAdded();
+        if (result && result.message) {
+            setCreatedUserInfo({ message: result.message, tempPassword: result.tempPassword });
+            onEmployeeAdded();
+        } else {
+             throw new Error('La acción del servidor no devolvió una respuesta válida.');
+        }
       } catch (error: any) {
         toast({
           variant: 'destructive',
