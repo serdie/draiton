@@ -55,7 +55,7 @@ const sanitizeForFirestore = (data: any): any => {
 
 
 export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, employee, onSaveSuccess }: ViewPayrollModalProps) {
-    const { user } = useContext(AuthContext);
+    const { user, isAdmin } = useContext(AuthContext);
     const { toast } = useToast();
     const printableAreaRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
@@ -94,7 +94,7 @@ export function ViewPayrollModal({ isOpen, onClose, payroll: initialPayroll, emp
       const payrollData = {
           ...currentPayroll,
           employeeId: employee.id,
-          ownerId: user.uid,
+          ownerId: isAdmin ? user.uid : employee.ownerId, // Use admin's UID if admin, otherwise employee's owner
           createdAt: serverTimestamp(),
       };
       
