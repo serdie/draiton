@@ -172,3 +172,25 @@ export async function updateEmployeeAction(employeeId: string, updatedData: any)
         return { success: false, error: 'No se pudo actualizar el empleado en el servidor.' };
     }
 }
+
+
+export async function updateEmployeePasswordAction(employeeId: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  if (!employeeId || !newPassword) {
+    return { success: false, error: 'Se requiere el ID del empleado y la nueva contraseña.' };
+  }
+
+  const { auth } = getFirebaseAuth();
+
+  try {
+    await auth.updateUser(employeeId, {
+      password: newPassword,
+    });
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating employee password:", error);
+    if (error.code === 'auth/user-not-found') {
+        return { success: false, error: 'El empleado no existe en el sistema de autenticación.' };
+    }
+    return { success: false, error: 'No se pudo actualizar la contraseña.' };
+  }
+}
