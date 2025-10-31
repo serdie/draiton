@@ -3,84 +3,24 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Coins, Receipt, Users, Loader2, MoreHorizontal, Download, Mail, Trash2, Pencil, Clock } from 'lucide-react';
+import { FileText, Coins, Receipt, Users } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
 import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
 import { AuthContext } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 import { EmpleadosPageContent } from './empleados/page';
-import { collection, query, where, onSnapshot, type Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
-import { useToast } from '@/hooks/use-toast';
-import type { GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { ViewPayrollModal } from './nominas/view-payroll-modal';
-import type { Employee } from './empleados/types';
+import { EmployeePayslipList } from './empleados/employee-payslip-list';
 import { FichajeEmpleadoTab } from './empleados/fichaje-empleado-tab';
+import { Clock } from 'lucide-react';
+
 
 export default function FinanzasPage() {
-  const { user, isEmpresa, isEmployee } = useContext(AuthContext);
-  const { toast } = useToast();
-  const [payrolls, setPayrolls] = useState<(GeneratePayrollOutput & { id: string })[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
-
-  useEffect(() => {
-    if (isEmployee && user) {
-        setLoading(true);
-        const q = query(collection(db, 'payrolls'), where('employeeId', '==', user.uid));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const payrollsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratePayrollOutput & { id: string }));
-            
-            const monthOrder = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            payrollsList.sort((a, b) => {
-                const [monthA, yearA] = a.header.period.split(' ');
-                const [monthB, yearB] = b.header.period.split(' ');
-                const dateA = new Date(parseInt(yearA), monthOrder.indexOf(monthA));
-                const dateB = new Date(parseInt(yearB), monthOrder.indexOf(monthB));
-                return dateB.getTime() - dateA.getTime();
-            });
-
-            setPayrolls(payrollsList);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching payrolls for employee:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar tus nóminas.' });
-            setLoading(false);
-        });
-        return () => unsubscribe();
-    } else {
-        setLoading(false);
-    }
-  }, [isEmployee, user, toast]);
+  const { isEmpresa, isEmployee } = useContext(AuthContext);
 
   if (isEmployee) {
     return (
-        <>
-        {payrollToView && user && (
-             <ViewPayrollModal
-                isOpen={!!payrollToView}
-                onClose={() => setPayrollToView(null)}
-                payroll={payrollToView}
-                // Mock employee data for the modal, as the employee is the user.
-                employee={{
-                    id: user.uid,
-                    name: user.displayName || 'Empleado',
-                    email: user.email || '',
-                    ownerId: '',
-                    position: '',
-                    nif: '',
-                    socialSecurityNumber: '',
-                    contractType: 'Indefinido',
-                    grossAnnualSalary: 0,
-                }}
-            />
-        )}
-         <div className="space-y-6">
+        <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold">Mis Finanzas y Fichajes</h1>
                 <p className="text-muted-foreground">Consulta tus nóminas y gestiona tu jornada laboral.</p>
@@ -94,68 +34,10 @@ export default function FinanzasPage() {
                     <FichajeEmpleadoTab />
                 </TabsContent>
                 <TabsContent value="nominas" className="mt-6">
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Historial de Nóminas</CardTitle>
-                            <CardDescription>Aquí puedes ver todas tus nóminas recibidas.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {loading ? (
-                                <div className="flex justify-center items-center py-10">
-                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                                </div>
-                            ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Periodo</TableHead>
-                                            <TableHead>Importe Líquido</TableHead>
-                                            <TableHead>Estado</TableHead>
-                                            <TableHead className="text-right">Acciones</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {payrolls.length > 0 ? payrolls.map((payroll) => (
-                                            <TableRow key={payroll.id}>
-                                                <TableCell className="font-medium">{payroll.header.period}</TableCell>
-                                                <TableCell>{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(payroll.netPay)}</TableCell>
-                                                <TableCell className="text-green-600">Pagada</TableCell>
-                                                <TableCell className="text-right">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                <MoreHorizontal className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
-                                                                <FileText className="mr-2 h-4 w-4" />
-                                                                Ver Nómina
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setPayrollToView(payroll)}>
-                                                                <Download className="mr-2 h-4 w-4" />
-                                                                Descargar PDF
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </TableCell>
-                                            </TableRow>
-                                        )) : (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="h-24 text-center">
-                                                    Aún no has recibido ninguna nómina.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            )}
-                        </CardContent>
-                    </Card>
+                     <EmployeePayslipList />
                 </TabsContent>
             </Tabs>
         </div>
-        </>
     )
   }
 

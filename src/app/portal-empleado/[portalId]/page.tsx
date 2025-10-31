@@ -18,11 +18,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { FichajeEmpleadoTab } from '@/app/dashboard/finanzas/empleados/fichaje-empleado-tab';
+import { EmployeePayslipList } from '@/app/dashboard/finanzas/empleados/employee-payslip-list';
 
 function EmployeePortalContent({ employee }: { employee: Employee }) {
     return (
          <div className="space-y-8">
-            <Card>
+             <Card>
                 <CardHeader>
                     <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-xl font-bold">
@@ -30,31 +32,15 @@ function EmployeePortalContent({ employee }: { employee: Employee }) {
                         </div>
                         <div>
                             <CardTitle className="text-2xl">Bienvenido, {employee.name}</CardTitle>
-                            <CardDescription>Este es tu espacio personal para consultar tu información laboral.</CardDescription>
+                            <CardDescription>Este es tu espacio personal para consultar tu información laboral y gestionar tu jornada.</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div><p className="text-muted-foreground">Puesto</p><p className="font-semibold">{employee.position}</p></div>
-                    <div><p className="text-muted-foreground">Contrato</p><p className="font-semibold">{employee.contractType}</p></div>
-                    <div><p className="text-muted-foreground">NIF</p><p className="font-semibold">{employee.nif}</p></div>
-                    <div><p className="text-muted-foreground">Nº S.S.</p><p className="font-semibold">{employee.socialSecurityNumber}</p></div>
-                </CardContent>
             </Card>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary"/> Mis Nóminas</CardTitle></CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">Aquí aparecerá un listado de tus nóminas para que puedas consultarlas y descargarlas.</p>
-                    </CardContent>
-                </Card>
-                    <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/> Mis Fichajes</CardTitle></CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">Consulta tu historial de entradas y salidas. Próximamente podrás fichar desde aquí.</p>
-                    </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <FichajeEmpleadoTab />
+                <EmployeePayslipList />
             </div>
         </div>
     );
@@ -168,8 +154,19 @@ export default function EmployeePortalPage() {
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [portalId]);
+    // Check if a user is already authenticated in the session
+    const unsubscribeAuth = auth.onAuthStateChanged(user => {
+      if (user && employee && user.uid === employee.id) {
+        setAuthenticatedUser(user);
+      }
+    });
+
+
+    return () => {
+      unsubscribe();
+      unsubscribeAuth();
+    }
+  }, [portalId, employee]);
   
   const handleLoginSuccess = (user: FirebaseUser) => {
     if (user.uid === employee?.id) {
@@ -178,6 +175,11 @@ export default function EmployeePortalPage() {
         setError('Las credenciales no corresponden a este portal de empleado.');
         auth.signOut(); // Log out the user if they don't belong here
     }
+  }
+
+  const handleLogout = () => {
+    auth.signOut();
+    setAuthenticatedUser(null);
   }
 
   const renderContent = () => {
@@ -223,8 +225,9 @@ export default function EmployeePortalPage() {
                     <span className="font-bold">Portal del Empleado</span>
                 </div>
                  {authenticatedUser && (
-                    <div className="text-sm text-muted-foreground">
-                        Sesión iniciada como <span className="font-semibold text-foreground">{authenticatedUser.displayName}</span>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span>Sesión iniciada como <span className="font-semibold text-foreground">{authenticatedUser.displayName}</span></span>
+                        <Button variant="ghost" size="sm" onClick={handleLogout}>Cerrar Sesión</Button>
                     </div>
                 )}
             </div>
