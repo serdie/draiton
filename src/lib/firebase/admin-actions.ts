@@ -101,7 +101,7 @@ export async function createEmployeeUser(employeeData: {
         displayName: employeeData.name,
         photoURL: '', // Provide a default or leave empty
       });
-      message = `Se ha creado un usuario para ${employeeData.name}. Contraseña temporal: ${tempPassword}`;
+      message = `Se ha creado un usuario para ${employeeData.name}.`;
     } else {
       throw error;
     }

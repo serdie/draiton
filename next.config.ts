@@ -1,4 +1,3 @@
-
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -55,7 +54,13 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
+    // Este bloque experimental se queda como lo tenías (vacío o con lo que tuviera)
   },
+
+  // ======================================================
+  // AQUÍ ESTÁ EL ARREGLO:
+  // Esta línea va FUERA de "experimental"
+  // ======================================================
   allowedDevOrigins: ["https://*.cloudworkstations.dev"],
 };
 
