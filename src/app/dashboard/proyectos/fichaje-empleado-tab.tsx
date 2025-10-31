@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Loader2, Power } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -74,18 +73,29 @@ export function FichajeEmpleadoTab() {
             toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
             return;
         }
-        
-        const ownerId = (user as any).companyOwnerId;
-        if (!ownerId) {
-            toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a una empresa.' });
-            return;
-        }
 
-        const newType = status === 'out' ? 'Entrada' : 'Salida';
-        
         setIsProcessing(true);
 
         try {
+            // Get the employee's user document to find their companyOwnerId
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+
+            if (!userDoc.exists()) {
+                throw new Error("No se encontró el perfil de usuario.");
+            }
+
+            const userData = userDoc.data();
+            const ownerId = userData.companyOwnerId;
+
+            if (!ownerId) {
+                toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a una empresa.' });
+                setIsProcessing(false);
+                return;
+            }
+
+            const newType = status === 'out' ? 'Entrada' : 'Salida';
+
             await addDoc(collection(db, 'fichajes'), {
                 employeeId: user.uid,
                 employeeName: user.displayName,
@@ -93,6 +103,7 @@ export function FichajeEmpleadoTab() {
                 type: newType,
                 timestamp: serverTimestamp(),
             });
+
             toast({
                 title: `Fichaje de ${newType} registrado`,
                 description: `Has registrado tu ${newType.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
