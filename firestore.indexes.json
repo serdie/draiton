@@ -3,7 +3,7 @@
   "indexes": [
     {
       "collectionGroup": "fichajes",
-      "queryScope": "COLLECTION",
+      "queryScope": "COLLECTION_GROUP",
       "fields": [
         {
           "fieldPath": "employeeId",
