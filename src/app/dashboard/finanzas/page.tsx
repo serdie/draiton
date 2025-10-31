@@ -91,14 +91,11 @@ export default function FinanzasPage() {
         </div>
 
         <Tabs defaultValue="documentos" className="w-full">
-          <TabsList className={cn("grid w-full", isEmpresa ? "grid-cols-5" : "grid-cols-4")}>
+          <TabsList className={cn("grid w-full", isEmpresa ? "grid-cols-4" : "grid-cols-3")}>
             <TabsTrigger value="documentos"><FileText className="mr-2 h-4 w-4" />Documentos</TabsTrigger>
             <TabsTrigger value="gastos"><Receipt className="mr-2 h-4 w-4" />Gastos</TabsTrigger>
             <TabsTrigger value="impuestos"><Coins className="mr-2 h-4 w-4" />Impuestos</TabsTrigger>
              <TabsTrigger value="empleados"><Users className="mr-2 h-4 w-4" />Empleados</TabsTrigger>
-            {isEmpresa && (
-                 <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4" />Control Horario</TabsTrigger>
-            )}
           </TabsList>
           <TabsContent value="documentos" className="mt-6">
             <DocumentosContent />
@@ -112,11 +109,6 @@ export default function FinanzasPage() {
           <TabsContent value="empleados"  className="mt-6">
               <EmpleadosPageContent />
           </TabsContent>
-           {isEmpresa && (
-                <TabsContent value="fichajes"  className="mt-6">
-                    <FichajesTab />
-                </TabsContent>
-           )}
         </Tabs>
       </div>
   );

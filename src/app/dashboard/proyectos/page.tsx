@@ -111,7 +111,8 @@ export default function OperacionesPage() {
         { value: 'proyectos', label: 'Proyectos', icon: HardHat, component: <KanbanBoard projects={projects} loading={loading} /> },
         { value: 'crm', label: 'CRM', icon: User, component: <ContactosPage /> },
         { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
-        { value: 'informes', label: 'Informes', icon: BarChart2, component: <InformesPage /> }
+        { value: 'informes', label: 'Informes', icon: BarChart2, component: <InformesPage /> },
+        { value: 'fichajes', label: 'Fichajes', icon: Clock, component: <FichajesTab />, condition: isEmpresa }
     ];
     
     const tabsForEmployee = [
