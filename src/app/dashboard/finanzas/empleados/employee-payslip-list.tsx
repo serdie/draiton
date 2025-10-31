@@ -8,22 +8,29 @@ import { Loader2, MoreHorizontal, FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase/config';
+import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { ViewPayrollModal } from '../nominas/view-payroll-modal';
+import type { Employee } from './types';
+import { AuthContext } from '@/context/auth-context';
 
-export function EmployeePayslipList() {
+
+interface EmployeePayslipListProps {
+    employee: Employee;
+}
+
+
+export function EmployeePayslipList({ employee }: EmployeePayslipListProps) {
     const { toast } = useToast();
     const [payrolls, setPayrolls] = useState<(GeneratePayrollOutput & { id: string })[]>([]);
     const [loading, setLoading] = useState(true);
     const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
-    const currentUser = auth.currentUser;
 
     useEffect(() => {
-        if (currentUser) {
+        if (employee) {
             setLoading(true);
-            const q = query(collection(db, 'payrolls'), where('employeeId', '==', currentUser.uid));
+            const q = query(collection(db, 'payrolls'), where('employeeId', '==', employee.id));
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const payrollsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratePayrollOutput & { id: string }));
 
@@ -48,9 +55,9 @@ export function EmployeePayslipList() {
         } else {
             setLoading(false);
         }
-    }, [currentUser, toast]);
+    }, [employee, toast]);
     
-     if (!currentUser) {
+     if (!employee) {
         return (
              <Card>
                 <CardHeader>
@@ -70,17 +77,7 @@ export function EmployeePayslipList() {
                     isOpen={!!payrollToView}
                     onClose={() => setPayrollToView(null)}
                     payroll={payrollToView}
-                    employee={{
-                        id: currentUser.uid,
-                        name: currentUser.displayName || 'Empleado',
-                        email: currentUser.email || '',
-                        ownerId: '',
-                        position: '',
-                        nif: '',
-                        socialSecurityNumber: '',
-                        contractType: 'Indefinido',
-                        grossAnnualSalary: 0,
-                    }}
+                    employee={employee}
                 />
             )}
             <Card>

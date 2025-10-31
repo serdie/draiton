@@ -16,9 +16,9 @@ import { Clock } from 'lucide-react';
 
 
 export default function FinanzasPage() {
-  const { isEmpresa, isEmployee } = useContext(AuthContext);
+  const { user, isEmpresa, isEmployee } = useContext(AuthContext);
 
-  if (isEmployee) {
+  if (isEmployee && user) {
     return (
         <div className="space-y-6">
             <div>
@@ -34,7 +34,7 @@ export default function FinanzasPage() {
                     <FichajeEmpleadoTab />
                 </TabsContent>
                 <TabsContent value="nominas" className="mt-6">
-                     <EmployeePayslipList />
+                     <EmployeePayslipList employee={user as any} />
                 </TabsContent>
             </Tabs>
         </div>
