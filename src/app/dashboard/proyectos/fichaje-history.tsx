@@ -10,11 +10,12 @@ import { format, startOfWeek, startOfMonth, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Fichaje } from './types';
 import { Button } from '@/components/ui/button';
-import { Download, Calendar as CalendarIcon } from 'lucide-react';
+import { Download, Calendar as CalendarIcon, Edit } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
+import { RequestChangeModal } from './request-change-modal';
 
 
 interface FichajeHistoryProps {
@@ -36,6 +37,7 @@ const getTypeClass = (type: Fichaje['type']) => {
 export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
   const [period, setPeriod] = useState<Period>('semana');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
+  const [fichajeToChange, setFichajeToChange] = useState<Fichaje | null>(null);
 
 
   const filteredFichajes = useMemo(() => {
@@ -85,6 +87,14 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
   };
 
   return (
+    <>
+    {fichajeToChange && (
+        <RequestChangeModal 
+            isOpen={!!fichajeToChange}
+            onClose={() => setFichajeToChange(null)}
+            fichaje={fichajeToChange}
+        />
+    )}
     <Card>
       <CardHeader className="flex flex-col md:flex-row md:items-center justify-between">
         <div>
@@ -128,6 +138,7 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
               <TableHead>Día</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead className="text-right">Hora</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -142,11 +153,16 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
                     </span>
                   </TableCell>
                   <TableCell className="text-right font-mono">{format(fichaje.timestamp, 'HH:mm:ss')}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setFichajeToChange(fichaje)}>
+                        <Edit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   No hay registros para este periodo.
                 </TableCell>
               </TableRow>
@@ -155,5 +171,6 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
         </Table>
       </CardContent>
     </Card>
+    </>
   );
 }

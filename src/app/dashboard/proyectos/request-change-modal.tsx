@@ -1,0 +1,118 @@
+
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import type { Fichaje } from './types';
+
+interface RequestChangeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  fichaje: Fichaje;
+}
+
+export function RequestChangeModal({ isOpen, onClose, fichaje }: RequestChangeModalProps) {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [reason, setReason] = useState('');
+  const [newTime, setNewTime] = useState(format(fichaje.timestamp, 'HH:mm'));
+
+  const handleSubmit = async () => {
+    if (!reason || !newTime) {
+      toast({
+        variant: 'destructive',
+        title: 'Campos requeridos',
+        description: 'Debes indicar la nueva hora y el motivo del cambio.',
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    const [hours, minutes] = newTime.split(':').map(Number);
+    const newTimestamp = new Date(fichaje.timestamp);
+    newTimestamp.setHours(hours, minutes);
+
+    const fichajeRef = doc(db, 'fichajes', fichaje.id);
+    try {
+      await updateDoc(fichajeRef, {
+        requestedTimestamp: newTimestamp,
+        requestChangeReason: reason,
+        requestStatus: 'pending',
+        requestedAt: new Date(),
+      });
+      toast({
+        title: 'Solicitud Enviada',
+        description: 'Tu solicitud de cambio ha sido enviada para su revisión.',
+      });
+      onClose();
+    } catch (error) {
+      console.error("Error al solicitar cambio de fichaje:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo enviar tu solicitud. Inténtalo de nuevo.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Solicitar Cambio de Fichaje</DialogTitle>
+          <DialogDescription>
+            Propón un cambio para tu registro de <span className="font-semibold">{fichaje.type}</span> del {format(fichaje.timestamp, 'PPP', { locale: es })}.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4 items-center">
+                <div>
+                    <Label>Hora Original</Label>
+                    <Input readOnly value={format(fichaje.timestamp, 'HH:mm:ss')} className="font-mono bg-muted"/>
+                </div>
+                 <div>
+                    <Label htmlFor="new-time">Nueva Hora Propuesta</Label>
+                    <Input id="new-time" type="time" value={newTime} onChange={e => setNewTime(e.target.value)} />
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="reason">Motivo de la solicitud</Label>
+                <Textarea 
+                    id="reason" 
+                    value={reason} 
+                    onChange={(e) => setReason(e.target.value)} 
+                    placeholder="Ej: Olvidé fichar al llegar, mi hora real de entrada fue..."
+                />
+            </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Enviar Solicitud
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
