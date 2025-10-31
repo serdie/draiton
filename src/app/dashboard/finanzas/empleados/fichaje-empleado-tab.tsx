@@ -27,7 +27,7 @@ export function FichajeEmpleadoTab() {
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
-        if (!user?.uid) {
+        if (!user?.uid) { // <-- GUARDIA DE SEGURIDAD AÑADIDA
             setStatus('out');
             return;
         };
