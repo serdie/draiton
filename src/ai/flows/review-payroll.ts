@@ -15,6 +15,14 @@ import {
     type ReviewPayrollOutput 
 } from '@/ai/schemas/payroll-schemas'; // Asumimos schemas importados de aquí
 
+// ======================================================
+// AQUÍ ESTÁ EL ARREGLO:
+// Re-exportamos el tipo para que 'actions.ts' pueda encontrarlo
+// ======================================================
+export type { ReviewPayrollOutput } from '@/ai/schemas/payroll-schemas';
+// ======================================================
+
+
 export async function reviewPayroll(input: ReviewPayrollInput): Promise<ReviewPayrollOutput> {
     return reviewPayrollFlow(input);
 }

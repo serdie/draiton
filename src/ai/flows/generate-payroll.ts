@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -12,11 +11,14 @@ import { z } from 'genkit';
 import { 
     GeneratePayrollInputSchema, 
     GeneratePayrollOutputSchema,
-    type GeneratePayrollInput,
+    type GeneratePayrollInput, // 1. Importa los tipos que ESTE archivo necesita
     type GeneratePayrollOutput 
 } from '@/ai/schemas/payroll-schemas'; 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+
+// 2. Re-exporta los tipos para que 'actions.ts' pueda encontrarlos
+export type { GeneratePayrollInput, GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 
 // --- CONSTANTES DE COTIZACIÓN Y RETENCIÓN (¡IMPORTANTE! Actualizar según legislación vigente) ---
 const TIPO_CONTINGENCIAS_COMUNES = 0.0480; // Aprox. 4.80% (verificar BOE para el año actual)
@@ -182,4 +184,3 @@ const generatePayrollFlow = ai.defineFlow(
     }
   }
 );
-    

@@ -75,8 +75,8 @@ export default function ClientPortalPage() {
       }
 
       setProject({
-          id: projectDoc.id,
-          ...projectData,
+          // id: projectDoc.id, // <-- LÍNEA 78 (ELIMINADA)
+          ...projectData,   // <-- LÍNEA 79 (AHORA LÍNEA 78)
           startDate: projectData.startDate ? (projectData.startDate as any).toDate() : null,
           endDate: projectData.endDate ? (projectData.endDate as any).toDate() : null,
       });
@@ -158,14 +158,14 @@ export default function ClientPortalPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                             <div className="space-y-1">
+                            <div className="space-y-1">
                                 <div className="flex justify-between text-sm text-muted-foreground">
                                     <span>Progreso</span>
                                     <span className="font-semibold">{project.progress || 0}%</span>
                                 </div>
                                 <Progress value={project.progress || 0} />
                             </div>
-                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                 <div><p className="text-muted-foreground">Cliente</p><p className="font-semibold">{project.client}</p></div>
                                 <div><p className="text-muted-foreground">Fecha Inicio</p><p className="font-semibold">{project.startDate ? format(project.startDate, 'dd MMM yyyy', {locale: es}) : 'N/D'}</p></div>
                                 <div><p className="text-muted-foreground">Fecha Fin</p><p className="font-semibold">{project.endDate ? format(project.endDate, 'dd MMM yyyy', {locale: es}) : 'N/D'}</p></div>

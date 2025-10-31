@@ -27,6 +27,8 @@ export function EmployeeClocksCalendar({ employee, fichajes }: EmployeeClocksCal
 
     const ClockInIcon = () => <div className="h-1.5 w-1.5 rounded-full bg-green-500" />;
     const ClockOutIcon = () => <div className="h-1.5 w-1.5 rounded-full bg-red-500" />;
+    const BreakIcon = () => <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />;
+
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -41,16 +43,21 @@ export function EmployeeClocksCalendar({ employee, fichajes }: EmployeeClocksCal
                     DayContent: ({ date }) => {
                         const dayString = date.toDateString();
                         const dayFichajes = fichajesByDay[dayString];
+
                         const hasClockIn = dayFichajes?.some(f => f.type === 'Entrada');
                         const hasClockOut = dayFichajes?.some(f => f.type === 'Salida');
+                        const hasBreak = dayFichajes?.some(f => f.type === 'Inicio Descanso');
+
 
                         return (
                             <div className="relative w-full h-full flex items-center justify-center">
                                 <span>{date.getDate()}</span>
-                                {(hasClockIn || hasClockOut) && (
+
+                                {(hasClockIn || hasClockOut || hasBreak) && (
                                     <div className="absolute bottom-1 flex gap-1">
                                         {hasClockIn && <ClockInIcon />}
                                         {hasClockOut && <ClockOutIcon />}
+                                        {hasBreak && <BreakIcon />}
                                     </div>
                                 )}
                             </div>
