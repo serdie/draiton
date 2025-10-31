@@ -69,7 +69,7 @@ export function FichajeEmpleadoTab() {
     }, [user?.uid]);
 
     const handleFichaje = async () => {
-        if (!user || status === 'loading' || isProcessing) {
+        if (!user || !user.uid || status === 'loading' || isProcessing) {
             toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
             return;
         }
@@ -77,16 +77,8 @@ export function FichajeEmpleadoTab() {
         setIsProcessing(true);
 
         try {
-            // Get the employee's user document to find their companyOwnerId
-            const userDocRef = doc(db, 'users', user.uid);
-            const userDoc = await getDoc(userDocRef);
-
-            if (!userDoc.exists()) {
-                throw new Error("No se encontró el perfil de usuario.");
-            }
-
-            const userData = userDoc.data();
-            const ownerId = userData.companyOwnerId;
+            // The user object from AuthContext for an employee should have companyOwnerId
+            const ownerId = (user as any).companyOwnerId;
 
             if (!ownerId) {
                 toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a una empresa.' });
@@ -110,7 +102,7 @@ export function FichajeEmpleadoTab() {
             });
         } catch (error) {
             console.error("Error al registrar fichaje:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje.' });
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje. Revisa las reglas de seguridad.' });
         } finally {
             setIsProcessing(false);
         }
