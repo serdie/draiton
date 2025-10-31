@@ -15,35 +15,41 @@ import { FichajeEmpleadoTab } from './empleados/fichaje-empleado-tab';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { Employee } from './empleados/types';
+import { FichajesTab } from './empleados/fichajes-tab';
 
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
   const [employeeProfile, setEmployeeProfile] = useState<Employee | null>(null);
-  const [loadingEmployee, setLoadingEmployee] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isEmployee && user?.uid) {
         const fetchEmployeeProfile = async () => {
             const employeesQuery = query(collection(db, 'employees'), where('__name__', '==', user.uid));
-            const snapshot = await getDocs(employeesQuery);
-            if (!snapshot.empty) {
-                const employeeData = snapshot.docs[0].data();
-                setEmployeeProfile({
-                    id: snapshot.docs[0].id,
-                    ...employeeData
-                } as Employee);
+            try {
+                const snapshot = await getDocs(employeesQuery);
+                if (!snapshot.empty) {
+                    const employeeData = snapshot.docs[0].data();
+                    setEmployeeProfile({
+                        id: snapshot.docs[0].id,
+                        ...employeeData
+                    } as Employee);
+                }
+            } catch (error) {
+                console.error("Error fetching employee profile:", error);
+            } finally {
+                setLoading(false);
             }
-            setLoadingEmployee(false);
         };
         fetchEmployeeProfile();
     } else {
-        setLoadingEmployee(false);
+        setLoading(false);
     }
   }, [isEmployee, user?.uid]);
 
 
   if (isEmployee) {
-    if (loadingEmployee) {
+    if (loading) {
         return (
             <div className="flex h-[300px] items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -85,12 +91,13 @@ export default function FinanzasPage() {
         </div>
 
         <Tabs defaultValue="documentos" className="w-full">
-          <TabsList className={cn("grid w-full", isEmpresa ? "grid-cols-4" : "grid-cols-3")}>
+          <TabsList className={cn("grid w-full", isEmpresa ? "grid-cols-5" : "grid-cols-4")}>
             <TabsTrigger value="documentos"><FileText className="mr-2 h-4 w-4" />Documentos</TabsTrigger>
             <TabsTrigger value="gastos"><Receipt className="mr-2 h-4 w-4" />Gastos</TabsTrigger>
             <TabsTrigger value="impuestos"><Coins className="mr-2 h-4 w-4" />Impuestos</TabsTrigger>
+             <TabsTrigger value="empleados"><Users className="mr-2 h-4 w-4" />Empleados</TabsTrigger>
             {isEmpresa && (
-                 <TabsTrigger value="empleados"><Users className="mr-2 h-4 w-4" />Empleados</TabsTrigger>
+                 <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4" />Control Horario</TabsTrigger>
             )}
           </TabsList>
           <TabsContent value="documentos" className="mt-6">
@@ -102,9 +109,12 @@ export default function FinanzasPage() {
           <TabsContent value="impuestos"  className="mt-6">
             <ImpuestosTab />
           </TabsContent>
+          <TabsContent value="empleados"  className="mt-6">
+              <EmpleadosPageContent />
+          </TabsContent>
            {isEmpresa && (
-                <TabsContent value="empleados"  className="mt-6">
-                    <EmpleadosPageContent />
+                <TabsContent value="fichajes"  className="mt-6">
+                    <FichajesTab />
                 </TabsContent>
            )}
         </Tabs>

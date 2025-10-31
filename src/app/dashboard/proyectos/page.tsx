@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { FichajeEmpleadoTab } from '../finanzas/empleados/fichaje-empleado-tab';
-import type { Project } from './page';
+
 
 export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
 
@@ -61,7 +61,7 @@ export default function OperacionesPage() {
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
     const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
     const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState(isEmployee ? 'proyectos' : 'proyectos');
+    const [activeTab, setActiveTab] = useState('proyectos');
     
     useEffect(() => {
         if (!db || !user) {
@@ -111,7 +111,6 @@ export default function OperacionesPage() {
         { value: 'proyectos', label: 'Proyectos', icon: HardHat, component: <KanbanBoard projects={projects} loading={loading} /> },
         { value: 'crm', label: 'CRM', icon: User, component: <ContactosPage /> },
         { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
-        { value: 'fichajes', label: 'Fichajes', icon: Clock, condition: isEmpresa, component: <FichajesTab /> },
         { value: 'informes', label: 'Informes', icon: BarChart2, component: <InformesPage /> }
     ];
     
@@ -119,7 +118,6 @@ export default function OperacionesPage() {
         { value: 'proyectos', label: 'Proyectos', icon: HardHat, component: <KanbanBoard projects={projects} loading={loading} /> },
         { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
         { value: 'fichajes', label: 'Fichajes', icon: Clock, component: user ? <FichajeEmpleadoTab employee={user as any} /> : null },
-        { value: 'informes', label: 'Informes', icon: BarChart2, component: <InformesPage /> }
     ];
 
     const visibleTabs = isEmployee ? tabsForEmployee : tabsForOwner.filter(tab => tab.condition !== false);
