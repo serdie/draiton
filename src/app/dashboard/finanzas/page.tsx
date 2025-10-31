@@ -18,7 +18,7 @@ import { Clock } from 'lucide-react';
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
 
-  if (isEmployee && user) {
+  if (isEmployee && user?.uid) {
     return (
         <div className="space-y-6">
             <div>
@@ -39,6 +39,11 @@ export default function FinanzasPage() {
             </Tabs>
         </div>
     )
+  }
+
+  if (isEmployee && !user?.uid) {
+      // Render nothing or a loader while waiting for user data
+      return null;
   }
 
   return (
