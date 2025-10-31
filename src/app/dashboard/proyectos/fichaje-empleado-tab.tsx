@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Loader2, Power } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, serverTimestamp, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -27,15 +28,14 @@ export function FichajeEmpleadoTab() {
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
-        if (!user) {
+        if (!user?.uid) {
             setStatus('out');
             return;
         };
 
         const q = query(
             collection(db, 'fichajes'),
-            where('employeeId', '==', user.uid),
-            orderBy('timestamp', 'desc')
+            where('employeeId', '==', user.uid)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -48,6 +48,9 @@ export function FichajeEmpleadoTab() {
                     timestamp: (data.timestamp as Timestamp).toDate(),
                  } as Fichaje)
             });
+            
+            fichajesList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+            
             setAllFichajes(fichajesList);
 
             if (fichajesList.length > 0) {
@@ -64,7 +67,7 @@ export function FichajeEmpleadoTab() {
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user?.uid]);
 
     const handleFichaje = async () => {
         if (!user || status === 'loading' || isProcessing) {

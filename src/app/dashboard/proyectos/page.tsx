@@ -29,7 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FichajeEmpleadoTab } from '../finanzas/empleados/fichaje-empleado-tab';
+import { FichajeEmpleadoTab } from './fichaje-empleado-tab';
 
 
 export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
@@ -61,7 +61,7 @@ export default function OperacionesPage() {
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
     const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
     const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('proyectos');
+    const [activeTab, setActiveTab] = useState(isEmployee ? 'fichajes' : 'proyectos');
     
     useEffect(() => {
         if (!db || !user) {
@@ -112,16 +112,15 @@ export default function OperacionesPage() {
         { value: 'crm', label: 'CRM', icon: User, component: <ContactosPage /> },
         { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
         { value: 'informes', label: 'Informes', icon: BarChart2, component: <InformesPage /> },
-        { value: 'fichajes', label: 'Fichajes', icon: Clock, component: <FichajesTab />, condition: isEmpresa }
     ];
     
     const tabsForEmployee = [
+        { value: 'fichajes', label: 'Fichajes', icon: Clock, component: <FichajeEmpleadoTab /> },
         { value: 'proyectos', label: 'Proyectos', icon: HardHat, component: <KanbanBoard projects={projects} loading={loading} /> },
         { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
-        { value: 'fichajes', label: 'Fichajes', icon: Clock, component: user ? <FichajeEmpleadoTab employee={user as any} /> : null },
     ];
 
-    const visibleTabs = isEmployee ? tabsForEmployee : tabsForOwner.filter(tab => tab.condition !== false);
+    const visibleTabs = isEmployee ? tabsForEmployee : tabsForOwner;
 
   return (
     <>
