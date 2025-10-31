@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { EmployeePayslipList } from './empleados/employee-payslip-list';
 import { FichajesTab } from './empleados/fichajes-tab';
 import { NominasTab } from './nominas-tab';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
@@ -39,12 +40,11 @@ export default function FinanzasPage() {
         </div>
 
         <Tabs defaultValue="documentos" className="w-full">
-          <TabsList className={cn("grid w-full", isEmpresa ? "grid-cols-5" : "grid-cols-3")}>
+          <TabsList className={cn("grid w-full", isEmpresa ? "grid-cols-4" : "grid-cols-3")}>
             <TabsTrigger value="documentos"><FileText className="mr-2 h-4 w-4" />Documentos</TabsTrigger>
             <TabsTrigger value="gastos"><Receipt className="mr-2 h-4 w-4" />Gastos</TabsTrigger>
             <TabsTrigger value="impuestos"><Coins className="mr-2 h-4 w-4" />Impuestos</TabsTrigger>
-            {isEmpresa && <TabsTrigger value="nominas"><Users className="mr-2 h-4 w-4" />Nóminas</TabsTrigger>}
-            {isEmpresa && <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4" />Fichajes</TabsTrigger>}
+            {isEmpresa && <TabsTrigger value="empleados"><Users className="mr-2 h-4 w-4" />Empleados</TabsTrigger>}
           </TabsList>
           <TabsContent value="documentos" className="mt-6">
             <DocumentosContent />
@@ -56,13 +56,19 @@ export default function FinanzasPage() {
             <ImpuestosTab />
           </TabsContent>
           {isEmpresa && (
-            <TabsContent value="nominas"  className="mt-6">
-              <NominasTab />
-            </TabsContent>
-          )}
-          {isEmpresa && (
-             <TabsContent value="fichajes"  className="mt-6">
-              <FichajesTab />
+            <TabsContent value="empleados"  className="mt-6">
+               <Tabs defaultValue="nominas" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="nominas"><Users className="mr-2 h-4 w-4" />Nóminas</TabsTrigger>
+                    <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4" />Fichajes</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="nominas" className="mt-6">
+                    <NominasTab />
+                  </TabsContent>
+                  <TabsContent value="fichajes" className="mt-6">
+                    <FichajesTab />
+                  </TabsContent>
+                </Tabs>
             </TabsContent>
           )}
         </Tabs>
