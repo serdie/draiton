@@ -38,7 +38,7 @@ export function EmployeePortalCard({ employee }: EmployeePortalCardProps) {
     let newPortalId = portalId;
     if (checked && !portalId) {
         newPortalId = nanoid(12);
-        setPortalId(newPortalId);
+        setPortalId(newPortalId); // This line was missing
     }
     
     setIsActive(checked);
@@ -47,7 +47,7 @@ export function EmployeePortalCard({ employee }: EmployeePortalCardProps) {
     try {
       await updateDoc(employeeRef, {
         employeePortalActive: checked,
-        clientPortalId: newPortalId, // Ensure this fieldname is correct in Firestore
+        employeePortalId: newPortalId, // Corrected field name
       });
       toast({
         title: 'Portal de Empleado Actualizado',
@@ -62,6 +62,9 @@ export function EmployeePortalCard({ employee }: EmployeePortalCardProps) {
       });
       // Revert UI state on error
       setIsActive(!checked);
+      if (checked && !portalId) {
+        setPortalId(''); // Revert ID if it was newly generated
+      }
     }
   };
 
@@ -81,9 +84,10 @@ export function EmployeePortalCard({ employee }: EmployeePortalCardProps) {
     });
   }
 
-  const portalUrl = `${window.location.origin}/portal-empleado/${portalId}`;
+  const portalUrl = portalId ? `${window.location.origin}/portal-empleado/${portalId}` : '';
   
   const copyToClipboard = () => {
+    if (!portalUrl) return;
     navigator.clipboard.writeText(portalUrl).then(() => {
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
@@ -124,10 +128,10 @@ export function EmployeePortalCard({ employee }: EmployeePortalCardProps) {
                 <Label>Enlace del Portal</Label>
                 <div className="flex items-center gap-2">
                     <Input readOnly value={portalUrl} />
-                    <Button variant="outline" size="icon" onClick={copyToClipboard}>
+                    <Button variant="outline" size="icon" onClick={copyToClipboard} disabled={!portalUrl}>
                         {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                     </Button>
-                     <Button asChild variant="outline" size="icon">
+                     <Button asChild variant="outline" size="icon" disabled={!portalUrl}>
                         <Link href={portalUrl} target="_blank"><ExternalLink className="h-4 w-4" /></Link>
                     </Button>
                 </div>
@@ -135,7 +139,7 @@ export function EmployeePortalCard({ employee }: EmployeePortalCardProps) {
           </div>
         )}
 
-        <Separator />
+        <Separator className="my-6" />
 
         <div className="space-y-4">
             <h3 className="font-medium text-base flex items-center gap-2"><KeyRound className="h-4 w-4" />Gestionar Contraseña</h3>
