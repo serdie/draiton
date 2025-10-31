@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Coins, Receipt, Users, Loader2 } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
@@ -23,22 +23,30 @@ export default function FinanzasPage() {
   const [employeeProfile, setEmployeeProfile] = useState<Employee | null>(null);
   const [loadingEmployee, setLoadingEmployee] = useState(true);
 
-  useEffect(() => {
-    if (isEmployee && user?.uid) {
-      const getEmployeeProfile = async () => {
-        setLoadingEmployee(true);
-        const employeeDocRef = doc(db, 'employees', user.uid);
+  const getEmployeeProfile = useCallback(async (uid: string) => {
+    setLoadingEmployee(true);
+    try {
+        const employeeDocRef = doc(db, 'employees', uid);
         const docSnap = await getDoc(employeeDocRef);
         if (docSnap.exists()) {
-          setEmployeeProfile({ id: docSnap.id, ...docSnap.data() } as Employee);
+            setEmployeeProfile({ id: docSnap.id, ...docSnap.data() } as Employee);
         }
+    } catch (error) {
+        console.error("Error fetching employee profile:", error);
+    } finally {
         setLoadingEmployee(false);
-      };
-      getEmployeeProfile();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isEmployee) {
+      if (user?.uid && !employeeProfile) {
+        getEmployeeProfile(user.uid);
+      }
     } else {
       setLoadingEmployee(false);
     }
-  }, [isEmployee, user?.uid]);
+  }, [isEmployee, user?.uid, employeeProfile, getEmployeeProfile]);
 
 
   if (isEmployee) {
