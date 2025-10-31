@@ -21,6 +21,6 @@ export type Fichaje = {
     employeeId: string;
     employeeName: string;
     ownerId: string;
-    type: 'Entrada' | 'Salida';
+    type: 'Entrada' | 'Salida' | 'Inicio Descanso' | 'Fin Descanso';
     timestamp: Date;
 }
