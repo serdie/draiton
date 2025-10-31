@@ -27,7 +27,7 @@ export function FichajeEmpleadoTab() {
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
-        if (!user) {
+        if (!user?.uid) {
             setStatus('out');
             return;
         };
