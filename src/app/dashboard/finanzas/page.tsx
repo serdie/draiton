@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Coins, Receipt, Users } from 'lucide-react';
+import { FileText, Coins, Receipt, Users, Loader2 } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
 import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
@@ -13,37 +13,66 @@ import { EmpleadosPageContent } from './empleados/page';
 import { EmployeePayslipList } from './empleados/employee-payslip-list';
 import { FichajeEmpleadoTab } from './empleados/fichaje-empleado-tab';
 import { Clock } from 'lucide-react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { type Employee } from './empleados/types';
 
 
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
+  const [employeeProfile, setEmployeeProfile] = useState<Employee | null>(null);
+  const [loadingEmployee, setLoadingEmployee] = useState(true);
 
-  if (isEmployee && user?.uid) {
-    return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold">Mis Finanzas y Fichajes</h1>
-                <p className="text-muted-foreground">Consulta tus nóminas y gestiona tu jornada laboral.</p>
-            </div>
-             <Tabs defaultValue="fichajes" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4"/>Mi Fichaje</TabsTrigger>
-                    <TabsTrigger value="nominas"><FileText className="mr-2 h-4 w-4"/>Mis Nóminas</TabsTrigger>
-                </TabsList>
-                <TabsContent value="fichajes" className="mt-6">
-                    <FichajeEmpleadoTab employee={user as any} />
-                </TabsContent>
-                <TabsContent value="nominas" className="mt-6">
-                     <EmployeePayslipList employee={user as any} />
-                </TabsContent>
-            </Tabs>
+  useEffect(() => {
+    if (isEmployee && user?.uid) {
+      const getEmployeeProfile = async () => {
+        setLoadingEmployee(true);
+        const employeeDocRef = doc(db, 'employees', user.uid);
+        const docSnap = await getDoc(employeeDocRef);
+        if (docSnap.exists()) {
+          setEmployeeProfile({ id: docSnap.id, ...docSnap.data() } as Employee);
+        }
+        setLoadingEmployee(false);
+      };
+      getEmployeeProfile();
+    } else {
+      setLoadingEmployee(false);
+    }
+  }, [isEmployee, user]);
+
+
+  if (isEmployee) {
+    if (loadingEmployee) {
+       return (
+        <div className="flex h-[300px] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-    )
-  }
-
-  if (isEmployee && !user?.uid) {
-      // Render nothing or a loader while waiting for user data
-      return null;
+       );
+    }
+    
+    if (employeeProfile) {
+        return (
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold">Mis Finanzas y Fichajes</h1>
+                    <p className="text-muted-foreground">Consulta tus nóminas y gestiona tu jornada laboral.</p>
+                </div>
+                 <Tabs defaultValue="fichajes" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4"/>Mi Fichaje</TabsTrigger>
+                        <TabsTrigger value="nominas"><FileText className="mr-2 h-4 w-4"/>Mis Nóminas</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="fichajes" className="mt-6">
+                        <FichajeEmpleadoTab employee={employeeProfile} />
+                    </TabsContent>
+                    <TabsContent value="nominas" className="mt-6">
+                         <EmployeePayslipList employee={employeeProfile} />
+                    </TabsContent>
+                </Tabs>
+            </div>
+        )
+    }
+     return <div>No se pudo cargar el perfil del empleado.</div>;
   }
 
   return (

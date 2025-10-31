@@ -28,7 +28,7 @@ export function EmployeePayslipList({ employee }: EmployeePayslipListProps) {
     const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
 
     useEffect(() => {
-        if (!employee) {
+        if (!employee?.id) {
             setLoading(false);
             return;
         }
