@@ -77,10 +77,9 @@ export function FichajeEmpleadoTab() {
         setIsProcessing(true);
 
         try {
-            // The user object from AuthContext for an employee should have companyOwnerId
-            const ownerId = (user as any).companyOwnerId;
+            const companyOwnerId = (user as any).companyOwnerId;
 
-            if (!ownerId) {
+            if (!companyOwnerId) {
                 toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a ninguna empresa.' });
                 setIsProcessing(false);
                 return;
@@ -91,7 +90,7 @@ export function FichajeEmpleadoTab() {
             await addDoc(collection(db, 'fichajes'), {
                 employeeId: user.uid,
                 employeeName: user.displayName,
-                ownerId: ownerId,
+                ownerId: companyOwnerId,
                 type: newType,
                 timestamp: serverTimestamp(),
             });
