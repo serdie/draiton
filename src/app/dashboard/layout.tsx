@@ -37,6 +37,7 @@ import {
   User,
   BookOpen,
   MessageSquare,
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -237,11 +238,9 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                 {user?.role === 'pro' && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
                 {user?.role === 'empresa' && <Badge variant="outline" className={cn('border-purple-400 bg-purple-400/10 text-purple-500 dark:border-purple-400 dark:text-purple-400')}>EMPRESA</Badge>}
 
-                 <Button asChild variant="ghost" size="icon">
-                  <Link href="/dashboard/configuracion">
-                    <Settings className="h-5 w-5"/>
-                  </Link>
-                </Button>
+                 <Button variant="ghost" size="icon">
+                    <Bell className="h-5 w-5"/>
+                 </Button>
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <div id="tour-perfil" className='flex items-center gap-3 cursor-pointer'>
