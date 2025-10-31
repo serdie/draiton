@@ -147,26 +147,24 @@ export default function EmployeePortalPage() {
           ...employeeData,
           hireDate: employeeData.hireDate ? (employeeData.hireDate as any).toDate() : undefined,
       } as Employee);
-      setLoading(false);
+
+       // Check if a user is already authenticated in the session
+        const unsubscribeAuth = auth.onAuthStateChanged(user => {
+            if (user && employeeDoc.id === user.uid) {
+                setAuthenticatedUser(user);
+            }
+             setLoading(false);
+        });
+        return () => unsubscribeAuth();
+
     }, (err) => {
       console.error(err);
       setError('Error al cargar los datos del portal.');
       setLoading(false);
     });
 
-    // Check if a user is already authenticated in the session
-    const unsubscribeAuth = auth.onAuthStateChanged(user => {
-      if (user && employee && user.uid === employee.id) {
-        setAuthenticatedUser(user);
-      }
-    });
-
-
-    return () => {
-      unsubscribe();
-      unsubscribeAuth();
-    }
-  }, [portalId, employee]);
+    return () => unsubscribe();
+  }, [portalId]);
   
   const handleLoginSuccess = (user: FirebaseUser) => {
     if (user.uid === employee?.id) {
