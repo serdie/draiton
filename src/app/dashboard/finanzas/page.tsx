@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Coins, Receipt, Users, Loader2, Clock } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
@@ -12,39 +12,67 @@ import { cn } from '@/lib/utils';
 import { EmpleadosPageContent } from './empleados/page';
 import { EmployeePayslipList } from './empleados/employee-payslip-list';
 import { FichajeEmpleadoTab } from './empleados/fichaje-empleado-tab';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import type { Employee } from './empleados/types';
 
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
+  const [employeeProfile, setEmployeeProfile] = useState<Employee | null>(null);
+  const [loadingEmployee, setLoadingEmployee] = useState(true);
+
+  useEffect(() => {
+    if (isEmployee && user?.uid) {
+        const fetchEmployeeProfile = async () => {
+            const employeesQuery = query(collection(db, 'employees'), where('__name__', '==', user.uid));
+            const snapshot = await getDocs(employeesQuery);
+            if (!snapshot.empty) {
+                const employeeData = snapshot.docs[0].data();
+                setEmployeeProfile({
+                    id: snapshot.docs[0].id,
+                    ...employeeData
+                } as Employee);
+            }
+            setLoadingEmployee(false);
+        };
+        fetchEmployeeProfile();
+    } else {
+        setLoadingEmployee(false);
+    }
+  }, [isEmployee, user?.uid]);
+
 
   if (isEmployee) {
-    // Renderiza la vista del empleado solo si el user.uid está disponible para evitar errores de consulta.
-    if (user?.uid) {
+    if (loadingEmployee) {
         return (
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold">Mis Finanzas y Fichajes</h1>
-                    <p className="text-muted-foreground">Consulta tus nóminas y gestiona tu jornada laboral.</p>
-                </div>
-                 <Tabs defaultValue="fichajes" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4"/>Mi Fichaje</TabsTrigger>
-                        <TabsTrigger value="nominas"><FileText className="mr-2 h-4 w-4"/>Mis Nóminas</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="fichajes" className="mt-6">
-                        <FichajeEmpleadoTab employee={user as any} />
-                    </TabsContent>
-                    <TabsContent value="nominas" className="mt-6">
-                         <EmployeePayslipList employee={user as any} />
-                    </TabsContent>
-                </Tabs>
+            <div className="flex h-[300px] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }
-    // Muestra un cargador mientras se obtiene la información completa del usuario.
+
+    if (!employeeProfile) {
+         return <div className="text-center text-muted-foreground p-8">No se pudo cargar el perfil del empleado.</div>
+    }
+
     return (
-       <div className="flex h-[300px] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Mis Finanzas</h1>
+          <p className="text-muted-foreground">Consulta tus nóminas.</p>
         </div>
+        <Tabs defaultValue="nominas" className="w-full">
+          <TabsList className="grid w-full grid-cols-1">
+            <TabsTrigger value="nominas">
+              <FileText className="mr-2 h-4 w-4" />
+              Mis Nóminas
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="nominas" className="mt-6">
+            <EmployeePayslipList employee={employeeProfile} />
+          </TabsContent>
+        </Tabs>
+      </div>
     );
   }
 

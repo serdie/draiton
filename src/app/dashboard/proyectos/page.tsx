@@ -118,7 +118,7 @@ export default function OperacionesPage() {
     const tabsForEmployee = [
         { value: 'proyectos', label: 'Proyectos', icon: HardHat, component: <KanbanBoard projects={projects} loading={loading} /> },
         { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
-        // Fichaje se movió a la página de Finanzas para empleados
+        { value: 'fichajes', label: 'Fichajes', icon: Clock, component: user ? <FichajeEmpleadoTab employee={user as any} /> : null },
         { value: 'informes', label: 'Informes', icon: BarChart2, component: <InformesPage /> }
     ];
 
