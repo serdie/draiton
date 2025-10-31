@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Loader2, Power } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp, getDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -81,7 +81,7 @@ export function FichajeEmpleadoTab() {
             const ownerId = (user as any).companyOwnerId;
 
             if (!ownerId) {
-                toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a una empresa.' });
+                toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a ninguna empresa.' });
                 setIsProcessing(false);
                 return;
             }
