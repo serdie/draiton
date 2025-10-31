@@ -28,33 +28,34 @@ export function EmployeePayslipList({ employee }: EmployeePayslipListProps) {
     const [payrollToView, setPayrollToView] = useState<GeneratePayrollOutput | null>(null);
 
     useEffect(() => {
-        if (employee) {
-            setLoading(true);
-            const q = query(collection(db, 'payrolls'), where('employeeId', '==', employee.id));
-            const unsubscribe = onSnapshot(q, (snapshot) => {
-                const payrollsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratePayrollOutput & { id: string }));
-
-                const monthOrder = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                payrollsList.sort((a, b) => {
-                    if (!a.header?.paymentPeriod || !b.header?.paymentPeriod) return 0;
-                    const [monthA, yearA] = a.header.paymentPeriod.split(' ');
-                    const [monthB, yearB] = b.header.paymentPeriod.split(' ');
-                    const dateA = new Date(parseInt(yearA), monthOrder.indexOf(monthA));
-                    const dateB = new Date(parseInt(yearB), monthOrder.indexOf(monthB));
-                    return dateB.getTime() - dateA.getTime();
-                });
-
-                setPayrolls(payrollsList);
-                setLoading(false);
-            }, (error) => {
-                console.error("Error fetching payrolls for employee:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar tus nóminas.' });
-                setLoading(false);
-            });
-            return () => unsubscribe();
-        } else {
+        if (!employee) {
             setLoading(false);
+            return;
         }
+
+        setLoading(true);
+        const q = query(collection(db, 'payrolls'), where('employeeId', '==', employee.id));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const payrollsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratePayrollOutput & { id: string }));
+
+            const monthOrder = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            payrollsList.sort((a, b) => {
+                if (!a.header?.paymentPeriod || !b.header?.paymentPeriod) return 0;
+                const [monthA, yearA] = a.header.paymentPeriod.split(' ');
+                const [monthB, yearB] = b.header.paymentPeriod.split(' ');
+                const dateA = new Date(parseInt(yearA), monthOrder.indexOf(monthA));
+                const dateB = new Date(parseInt(yearB), monthOrder.indexOf(monthB));
+                return dateB.getTime() - dateA.getTime();
+            });
+
+            setPayrolls(payrollsList);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching payrolls for employee:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar tus nóminas.' });
+            setLoading(false);
+        });
+        return () => unsubscribe();
     }, [employee, toast]);
     
      if (!employee) {
