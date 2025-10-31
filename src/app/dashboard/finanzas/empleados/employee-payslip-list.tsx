@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, MoreHorizontal, FileText, Download } from 'lucide-react';
@@ -13,8 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { type GeneratePayrollOutput } from '@/ai/schemas/payroll-schemas';
 import { ViewPayrollModal } from '../nominas/view-payroll-modal';
 import type { Employee } from './types';
-import { AuthContext } from '@/context/auth-context';
-
 
 interface EmployeePayslipListProps {
     employee: Employee;

@@ -5,9 +5,8 @@ import { useState, useContext, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Loader2, Power } from 'lucide-react';
-import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, serverTimestamp, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -18,14 +17,12 @@ import type { Employee, Fichaje } from './types';
 type FichajeStatus = 'out' | 'in';
 
 export function FichajeEmpleadoTab({ employee }: { employee: Employee }) {
-    const { user } = useContext(AuthContext); // Still need user for companyOwnerId
     const { toast } = useToast();
     const [status, setStatus] = useState<FichajeStatus | 'loading'>('loading');
     const [lastFichajeTime, setLastFichajeTime] = useState<string | null>(null);
     const [allFichajes, setAllFichajes] = useState<Fichaje[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Effect to determine initial status and load all fichajes
     useEffect(() => {
         if (!employee?.id) {
             setStatus('out');
@@ -48,7 +45,6 @@ export function FichajeEmpleadoTab({ employee }: { employee: Employee }) {
                  } as Fichaje)
             });
             
-            // Sort locally after fetching
             fichajesList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
             
             setAllFichajes(fichajesList);
@@ -70,12 +66,12 @@ export function FichajeEmpleadoTab({ employee }: { employee: Employee }) {
     }, [employee]);
 
     const handleFichaje = async () => {
-        if (!employee || !user || status === 'loading' || isProcessing) {
-            toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
+        if (!employee || !employee.id || !employee.name || status === 'loading' || isProcessing) {
+            toast({ variant: 'destructive', title: 'Acción no válida', description: 'No se puede registrar el fichaje en este momento.' });
             return;
         }
         
-        const ownerId = (user as any).companyOwnerId;
+        const ownerId = (employee as any).ownerId;
         if (!ownerId) {
             toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a una empresa.' });
             return;

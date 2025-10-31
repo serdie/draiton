@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useContext, useCallback } from 'react';
+import { useContext } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Coins, Receipt, Users, Loader2 } from 'lucide-react';
+import { FileText, Coins, Receipt, Users, Loader2, Clock } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
 import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
@@ -12,53 +12,13 @@ import { cn } from '@/lib/utils';
 import { EmpleadosPageContent } from './empleados/page';
 import { EmployeePayslipList } from './empleados/employee-payslip-list';
 import { FichajeEmpleadoTab } from './empleados/fichaje-empleado-tab';
-import { Clock } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
-import { type Employee } from './empleados/types';
-
 
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
-  const [employeeProfile, setEmployeeProfile] = useState<Employee | null>(null);
-  const [loadingEmployee, setLoadingEmployee] = useState(true);
-
-  const getEmployeeProfile = useCallback(async (uid: string) => {
-    setLoadingEmployee(true);
-    try {
-        const employeeDocRef = doc(db, 'employees', uid);
-        const docSnap = await getDoc(employeeDocRef);
-        if (docSnap.exists()) {
-            setEmployeeProfile({ id: docSnap.id, ...docSnap.data() } as Employee);
-        }
-    } catch (error) {
-        console.error("Error fetching employee profile:", error);
-    } finally {
-        setLoadingEmployee(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isEmployee) {
-      if (user?.uid && !employeeProfile) {
-        getEmployeeProfile(user.uid);
-      }
-    } else {
-      setLoadingEmployee(false);
-    }
-  }, [isEmployee, user?.uid, employeeProfile, getEmployeeProfile]);
-
 
   if (isEmployee) {
-    if (loadingEmployee) {
-       return (
-        <div className="flex h-[300px] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-       );
-    }
-    
-    if (employeeProfile) {
+    // Renderiza la vista del empleado solo si el user.uid está disponible para evitar errores de consulta.
+    if (user?.uid) {
         return (
             <div className="space-y-6">
                 <div>
@@ -71,18 +31,24 @@ export default function FinanzasPage() {
                         <TabsTrigger value="nominas"><FileText className="mr-2 h-4 w-4"/>Mis Nóminas</TabsTrigger>
                     </TabsList>
                     <TabsContent value="fichajes" className="mt-6">
-                        <FichajeEmpleadoTab employee={employeeProfile} />
+                        <FichajeEmpleadoTab employee={user as any} />
                     </TabsContent>
                     <TabsContent value="nominas" className="mt-6">
-                         <EmployeePayslipList employee={employeeProfile} />
+                         <EmployeePayslipList employee={user as any} />
                     </TabsContent>
                 </Tabs>
             </div>
-        )
+        );
     }
-     return <div>No se pudo cargar el perfil del empleado.</div>;
+    // Muestra un cargador mientras se obtiene la información completa del usuario.
+    return (
+       <div className="flex h-[300px] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
   }
 
+  // Vista para dueños de empresa, pro y admin
   return (
       <div className="space-y-6">
         <div>
