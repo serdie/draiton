@@ -23,6 +23,16 @@ interface FichajeHistoryProps {
 
 type Period = 'semana' | 'mes' | 'personalizado';
 
+const getTypeClass = (type: Fichaje['type']) => {
+    switch(type) {
+        case 'Entrada': return 'text-green-600';
+        case 'Salida': return 'text-red-600';
+        case 'Inicio Descanso': return 'text-blue-500';
+        case 'Fin Descanso': return 'text-blue-800 dark:text-blue-300';
+        default: return '';
+    }
+}
+
 export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
   const [period, setPeriod] = useState<Period>('semana');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
@@ -127,7 +137,7 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
                   <TableCell>{format(fichaje.timestamp, 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="capitalize">{format(fichaje.timestamp, 'eeee', { locale: es })}</TableCell>
                   <TableCell>
-                    <span className={`font-semibold ${fichaje.type === 'Entrada' ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className={cn('font-semibold', getTypeClass(fichaje.type))}>
                       {fichaje.type}
                     </span>
                   </TableCell>
