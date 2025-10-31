@@ -81,4 +81,3 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
         </Card>
     );
 }
-
