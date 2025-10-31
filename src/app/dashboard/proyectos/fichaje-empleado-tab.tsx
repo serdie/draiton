@@ -4,7 +4,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LogIn, LogOut, Loader2, Power } from 'lucide-react';
+import { LogIn, LogOut, Loader2, Power, Coffee } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
@@ -16,11 +16,13 @@ import type { Fichaje } from './types';
 
 
 type FichajeStatus = 'out' | 'in';
+type BreakStatus = 'working' | 'on_break';
 
 export function FichajeEmpleadoTab() {
     const { user } = useContext(AuthContext);
     const { toast } = useToast();
     const [status, setStatus] = useState<FichajeStatus | 'loading'>('loading');
+    const [breakStatus, setBreakStatus] = useState<BreakStatus>('working');
     const [lastFichajeTime, setLastFichajeTime] = useState<string | null>(null);
     const [allFichajes, setAllFichajes] = useState<Fichaje[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -29,6 +31,7 @@ export function FichajeEmpleadoTab() {
     useEffect(() => {
         if (!user?.uid) {
             setStatus('out');
+            setBreakStatus('working');
             return;
         };
 
@@ -54,10 +57,24 @@ export function FichajeEmpleadoTab() {
 
             if (fichajesList.length > 0) {
                 const lastFichaje = fichajesList[0];
-                setStatus(lastFichaje.type === 'Entrada' ? 'in' : 'out');
                 setLastFichajeTime(format(lastFichaje.timestamp, "dd MMM, yyyy 'a las' HH:mm", { locale: es }));
+                
+                if (lastFichaje.type === 'Entrada') {
+                    setStatus('in');
+                    setBreakStatus('working');
+                } else if (lastFichaje.type === 'Salida') {
+                    setStatus('out');
+                    setBreakStatus('working');
+                } else if (lastFichaje.type === 'Inicio Descanso') {
+                    setStatus('in');
+                    setBreakStatus('on_break');
+                } else if (lastFichaje.type === 'Fin Descanso') {
+                    setStatus('in');
+                    setBreakStatus('working');
+                }
             } else {
                 setStatus('out');
+                setBreakStatus('working');
                 setLastFichajeTime(null);
             }
         }, (error) => {
@@ -68,36 +85,32 @@ export function FichajeEmpleadoTab() {
         return () => unsubscribe();
     }, [user?.uid]);
 
-    const handleFichaje = async () => {
+    const handleFichaje = async (type: 'Entrada' | 'Salida' | 'Inicio Descanso' | 'Fin Descanso') => {
         if (!user || !user.uid || status === 'loading' || isProcessing) {
             toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
             return;
         }
 
+        const companyOwnerId = (user as any).companyOwnerId;
+        if (!companyOwnerId) {
+            toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a ninguna empresa.' });
+            return;
+        }
+        
         setIsProcessing(true);
 
         try {
-            const companyOwnerId = (user as any).companyOwnerId;
-
-            if (!companyOwnerId) {
-                toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a ninguna empresa.' });
-                setIsProcessing(false);
-                return;
-            }
-
-            const newType = status === 'out' ? 'Entrada' : 'Salida';
-
             await addDoc(collection(db, 'fichajes'), {
                 employeeId: user.uid,
-                employeeName: user.displayName,
                 ownerId: companyOwnerId,
-                type: newType,
+                employeeName: user.displayName,
+                type: type,
                 timestamp: serverTimestamp(),
             });
 
             toast({
-                title: `Fichaje de ${newType} registrado`,
-                description: `Has registrado tu ${newType.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
+                title: `Fichaje de ${type} registrado`,
+                description: `Has registrado tu ${type.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
             });
         } catch (error) {
             console.error("Error al registrar fichaje:", error);
@@ -108,6 +121,7 @@ export function FichajeEmpleadoTab() {
     };
 
     const isClockIn = status === 'in';
+    const isOnBreak = breakStatus === 'on_break';
     const isLoading = status === 'loading';
 
     return (
@@ -115,7 +129,7 @@ export function FichajeEmpleadoTab() {
             <Card className="w-full max-w-md mx-auto">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl">Control de Jornada</CardTitle>
-                    <CardDescription>Registra tu entrada y salida del trabajo.</CardDescription>
+                    <CardDescription>Registra tu entrada, salida y descansos.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-6">
                     <div className={`p-6 rounded-full ${isClockIn ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
@@ -125,7 +139,7 @@ export function FichajeEmpleadoTab() {
                     </div>
                     <div className="text-center">
                         <p className="font-semibold text-xl">
-                            {isLoading ? 'Cargando estado...' : (isClockIn ? 'Actualmente DENTRO' : 'Actualmente FUERA')}
+                            {isLoading ? 'Cargando estado...' : (isClockIn ? (isOnBreak ? 'EN DESCANSO' : 'Actualmente DENTRO') : 'Actualmente FUERA')}
                         </p>
                         {lastFichajeTime && !isLoading && (
                             <p className="text-sm text-muted-foreground">
@@ -133,15 +147,27 @@ export function FichajeEmpleadoTab() {
                             </p>
                         )}
                     </div>
-                    <Button 
-                        size="lg" 
-                        className={`w-full ${isClockIn ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
-                        onClick={handleFichaje}
-                        disabled={isLoading || isProcessing}
-                    >
-                        {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isClockIn ? <LogOut className="mr-2 h-5 w-5"/> : <LogIn className="mr-2 h-5 w-5"/>) }
-                        {isProcessing ? 'Registrando...' : (isClockIn ? 'Fichar Salida' : 'Fichar Entrada')}
-                    </Button>
+                    <div className="w-full space-y-2">
+                        <Button 
+                            size="lg" 
+                            className={`w-full ${isClockIn ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+                            onClick={() => handleFichaje(isClockIn ? 'Salida' : 'Entrada')}
+                            disabled={isLoading || isProcessing || isOnBreak}
+                        >
+                            {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isClockIn ? <LogOut className="mr-2 h-5 w-5"/> : <LogIn className="mr-2 h-5 w-5"/>) }
+                            {isProcessing ? 'Registrando...' : (isClockIn ? 'Fichar Salida' : 'Fichar Entrada')}
+                        </Button>
+                         <Button
+                            size="lg"
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => handleFichaje(isOnBreak ? 'Fin Descanso' : 'Inicio Descanso')}
+                            disabled={isLoading || isProcessing || !isClockIn}
+                        >
+                            {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Coffee className="mr-2 h-5 w-5" />}
+                            {isOnBreak ? 'Finalizar Descanso' : 'Iniciar Descanso'}
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
 

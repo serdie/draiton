@@ -158,7 +158,7 @@
             "employeeId": { "type": "string" },
             "employeeName": { "type": "string" },
             "ownerId": { "type": "string" },
-            "type": { "type": "string", "enum": ["Entrada", "Salida"] },
+            "type": { "type": "string", "enum": ["Entrada", "Salida", "Inicio Descanso", "Fin Descanso"] },
             "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["employeeId", "ownerId", "type", "timestamp"]
