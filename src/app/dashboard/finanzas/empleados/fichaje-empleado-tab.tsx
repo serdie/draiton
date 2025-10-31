@@ -27,15 +27,16 @@ export function FichajeEmpleadoTab() {
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
-        if (!user?.uid) { // <-- GUARDIA DE SEGURIDAD AÑADIDA
+        if (!user?.uid) {
             setStatus('out');
             return;
         };
 
         const q = query(
             collection(db, 'fichajes'),
-            where('employeeId', '==', user.uid),
-            orderBy('timestamp', 'desc')
+            where('employeeId', '==', user.uid)
+            // The orderBy clause is removed to avoid needing a composite index
+            // orderBy('timestamp', 'desc') 
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -48,6 +49,10 @@ export function FichajeEmpleadoTab() {
                     timestamp: (data.timestamp as Timestamp).toDate(),
                  } as Fichaje)
             });
+            
+            // Sort locally after fetching
+            fichajesList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+            
             setAllFichajes(fichajesList);
 
             if (fichajesList.length > 0) {
