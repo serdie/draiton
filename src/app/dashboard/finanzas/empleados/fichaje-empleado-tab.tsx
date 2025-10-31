@@ -35,8 +35,6 @@ export function FichajeEmpleadoTab() {
         const q = query(
             collection(db, 'fichajes'),
             where('employeeId', '==', user.uid)
-            // The orderBy clause is removed to avoid needing a composite index
-            // orderBy('timestamp', 'desc') 
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
