@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -21,6 +21,7 @@ import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Fichaje } from './types';
+import { AuthContext } from '@/context/auth-context';
 
 interface RequestChangeModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ interface RequestChangeModalProps {
 
 export function RequestChangeModal({ isOpen, onClose, fichaje }: RequestChangeModalProps) {
   const { toast } = useToast();
+  const { user } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const [reason, setReason] = useState('');
   const [newTime, setNewTime] = useState(format(fichaje.timestamp, 'HH:mm'));
@@ -41,6 +43,10 @@ export function RequestChangeModal({ isOpen, onClose, fichaje }: RequestChangeMo
         title: 'Campos requeridos',
         description: 'Debes indicar la nueva hora y el motivo del cambio.',
       });
+      return;
+    }
+     if (!user) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo identificar al usuario.' });
       return;
     }
     
@@ -57,6 +63,8 @@ export function RequestChangeModal({ isOpen, onClose, fichaje }: RequestChangeMo
         requestChangeReason: reason,
         requestStatus: 'pending',
         requestedAt: new Date(),
+        requesterId: user.uid,
+        requesterName: user.displayName,
       });
       toast({
         title: 'Solicitud Enviada',
