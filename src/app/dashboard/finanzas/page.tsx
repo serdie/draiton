@@ -38,7 +38,7 @@ export default function FinanzasPage() {
     } else {
       setLoadingEmployee(false);
     }
-  }, [isEmployee, user]);
+  }, [isEmployee, user?.uid]);
 
 
   if (isEmployee) {
