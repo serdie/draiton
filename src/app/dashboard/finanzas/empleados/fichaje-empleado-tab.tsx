@@ -12,13 +12,13 @@ import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FichajeHistory } from './fichaje-history';
-import type { Fichaje } from './types';
+import type { Employee, Fichaje } from './types';
 
 
 type FichajeStatus = 'out' | 'in';
 
-export function FichajeEmpleadoTab() {
-    const { user } = useContext(AuthContext);
+export function FichajeEmpleadoTab({ employee }: { employee: Employee }) {
+    const { user } = useContext(AuthContext); // Still need user for companyOwnerId
     const { toast } = useToast();
     const [status, setStatus] = useState<FichajeStatus | 'loading'>('loading');
     const [lastFichajeTime, setLastFichajeTime] = useState<string | null>(null);
@@ -27,14 +27,14 @@ export function FichajeEmpleadoTab() {
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
-        if (!user?.uid) {
+        if (!employee?.id) {
             setStatus('out');
             return;
         };
 
         const q = query(
             collection(db, 'fichajes'),
-            where('employeeId', '==', user.uid)
+            where('employeeId', '==', employee.id)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -67,10 +67,10 @@ export function FichajeEmpleadoTab() {
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [employee]);
 
     const handleFichaje = async () => {
-        if (!user || status === 'loading' || isProcessing) {
+        if (!employee || !user || status === 'loading' || isProcessing) {
             toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
             return;
         }
@@ -87,8 +87,8 @@ export function FichajeEmpleadoTab() {
 
         try {
             await addDoc(collection(db, 'fichajes'), {
-                employeeId: user.uid,
-                employeeName: user.displayName,
+                employeeId: employee.id,
+                employeeName: employee.name,
                 ownerId: ownerId,
                 type: newType,
                 timestamp: serverTimestamp(),

@@ -31,7 +31,7 @@ export default function FinanzasPage() {
                     <TabsTrigger value="nominas"><FileText className="mr-2 h-4 w-4"/>Mis Nóminas</TabsTrigger>
                 </TabsList>
                 <TabsContent value="fichajes" className="mt-6">
-                    <FichajeEmpleadoTab />
+                    <FichajeEmpleadoTab employee={user as any} />
                 </TabsContent>
                 <TabsContent value="nominas" className="mt-6">
                      <EmployeePayslipList employee={user as any} />
