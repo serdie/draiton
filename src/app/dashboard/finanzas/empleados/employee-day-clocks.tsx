@@ -37,19 +37,23 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
 
     let totalMinutes = 0;
     if (clockIns.length > 0 && clockOuts.length > 0) {
-        const firstIn = clockIns[0].timestamp;
-        const lastOut = clockOuts[clockOuts.length - 1].timestamp;
-        totalMinutes = differenceInMinutes(lastOut, firstIn);
+        const firstIn = clockIns[0]?.timestamp;
+        const lastOut = clockOuts[clockOuts.length - 1]?.timestamp;
         
-        // Restar descansos
-        let breakStartTime: Date | null = null;
-        for (const fichaje of sortedFichajes) {
-            if (fichaje.type === 'Inicio Descanso') {
-                breakStartTime = fichaje.timestamp;
-            }
-            if (fichaje.type === 'Fin Descanso' && breakStartTime) {
-                totalMinutes -= differenceInMinutes(fichaje.timestamp, breakStartTime);
-                breakStartTime = null; // Reset for next break
+        // Ensure both firstIn and lastOut are valid dates before calculating
+        if (firstIn && lastOut) {
+            totalMinutes = differenceInMinutes(lastOut, firstIn);
+        
+            // Restar descansos
+            let breakStartTime: Date | null = null;
+            for (const fichaje of sortedFichajes) {
+                if (fichaje.type === 'Inicio Descanso') {
+                    breakStartTime = fichaje.timestamp;
+                }
+                if (fichaje.type === 'Fin Descanso' && breakStartTime) {
+                    totalMinutes -= differenceInMinutes(fichaje.timestamp, breakStartTime);
+                    breakStartTime = null; // Reset for next break
+                }
             }
         }
     }
