@@ -36,24 +36,21 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
     const clockOuts = sortedFichajes.filter(f => f.type === 'Salida');
 
     let totalMinutes = 0;
-    if (clockIns.length > 0 && clockOuts.length > 0) {
-        const firstIn = clockIns[0]?.timestamp;
-        const lastOut = clockOuts[clockOuts.length - 1]?.timestamp;
-        
-        // Ensure both firstIn and lastOut are valid dates before calculating
-        if (firstIn && lastOut) {
-            totalMinutes = differenceInMinutes(lastOut, firstIn);
-        
-            // Restar descansos
-            let breakStartTime: Date | null = null;
-            for (const fichaje of sortedFichajes) {
-                if (fichaje.type === 'Inicio Descanso') {
-                    breakStartTime = fichaje.timestamp;
-                }
-                if (fichaje.type === 'Fin Descanso' && breakStartTime) {
-                    totalMinutes -= differenceInMinutes(fichaje.timestamp, breakStartTime);
-                    breakStartTime = null; // Reset for next break
-                }
+    const firstIn = clockIns[0]?.timestamp;
+    const lastOut = clockOuts[clockOuts.length - 1]?.timestamp;
+
+    if (firstIn && lastOut && firstIn < lastOut) {
+        totalMinutes = differenceInMinutes(lastOut, firstIn);
+    
+        // Restar descansos
+        let breakStartTime: Date | null = null;
+        for (const fichaje of sortedFichajes) {
+            if (fichaje.type === 'Inicio Descanso' && fichaje.timestamp > firstIn && fichaje.timestamp < lastOut) {
+                breakStartTime = fichaje.timestamp;
+            }
+            if (fichaje.type === 'Fin Descanso' && breakStartTime && fichaje.timestamp > breakStartTime) {
+                totalMinutes -= differenceInMinutes(fichaje.timestamp, breakStartTime);
+                breakStartTime = null; // Reset for next break
             }
         }
     }
