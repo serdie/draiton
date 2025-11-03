@@ -181,7 +181,7 @@ export function FichajeEmpleadoTab() {
                 </CardContent>
             </Card>
 
-            <FichajeHistory fichajes={allFichajes} />
+            <FichajeHistory allFichajes={allFichajes} />
         </div>
     );
 }

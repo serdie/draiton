@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,7 +18,7 @@ import { RequestChangeModal } from './request-change-modal';
 
 
 interface FichajeHistoryProps {
-  fichajes: Fichaje[];
+  allFichajes: Fichaje[];
 }
 
 type Period = 'semana' | 'mes' | 'personalizado';
@@ -34,7 +33,7 @@ const getTypeClass = (type: Fichaje['type']) => {
     }
 }
 
-export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
+export function FichajeHistory({ allFichajes: fichajes }: FichajeHistoryProps) {
   const [period, setPeriod] = useState<Period>('semana');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [fichajeToChange, setFichajeToChange] = useState<Fichaje | null>(null);
