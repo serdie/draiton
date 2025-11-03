@@ -303,15 +303,13 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                             <div className="px-2 py-1.5 text-sm text-muted-foreground">No tienes notificaciones</div>
                         ) : (
                             notifications.map(notif => (
-                                <div key={notif.id} onClick={() => handleNotificationClick(notif)} className={cn("relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground", !notif.isRead && "font-semibold")}>
-                                     <div className="flex items-start gap-3">
-                                        {!notif.isRead && <span className="block h-2 w-2 mt-1.5 rounded-full bg-primary" />}
-                                        <div className={cn(notif.isRead && "pl-5")}>
-                                            <p>{notif.senderName} {notif.message}</p>
-                                            <p className="text-xs text-muted-foreground">{formatDistanceToNow(notif.createdAt, { addSuffix: true, locale: es })}</p>
-                                        </div>
+                                <DropdownMenuItem key={notif.id} onSelect={() => handleNotificationClick(notif)} className={cn("flex items-start gap-3 cursor-pointer", !notif.isRead && "font-semibold")}>
+                                     {!notif.isRead && <span className="block h-2 w-2 mt-1.5 rounded-full bg-primary flex-shrink-0" />}
+                                     <div className={cn(notif.isRead && "pl-5")}>
+                                        <p>{notif.senderName} {notif.message}</p>
+                                        <p className="text-xs text-muted-foreground font-normal">{formatDistanceToNow(notif.createdAt, { addSuffix: true, locale: es })}</p>
                                     </div>
-                                </div>
+                                </DropdownMenuItem>
                             ))
                         )}
                          <DropdownMenuSeparator />
@@ -386,3 +384,5 @@ export default function DashboardLayout({
     </TourProvider>
   )
 }
+
+    
