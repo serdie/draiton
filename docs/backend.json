@@ -177,7 +177,7 @@
         "recipientId": { "type": "string", "description": "UID of the user who will receive the notification." },
         "senderId": { "type": "string", "description": "UID of the user who triggered the notification." },
         "senderName": { "type": "string", "description": "Name of the user who triggered the notification." },
-        "type": { "type": "string", "enum": ["FICHAGE_CHANGE_REQUEST"], "description": "The type of the notification." },
+        "type": { "type": "string", "enum": ["FICHAGE_CHANGE_REQUEST", "FICHAGE_CHANGE_RESPONSE"], "description": "The type of the notification." },
         "message": { "type": "string", "description": "The main content of the notification." },
         "link": { "type": "string", "description": "URL to navigate to when the notification is clicked." },
         "isRead": { "type": "boolean", "description": "Whether the notification has been read." },

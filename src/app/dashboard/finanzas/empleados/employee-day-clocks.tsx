@@ -7,10 +7,12 @@ import { format, differenceInMinutes, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, ArrowRight } from 'lucide-react';
+import { useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
 
 interface EmployeeDayClocksProps {
     date: Date;
@@ -30,6 +32,7 @@ const getTypeClass = (type: Fichaje['type']) => {
 
 export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
     const { toast } = useToast();
+    const { user } = useContext(AuthContext);
     const sortedFichajes = [...fichajes].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     
     const clockIns = sortedFichajes.filter(f => f.type === 'Entrada');
@@ -61,7 +64,7 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
     const handleRequest = async (fichajeId: string, approved: boolean) => {
         const fichajeRef = doc(db, 'fichajes', fichajeId);
         const fichajeToUpdate = fichajes.find(f => f.id === fichajeId);
-        if (!fichajeToUpdate) return;
+        if (!fichajeToUpdate || !user) return;
         
         const updateData: any = {
             requestStatus: approved ? 'approved' : 'rejected'
@@ -73,6 +76,19 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
 
         try {
             await updateDoc(fichajeRef, updateData);
+
+            // Crear notificación para el empleado
+            await addDoc(collection(db, 'notifications'), {
+                recipientId: fichajeToUpdate.employeeId,
+                senderId: user.uid,
+                senderName: user.displayName,
+                type: 'FICHAGE_CHANGE_RESPONSE',
+                message: `ha ${approved ? 'aprobado' : 'rechazado'} tu solicitud de cambio de fichaje.`,
+                link: '/dashboard/proyectos?tab=fichajes', // Link para el portal del empleado
+                isRead: false,
+                createdAt: serverTimestamp(),
+            });
+
             toast({ title: 'Solicitud gestionada', description: `La solicitud de cambio ha sido ${approved ? 'aprobada' : 'rechazada'}.` });
         } catch(error) {
             console.error("Error al gestionar solicitud:", error);
