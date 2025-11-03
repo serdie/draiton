@@ -46,8 +46,18 @@ export function FichajeEmpleadoTab() {
                  const data = doc.data();
                  fichajesList.push({
                     id: doc.id,
-                    ...data,
+                    employeeId: data.employeeId,
+                    employeeName: data.employeeName,
+                    ownerId: data.ownerId,
+                    type: data.type,
                     timestamp: (data.timestamp as Timestamp).toDate(),
+                    // Safely access optional fields
+                    requestChangeReason: data.requestChangeReason || undefined,
+                    requestedTimestamp: data.requestedTimestamp ? (data.requestedTimestamp as Timestamp).toDate() : undefined,
+                    requestStatus: data.requestStatus || undefined,
+                    requestedAt: data.requestedAt ? (data.requestedAt as Timestamp).toDate() : undefined,
+                    requesterId: data.requesterId || undefined,
+                    requesterName: data.requesterName || undefined,
                  } as Fichaje)
             });
             
