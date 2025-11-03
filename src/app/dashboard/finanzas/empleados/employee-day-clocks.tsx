@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Fichaje } from './types';
-import { format, differenceInMinutes } from 'date-fns';
+import { format, differenceInMinutes, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -39,16 +39,16 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
     const firstIn = clockIns[0]?.timestamp;
     const lastOut = clockOuts[clockOuts.length - 1]?.timestamp;
 
-    if (firstIn && lastOut && firstIn < lastOut) {
+    if (firstIn && lastOut && isValid(firstIn) && isValid(lastOut) && firstIn < lastOut) {
         totalMinutes = differenceInMinutes(lastOut, firstIn);
     
         // Restar descansos
         let breakStartTime: Date | null = null;
         for (const fichaje of sortedFichajes) {
-            if (fichaje.type === 'Inicio Descanso' && fichaje.timestamp > firstIn && fichaje.timestamp < lastOut) {
+            if (fichaje.type === 'Inicio Descanso' && isValid(fichaje.timestamp) && fichaje.timestamp > firstIn && fichaje.timestamp < lastOut) {
                 breakStartTime = fichaje.timestamp;
             }
-            if (fichaje.type === 'Fin Descanso' && breakStartTime && fichaje.timestamp > breakStartTime) {
+            if (fichaje.type === 'Fin Descanso' && isValid(fichaje.timestamp) && breakStartTime && fichaje.timestamp > breakStartTime) {
                 totalMinutes -= differenceInMinutes(fichaje.timestamp, breakStartTime);
                 breakStartTime = null; // Reset for next break
             }
@@ -83,7 +83,7 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Fichajes del {format(date, 'PPP', { locale: es })}</CardTitle>
+                <CardTitle>Fichajes del {isValid(date) ? format(date, 'PPP', { locale: es }) : 'Fecha inválida'}</CardTitle>
             </CardHeader>
             <CardContent>
                 {sortedFichajes.length === 0 ? (
@@ -92,6 +92,9 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
                     <div className="space-y-4">
                         <div className="space-y-2">
                              {sortedFichajes.map((fichaje) => {
+                                 if (!fichaje.timestamp || !isValid(fichaje.timestamp)) {
+                                     return null; // Don't render if timestamp is invalid
+                                 }
                                  const { bg, text } = getTypeClass(fichaje.type);
                                  return (
                                      <div key={fichaje.id}>
@@ -108,7 +111,7 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
                                                     <div className="flex items-center gap-2 font-semibold">
                                                         Hora original: {format(fichaje.timestamp, 'HH:mm')}
                                                         <ArrowRight className="h-4 w-4"/>
-                                                        Hora solicitada: {fichaje.requestedTimestamp ? format(fichaje.requestedTimestamp, 'HH:mm') : 'N/A'}
+                                                        Hora solicitada: {fichaje.requestedTimestamp && isValid(fichaje.requestedTimestamp) ? format(fichaje.requestedTimestamp, 'HH:mm') : 'N/A'}
                                                     </div>
                                                     <div className="flex gap-2 mt-2">
                                                         <Button size="sm" onClick={() => handleRequest(fichaje.id, true)}>Aprobar</Button>
