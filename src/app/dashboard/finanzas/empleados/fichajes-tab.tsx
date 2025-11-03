@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -47,7 +47,8 @@ export function FichajesTab() {
                 return {
                     id: doc.id,
                     ...data,
-                    timestamp: data.timestamp.toDate()
+                    timestamp: data.timestamp.toDate(),
+                    requestedTimestamp: data.requestedTimestamp ? data.requestedTimestamp.toDate() : undefined
                 } as Fichaje;
             });
             setFichajes(fetchedFichajes);
