@@ -303,7 +303,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                             <DropdownMenuItem disabled>No tienes notificaciones</DropdownMenuItem>
                         ) : (
                             notifications.map(notif => (
-                                <DropdownMenuItem key={notif.id} onSelect={() => handleNotificationClick(notif)} className={cn(!notif.isRead && "font-semibold")}>
+                                <DropdownMenuItem key={notif.id} onSelect={() => handleNotificationClick(notif)} className={cn("cursor-pointer", !notif.isRead && "font-semibold")}>
                                      <div className="flex items-start gap-3">
                                         {!notif.isRead && <span className="block h-2 w-2 mt-1.5 rounded-full bg-primary" />}
                                         <div className={cn(notif.isRead && "pl-5")}>
