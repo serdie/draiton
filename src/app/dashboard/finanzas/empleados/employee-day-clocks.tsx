@@ -5,6 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Fichaje } from './types';
 import { format, differenceInMinutes } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { useToast } from '@/hooks/use-toast';
+import { AlertCircle, ArrowRight } from 'lucide-react';
 
 interface EmployeeDayClocksProps {
     date: Date;
@@ -23,6 +29,7 @@ const getTypeClass = (type: Fichaje['type']) => {
 
 
 export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
+    const { toast } = useToast();
     const sortedFichajes = [...fichajes].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     
     const clockIns = sortedFichajes.filter(f => f.type === 'Entrada');
@@ -49,6 +56,28 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
     
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
+    
+    const handleRequest = async (fichajeId: string, approved: boolean) => {
+        const fichajeRef = doc(db, 'fichajes', fichajeId);
+        const fichajeToUpdate = fichajes.find(f => f.id === fichajeId);
+        if (!fichajeToUpdate) return;
+        
+        const updateData: any = {
+            requestStatus: approved ? 'approved' : 'rejected'
+        };
+
+        if (approved && fichajeToUpdate.requestedTimestamp) {
+            updateData.timestamp = fichajeToUpdate.requestedTimestamp;
+        }
+
+        try {
+            await updateDoc(fichajeRef, updateData);
+            toast({ title: 'Solicitud gestionada', description: `La solicitud de cambio ha sido ${approved ? 'aprobada' : 'rechazada'}.` });
+        } catch(error) {
+            console.error("Error al gestionar solicitud:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo actualizar la solicitud.' });
+        }
+    }
 
     return (
         <Card>
@@ -64,9 +93,29 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
                              {sortedFichajes.map((fichaje) => {
                                  const { bg, text } = getTypeClass(fichaje.type);
                                  return (
-                                     <div key={fichaje.id} className={`flex justify-between items-center text-sm p-2 rounded-md ${bg}`}>
-                                         <span className={`font-medium ${text}`}>{fichaje.type}</span>
-                                         <span>{format(fichaje.timestamp, 'HH:mm:ss')}</span>
+                                     <div key={fichaje.id}>
+                                         <div className={`flex justify-between items-center text-sm p-2 rounded-md ${bg}`}>
+                                             <span className={`font-medium ${text}`}>{fichaje.type}</span>
+                                             <span>{format(fichaje.timestamp, 'HH:mm:ss')}</span>
+                                         </div>
+                                         {fichaje.requestStatus === 'pending' && (
+                                            <Alert variant="default" className="mt-2 border-yellow-500/50 bg-yellow-500/10">
+                                                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                                                <AlertTitle className="text-yellow-700">Solicitud de Cambio Pendiente</AlertTitle>
+                                                <AlertDescription className="text-yellow-600">
+                                                    <p>Motivo: <span className="italic">{fichaje.requestChangeReason}</span></p>
+                                                    <div className="flex items-center gap-2 font-semibold">
+                                                        Hora original: {format(fichaje.timestamp, 'HH:mm')}
+                                                        <ArrowRight className="h-4 w-4"/>
+                                                        Hora solicitada: {fichaje.requestedTimestamp ? format(fichaje.requestedTimestamp, 'HH:mm') : 'N/A'}
+                                                    </div>
+                                                    <div className="flex gap-2 mt-2">
+                                                        <Button size="sm" onClick={() => handleRequest(fichaje.id, true)}>Aprobar</Button>
+                                                        <Button size="sm" variant="destructive" onClick={() => handleRequest(fichaje.id, false)}>Rechazar</Button>
+                                                    </div>
+                                                </AlertDescription>
+                                            </Alert>
+                                         )}
                                      </div>
                                  )
                              })}

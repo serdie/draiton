@@ -6,6 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { type Fichaje } from './types';
 import { EmployeeDayClocks } from './employee-day-clocks';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { AlertCircle } from 'lucide-react';
 
 interface EmployeeClocksCalendarProps {
     employee: { id: string; name: string };
@@ -47,11 +48,15 @@ export function EmployeeClocksCalendar({ employee, fichajes }: EmployeeClocksCal
                         const hasClockIn = dayFichajes?.some(f => f.type === 'Entrada');
                         const hasClockOut = dayFichajes?.some(f => f.type === 'Salida');
                         const hasBreak = dayFichajes?.some(f => f.type === 'Inicio Descanso');
-
+                        const hasPendingRequest = dayFichajes?.some(f => f.requestStatus === 'pending');
 
                         return (
                             <div className="relative w-full h-full flex items-center justify-center">
                                 <span>{date.getDate()}</span>
+                                
+                                {hasPendingRequest && (
+                                    <AlertCircle className="absolute top-1 right-1 h-3 w-3 text-yellow-500" />
+                                )}
 
                                 {(hasClockIn || hasClockOut || hasBreak) && (
                                     <div className="absolute bottom-1 flex gap-1">

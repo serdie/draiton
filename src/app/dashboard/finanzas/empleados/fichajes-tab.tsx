@@ -10,7 +10,7 @@ import { type Fichaje, type Employee } from './types';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -65,11 +65,15 @@ export function FichajesTab() {
         return <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin"/></div>
     }
 
+    const employeeHasPendingRequests = (employeeId: string) => {
+        return fichajes.some(f => f.employeeId === employeeId && f.requestStatus === 'pending');
+    }
+
     return (
         <Card>
             <CardHeader>
                 <CardTitle>Registro de Fichajes de Empleados</CardTitle>
-                <CardDescription>Selecciona un empleado para ver su calendario de control horario.</CardDescription>
+                <CardDescription>Selecciona un empleado para ver su calendario de control horario y gestionar solicitudes.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-1 space-y-2">
@@ -79,15 +83,20 @@ export function FichajesTab() {
                             key={employee.id}
                             onClick={() => setSelectedEmployee(employee)}
                             className={cn(
-                                'flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors',
+                                'flex items-center justify-between gap-3 p-2 rounded-lg cursor-pointer transition-colors',
                                 selectedEmployee?.id === employee.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
                             )}
                         >
-                            <Avatar className="h-9 w-9">
-                                <AvatarImage src={(employee as any).avatar} alt={employee.name} />
-                                <AvatarFallback>{getInitials(employee.name)}</AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{employee.name}</span>
+                            <div className="flex items-center gap-3">
+                                <Avatar className="h-9 w-9">
+                                    <AvatarImage src={(employee as any).avatar} alt={employee.name} />
+                                    <AvatarFallback>{getInitials(employee.name)}</AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{employee.name}</span>
+                            </div>
+                             {employeeHasPendingRequests(employee.id) && (
+                                <AlertCircle className="h-5 w-5 text-yellow-500" />
+                            )}
                         </div>
                     )) : <p className="text-sm text-muted-foreground">No tienes empleados registrados.</p>}
                 </div>
