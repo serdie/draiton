@@ -159,9 +159,31 @@
             "employeeName": { "type": "string" },
             "ownerId": { "type": "string" },
             "type": { "type": "string", "enum": ["Entrada", "Salida", "Inicio Descanso", "Fin Descanso"] },
-            "timestamp": { "type": "string", "format": "date-time" }
+            "timestamp": { "type": "string", "format": "date-time" },
+            "requestChangeReason": { "type": "string", "description": "Reason provided by the employee to request a change on this entry." },
+            "requestedTimestamp": { "type": "string", "format": "date-time", "description": "The new timestamp requested by the employee." },
+            "requestStatus": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "The status of the change request." },
+            "requestedAt": { "type": "string", "format": "date-time", "description": "When the change was requested." },
+            "requesterId": { "type": "string", "description": "UID of the user who requested the change (the employee)." },
+            "requesterName": { "type": "string", "description": "Name of the user who requested the change." }
         },
         "required": ["employeeId", "ownerId", "type", "timestamp"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Represents an in-app notification for a user.",
+      "type": "object",
+      "properties": {
+        "recipientId": { "type": "string", "description": "UID of the user who will receive the notification." },
+        "senderId": { "type": "string", "description": "UID of the user who triggered the notification." },
+        "senderName": { "type": "string", "description": "Name of the user who triggered the notification." },
+        "type": { "type": "string", "enum": ["FICHAGE_CHANGE_REQUEST"], "description": "The type of the notification." },
+        "message": { "type": "string", "description": "The main content of the notification." },
+        "link": { "type": "string", "description": "URL to navigate to when the notification is clicked." },
+        "isRead": { "type": "boolean", "description": "Whether the notification has been read." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation." }
+      },
+      "required": ["recipientId", "senderId", "type", "message", "link", "isRead", "createdAt"]
     }
   },
   "auth": {
@@ -199,6 +221,10 @@
     "/fichajes/{fichajeId}": {
       "schema": { "$ref": "#/entities/Fichaje" },
       "description": "Stores all clock-in and clock-out events."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Stores in-app notifications for users."
     }
   }
 }

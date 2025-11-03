@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
 import {
   SidebarProvider,
@@ -24,6 +24,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import {
   Settings,
@@ -38,10 +42,11 @@ import {
   BookOpen,
   MessageSquare,
   Bell,
+  CheckCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { auth, db } from '@/lib/firebase/config';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -53,13 +58,49 @@ import { cn } from '@/lib/utils';
 import { TourProvider, useTour } from '@/context/tour-context';
 import { TourSpotlight } from '@/components/tour/tour-spotlight';
 import { tourStepsBase, tourStepsPro, tourStepsFree, tourStepsAdmin } from '@/components/tour/tour-steps';
+import { collection, query, where, onSnapshot, updateDoc, doc, Timestamp, orderBy } from 'firebase/firestore';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
+type Notification = {
+    id: string;
+    senderName: string;
+    message: string;
+    link: string;
+    isRead: boolean;
+    createdAt: Date;
+}
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, isPro, isEmpresa, isEmployee, isFree } = useContext(AuthContext);
   const pathname = usePathname();
+  const router = useRouter();
   const isMobile = useIsMobile();
   const { startTour } = useTour();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+        collection(db, 'notifications'), 
+        where('recipientId', '==', user.uid),
+        orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const notifs = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: (doc.data().createdAt as Timestamp).toDate()
+        } as Notification));
+        setNotifications(notifs);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
   
   const handleLogout = async () => {
     await signOut(auth);
@@ -76,6 +117,14 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         steps = [...steps, ...tourStepsFree]
     }
     startTour(steps);
+  };
+  
+   const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.isRead) {
+        const notifRef = doc(db, 'notifications', notification.id);
+        await updateDoc(notifRef, { isRead: true });
+    }
+    router.push(notification.link);
   };
 
 
@@ -238,9 +287,38 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                 {user?.role === 'pro' && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
                 {user?.role === 'empresa' && <Badge variant="outline" className={cn('border-purple-400 bg-purple-400/10 text-purple-500 dark:border-purple-400 dark:text-purple-400')}>EMPRESA</Badge>}
 
-                 <Button variant="ghost" size="icon">
-                    <Bell className="h-5 w-5"/>
-                 </Button>
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="relative">
+                            <Bell className="h-5 w-5"/>
+                             {unreadNotificationsCount > 0 && (
+                                <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background" />
+                            )}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-80" align="end">
+                        <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {notifications.length === 0 ? (
+                            <DropdownMenuItem disabled>No tienes notificaciones</DropdownMenuItem>
+                        ) : (
+                            notifications.map(notif => (
+                                <DropdownMenuItem key={notif.id} onSelect={() => handleNotificationClick(notif)} className={cn(!notif.isRead && "font-semibold")}>
+                                     <div className="flex items-start gap-3">
+                                        {!notif.isRead && <span className="block h-2 w-2 mt-1.5 rounded-full bg-primary" />}
+                                        <div className={cn(notif.isRead && "pl-5")}>
+                                            <p>{notif.senderName} {notif.message}</p>
+                                            <p className="text-xs text-muted-foreground">{formatDistanceToNow(notif.createdAt, { addSuffix: true, locale: es })}</p>
+                                        </div>
+                                    </div>
+                                </DropdownMenuItem>
+                            ))
+                        )}
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem className="justify-center text-xs text-muted-foreground">Marcar todas como leídas</DropdownMenuItem>
+                    </DropdownMenuContent>
+                 </DropdownMenu>
+
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <div id="tour-perfil" className='flex items-center gap-3 cursor-pointer'>

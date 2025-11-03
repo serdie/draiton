@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -45,8 +45,8 @@ export function RequestChangeModal({ isOpen, onClose, fichaje }: RequestChangeMo
       });
       return;
     }
-     if (!user) {
-      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo identificar al usuario.' });
+     if (!user || !(user as any).companyOwnerId) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo identificar a tu empresa.' });
       return;
     }
     
@@ -66,6 +66,20 @@ export function RequestChangeModal({ isOpen, onClose, fichaje }: RequestChangeMo
         requesterId: user.uid,
         requesterName: user.displayName,
       });
+
+      // Crear notificación para el dueño de la empresa
+      await addDoc(collection(db, 'notifications'), {
+        recipientId: (user as any).companyOwnerId,
+        senderId: user.uid,
+        senderName: user.displayName,
+        type: 'FICHAGE_CHANGE_REQUEST',
+        message: 'ha solicitado un cambio en un fichaje.',
+        link: '/dashboard/finanzas?tab=empleados',
+        isRead: false,
+        createdAt: serverTimestamp(),
+      });
+
+
       toast({
         title: 'Solicitud Enviada',
         description: 'Tu solicitud de cambio ha sido enviada para su revisión.',
