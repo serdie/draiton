@@ -59,7 +59,8 @@ service cloud.firestore {
         // El dueño puede leer todos los fichajes de su empresa.
         // El empleado puede crear y leer sus propios fichajes.
         allow create: if request.auth.uid == request.resource.data.employeeId;
-        allow read: if resource.data.ownerId != null && (resource.data.ownerId == request.auth.uid || resource.data.employeeId == request.auth.uid);
+        allow read: if request.auth.uid == resource.data.ownerId || request.auth.uid == resource.data.employeeId;
+        allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
         // El empleado puede solicitar un cambio, el jefe puede aprobar/rechazar.
         allow update: if request.auth.uid == resource.data.employeeId || request.auth.uid == resource.data.ownerId;
     }

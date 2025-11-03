@@ -32,8 +32,9 @@ export function FichajeEmpleadoTab() {
         if (!user?.uid) {
             setStatus('out');
             setBreakStatus('working');
+            setLoading(false);
             return;
-        };
+        }
 
         const q = query(
             collection(db, 'fichajes'),
@@ -41,24 +42,15 @@ export function FichajeEmpleadoTab() {
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fichajesList: Fichaje[] = [];
-            snapshot.forEach(doc => {
+            const fichajesList: Fichaje[] = snapshot.docs.map(doc => {
                  const data = doc.data();
-                 fichajesList.push({
+                 return {
                     id: doc.id,
-                    employeeId: data.employeeId,
-                    employeeName: data.employeeName,
-                    ownerId: data.ownerId,
-                    type: data.type,
+                    ...data,
                     timestamp: (data.timestamp as Timestamp).toDate(),
-                    // Safely access optional fields
-                    requestChangeReason: data.requestChangeReason || undefined,
                     requestedTimestamp: data.requestedTimestamp ? (data.requestedTimestamp as Timestamp).toDate() : undefined,
-                    requestStatus: data.requestStatus || undefined,
                     requestedAt: data.requestedAt ? (data.requestedAt as Timestamp).toDate() : undefined,
-                    requesterId: data.requesterId || undefined,
-                    requesterName: data.requesterName || undefined,
-                 } as Fichaje)
+                 } as Fichaje;
             });
             
             fichajesList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
@@ -87,9 +79,11 @@ export function FichajeEmpleadoTab() {
                 setBreakStatus('working');
                 setLastFichajeTime(null);
             }
+             setLoading(false);
         }, (error) => {
             console.error("Error al obtener el estado de fichaje:", error);
             setStatus('out');
+            setLoading(false);
         });
 
         return () => unsubscribe();

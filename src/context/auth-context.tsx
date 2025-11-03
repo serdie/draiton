@@ -19,6 +19,7 @@ export interface User extends FirebaseUser {
     role?: UserRole;
     company?: CompanySettings;
     providerData?: any;
+    companyOwnerId?: string;
 }
 
 interface AuthContextType {
@@ -136,9 +137,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (loading) return;
 
     const isAuthPage = pathname === '/login' || pathname === '/register';
-    const isProtected = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
+    const isProtected = pathname.startsWith('/dashboard') || pathname.startsWith('/admin') || pathname.startsWith('/portal-empleado');
 
-    if (!user && isProtected) {
+    if (!user && isProtected && !pathname.startsWith('/portal-empleado')) {
         router.push('/login');
     }
 
@@ -159,7 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { isPro, isAdmin, isFree, isEmpresa, isEmployee };
   }, [effectiveRole]);
 
-  if (loading) {
+  if (loading && !user && (pathname.startsWith('/dashboard') || pathname.startsWith('/admin'))) {
       return (
           <div className="flex h-screen w-screen items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />

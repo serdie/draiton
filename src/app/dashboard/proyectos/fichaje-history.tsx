@@ -33,7 +33,7 @@ const getTypeClass = (type: Fichaje['type']) => {
     }
 }
 
-export function FichajeHistory({ allFichajes: fichajes }: FichajeHistoryProps) {
+export function FichajeHistory({ allFichajes }: FichajeHistoryProps) {
   const [period, setPeriod] = useState<Period>('semana');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [fichajeToChange, setFichajeToChange] = useState<Fichaje | null>(null);
@@ -68,13 +68,13 @@ export function FichajeHistory({ allFichajes: fichajes }: FichajeHistoryProps) {
     }
 
 
-    return fichajes.filter(f => {
+    return allFichajes.filter(f => {
         const timestamp = f.timestamp;
         const isInRange = timestamp >= startDate! && (endDate ? timestamp <= endDate : true);
         return isInRange;
     });
 
-  }, [fichajes, period, customDateRange]);
+  }, [allFichajes, period, customDateRange]);
 
   const handleExport = () => {
     // Basic CSV export logic
