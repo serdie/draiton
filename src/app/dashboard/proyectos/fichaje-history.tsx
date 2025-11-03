@@ -6,7 +6,7 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format, startOfWeek, startOfMonth, subDays } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Fichaje } from './types';
 import { Button } from '@/components/ui/button';
@@ -43,23 +43,31 @@ export function FichajeHistory({ fichajes }: FichajeHistoryProps) {
   const filteredFichajes = useMemo(() => {
     const now = new Date();
     let startDate: Date | undefined;
-    let endDate: Date | undefined = now;
+    let endDate: Date | undefined;
 
     switch (period) {
       case 'mes':
         startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
         break;
       case 'personalizado':
         startDate = customDateRange?.from;
-        endDate = customDateRange?.to ? new Date(new Date(customDateRange.to).setHours(23, 59, 59, 999)) : undefined;
+        endDate = customDateRange?.to ? new Date(new Date(customDateRange.to).setHours(23, 59, 59, 999)) : customDateRange?.from;
         break;
       case 'semana':
       default:
         startDate = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+        endDate = endOfWeek(now, { weekStartsOn: 1 });
         break;
     }
 
     if (!startDate) return [];
+    
+    // Ensure endDate covers the whole day
+    if(endDate) {
+        endDate = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+    }
+
 
     return fichajes.filter(f => {
         const timestamp = f.timestamp;
