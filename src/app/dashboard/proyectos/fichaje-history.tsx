@@ -79,11 +79,38 @@ export function FichajeHistory({ allFichajes }: FichajeHistoryProps) {
   }, [allFichajes, period, customDateRange]);
 
   const handleExport = () => {
-    // Basic CSV export logic
-    const headers = "Fecha,Dia,Tipo,Hora";
-    const rows = filteredFichajes.map(f => 
-        `${format(f.timestamp, 'yyyy-MM-dd')},${format(f.timestamp, 'eeee', {locale: es})},${f.type},${format(f.timestamp, 'HH:mm:ss')}`
-    ).join('\n');
+    const headers = "Fecha,Dia,Tipo,Hora,Modalidad,Detalles Pausa,Justificacion";
+    
+    const rows = filteredFichajes.map(f => {
+        const date = format(f.timestamp, 'yyyy-MM-dd');
+        const day = format(f.timestamp, 'eeee', { locale: es });
+        const type = f.type;
+        const time = format(f.timestamp, 'HH:mm:ss');
+        
+        let modality = '';
+        if (f.type === 'Entrada' || f.type === 'Fin Descanso') {
+            modality = f.workModality || '';
+        }
+
+        let breakDetailsStr = '';
+        if (f.type === 'Inicio Descanso' && f.breakDetails) {
+            const details = [];
+            if (f.breakDetails.isSplitShift) details.push('Jornada partida');
+            if (f.breakDetails.isPersonal) details.push('Personal');
+            if (f.breakDetails.isJustified) details.push('Justificada');
+            breakDetailsStr = details.join(', ');
+        }
+        
+        const justification = (f.type === 'Inicio Descanso' && f.breakDetails?.isJustified) 
+            ? f.breakDetails.justificationType || '' 
+            : '';
+        
+        // Escape commas in strings
+        const safeBreakDetails = `"${breakDetailsStr.replace(/"/g, '""')}"`;
+        const safeJustification = `"${justification.replace(/"/g, '""')}"`;
+
+        return [date, day, type, time, modality, safeBreakDetails, safeJustification].join(',');
+    }).join('\n');
     
     const csvContent = `data:text/csv;charset=utf-8,${headers}\n${rows}`;
     const encodedUri = encodeURI(csvContent);
