@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
@@ -38,6 +39,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [socialSecurityNumber, setSocialSecurityNumber] = useState(employee.socialSecurityNumber);
   const [contractType, setContractType] = useState(employee.contractType);
   const [workModality, setWorkModality] = useState(employee.workModality || 'Presencial');
+  const [weeklyHours, setWeeklyHours] = useState(String(employee.weeklyHours || 40));
   const [paymentFrequency, setPaymentFrequency] = useState(employee.paymentFrequency || 'Mensual');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
   const [proratedExtraPays, setProratedExtraPays] = useState(employee.proratedExtraPays ?? true);
@@ -56,6 +58,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setSocialSecurityNumber(employee.socialSecurityNumber);
     setContractType(employee.contractType);
     setWorkModality(employee.workModality || 'Presencial');
+    setWeeklyHours(String(employee.weeklyHours || 40));
     setPaymentFrequency(employee.paymentFrequency || 'Mensual');
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
     setProratedExtraPays(employee.proratedExtraPays ?? true);
@@ -82,6 +85,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         socialSecurityNumber,
         contractType,
         workModality,
+        weeklyHours: parseInt(weeklyHours, 10),
         paymentFrequency,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
         proratedExtraPays,
@@ -191,10 +195,16 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                 </SelectContent>
             </Select>
         </div>
-            <div className="space-y-2">
-            <Label htmlFor="edit-salary">Salario Bruto Anual (€)</Label>
-            <Input id="edit-salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="edit-salary">Salario Bruto Anual (€)</Label>
+                    <Input id="edit-salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="edit-weekly-hours">Horas Semanales</Label>
+                    <Input id="edit-weekly-hours" type="number" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} required />
+                </div>
+            </div>
         <div className="flex items-center space-x-2">
             <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
             <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra en la nómina mensual</Label>

@@ -47,6 +47,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [socialSecurityNumber, setSocialSecurityNumber] = useState('');
   const [contractType, setContractType] = useState('');
   const [workModality, setWorkModality] = useState('Presencial');
+  const [weeklyHours, setWeeklyHours] = useState('40');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState('');
   const [hireDate, setHireDate] = useState<Date | undefined>();
   const [paymentFrequency, setPaymentFrequency] = useState('Mensual');
@@ -62,6 +63,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     setSocialSecurityNumber('');
     setContractType('');
     setWorkModality('Presencial');
+    setWeeklyHours('40');
     setGrossAnnualSalary('');
     setHireDate(undefined);
     setPaymentFrequency('Mensual');
@@ -88,6 +90,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         socialSecurityNumber,
         contractType,
         workModality,
+        weeklyHours: parseInt(weeklyHours, 10),
         paymentFrequency,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
         proratedExtraPays,
@@ -227,10 +230,16 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
                     </SelectContent>
                 </Select>
             </div>
-             <div className="space-y-2">
-              <Label htmlFor="salary">Salario Bruto Anual (€)</Label>
-              <Input id="salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
-            </div>
+             <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="salary">Salario Bruto Anual (€)</Label>
+                    <Input id="salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="weekly-hours">Horas Semanales</Label>
+                    <Input id="weekly-hours" type="number" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} required />
+                </div>
+             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
               <Label htmlFor="prorated-pays" className="text-sm font-normal">Prorratear pagas extra en la nómina mensual</Label>

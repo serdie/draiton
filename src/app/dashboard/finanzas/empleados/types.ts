@@ -13,6 +13,7 @@ export type Employee = {
     workModality: 'Presencial' | 'Mixto' | 'Teletrabajo';
     paymentFrequency: 'Mensual' | 'Diario' | 'Semanal' | 'Quincenal' | 'Personalizar';
     grossAnnualSalary: number;
+    weeklyHours?: number;
     proratedExtraPays: boolean;
     hireDate?: Date;
     avatar?: string;

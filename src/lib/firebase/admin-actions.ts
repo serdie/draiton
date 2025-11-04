@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import admin from 'firebase-admin';
@@ -77,6 +78,7 @@ export async function createEmployeeUser(employeeData: {
   socialSecurityNumber: string;
   contractType: string;
   workModality: string;
+  weeklyHours: number;
   grossAnnualSalary: number;
   hireDate?: Date;
   paymentFrequency: string;
