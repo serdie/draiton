@@ -167,7 +167,18 @@
             "requestStatus": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "The status of the change request." },
             "requestedAt": { "type": "string", "format": "date-time", "description": "When the change was requested." },
             "requesterId": { "type": "string", "description": "UID of the user who requested the change (the employee)." },
-            "requesterName": { "type": "string", "description": "Name of the user who requested the change." }
+            "requesterName": { "type": "string", "description": "Name of the user who requested the change." },
+            "breakDetails": {
+                "type": "object",
+                "description": "Details about the break.",
+                "properties": {
+                    "isSplitShift": { "type": "boolean" },
+                    "isPersonal": { "type": "boolean" },
+                    "isJustified": { "type": "boolean" },
+                    "justificationType": { "type": "string", "enum": ["Visita medica", "Tratamiento", "Gestiones administrativas", "Tutoria", "Otros"] },
+                    "moreInfo": { "type": "string" }
+                }
+            }
         },
         "required": ["employeeId", "ownerId", "type", "timestamp"]
     },

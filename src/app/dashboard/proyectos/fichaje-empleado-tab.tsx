@@ -12,7 +12,8 @@ import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FichajeHistory } from './fichaje-history';
-import type { Fichaje } from './types';
+import type { Fichaje, BreakDetails } from './types';
+import { StartBreakModal } from './start-break-modal';
 
 
 type FichajeStatus = 'out' | 'in';
@@ -26,6 +27,7 @@ export function FichajeEmpleadoTab() {
     const [lastFichajeTime, setLastFichajeTime] = useState<string | null>(null);
     const [allFichajes, setAllFichajes] = useState<Fichaje[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
@@ -89,7 +91,7 @@ export function FichajeEmpleadoTab() {
         return () => unsubscribe();
     }, [user?.uid]);
 
-    const handleFichaje = async (type: 'Entrada' | 'Salida' | 'Inicio Descanso' | 'Fin Descanso') => {
+    const handleFichaje = async (type: 'Entrada' | 'Salida' | 'Fin Descanso', details?: BreakDetails) => {
         if (!user || !user.uid || status === 'loading' || isProcessing) {
             toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
             return;
@@ -110,6 +112,7 @@ export function FichajeEmpleadoTab() {
                 employeeName: user.displayName,
                 type: type,
                 timestamp: serverTimestamp(),
+                ...details, // Add break details if provided
             });
 
             toast({
@@ -123,12 +126,56 @@ export function FichajeEmpleadoTab() {
             setIsProcessing(false);
         }
     };
+    
+    const handleStartBreak = async (details: BreakDetails) => {
+        if (!user || !user.uid || status === 'loading' || isProcessing) {
+            toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
+            return;
+        }
+
+        const companyOwnerId = (user as any).companyOwnerId;
+        if (!companyOwnerId) {
+            toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a ninguna empresa.' });
+            return;
+        }
+        
+        setIsProcessing(true);
+
+        try {
+            await addDoc(collection(db, 'fichajes'), {
+                employeeId: user.uid,
+                ownerId: companyOwnerId,
+                employeeName: user.displayName,
+                type: 'Inicio Descanso',
+                timestamp: serverTimestamp(),
+                breakDetails: details,
+            });
+
+            toast({
+                title: `Fichaje de Inicio Descanso registrado`,
+                description: `Has registrado tu descanso a las ${format(new Date(), 'HH:mm')}.`,
+            });
+            setIsBreakModalOpen(false);
+        } catch (error) {
+            console.error("Error al registrar fichaje:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje. Revisa las reglas de seguridad.' });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
     const isClockIn = status === 'in';
     const isOnBreak = breakStatus === 'on_break';
     const isLoading = status === 'loading';
 
     return (
+        <>
+        <StartBreakModal 
+            isOpen={isBreakModalOpen}
+            onClose={() => setIsBreakModalOpen(false)}
+            onSubmit={handleStartBreak}
+            isSubmitting={isProcessing}
+        />
         <div className="space-y-6">
             <Card className="w-full max-w-md mx-auto">
                 <CardHeader className="text-center">
@@ -165,7 +212,7 @@ export function FichajeEmpleadoTab() {
                             size="lg"
                             variant="outline"
                             className="w-full"
-                            onClick={() => handleFichaje(isOnBreak ? 'Fin Descanso' : 'Inicio Descanso')}
+                            onClick={() => isOnBreak ? handleFichaje('Fin Descanso') : setIsBreakModalOpen(true)}
                             disabled={isLoading || isProcessing || !isClockIn}
                         >
                             {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Coffee className="mr-2 h-5 w-5" />}
@@ -177,5 +224,6 @@ export function FichajeEmpleadoTab() {
 
             <FichajeHistory allFichajes={allFichajes} />
         </div>
+        </>
     );
 }
