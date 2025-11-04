@@ -150,34 +150,43 @@ export function AusenciasTab() {
                                 className="rounded-md border p-4"
                                 numberOfMonths={2}
                                 components={{
-                                    DayContent: ({ date }) => {
+                                    DayContent: ({ date, ...props }) => {
                                         const dayAbsences = absenceDays.get(date.toDateString());
-                                        return (
-                                            <div className="relative w-full h-full flex items-center justify-center">
+                                        const dayElement = (
+                                             <div className="relative w-full h-full flex items-center justify-center">
                                                 <span>{date.getDate()}</span>
                                                 {dayAbsences && dayAbsences.length > 0 && (
-                                                    <Popover>
-                                                        <PopoverTrigger asChild>
-                                                            <div className="absolute bottom-1 w-full flex justify-center gap-0.5">
-                                                                {dayAbsences.slice(0, 3).map((absence, index) => (
-                                                                    <div key={index} className={`h-1.5 w-1.5 rounded-full ${getAbsenceTypeColor(absence.type)} ${absence.status === 'Pendiente' ? 'opacity-50' : ''}`} />
-                                                                ))}
-                                                            </div>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-60">
-                                                            <div className="space-y-2">
-                                                                {dayAbsences.map((absence, index) => (
-                                                                    <div key={index} className="flex items-center gap-2">
-                                                                        <div className={`h-2 w-2 rounded-full ${getAbsenceTypeColor(absence.type)}`} />
-                                                                        <span className="text-sm">{absence.type} ({absence.status})</span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </PopoverContent>
-                                                    </Popover>
+                                                    <div className="absolute bottom-1 w-full flex justify-center gap-0.5">
+                                                        {dayAbsences.slice(0, 3).map((absence, index) => (
+                                                            <div key={index} className={`h-1.5 w-1.5 rounded-full ${getAbsenceTypeColor(absence.type)} ${absence.status === 'Pendiente' ? 'opacity-50' : ''}`} />
+                                                        ))}
+                                                    </div>
                                                 )}
                                             </div>
                                         );
+
+                                        if (dayAbsences && dayAbsences.length > 0) {
+                                            return (
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        {dayElement}
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-60">
+                                                        <div className="space-y-2">
+                                                            <p className="font-semibold text-sm">Ausencias del día:</p>
+                                                            {dayAbsences.map((absence, index) => (
+                                                                <div key={index} className="flex items-center gap-2">
+                                                                    <div className={`h-2 w-2 rounded-full ${getAbsenceTypeColor(absence.type)}`} />
+                                                                    <span className="text-sm">{absence.type} ({absence.status})</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
+                                            )
+                                        }
+
+                                        return dayElement;
                                     }
                                 }}
                             />
