@@ -10,13 +10,14 @@ import { Button } from '@/components/ui/button';
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, ArrowRight, Eye } from 'lucide-react';
 import { useContext } from 'react';
 import { AuthContext } from '@/context/auth-context';
 
 interface EmployeeDayClocksProps {
     date: Date;
     fichajes: Fichaje[];
+    onViewFichaje: (fichaje: Fichaje) => void;
 }
 
 const getTypeClass = (type: Fichaje['type']) => {
@@ -30,7 +31,7 @@ const getTypeClass = (type: Fichaje['type']) => {
 }
 
 
-export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
+export function EmployeeDayClocks({ date, fichajes, onViewFichaje }: EmployeeDayClocksProps) {
     const { toast } = useToast();
     const { user } = useContext(AuthContext);
     const sortedFichajes = [...fichajes].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
@@ -115,8 +116,13 @@ export function EmployeeDayClocks({ date, fichajes }: EmployeeDayClocksProps) {
                                  return (
                                      <div key={fichaje.id}>
                                          <div className={`flex justify-between items-center text-sm p-2 rounded-md ${bg}`}>
-                                             <span className={`font-medium ${text}`}>{fichaje.type}</span>
-                                             <span>{format(fichaje.timestamp, 'HH:mm:ss')}</span>
+                                             <div className="flex items-center gap-2">
+                                                <span className={`font-medium ${text}`}>{fichaje.type}</span>
+                                                <span>{format(fichaje.timestamp, 'HH:mm:ss')}</span>
+                                             </div>
+                                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onViewFichaje(fichaje)}>
+                                                 <Eye className="h-4 w-4" />
+                                             </Button>
                                          </div>
                                          {fichaje.requestStatus === 'pending' && (
                                             <Alert variant="default" className="mt-2 border-yellow-500/50 bg-yellow-500/10">

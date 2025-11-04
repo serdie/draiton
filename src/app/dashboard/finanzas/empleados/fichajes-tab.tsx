@@ -11,6 +11,7 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { ViewFichajeModal } from '../../proyectos/view-fichaje-modal';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -24,6 +25,7 @@ export function FichajesTab() {
     const [fichajes, setFichajes] = useState<Fichaje[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [loading, setLoading] = useState(true);
+    const [fichajeToView, setFichajeToView] = useState<Fichaje | null>(null);
 
     useEffect(() => {
         if (!user) return;
@@ -71,6 +73,14 @@ export function FichajesTab() {
     }
 
     return (
+        <>
+        {fichajeToView && (
+            <ViewFichajeModal
+                isOpen={!!fichajeToView}
+                onClose={() => setFichajeToView(null)}
+                fichaje={fichajeToView}
+            />
+        )}
         <Card>
             <CardHeader>
                 <CardTitle>Registro de Fichajes de Empleados</CardTitle>
@@ -106,6 +116,7 @@ export function FichajesTab() {
                         <EmployeeClocksCalendar 
                             employee={selectedEmployee}
                             fichajes={fichajes.filter(f => f.employeeId === selectedEmployee.id)}
+                            onViewFichaje={setFichajeToView}
                         />
                    ) : (
                        <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -115,5 +126,6 @@ export function FichajesTab() {
                 </div>
             </CardContent>
         </Card>
+        </>
     );
 }

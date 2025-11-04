@@ -11,9 +11,10 @@ import { AlertCircle } from 'lucide-react';
 interface EmployeeClocksCalendarProps {
     employee: { id: string; name: string };
     fichajes: Fichaje[];
+    onViewFichaje: (fichaje: Fichaje) => void;
 }
 
-export function EmployeeClocksCalendar({ employee, fichajes }: EmployeeClocksCalendarProps) {
+export function EmployeeClocksCalendar({ employee, fichajes, onViewFichaje }: EmployeeClocksCalendarProps) {
     const [selectedDay, setSelectedDay] = useState<Date | undefined>(new Date());
     const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
@@ -75,6 +76,7 @@ export function EmployeeClocksCalendar({ employee, fichajes }: EmployeeClocksCal
                  <EmployeeDayClocks 
                     date={selectedDay} 
                     fichajes={fichajesByDay[selectedDay.toDateString()] || []}
+                    onViewFichaje={onViewFichaje}
                 />
             ) : (
                 <Card>
