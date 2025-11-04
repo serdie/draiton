@@ -76,6 +76,7 @@ export async function createEmployeeUser(employeeData: {
   nif: string;
   socialSecurityNumber: string;
   contractType: string;
+  workModality: string;
   grossAnnualSalary: number;
   hireDate?: Date;
   paymentFrequency: string;

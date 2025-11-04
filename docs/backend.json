@@ -139,6 +139,7 @@
             "phone": { "type": "string" },
             "socialSecurityNumber": { "type": "string" },
             "contractType": { "type": "string", "enum": ["Indefinido", "Temporal", "Formación", "Prácticas"] },
+            "workModality": { "type": "string", "enum": ["Presencial", "Mixto", "Teletrabajo"], "description": "Work modality for the employee." },
             "paymentFrequency": { "type": "string", "enum": ["Mensual", "Diario", "Semanal", "Quincenal", "Personalizar"] },
             "grossAnnualSalary": { "type": "number" },
             "proratedExtraPays": { "type": "boolean" },

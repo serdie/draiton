@@ -10,10 +10,14 @@ export type Employee = {
     nif: string;
     socialSecurityNumber: string;
     contractType: 'Indefinido' | 'Temporal' | 'Formación' | 'Prácticas';
+    workModality: 'Presencial' | 'Mixto' | 'Teletrabajo';
     paymentFrequency: 'Mensual' | 'Diario' | 'Semanal' | 'Quincenal' | 'Personalizar';
     grossAnnualSalary: number;
+    proratedExtraPays: boolean;
     hireDate?: Date;
     avatar?: string;
+    employeePortalActive?: boolean;
+    employeePortalId?: string;
 };
 
 export type Fichaje = {
@@ -23,4 +27,10 @@ export type Fichaje = {
     ownerId: string;
     type: 'Entrada' | 'Salida' | 'Inicio Descanso' | 'Fin Descanso';
     timestamp: Date;
+    requestChangeReason?: string;
+    requestedTimestamp?: Date;
+    requestStatus?: 'pending' | 'approved' | 'rejected';
+    requestedAt?: Date;
+    requesterId?: string;
+    requesterName?: string;
 }

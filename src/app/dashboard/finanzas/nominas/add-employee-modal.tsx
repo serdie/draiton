@@ -46,6 +46,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [nif, setNif] = useState('');
   const [socialSecurityNumber, setSocialSecurityNumber] = useState('');
   const [contractType, setContractType] = useState('');
+  const [workModality, setWorkModality] = useState('Presencial');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState('');
   const [hireDate, setHireDate] = useState<Date | undefined>();
   const [paymentFrequency, setPaymentFrequency] = useState('Mensual');
@@ -60,6 +61,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     setNif('');
     setSocialSecurityNumber('');
     setContractType('');
+    setWorkModality('Presencial');
     setGrossAnnualSalary('');
     setHireDate(undefined);
     setPaymentFrequency('Mensual');
@@ -85,6 +87,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         nif,
         socialSecurityNumber,
         contractType,
+        workModality,
         paymentFrequency,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
         proratedExtraPays,
@@ -188,30 +191,41 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
             </div>
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                <Label htmlFor="contract-type">Tipo de Contrato</Label>
-                <Select value={contractType} onValueChange={setContractType} required>
-                    <SelectTrigger><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
-                    <SelectContent>
-                    <SelectItem value="Indefinido">Indefinido</SelectItem>
-                    <SelectItem value="Temporal">Temporal</SelectItem>
-                    <SelectItem value="Formación">Formación</SelectItem>
-                    <SelectItem value="Prácticas">Prácticas</SelectItem>
-                    </SelectContent>
-                </Select>
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="payment-frequency">Frecuencia de Pago</Label>
-                     <Select value={paymentFrequency} onValueChange={setPaymentFrequency} required>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Label htmlFor="contract-type">Tipo de Contrato</Label>
+                    <Select value={contractType} onValueChange={setContractType} required>
+                        <SelectTrigger><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Mensual">Mensual</SelectItem>
-                            <SelectItem value="Diario">Diario</SelectItem>
-                            <SelectItem value="Semanal">Semanal</SelectItem>
-                            <SelectItem value="Quincenal">Quincenal</SelectItem>
-                            <SelectItem value="Personalizar">Personalizar</SelectItem>
+                        <SelectItem value="Indefinido">Indefinido</SelectItem>
+                        <SelectItem value="Temporal">Temporal</SelectItem>
+                        <SelectItem value="Formación">Formación</SelectItem>
+                        <SelectItem value="Prácticas">Prácticas</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
+                <div className="space-y-2">
+                    <Label htmlFor="work-modality">Modalidad de Trabajo</Label>
+                    <Select value={workModality} onValueChange={setWorkModality} required>
+                        <SelectTrigger><SelectValue placeholder="Selecciona modalidad" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Presencial">Presencial</SelectItem>
+                            <SelectItem value="Mixto">Mixto</SelectItem>
+                            <SelectItem value="Teletrabajo">Teletrabajo</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="payment-frequency">Frecuencia de Pago</Label>
+                    <Select value={paymentFrequency} onValueChange={setPaymentFrequency} required>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Mensual">Mensual</SelectItem>
+                        <SelectItem value="Diario">Diario</SelectItem>
+                        <SelectItem value="Semanal">Semanal</SelectItem>
+                        <SelectItem value="Quincenal">Quincenal</SelectItem>
+                        <SelectItem value="Personalizar">Personalizar</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
              <div className="space-y-2">
               <Label htmlFor="salary">Salario Bruto Anual (€)</Label>

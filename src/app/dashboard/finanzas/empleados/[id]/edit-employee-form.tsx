@@ -37,6 +37,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [nif, setNif] = useState(employee.nif);
   const [socialSecurityNumber, setSocialSecurityNumber] = useState(employee.socialSecurityNumber);
   const [contractType, setContractType] = useState(employee.contractType);
+  const [workModality, setWorkModality] = useState(employee.workModality || 'Presencial');
   const [paymentFrequency, setPaymentFrequency] = useState(employee.paymentFrequency || 'Mensual');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
   const [proratedExtraPays, setProratedExtraPays] = useState(employee.proratedExtraPays ?? true);
@@ -54,6 +55,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setNif(employee.nif);
     setSocialSecurityNumber(employee.socialSecurityNumber);
     setContractType(employee.contractType);
+    setWorkModality(employee.workModality || 'Presencial');
     setPaymentFrequency(employee.paymentFrequency || 'Mensual');
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
     setProratedExtraPays(employee.proratedExtraPays ?? true);
@@ -79,6 +81,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         nif,
         socialSecurityNumber,
         contractType,
+        workModality,
         paymentFrequency,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
         proratedExtraPays,
@@ -164,18 +167,29 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                 </Select>
             </div>
             <div className="space-y-2">
-                <Label htmlFor="payment-frequency">Frecuencia de Pago</Label>
-                    <Select value={paymentFrequency} onValueChange={setPaymentFrequency} required>
+                <Label htmlFor="work-modality">Modalidad de Trabajo</Label>
+                <Select value={workModality} onValueChange={(v) => setWorkModality(v as any)} required>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Mensual">Mensual</SelectItem>
-                        <SelectItem value="Diario">Diario</SelectItem>
-                        <SelectItem value="Semanal">Semanal</SelectItem>
-                        <SelectItem value="Quincenal">Quincenal</SelectItem>
-                        <SelectItem value="Personalizar">Personalizar</SelectItem>
+                        <SelectItem value="Presencial">Presencial</SelectItem>
+                        <SelectItem value="Mixto">Mixto</SelectItem>
+                        <SelectItem value="Teletrabajo">Teletrabajo</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
+        </div>
+         <div className="space-y-2">
+            <Label htmlFor="payment-frequency">Frecuencia de Pago</Label>
+                <Select value={paymentFrequency} onValueChange={setPaymentFrequency} required>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="Mensual">Mensual</SelectItem>
+                    <SelectItem value="Diario">Diario</SelectItem>
+                    <SelectItem value="Semanal">Semanal</SelectItem>
+                    <SelectItem value="Quincenal">Quincenal</SelectItem>
+                    <SelectItem value="Personalizar">Personalizar</SelectItem>
+                </SelectContent>
+            </Select>
         </div>
             <div className="space-y-2">
             <Label htmlFor="edit-salary">Salario Bruto Anual (€)</Label>
