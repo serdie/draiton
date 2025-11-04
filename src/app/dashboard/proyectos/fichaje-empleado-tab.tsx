@@ -14,6 +14,7 @@ import { es } from 'date-fns/locale';
 import { FichajeHistory } from './fichaje-history';
 import type { Fichaje, BreakDetails } from './types';
 import { StartBreakModal } from './start-break-modal';
+import { SelectWorkModalityModal } from './select-work-modality-modal';
 
 
 type FichajeStatus = 'out' | 'in';
@@ -28,6 +29,7 @@ export function FichajeEmpleadoTab() {
     const [allFichajes, setAllFichajes] = useState<Fichaje[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
+    const [isWorkModalityModalOpen, setIsWorkModalityModalOpen] = useState(false);
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
@@ -91,7 +93,22 @@ export function FichajeEmpleadoTab() {
         return () => unsubscribe();
     }, [user?.uid]);
 
-    const handleFichaje = async (type: 'Entrada' | 'Salida' | 'Fin Descanso', details?: BreakDetails) => {
+    const handleClockIn = () => {
+        if (!user) return;
+        const employee = user as Employee; // Cast user to Employee type from your context
+        if (employee.workModality === 'Mixto') {
+            setIsWorkModalityModalOpen(true);
+        } else {
+            handleFichaje('Entrada', undefined, employee.workModality);
+        }
+    };
+    
+    const handleWorkModalitySelected = (modality: 'Presencial' | 'Teletrabajo') => {
+        handleFichaje('Entrada', undefined, modality);
+        setIsWorkModalityModalOpen(false);
+    };
+
+    const handleFichaje = async (type: 'Entrada' | 'Salida' | 'Fin Descanso', details?: BreakDetails, workModality?: 'Presencial' | 'Teletrabajo') => {
         if (!user || !user.uid || status === 'loading' || isProcessing) {
             toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
             return;
@@ -105,15 +122,23 @@ export function FichajeEmpleadoTab() {
         
         setIsProcessing(true);
 
+        const fichajeData: any = {
+            employeeId: user.uid,
+            ownerId: companyOwnerId,
+            employeeName: user.displayName,
+            type: type,
+            timestamp: serverTimestamp(),
+        };
+
+        if (details) {
+            fichajeData.breakDetails = details;
+        }
+        if (workModality) {
+            fichajeData.workModality = workModality;
+        }
+
         try {
-            await addDoc(collection(db, 'fichajes'), {
-                employeeId: user.uid,
-                ownerId: companyOwnerId,
-                employeeName: user.displayName,
-                type: type,
-                timestamp: serverTimestamp(),
-                ...details, // Add break details if provided
-            });
+            await addDoc(collection(db, 'fichajes'), fichajeData);
 
             toast({
                 title: `Fichaje de ${type} registrado`,
@@ -176,6 +201,11 @@ export function FichajeEmpleadoTab() {
             onSubmit={handleStartBreak}
             isSubmitting={isProcessing}
         />
+        <SelectWorkModalityModal
+            isOpen={isWorkModalityModalOpen}
+            onClose={() => setIsWorkModalityModalOpen(false)}
+            onSelect={handleWorkModalitySelected}
+        />
         <div className="space-y-6">
             <Card className="w-full max-w-md mx-auto">
                 <CardHeader className="text-center">
@@ -202,7 +232,7 @@ export function FichajeEmpleadoTab() {
                         <Button 
                             size="lg" 
                             className={`w-full ${isClockIn ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
-                            onClick={() => handleFichaje(isClockIn ? 'Salida' : 'Entrada')}
+                            onClick={() => isClockIn ? handleFichaje('Salida') : handleClockIn()}
                             disabled={isLoading || isProcessing || isOnBreak}
                         >
                             {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isClockIn ? <LogOut className="mr-2 h-5 w-5"/> : <LogIn className="mr-2 h-5 w-5"/>) }
@@ -227,3 +257,5 @@ export function FichajeEmpleadoTab() {
         </>
     );
 }
+
+    

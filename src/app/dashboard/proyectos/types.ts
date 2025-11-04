@@ -22,4 +22,7 @@ export type Fichaje = {
     requesterId?: string;
     requesterName?: string;
     breakDetails?: BreakDetails;
+    workModality?: 'Presencial' | 'Teletrabajo';
 }
+
+    
