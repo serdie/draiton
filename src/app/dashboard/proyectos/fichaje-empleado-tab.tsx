@@ -31,7 +31,7 @@ export function FichajeEmpleadoTab() {
     const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
     const [isWorkModalityModalOpen, setIsWorkModalityModalOpen] = useState(false);
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
-    const [loading, setLoading] = useState(true);
+
 
     // Effect to get current employee profile
     useEffect(() => {
@@ -121,7 +121,7 @@ export function FichajeEmpleadoTab() {
         setIsWorkModalityModalOpen(false);
     };
 
-    const handleFichaje = async (type: 'Entrada' | 'Salida' | 'Fin Descanso', details?: BreakDetails, workModality?: 'Presencial' | 'Teletrabajo') => {
+    const handleFichaje = async (type: Fichaje['type'], details?: BreakDetails, workModality?: 'Presencial' | 'Teletrabajo') => {
         if (!user || !user.uid || status === 'loading' || isProcessing) {
             toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
             return;
@@ -166,40 +166,8 @@ export function FichajeEmpleadoTab() {
     };
     
     const handleStartBreak = async (details: BreakDetails) => {
-        if (!user || !user.uid || status === 'loading' || isProcessing) {
-            toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
-            return;
-        }
-
-        const companyOwnerId = (user as any).companyOwnerId;
-        if (!companyOwnerId) {
-            toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a ninguna empresa.' });
-            return;
-        }
-        
-        setIsProcessing(true);
-
-        try {
-            await addDoc(collection(db, 'fichajes'), {
-                employeeId: user.uid,
-                ownerId: companyOwnerId,
-                employeeName: user.displayName,
-                type: 'Inicio Descanso',
-                timestamp: serverTimestamp(),
-                breakDetails: details,
-            });
-
-            toast({
-                title: `Fichaje de Inicio Descanso registrado`,
-                description: `Has registrado tu descanso a las ${format(new Date(), 'HH:mm')}.`,
-            });
-            setIsBreakModalOpen(false);
-        } catch (error) {
-            console.error("Error al registrar fichaje:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje. Revisa las reglas de seguridad.' });
-        } finally {
-            setIsProcessing(false);
-        }
+       handleFichaje('Inicio Descanso', details);
+       setIsBreakModalOpen(false);
     };
 
     const isClockIn = status === 'in';

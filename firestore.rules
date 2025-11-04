@@ -56,10 +56,12 @@ service cloud.firestore {
 
     // Fichajes (Control Horario)
     match /fichajes/{fichajeId} {
-        // El dueño puede leer todos los fichajes de su empresa.
-        // El empleado puede crear y leer sus propios fichajes.
+        // Un empleado puede crear su propio fichaje.
         allow create: if request.auth.uid == request.resource.data.employeeId;
+        // El dueño puede leer todos los fichajes de su empresa.
+        // El empleado puede leer sus propios fichajes.
         allow read: if request.auth != null && (resource.data.ownerId == request.auth.uid || resource.data.employeeId == request.auth.uid);
+        // Permite la consulta de fichajes por empleado o por empresa
         allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
         // El empleado puede solicitar un cambio, el jefe puede aprobar/rechazar.
         allow update: if request.auth.uid == resource.data.employeeId || request.auth.uid == resource.data.ownerId;

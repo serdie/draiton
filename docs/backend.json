@@ -178,6 +178,11 @@
                     "justificationType": { "type": "string", "enum": ["Visita medica", "Tratamiento", "Gestiones administrativas", "Tutoria", "Otros"] },
                     "moreInfo": { "type": "string" }
                 }
+            },
+            "workModality": {
+              "type": "string",
+              "enum": ["Presencial", "Teletrabajo"],
+              "description": "Modality of the work session, for hybrid workers."
             }
         },
         "required": ["employeeId", "ownerId", "type", "timestamp"]
