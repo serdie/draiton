@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Loader2, Power, Coffee } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { FichajeHistory } from './fichaje-history';
+import { FichajeHistory } from '../../proyectos/fichaje-history';
 import type { Employee, Fichaje, BreakDetails } from './types';
 import { StartBreakModal } from './start-break-modal';
 import { SelectWorkModalityModal } from './select-work-modality-modal';
@@ -19,6 +19,8 @@ import { AuthContext } from '@/context/auth-context';
 
 type FichajeStatus = 'out' | 'in';
 type BreakStatus = 'working' | 'on_break';
+type PostModalityAction = 'Entrada' | 'Fin Descanso';
+
 
 export function FichajeEmpleadoTab() {
     const { user } = useContext(AuthContext);
@@ -31,6 +33,7 @@ export function FichajeEmpleadoTab() {
     const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
     const [isWorkModalityModalOpen, setIsWorkModalityModalOpen] = useState(false);
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+    const [postModalityAction, setPostModalityAction] = useState<PostModalityAction | null>(null);
 
 
     // Effect to get current employee profile
@@ -110,18 +113,32 @@ export function FichajeEmpleadoTab() {
     const handleClockIn = () => {
         if (!currentEmployee) return;
         if (currentEmployee.workModality === 'Mixto') {
+            setPostModalityAction('Entrada');
             setIsWorkModalityModalOpen(true);
         } else {
             handleFichaje('Entrada', undefined, currentEmployee.workModality);
         }
     };
     
-    const handleWorkModalitySelected = (modality: 'Presencial' | 'Teletrabajo') => {
-        handleFichaje('Entrada', undefined, modality);
-        setIsWorkModalityModalOpen(false);
+    const handleEndBreak = () => {
+        if (!currentEmployee) return;
+        if (currentEmployee.workModality === 'Mixto') {
+            setPostModalityAction('Fin Descanso');
+            setIsWorkModalityModalOpen(true);
+        } else {
+            handleFichaje('Fin Descanso');
+        }
     };
 
-    const handleFichaje = async (type: 'Entrada' | 'Salida' | 'Fin Descanso', details?: BreakDetails, workModality?: 'Presencial' | 'Teletrabajo') => {
+    const handleWorkModalitySelected = (modality: 'Presencial' | 'Teletrabajo') => {
+        if (postModalityAction) {
+            handleFichaje(postModalityAction, undefined, modality);
+        }
+        setIsWorkModalityModalOpen(false);
+        setPostModalityAction(null);
+    };
+
+    const handleFichaje = async (type: Fichaje['type'], details?: BreakDetails, workModality?: 'Presencial' | 'Teletrabajo') => {
         if (!user || !user.uid || status === 'loading' || isProcessing) {
             toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
             return;
@@ -166,40 +183,8 @@ export function FichajeEmpleadoTab() {
     };
     
     const handleStartBreak = async (details: BreakDetails) => {
-        if (!user || !user.uid || status === 'loading' || isProcessing) {
-            toast({ variant: 'destructive', title: 'Acción en progreso', description: 'Por favor, espera a que finalice la operación actual.' });
-            return;
-        }
-
-        const companyOwnerId = (user as any).companyOwnerId;
-        if (!companyOwnerId) {
-            toast({ variant: 'destructive', title: 'Error de Configuración', description: 'Tu usuario no está vinculado a ninguna empresa.' });
-            return;
-        }
-        
-        setIsProcessing(true);
-
-        try {
-            await addDoc(collection(db, 'fichajes'), {
-                employeeId: user.uid,
-                ownerId: companyOwnerId,
-                employeeName: user.displayName,
-                type: 'Inicio Descanso',
-                timestamp: serverTimestamp(),
-                breakDetails: details,
-            });
-
-            toast({
-                title: `Fichaje de Inicio Descanso registrado`,
-                description: `Has registrado tu descanso a las ${format(new Date(), 'HH:mm')}.`,
-            });
-            setIsBreakModalOpen(false);
-        } catch (error) {
-            console.error("Error al registrar fichaje:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo registrar el fichaje. Revisa las reglas de seguridad.' });
-        } finally {
-            setIsProcessing(false);
-        }
+       await handleFichaje('Inicio Descanso', details);
+       setIsBreakModalOpen(false);
     };
 
     const isClockIn = status === 'in';
@@ -255,7 +240,7 @@ export function FichajeEmpleadoTab() {
                             size="lg"
                             variant="outline"
                             className="w-full"
-                            onClick={() => isOnBreak ? handleFichaje('Fin Descanso') : setIsBreakModalOpen(true)}
+                            onClick={() => isOnBreak ? handleEndBreak() : setIsBreakModalOpen(true)}
                             disabled={isLoading || isProcessing || !isClockIn}
                         >
                             {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Coffee className="mr-2 h-5 w-5" />}
