@@ -9,12 +9,13 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-f
 import { es } from 'date-fns/locale';
 import type { Fichaje } from './types';
 import { Button } from '@/components/ui/button';
-import { Download, Calendar as CalendarIcon, Edit } from 'lucide-react';
+import { Download, Calendar as CalendarIcon, Edit, Eye } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
 import { RequestChangeModal } from './request-change-modal';
+import { ViewFichajeModal } from './view-fichaje-modal';
 
 
 interface FichajeHistoryProps {
@@ -37,6 +38,7 @@ export function FichajeHistory({ allFichajes }: FichajeHistoryProps) {
   const [period, setPeriod] = useState<Period>('semana');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [fichajeToChange, setFichajeToChange] = useState<Fichaje | null>(null);
+  const [fichajeToView, setFichajeToView] = useState<Fichaje | null>(null);
 
 
   const filteredFichajes = useMemo(() => {
@@ -102,6 +104,13 @@ export function FichajeHistory({ allFichajes }: FichajeHistoryProps) {
             fichaje={fichajeToChange}
         />
     )}
+    {fichajeToView && (
+        <ViewFichajeModal
+            isOpen={!!fichajeToView}
+            onClose={() => setFichajeToView(null)}
+            fichaje={fichajeToView}
+        />
+    )}
     <Card>
       <CardHeader className="flex flex-col md:flex-row md:items-center justify-between">
         <div>
@@ -161,6 +170,9 @@ export function FichajeHistory({ allFichajes }: FichajeHistoryProps) {
                   </TableCell>
                   <TableCell className="text-right font-mono">{format(fichaje.timestamp, 'HH:mm:ss')}</TableCell>
                   <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setFichajeToView(fichaje)}>
+                        <Eye className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setFichajeToChange(fichaje)}>
                         <Edit className="h-4 w-4" />
                     </Button>
