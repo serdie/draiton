@@ -30,6 +30,20 @@ export function FichajeEmpleadoTab() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
     const [isWorkModalityModalOpen, setIsWorkModalityModalOpen] = useState(false);
+    const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+
+
+    // Effect to get current employee profile
+    useEffect(() => {
+        if (!user) return;
+        const employeeDocRef = doc(db, 'employees', user.uid);
+        const unsubscribe = onSnapshot(employeeDocRef, (doc) => {
+            if (doc.exists()) {
+                setCurrentEmployee({ id: doc.id, ...doc.data() } as Employee);
+            }
+        });
+        return () => unsubscribe();
+    }, [user]);
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
@@ -94,12 +108,11 @@ export function FichajeEmpleadoTab() {
     }, [user?.uid]);
 
     const handleClockIn = () => {
-        if (!user) return;
-        const employee = user as unknown as Employee;
-        if (employee.workModality === 'Mixto') {
+        if (!currentEmployee) return;
+        if (currentEmployee.workModality === 'Mixto') {
             setIsWorkModalityModalOpen(true);
         } else {
-            handleFichaje('Entrada', undefined, employee.workModality);
+            handleFichaje('Entrada', undefined, currentEmployee.workModality);
         }
     };
     
