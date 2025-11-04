@@ -19,6 +19,8 @@ import { AuthContext } from '@/context/auth-context';
 
 type FichajeStatus = 'out' | 'in';
 type BreakStatus = 'working' | 'on_break';
+type PostModalityAction = 'Entrada' | 'Fin Descanso';
+
 
 export function FichajeEmpleadoTab() {
     const { user } = useContext(AuthContext);
@@ -31,6 +33,7 @@ export function FichajeEmpleadoTab() {
     const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
     const [isWorkModalityModalOpen, setIsWorkModalityModalOpen] = useState(false);
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+    const [postModalityAction, setPostModalityAction] = useState<PostModalityAction | null>(null);
 
 
     // Effect to get current employee profile
@@ -110,15 +113,29 @@ export function FichajeEmpleadoTab() {
     const handleClockIn = () => {
         if (!currentEmployee) return;
         if (currentEmployee.workModality === 'Mixto') {
+            setPostModalityAction('Entrada');
             setIsWorkModalityModalOpen(true);
         } else {
             handleFichaje('Entrada', undefined, currentEmployee.workModality);
         }
     };
     
+    const handleEndBreak = () => {
+        if (!currentEmployee) return;
+        if (currentEmployee.workModality === 'Mixto') {
+            setPostModalityAction('Fin Descanso');
+            setIsWorkModalityModalOpen(true);
+        } else {
+            handleFichaje('Fin Descanso');
+        }
+    };
+
     const handleWorkModalitySelected = (modality: 'Presencial' | 'Teletrabajo') => {
-        handleFichaje('Entrada', undefined, modality);
+        if (postModalityAction) {
+            handleFichaje(postModalityAction, undefined, modality);
+        }
         setIsWorkModalityModalOpen(false);
+        setPostModalityAction(null);
     };
 
     const handleFichaje = async (type: Fichaje['type'], details?: BreakDetails, workModality?: 'Presencial' | 'Teletrabajo') => {
@@ -165,8 +182,8 @@ export function FichajeEmpleadoTab() {
         }
     };
     
-    const handleStartBreak = (details: BreakDetails) => {
-       handleFichaje('Inicio Descanso', details);
+    const handleStartBreak = async (details: BreakDetails) => {
+       await handleFichaje('Inicio Descanso', details);
        setIsBreakModalOpen(false);
     };
 
@@ -223,7 +240,7 @@ export function FichajeEmpleadoTab() {
                             size="lg"
                             variant="outline"
                             className="w-full"
-                            onClick={() => isOnBreak ? handleFichaje('Fin Descanso') : setIsBreakModalOpen(true)}
+                            onClick={() => isOnBreak ? handleEndBreak() : setIsBreakModalOpen(true)}
                             disabled={isLoading || isProcessing || !isClockIn}
                         >
                             {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Coffee className="mr-2 h-5 w-5" />}
