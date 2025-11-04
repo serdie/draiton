@@ -5,7 +5,6 @@ import { useState, useContext, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Loader2, Power, Coffee } from 'lucide-react';
-import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -15,6 +14,7 @@ import { FichajeHistory } from './fichaje-history';
 import type { Employee, Fichaje, BreakDetails } from './types';
 import { StartBreakModal } from './start-break-modal';
 import { SelectWorkModalityModal } from './select-work-modality-modal';
+import { AuthContext } from '@/context/auth-context';
 
 
 type FichajeStatus = 'out' | 'in';
@@ -165,7 +165,7 @@ export function FichajeEmpleadoTab() {
         }
     };
     
-    const handleStartBreak = async (details: BreakDetails) => {
+    const handleStartBreak = (details: BreakDetails) => {
        handleFichaje('Inicio Descanso', details);
        setIsBreakModalOpen(false);
     };
@@ -238,5 +238,3 @@ export function FichajeEmpleadoTab() {
         </>
     );
 }
-
-    
