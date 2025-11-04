@@ -46,9 +46,9 @@ export interface Absence {
   employeeId: string;
   ownerId: string;
   type: AbsenceType;
-  startDate: Timestamp | Date;
-  endDate: Timestamp | Date;
+  startDate: Date;
+  endDate: Date;
   status: AbsenceStatus;
   notes?: string;
-  createdAt: Timestamp | Date;
+  createdAt: Date;
 }
