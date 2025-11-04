@@ -65,6 +65,15 @@ service cloud.firestore {
         allow update: if request.auth.uid == resource.data.employeeId || request.auth.uid == resource.data.ownerId;
     }
     
+    // Ausencias (Vacaciones, Bajas, etc.)
+    match /absences/{absenceId} {
+      // El dueño puede gestionar las ausencias de sus empleados.
+      allow create, update, delete: if request.auth.uid == request.resource.data.ownerId;
+      // El dueño y el propio empleado pueden leer las ausencias.
+      allow read: if request.auth != null && (resource.data.ownerId == request.auth.uid || resource.data.employeeId == request.auth.uid);
+      allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
+    }
+    
     // Notifications
     match /notifications/{notificationId} {
       // Un usuario solo puede leer y escribir sus propias notificaciones

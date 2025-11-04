@@ -1,5 +1,7 @@
 
 
+import type { Timestamp } from 'firebase/firestore';
+
 export type Employee = {
     id: string;
     ownerId: string;
@@ -34,4 +36,19 @@ export type Fichaje = {
     requestedAt?: Date;
     requesterId?: string;
     requesterName?: string;
+}
+
+export type AbsenceType = 'Vacaciones' | 'Baja por enfermedad' | 'Paternidad/Maternidad' | 'Día propio' | 'Otro';
+export type AbsenceStatus = 'Aprobada' | 'Pendiente' | 'Rechazada';
+
+export interface Absence {
+  id: string;
+  employeeId: string;
+  ownerId: string;
+  type: AbsenceType;
+  startDate: Timestamp | Date;
+  endDate: Timestamp | Date;
+  status: AbsenceStatus;
+  notes?: string;
+  createdAt: Timestamp | Date;
 }

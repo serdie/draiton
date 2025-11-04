@@ -3,7 +3,7 @@
 
 import { useContext } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Coins, Receipt, Users, Clock } from 'lucide-react';
+import { FileText, Coins, Receipt, Users, Clock, CalendarOff } from 'lucide-react';
 import { DocumentosContent } from '../documentos/documentos-content';
 import { GastosContent } from '../gastos/gastos-content';
 import { ImpuestosTab } from './impuestos-tab';
@@ -13,6 +13,7 @@ import { EmployeePayslipList } from './empleados/employee-payslip-list';
 import { FichajesTab } from './empleados/fichajes-tab';
 import { NominasTab } from './nominas-tab';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AusenciasTab } from './empleados/ausencias-tab';
 
 export default function FinanzasPage() {
   const { user, isEmpresa, isEmployee } = useContext(AuthContext);
@@ -58,15 +59,19 @@ export default function FinanzasPage() {
           {isEmpresa && (
             <TabsContent value="empleados"  className="mt-6">
                <Tabs defaultValue="nominas" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="nominas"><Users className="mr-2 h-4 w-4" />Nóminas</TabsTrigger>
                     <TabsTrigger value="fichajes"><Clock className="mr-2 h-4 w-4" />Fichajes</TabsTrigger>
+                    <TabsTrigger value="ausencias"><CalendarOff className="mr-2 h-4 w-4" />Ausencias</TabsTrigger>
                   </TabsList>
                   <TabsContent value="nominas" className="mt-6">
                     <NominasTab />
                   </TabsContent>
                   <TabsContent value="fichajes" className="mt-6">
                     <FichajesTab />
+                  </TabsContent>
+                   <TabsContent value="ausencias" className="mt-6">
+                    <AusenciasTab />
                   </TabsContent>
                 </Tabs>
             </TabsContent>

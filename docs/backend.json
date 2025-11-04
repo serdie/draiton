@@ -142,6 +142,7 @@
             "workModality": { "type": "string", "enum": ["Presencial", "Mixto", "Teletrabajo"], "description": "Work modality for the employee." },
             "paymentFrequency": { "type": "string", "enum": ["Mensual", "Diario", "Semanal", "Quincenal", "Personalizar"] },
             "grossAnnualSalary": { "type": "number" },
+            "weeklyHours": { "type": "number", "description": "Contracted weekly work hours." },
             "proratedExtraPays": { "type": "boolean" },
             "hireDate": { "type": "string", "format": "date-time" },
             "ownerId": { "type": "string" },
@@ -169,6 +170,22 @@
             "requesterName": { "type": "string", "description": "Name of the user who requested the change." }
         },
         "required": ["employeeId", "ownerId", "type", "timestamp"]
+    },
+    "Absence": {
+      "title": "Absence",
+      "description": "Represents an employee's absence from work.",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "description": "The ID of the employee." },
+        "ownerId": { "type": "string", "description": "The ID of the company owner." },
+        "type": { "type": "string", "enum": ["Vacaciones", "Baja por enfermedad", "Paternidad/Maternidad", "Día propio", "Otro"], "description": "The type of absence." },
+        "startDate": { "type": "string", "format": "date-time", "description": "Start date of the absence." },
+        "endDate": { "type": "string", "format": "date-time", "description": "End date of the absence." },
+        "status": { "type": "string", "enum": ["Aprobada", "Pendiente", "Rechazada"], "description": "The status of the absence request." },
+        "notes": { "type": "string", "description": "Additional notes about the absence." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation." }
+      },
+      "required": ["employeeId", "ownerId", "type", "startDate", "endDate", "status", "createdAt"]
     },
     "Notification": {
       "title": "Notification",
@@ -222,6 +239,10 @@
     "/fichajes/{fichajeId}": {
       "schema": { "$ref": "#/entities/Fichaje" },
       "description": "Stores all clock-in and clock-out events."
+    },
+    "/absences/{absenceId}": {
+      "schema": { "$ref": "#/entities/Absence" },
+      "description": "Stores employee absence records."
     },
     "/notifications/{notificationId}": {
       "schema": { "$ref": "#/entities/Notification" },
