@@ -7,12 +7,12 @@ import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Loader2, Power, Coffee } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FichajeHistory } from './fichaje-history';
-import type { Fichaje, BreakDetails } from './types';
+import type { Employee, Fichaje, BreakDetails } from './types';
 import { StartBreakModal } from './start-break-modal';
 import { SelectWorkModalityModal } from './select-work-modality-modal';
 
@@ -30,6 +30,20 @@ export function FichajeEmpleadoTab() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
     const [isWorkModalityModalOpen, setIsWorkModalityModalOpen] = useState(false);
+    const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    // Effect to get current employee profile
+    useEffect(() => {
+        if (!user) return;
+        const employeeDocRef = doc(db, 'employees', user.uid);
+        const unsubscribe = onSnapshot(employeeDocRef, (doc) => {
+            if (doc.exists()) {
+                setCurrentEmployee({ id: doc.id, ...doc.data() } as Employee);
+            }
+        });
+        return () => unsubscribe();
+    }, [user]);
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
@@ -94,12 +108,11 @@ export function FichajeEmpleadoTab() {
     }, [user?.uid]);
 
     const handleClockIn = () => {
-        if (!user) return;
-        const employee = user as Employee; // Cast user to Employee type from your context
-        if (employee.workModality === 'Mixto') {
+        if (!currentEmployee) return;
+        if (currentEmployee.workModality === 'Mixto') {
             setIsWorkModalityModalOpen(true);
         } else {
-            handleFichaje('Entrada', undefined, employee.workModality);
+            handleFichaje('Entrada', undefined, currentEmployee.workModality);
         }
     };
     
@@ -232,7 +245,7 @@ export function FichajeEmpleadoTab() {
                         <Button 
                             size="lg" 
                             className={`w-full ${isClockIn ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
-                            onClick={() => isClockIn ? handleFichaje('Salida') : handleClockIn()}
+                            onClick={() => (isClockIn ? handleFichaje('Salida') : handleClockIn())}
                             disabled={isLoading || isProcessing || isOnBreak}
                         >
                             {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isClockIn ? <LogOut className="mr-2 h-5 w-5"/> : <LogIn className="mr-2 h-5 w-5"/>) }
@@ -257,5 +270,3 @@ export function FichajeEmpleadoTab() {
         </>
     );
 }
-
-    
