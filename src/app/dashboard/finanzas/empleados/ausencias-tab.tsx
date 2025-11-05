@@ -102,20 +102,13 @@ export function AusenciasTab() {
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
+            setLoading(false); // Make sure loading stops after absences are fetched
         }, (error) => {
             console.error("Error fetching absences:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las ausencias.'});
-        });
-        
-        // This will only run once to turn off initial loading
-        Promise.all([
-            new Promise(resolve => onSnapshot(employeesQuery, resolve)),
-            new Promise(resolve => onSnapshot(absencesQuery, resolve)),
-        ]).then(() => {
             setLoading(false);
         });
-
-
+        
         return () => {
             unsubscribeEmployees();
             unsubscribeAbsences();
@@ -132,8 +125,9 @@ export function AusenciasTab() {
     const absenceDays = useMemo(() => {
         const days = new Map<string, { type: Absence['type'], status: Absence['status']}[]>();
         employeeAbsences.forEach(absence => {
-            const start = absence.startDate;
-            const end = absence.endDate;
+            if (!absence.startDate || !absence.endDate) return;
+            const start = new Date(absence.startDate);
+            const end = new Date(absence.endDate);
 
             if (isValid(start) && isValid(end) && start <= end) {
                  const interval = eachDayOfInterval({ start, end });
@@ -388,3 +382,5 @@ export function AusenciasTab() {
         </>
     );
 }
+
+    
