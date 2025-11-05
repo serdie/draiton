@@ -82,8 +82,32 @@ export function AusenciasTab() {
 
         const initialLoad = async () => {
             try {
-                await Promise.all([getDocs(employeesQuery), getDocs(absencesQuery)]);
-                if (isMounted) setLoading(false);
+                const [employeesSnapshot, absencesSnapshot] = await Promise.all([
+                    getDocs(employeesQuery),
+                    getDocs(absencesQuery)
+                ]);
+
+                if (isMounted) {
+                    const fetchedEmployees = employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+                    setEmployees(fetchedEmployees);
+
+                    if (!selectedEmployee && fetchedEmployees.length > 0) {
+                        setSelectedEmployee(fetchedEmployees[0]);
+                    }
+
+                    const fetchedAbsences = absencesSnapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            ...data,
+                            startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
+                            endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
+                            createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
+                        } as Absence;
+                    });
+                    setAbsences(fetchedAbsences);
+                    setLoading(false);
+                }
             } catch (error) {
                 console.error("Error during initial data load:", error);
                 if (isMounted) setLoading(false);
@@ -96,9 +120,6 @@ export function AusenciasTab() {
             if (!isMounted) return;
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
-            if (!selectedEmployee && fetchedEmployees.length > 0) {
-                setSelectedEmployee(fetchedEmployees[0]);
-            }
         }, (error) => {
              console.error("Error fetching employees:", error);
         });
@@ -126,7 +147,8 @@ export function AusenciasTab() {
             unsubscribeEmployees();
             unsubscribeAbsences();
         }
-    }, [user, selectedEmployee]);
+    }, [user, selectedEmployee, toast]);
+
 
     const employeeAbsences = useMemo(() => {
         if (!selectedEmployee) return [];
