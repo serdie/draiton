@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, PlusCircle, CalendarOff, FilterX, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, deleteDoc, doc, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, deleteDoc, doc, orderBy, Timestamp } from 'firebase/firestore';
 import type { Employee, Absence, AbsenceType, AbsenceStatus } from './types';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
@@ -68,86 +68,52 @@ export function AusenciasTab() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+    // Effect for employees
     useEffect(() => {
         if (!user) {
             setLoading(false);
             return;
         }
-
-        let isMounted = true;
         setLoading(true);
-
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
-        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
-
-        const initialLoad = async () => {
-            try {
-                const [employeesSnapshot, absencesSnapshot] = await Promise.all([
-                    getDocs(employeesQuery),
-                    getDocs(absencesQuery)
-                ]);
-
-                if (isMounted) {
-                    const fetchedEmployees = employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
-                    setEmployees(fetchedEmployees);
-
-                    if (!selectedEmployee && fetchedEmployees.length > 0) {
-                        setSelectedEmployee(fetchedEmployees[0]);
-                    }
-
-                    const fetchedAbsences = absencesSnapshot.docs.map(doc => {
-                        const data = doc.data();
-                        return {
-                            id: doc.id,
-                            ...data,
-                            startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
-                            endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
-                            createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
-                        } as Absence;
-                    });
-                    setAbsences(fetchedAbsences);
-                    setLoading(false);
-                }
-            } catch (error) {
-                console.error("Error during initial data load:", error);
-                if (isMounted) setLoading(false);
-            }
-        };
-
-        initialLoad();
-        
-        const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
-            if (!isMounted) return;
+        const unsubscribe = onSnapshot(employeesQuery, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
+            if (!selectedEmployee && fetchedEmployees.length > 0) {
+                setSelectedEmployee(fetchedEmployees[0]);
+            }
+            setLoading(false);
         }, (error) => {
-             console.error("Error fetching employees:", error);
+            console.error("Error fetching employees:", error);
+            setLoading(false);
         });
+
+        return () => unsubscribe();
+    }, [user, selectedEmployee]);
+
+    // Effect for absences
+    useEffect(() => {
+        if (!user) return;
+        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
         
-        const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
-            if (!isMounted) return;
+        const unsubscribe = onSnapshot(absencesQuery, (snapshot) => {
             const fetchedAbsences = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
                     id: doc.id,
                     ...data,
-                    startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
-                    endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
-                    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
+                    startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : new Date(data.startDate),
+                    endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : new Date(data.endDate),
+                    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
         }, (error) => {
-             console.error("Error fetching absences:", error);
+            console.error("Error fetching absences:", error);
         });
 
-
-        return () => {
-            isMounted = false;
-            unsubscribeEmployees();
-            unsubscribeAbsences();
-        }
-    }, [user, selectedEmployee, toast]);
+        return () => unsubscribe();
+    }, [user]);
 
 
     const employeeAbsences = useMemo(() => {
