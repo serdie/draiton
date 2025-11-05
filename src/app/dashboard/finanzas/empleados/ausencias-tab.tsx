@@ -102,7 +102,7 @@ export function AusenciasTab() {
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
-            setLoading(false); // Make sure loading stops after absences are fetched
+            setLoading(false);
         }, (error) => {
             console.error("Error fetching absences:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las ausencias.'});
@@ -381,6 +381,5 @@ export function AusenciasTab() {
             </div>
         </>
     );
-}
 
     
