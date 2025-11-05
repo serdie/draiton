@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, PlusCircle, CalendarOff, FilterX, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, deleteDoc, doc, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, deleteDoc, doc, orderBy, getDocs, Timestamp } from 'firebase/firestore';
 import type { Employee, Absence, AbsenceType, AbsenceStatus } from './types';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
@@ -80,21 +80,13 @@ export function AusenciasTab() {
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
 
-        // Use Promise.all to wait for initial fetches before setting loading to false
         const initialLoad = async () => {
             try {
-                await Promise.all([
-                    getDocs(employeesQuery),
-                    getDocs(absencesQuery),
-                ]);
-                if (isMounted) {
-                    setLoading(false);
-                }
+                await Promise.all([getDocs(employeesQuery), getDocs(absencesQuery)]);
+                if (isMounted) setLoading(false);
             } catch (error) {
                 console.error("Error during initial data load:", error);
-                if (isMounted) {
-                    setLoading(false);
-                }
+                if (isMounted) setLoading(false);
             }
         };
 
@@ -118,8 +110,9 @@ export function AusenciasTab() {
                 return {
                     id: doc.id,
                     ...data,
-                    startDate: data.startDate.toDate(),
-                    endDate: data.endDate.toDate(),
+                    startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
+                    endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
+                    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
@@ -143,7 +136,8 @@ export function AusenciasTab() {
     const absenceDays = useMemo(() => {
         const days = new Map<string, { type: Absence['type'], status: Absence['status']}[]>();
         employeeAbsences.forEach(absence => {
-            const interval = eachDayOfInterval({ start: absence.startDate, end: absence.endDate });
+            if (!absence.startDate || !absence.endDate) return;
+            const interval = eachDayOfInterval({ start: new Date(absence.startDate), end: new Date(absence.endDate) });
             interval.forEach(day => {
                 const dayString = day.toDateString();
                 if (!days.has(dayString)) {
@@ -351,7 +345,7 @@ export function AusenciasTab() {
                                     <TableRow key={absence.id}>
                                         <TableCell className="font-medium">{employeeMap.get(absence.employeeId) || 'Desconocido'}</TableCell>
                                         <TableCell>{absence.type}</TableCell>
-                                        <TableCell>{format(absence.startDate, 'dd/MM/yy')} - {format(absence.endDate, 'dd/MM/yy')}</TableCell>
+                                        <TableCell>{format(new Date(absence.startDate), 'dd/MM/yy')} - {format(new Date(absence.endDate), 'dd/MM/yy')}</TableCell>
                                         <TableCell><Badge variant="outline" className={cn(getAbsenceBadgeClass(absence.status))}>{absence.status}</Badge></TableCell>
                                         <TableCell className="text-right">
                                             {/* Actions Dropdown */}
