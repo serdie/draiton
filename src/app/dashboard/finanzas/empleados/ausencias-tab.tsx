@@ -15,7 +15,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RegisterAbsenceModal } from './register-absence-modal';
-import { eachDayOfInterval } from 'date-fns';
+import { eachDayOfInterval, isValid } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
@@ -79,27 +79,16 @@ export function AusenciasTab() {
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
 
-        let employeeDataLoaded = false;
-        let absenceDataLoaded = false;
-
-        const checkLoadingFinished = () => {
-            if (employeeDataLoaded && absenceDataLoaded) {
-                setLoading(false);
-            }
-        };
-        
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
             if (!selectedEmployee && fetchedEmployees.length > 0) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-            employeeDataLoaded = true;
-            checkLoadingFinished();
+            if(fetchedEmployees.length === 0) setLoading(false);
         }, (error) => {
             console.error("Error fetching employees:", error);
-            employeeDataLoaded = true;
-            checkLoadingFinished();
+            setLoading(false);
         });
 
         const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
@@ -114,19 +103,17 @@ export function AusenciasTab() {
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
-            absenceDataLoaded = true;
-            checkLoadingFinished();
+            setLoading(false);
         }, (error) => {
             console.error("Error fetching absences:", error);
-            absenceDataLoaded = true;
-            checkLoadingFinished();
+            setLoading(false);
         });
 
         return () => {
             unsubscribeEmployees();
             unsubscribeAbsences();
         }
-    }, [user, selectedEmployee]);
+    }, [user, selectedEmployee, toast]);
 
 
     const employeeAbsences = useMemo(() => {
@@ -137,15 +124,19 @@ export function AusenciasTab() {
     const absenceDays = useMemo(() => {
         const days = new Map<string, { type: Absence['type'], status: Absence['status']}[]>();
         employeeAbsences.forEach(absence => {
-            if (!absence.startDate || !absence.endDate) return;
-            const interval = eachDayOfInterval({ start: new Date(absence.startDate), end: new Date(absence.endDate) });
-            interval.forEach(day => {
-                const dayString = day.toDateString();
-                if (!days.has(dayString)) {
-                    days.set(dayString, []);
-                }
-                days.get(dayString)?.push({ type: absence.type, status: absence.status });
-            });
+            const start = absence.startDate;
+            const end = absence.endDate;
+
+            if (isValid(start) && isValid(end) && start <= end) {
+                 const interval = eachDayOfInterval({ start, end });
+                 interval.forEach(day => {
+                    const dayString = day.toDateString();
+                    if (!days.has(dayString)) {
+                        days.set(dayString, []);
+                    }
+                    days.get(dayString)?.push({ type: absence.type, status: absence.status });
+                });
+            }
         });
         return days;
     }, [employeeAbsences]);
@@ -271,7 +262,7 @@ export function AusenciasTab() {
                                                 return (
                                                     <Popover>
                                                         <PopoverTrigger asChild>
-                                                            <div className="relative w-full h-full flex items-center justify-center">{dayElement}</div>
+                                                            <div className="relative w-full h-full flex items-center justify-center cursor-pointer">{dayElement}</div>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-60">
                                                             <div className="space-y-2">
