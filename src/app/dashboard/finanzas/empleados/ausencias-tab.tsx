@@ -68,35 +68,41 @@ export function AusenciasTab() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    // Effect for employees
+    // Unified useEffect for data loading
     useEffect(() => {
         if (!user) {
             setLoading(false);
             return;
         }
         setLoading(true);
+
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
-        const unsubscribe = onSnapshot(employeesQuery, (snapshot) => {
+        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
+
+        let employeeDataLoaded = false;
+        let absenceDataLoaded = false;
+
+        const checkLoadingFinished = () => {
+            if (employeeDataLoaded && absenceDataLoaded) {
+                setLoading(false);
+            }
+        };
+        
+        const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
             if (!selectedEmployee && fetchedEmployees.length > 0) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-            setLoading(false);
+            employeeDataLoaded = true;
+            checkLoadingFinished();
         }, (error) => {
             console.error("Error fetching employees:", error);
-            setLoading(false);
+            employeeDataLoaded = true;
+            checkLoadingFinished();
         });
 
-        return () => unsubscribe();
-    }, [user, selectedEmployee]);
-
-    // Effect for absences
-    useEffect(() => {
-        if (!user) return;
-        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
-        
-        const unsubscribe = onSnapshot(absencesQuery, (snapshot) => {
+        const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
             const fetchedAbsences = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
@@ -108,12 +114,19 @@ export function AusenciasTab() {
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
+            absenceDataLoaded = true;
+            checkLoadingFinished();
         }, (error) => {
             console.error("Error fetching absences:", error);
+            absenceDataLoaded = true;
+            checkLoadingFinished();
         });
 
-        return () => unsubscribe();
-    }, [user]);
+        return () => {
+            unsubscribeEmployees();
+            unsubscribeAbsences();
+        }
+    }, [user, selectedEmployee]);
 
 
     const employeeAbsences = useMemo(() => {
