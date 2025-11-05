@@ -82,13 +82,12 @@ export function AusenciasTab() {
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
-            if (!selectedEmployee && fetchedEmployees.length > 0) {
+             if (!selectedEmployee && fetchedEmployees.length > 0) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-            if(fetchedEmployees.length === 0) setLoading(false);
         }, (error) => {
             console.error("Error fetching employees:", error);
-            setLoading(false);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
         });
 
         const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
@@ -103,23 +102,32 @@ export function AusenciasTab() {
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
-            setLoading(false);
         }, (error) => {
             console.error("Error fetching absences:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las ausencias.'});
+        });
+        
+        // This will only run once to turn off initial loading
+        Promise.all([
+            new Promise(resolve => onSnapshot(employeesQuery, resolve)),
+            new Promise(resolve => onSnapshot(absencesQuery, resolve)),
+        ]).then(() => {
             setLoading(false);
         });
+
 
         return () => {
             unsubscribeEmployees();
             unsubscribeAbsences();
         }
-    }, [user, selectedEmployee, toast]);
+    }, [user, toast]);
 
 
     const employeeAbsences = useMemo(() => {
         if (!selectedEmployee) return [];
         return absences.filter(a => a.employeeId === selectedEmployee.id);
     }, [absences, selectedEmployee]);
+    
 
     const absenceDays = useMemo(() => {
         const days = new Map<string, { type: Absence['type'], status: Absence['status']}[]>();
@@ -340,7 +348,6 @@ export function AusenciasTab() {
                                         <TableCell>{format(new Date(absence.startDate), 'dd/MM/yy')} - {format(new Date(absence.endDate), 'dd/MM/yy')}</TableCell>
                                         <TableCell><Badge variant="outline" className={cn(getAbsenceBadgeClass(absence.status))}>{absence.status}</Badge></TableCell>
                                         <TableCell className="text-right">
-                                            {/* Actions Dropdown */}
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAbsenceToDelete(absence)}>
                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                             </Button>
