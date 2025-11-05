@@ -89,7 +89,7 @@ export function AusenciasTab() {
             setLoading(false);
         });
 
-        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
+        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid));
         const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
             const fetchedAbsences = snapshot.docs.map(doc => {
                 const data = doc.data();
@@ -123,20 +123,16 @@ export function AusenciasTab() {
     const absenceDays = useMemo(() => {
         const days = new Map<string, { type: Absence['type'], status: Absence['status']}[]>();
         employeeAbsences.forEach(absence => {
-            if (!absence.startDate || !absence.endDate) return;
-            const start = new Date(absence.startDate);
-            const end = new Date(absence.endDate);
+            if (!absence.startDate || !absence.endDate || !isValid(absence.startDate) || !isValid(absence.endDate) || absence.startDate > absence.endDate) return;
 
-            if (isValid(start) && isValid(end) && start <= end) {
-                 const interval = eachDayOfInterval({ start, end });
-                 interval.forEach(day => {
-                    const dayString = day.toDateString();
-                    if (!days.has(dayString)) {
-                        days.set(dayString, []);
-                    }
-                    days.get(dayString)?.push({ type: absence.type, status: absence.status });
-                });
-            }
+             const interval = eachDayOfInterval({ start: absence.startDate, end: absence.endDate });
+             interval.forEach(day => {
+                const dayString = day.toDateString();
+                if (!days.has(dayString)) {
+                    days.set(dayString, []);
+                }
+                days.get(dayString)?.push({ type: absence.type, status: absence.status });
+            });
         });
         return days;
     }, [employeeAbsences]);
