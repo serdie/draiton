@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, PlusCircle, CalendarOff, FilterX, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, deleteDoc, doc, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, deleteDoc, doc, orderBy, getDocs } from 'firebase/firestore';
 import type { Employee, Absence, AbsenceType, AbsenceStatus } from './types';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
@@ -74,20 +74,45 @@ export function AusenciasTab() {
             return;
         }
 
+        let isMounted = true;
+        setLoading(true);
+
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
+        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
+
+        // Use Promise.all to wait for initial fetches before setting loading to false
+        const initialLoad = async () => {
+            try {
+                await Promise.all([
+                    getDocs(employeesQuery),
+                    getDocs(absencesQuery),
+                ]);
+                if (isMounted) {
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error("Error during initial data load:", error);
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        initialLoad();
+        
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
+            if (!isMounted) return;
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
             if (!selectedEmployee && fetchedEmployees.length > 0) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-             if (fetchedEmployees.length === 0) {
-                setLoading(false);
-            }
+        }, (error) => {
+             console.error("Error fetching employees:", error);
         });
         
-        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
         const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
+            if (!isMounted) return;
             const fetchedAbsences = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
@@ -98,10 +123,13 @@ export function AusenciasTab() {
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
-            setLoading(false);
+        }, (error) => {
+             console.error("Error fetching absences:", error);
         });
 
+
         return () => {
+            isMounted = false;
             unsubscribeEmployees();
             unsubscribeAbsences();
         }
@@ -352,11 +380,11 @@ export function AusenciasTab() {
                             >
                                 <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
                             </Button>
-                            <span className="text-sm text-muted-foreground">Página {currentPage} de {totalPages}</span>
+                            <span className="text-sm text-muted-foreground">Página {currentPage} de {totalPages > 0 ? totalPages : 1}</span>
                             <Button
                                 variant="outline" size="sm"
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
+                                disabled={currentPage >= totalPages}
                             >
                                 Siguiente <ChevronRight className="h-4 w-4 ml-1" />
                             </Button>
