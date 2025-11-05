@@ -77,22 +77,26 @@ export function AusenciasTab() {
             return;
         }
 
+        let isMounted = true;
+        setLoading(true);
+
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
+             if (!isMounted) return;
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
-            if (!selectedEmployee && fetchedEmployees.length > 0) {
+             if (fetchedEmployees.length > 0 && !selectedEmployee) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-             setLoading(false);
         }, (error) => {
+             if (!isMounted) return;
             console.error("Error fetching employees:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
-            setLoading(false);
         });
 
         const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
         const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
+             if (!isMounted) return;
             const fetchedAbsences = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
@@ -104,12 +108,16 @@ export function AusenciasTab() {
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
+            setLoading(false); // Set loading to false after absences are also fetched
         }, (error) => {
+             if (!isMounted) return;
             console.error("Error fetching absences:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las ausencias.'});
+            setLoading(false);
         });
         
         return () => {
+            isMounted = false;
             unsubscribeEmployees();
             unsubscribeAbsences();
         }
@@ -400,3 +408,5 @@ export function AusenciasTab() {
         </>
     );
 }
+
+    
