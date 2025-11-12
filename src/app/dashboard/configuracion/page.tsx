@@ -39,10 +39,12 @@ function ConfiguracionContent() {
                 Empresa
             </TabsTrigger>
           )}
-          <TabsTrigger value="suscripcion" className="w-full justify-start md:justify-center">
-            <CreditCard className="mr-2 h-4 w-4" />
-            Suscripción
-          </TabsTrigger>
+          {!isEmployee && (
+            <TabsTrigger value="suscripcion" className="w-full justify-start md:justify-center">
+              <CreditCard className="mr-2 h-4 w-4" />
+              Suscripción
+            </TabsTrigger>
+          )}
           <TabsTrigger value="notificaciones" className="w-full justify-start md:justify-center">
             <Bell className="mr-2 h-4 w-4" />
             Notificaciones
@@ -57,7 +59,9 @@ function ConfiguracionContent() {
             {!isEmployee && (
                 <TabsContent value="empresa"><EmpresaSettings /></TabsContent>
             )}
-            <TabsContent value="suscripcion"><SuscripcionSettings /></TabsContent>
+            {!isEmployee && (
+              <TabsContent value="suscripcion"><SuscripcionSettings /></TabsContent>
+            )}
             <TabsContent value="notificaciones"><NotificacionesSettings /></TabsContent>
             <TabsContent value="apariencia"><AparienciaSettings /></TabsContent>
         </div>
