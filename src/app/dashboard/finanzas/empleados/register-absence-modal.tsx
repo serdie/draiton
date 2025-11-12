@@ -21,7 +21,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import type { Employee, AbsenceType, AbsenceStatus } from './types';
@@ -75,11 +75,8 @@ export function RegisterAbsenceModal({ isOpen, onClose, employees }: RegisterAbs
     
     try {
         if (employeeId === 'all') {
-            // Batch write for all employees
-            const batch = writeBatch(db);
-            employees.forEach(employee => {
-                const absenceRef = doc(collection(db, 'absences'));
-                batch.set(absenceRef, {
+            const absencePromises = employees.map(employee => {
+                const newAbsence = {
                     ownerId: user.uid,
                     employeeId: employee.id,
                     type,
@@ -88,9 +85,12 @@ export function RegisterAbsenceModal({ isOpen, onClose, employees }: RegisterAbs
                     status,
                     notes,
                     createdAt: serverTimestamp(),
-                });
+                };
+                return addDoc(collection(db, 'absences'), newAbsence);
             });
-            await batch.commit();
+
+            await Promise.all(absencePromises);
+            
             toast({
                 title: 'Ausencias Registradas',
                 description: `Se ha registrado la ausencia para todos los empleados.`,
