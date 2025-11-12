@@ -17,11 +17,14 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Fichaje } from './types';
 import { AuthContext } from '@/context/auth-context';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 interface RequestChangeModalProps {
   isOpen: boolean;
@@ -34,14 +37,17 @@ export function RequestChangeModal({ isOpen, onClose, fichaje }: RequestChangeMo
   const { user } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const [reason, setReason] = useState('');
+  
+  // States for new date and time
+  const [newDate, setNewDate] = useState<Date | undefined>(fichaje.timestamp);
   const [newTime, setNewTime] = useState(format(fichaje.timestamp, 'HH:mm'));
 
   const handleSubmit = async () => {
-    if (!reason || !newTime) {
+    if (!reason || !newTime || !newDate) {
       toast({
         variant: 'destructive',
         title: 'Campos requeridos',
-        description: 'Debes indicar la nueva hora y el motivo del cambio.',
+        description: 'Debes indicar la nueva fecha, la hora y el motivo del cambio.',
       });
       return;
     }
@@ -52,9 +58,10 @@ export function RequestChangeModal({ isOpen, onClose, fichaje }: RequestChangeMo
     
     setIsLoading(true);
     
+    // Combine date and time
     const [hours, minutes] = newTime.split(':').map(Number);
-    const newTimestamp = new Date(fichaje.timestamp);
-    newTimestamp.setHours(hours, minutes);
+    const newTimestamp = new Date(newDate);
+    newTimestamp.setHours(hours, minutes, 0, 0); // Set seconds and ms to 0
 
     const fichajeRef = doc(db, 'fichajes', fichaje.id);
     try {
@@ -109,12 +116,32 @@ export function RequestChangeModal({ isOpen, onClose, fichaje }: RequestChangeMo
         <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4 items-center">
                 <div>
-                    <Label>Hora Original</Label>
-                    <Input readOnly value={format(fichaje.timestamp, 'HH:mm:ss')} className="font-mono bg-muted"/>
+                    <Label>Registro Original</Label>
+                    <Input readOnly value={format(fichaje.timestamp, 'dd/MM/yy HH:mm:ss')} className="font-mono bg-muted"/>
                 </div>
-                 <div>
-                    <Label htmlFor="new-time">Nueva Hora Propuesta</Label>
-                    <Input id="new-time" type="time" value={newTime} onChange={e => setNewTime(e.target.value)} />
+                <div className="space-y-4">
+                    <div>
+                        <Label htmlFor="new-date">Nueva Fecha Propuesta</Label>
+                         <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    id="new-date"
+                                    variant={"outline"}
+                                    className={cn("w-full justify-start text-left font-normal", !newDate && "text-muted-foreground")}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {newDate ? format(newDate, "dd/MM/yyyy") : <span>Elige una fecha</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar mode="single" selected={newDate} onSelect={setNewDate} initialFocus />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                     <div>
+                        <Label htmlFor="new-time">Nueva Hora Propuesta</Label>
+                        <Input id="new-time" type="time" value={newTime} onChange={e => setNewTime(e.target.value)} />
+                    </div>
                 </div>
             </div>
             <div className="space-y-2">

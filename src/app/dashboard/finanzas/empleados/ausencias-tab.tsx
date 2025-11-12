@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useContext, useEffect, useMemo } from 'react';
@@ -22,7 +21,6 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { EditAbsenceModal } from './edit-absence-modal';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -61,7 +59,6 @@ export function AusenciasTab() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [absenceToDelete, setAbsenceToDelete] = useState<Absence | null>(null);
-    const [absenceToEdit, setAbsenceToEdit] = useState<Absence | null>(null);
 
     // Filtering and pagination for history table
     const [filtroEmpleado, setFiltroEmpleado] = useState('all');
@@ -77,26 +74,22 @@ export function AusenciasTab() {
             return;
         }
 
-        let isMounted = true;
-        setLoading(true);
-
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
-             if (!isMounted) return;
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
-             if (fetchedEmployees.length > 0 && !selectedEmployee) {
+            if (!selectedEmployee && fetchedEmployees.length > 0) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
+             setLoading(false);
         }, (error) => {
-             if (!isMounted) return;
             console.error("Error fetching employees:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
+            setLoading(false);
         });
 
-        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
+        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid));
         const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
-             if (!isMounted) return;
             const fetchedAbsences = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
@@ -108,16 +101,12 @@ export function AusenciasTab() {
                 } as Absence;
             });
             setAbsences(fetchedAbsences);
-            setLoading(false); // Set loading to false after absences are also fetched
         }, (error) => {
-             if (!isMounted) return;
             console.error("Error fetching absences:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las ausencias.'});
-            setLoading(false);
         });
         
         return () => {
-            isMounted = false;
             unsubscribeEmployees();
             unsubscribeAbsences();
         }
@@ -196,14 +185,6 @@ export function AusenciasTab() {
                 onClose={() => setIsModalOpen(false)}
                 employees={employees}
             />
-            {absenceToEdit && (
-                <EditAbsenceModal
-                    isOpen={!!absenceToEdit}
-                    onClose={() => setAbsenceToEdit(null)}
-                    absence={absenceToEdit}
-                    employees={employees}
-                />
-            )}
              <AlertDialog open={!!absenceToDelete} onOpenChange={(open) => !open && setAbsenceToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -354,23 +335,9 @@ export function AusenciasTab() {
                                         <TableCell>{format(new Date(absence.startDate), 'dd/MM/yy')} - {format(new Date(absence.endDate), 'dd/MM/yy')}</TableCell>
                                         <TableCell><Badge variant="outline" className={cn(getAbsenceBadgeClass(absence.status))}>{absence.status}</Badge></TableCell>
                                         <TableCell className="text-right">
-                                             <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => setAbsenceToEdit(absence)}>
-                                                        <Pencil className="h-4 w-4 mr-2" />
-                                                        Editar
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setAbsenceToDelete(absence)} className="text-destructive focus:text-destructive">
-                                                        <Trash2 className="h-4 w-4 mr-2" />
-                                                        Eliminar
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAbsenceToDelete(absence)}>
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 )) : (
@@ -408,5 +375,4 @@ export function AusenciasTab() {
         </>
     );
 }
-
     
