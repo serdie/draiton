@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useContext } from 'react';
@@ -33,7 +32,7 @@ interface RegisterAbsenceModalProps {
   employees: Employee[];
 }
 
-const absenceTypes: AbsenceType[] = ['Vacaciones', 'Baja por enfermedad', 'Paternidad/Maternidad', 'Día propio', 'Otro'];
+const absenceTypes: AbsenceType[] = ['Vacaciones', 'Baja por enfermedad', 'Paternidad/Maternidad', 'Día propio', 'Festivo', 'Otro'];
 const absenceStatuses: AbsenceStatus[] = ['Aprobada', 'Pendiente', 'Rechazada'];
 
 export function RegisterAbsenceModal({ isOpen, onClose, employees }: RegisterAbsenceModalProps) {

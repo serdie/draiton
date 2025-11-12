@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useContext, useEffect, useMemo, useCallback } from 'react';
@@ -23,6 +22,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { EditAbsenceModal } from './edit-absence-modal';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -35,6 +35,7 @@ const getAbsenceTypeColor = (type: Absence['type']) => {
         case 'Baja por enfermedad': return 'bg-orange-500';
         case 'Paternidad/Maternidad': return 'bg-purple-500';
         case 'Día propio': return 'bg-green-500';
+        case 'Festivo': return 'bg-indigo-500';
         default: return 'bg-gray-500';
     }
 };
@@ -48,7 +49,7 @@ const getAbsenceBadgeClass = (status: AbsenceStatus) => {
   }
 };
 
-const absenceTypes: AbsenceType[] = ['Vacaciones', 'Baja por enfermedad', 'Paternidad/Maternidad', 'Día propio', 'Otro'];
+const absenceTypes: AbsenceType[] = ['Vacaciones', 'Baja por enfermedad', 'Paternidad/Maternidad', 'Día propio', 'Festivo', 'Otro'];
 const absenceStatuses: AbsenceStatus[] = ['Aprobada', 'Pendiente', 'Rechazada'];
 
 
@@ -61,6 +62,7 @@ export function AusenciasTab() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [absenceToDelete, setAbsenceToDelete] = useState<Absence | null>(null);
+    const [absenceToEdit, setAbsenceToEdit] = useState<Absence | null>(null);
 
     // Filtering and pagination for history table
     const [filtroEmpleado, setFiltroEmpleado] = useState('all');
@@ -70,50 +72,51 @@ export function AusenciasTab() {
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // Effect for employees and absences
-    useEffect(() => {
-        if (!user) {
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
-        const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
-            const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
-            setEmployees(fetchedEmployees);
-            if (fetchedEmployees.length > 0 && !selectedEmployee) {
-                setSelectedEmployee(fetchedEmployees[0]);
-            }
-        }, (error) => {
-            console.error("Error fetching employees:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
-            setLoading(false);
-        });
+   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
 
-        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid));
-        const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
-            const fetchedAbsences = snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data,
-                    startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : new Date(data.startDate),
-                    endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : new Date(data.endDate),
-                    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
-                } as Absence;
-            });
-            setAbsences(fetchedAbsences.sort((a, b) => b.startDate.getTime() - a.startDate.getTime()));
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching absences:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las ausencias.'});
-            setLoading(false);
-        });
-        
-        return () => {
-            unsubscribeEmployees();
-            unsubscribeAbsences();
+    const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
+    const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
+        const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+        setEmployees(fetchedEmployees);
+        // Set selected employee only if it's not set and there are employees
+        if (!selectedEmployee && fetchedEmployees.length > 0) {
+            setSelectedEmployee(fetchedEmployees[0]);
         }
-    }, [user, toast, selectedEmployee]);
+        setLoading(false); // We can set loading to false here as the employee list is the primary dependency for the view
+    }, (error) => {
+        console.error("Error fetching employees:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
+        setLoading(false);
+    });
+
+    const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid));
+    const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
+        const fetchedAbsences = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : new Date(data.startDate),
+                endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : new Date(data.endDate),
+                createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
+            } as Absence;
+        });
+        setAbsences(fetchedAbsences.sort((a, b) => b.startDate.getTime() - a.startDate.getTime()));
+    }, (error) => {
+        console.error("Error fetching absences:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las ausencias.'});
+    });
+    
+    return () => {
+        unsubscribeEmployees();
+        unsubscribeAbsences();
+    }
+}, [user, toast]); // Removed selectedEmployee from dependencies
 
 
     const employeeAbsences = useMemo(() => {
@@ -188,6 +191,14 @@ export function AusenciasTab() {
                 onClose={() => setIsModalOpen(false)}
                 employees={employees}
             />
+            {absenceToEdit && (
+                 <EditAbsenceModal 
+                    isOpen={!!absenceToEdit}
+                    onClose={() => setAbsenceToEdit(null)}
+                    absence={absenceToEdit}
+                    employees={employees}
+                />
+            )}
              <AlertDialog open={!!absenceToDelete} onOpenChange={(open) => !open && setAbsenceToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -345,6 +356,9 @@ export function AusenciasTab() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
+                                                     <DropdownMenuItem onClick={() => setAbsenceToEdit(absence)}>
+                                                        <Pencil className="mr-2 h-4 w-4" /> Editar
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setAbsenceToDelete(absence)}>
                                                         <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                                                     </DropdownMenuItem>
