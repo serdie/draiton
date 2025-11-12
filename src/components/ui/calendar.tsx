@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -6,7 +7,7 @@ import { DayPicker } from "react-day-picker"
 import { es } from "date-fns/locale"
 
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
@@ -117,6 +118,7 @@ function Calendar({
                           const newDate = new Date(displayMonth)
                           newDate.setFullYear(year)
                           props.onMonthChange?.(newDate)
+                          setPopoverOpen(false)
                         }}
                       >
                         {year}
