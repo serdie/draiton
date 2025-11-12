@@ -1,4 +1,5 @@
 
+'use client';
 
 import type { Timestamp } from 'firebase/firestore';
 
@@ -38,7 +39,7 @@ export type Fichaje = {
     requesterName?: string;
 }
 
-export type AbsenceType = 'Vacaciones' | 'Baja por enfermedad' | 'Paternidad/Maternidad' | 'Día propio' | 'Otro';
+export type AbsenceType = 'Vacaciones' | 'Baja por enfermedad' | 'Paternidad/Maternidad' | 'Día propio' | 'Festivo' | 'Otro';
 export type AbsenceStatus = 'Aprobada' | 'Pendiente' | 'Rechazada';
 
 export interface Absence {
