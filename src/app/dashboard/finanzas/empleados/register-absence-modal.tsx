@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useContext } from 'react';
@@ -20,7 +21,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import type { Employee, AbsenceType, AbsenceStatus } from './types';
@@ -73,21 +74,47 @@ export function RegisterAbsenceModal({ isOpen, onClose, employees }: RegisterAbs
     setIsLoading(true);
     
     try {
-      await addDoc(collection(db, 'absences'), {
-        ownerId: user.uid,
-        employeeId,
-        type,
-        startDate: dateRange.from,
-        endDate: dateRange.to || dateRange.from,
-        status,
-        notes,
-        createdAt: serverTimestamp(),
-      });
-      toast({
-        title: 'Ausencia Registrada',
-        description: 'La ausencia ha sido guardada en el calendario del empleado.',
-      });
-      handleClose();
+        if (employeeId === 'all') {
+            // Batch write for all employees
+            const batch = writeBatch(db);
+            employees.forEach(employee => {
+                const absenceRef = doc(collection(db, 'absences'));
+                batch.set(absenceRef, {
+                    ownerId: user.uid,
+                    employeeId: employee.id,
+                    type,
+                    startDate: dateRange.from,
+                    endDate: dateRange.to || dateRange.from,
+                    status,
+                    notes,
+                    createdAt: serverTimestamp(),
+                });
+            });
+            await batch.commit();
+            toast({
+                title: 'Ausencias Registradas',
+                description: `Se ha registrado la ausencia para todos los empleados.`,
+            });
+        } else {
+            // Single write for one employee
+            await addDoc(collection(db, 'absences'), {
+                ownerId: user.uid,
+                employeeId,
+                type,
+                startDate: dateRange.from,
+                endDate: dateRange.to || dateRange.from,
+                status,
+                notes,
+                createdAt: serverTimestamp(),
+            });
+             toast({
+                title: 'Ausencia Registrada',
+                description: 'La ausencia ha sido guardada en el calendario del empleado.',
+            });
+        }
+      
+        handleClose();
+
     } catch (error) {
       console.error("Error al registrar ausencia: ", error);
       toast({
@@ -106,7 +133,7 @@ export function RegisterAbsenceModal({ isOpen, onClose, employees }: RegisterAbs
         <DialogHeader>
           <DialogTitle>Registrar Ausencia</DialogTitle>
           <DialogDescription>
-            Añade un periodo de ausencia para un empleado.
+            Añade un periodo de ausencia para uno o todos los empleados.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
@@ -117,6 +144,7 @@ export function RegisterAbsenceModal({ isOpen, onClose, employees }: RegisterAbs
                 <SelectValue placeholder="Selecciona un empleado" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Todos los empleados</SelectItem>
                 {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
               </SelectContent>
             </Select>
