@@ -14,12 +14,11 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AuthContext } from '@/context/auth-context';
-import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { RegisterExpenseModal } from './register-expense-modal';
-import { deleteExpense } from '@/lib/firebase/expense-actions';
 import type { ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
 import type { Expense } from './page';
 import { EditExpenseModal } from './edit-expense-modal';
@@ -134,18 +133,24 @@ export function GastosContent() {
         setIsEditModalOpen(true);
     }
     
-     const handleDelete = useCallback(async () => {
+     const handleDelete = async () => {
         if (!expenseToDelete) return;
-
-        const { success, error } = await deleteExpense(expenseToDelete.id);
-
-        if (success) {
+        const expenseRef = doc(db, "expenses", expenseToDelete.id);
+        
+        try {
+            await deleteDoc(expenseRef);
             toast({ title: 'Gasto Eliminado', description: 'El gasto ha sido eliminado correctamente.' });
-        } else {
-            toast({ variant: 'destructive', title: 'Error', description: error });
+        } catch (error: any) {
+             toast({ 
+                variant: 'destructive', 
+                title: 'Error al Eliminar', 
+                description: 'No tienes permiso para borrar este gasto.' 
+            });
+            console.error("Error deleting expense:", error);
+        } finally {
+            setExpenseToDelete(null);
         }
-        setExpenseToDelete(null);
-    }, [expenseToDelete, toast]);
+    };
 
     return (
         <>

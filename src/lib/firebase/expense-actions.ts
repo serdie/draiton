@@ -5,32 +5,6 @@ import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from './config';
 import { processCsvExpenses, type ProcessCsvExpensesOutput } from '@/ai/flows/process-csv-expenses';
 import { processPdfExpenses, type ProcessPdfExpensesOutput } from '@/ai/flows/process-pdf-expenses';
-import { getFirebaseAuth } from './firebase-admin';
-
-export async function deleteExpense(id: string): Promise<{ success: boolean; error?: string }> {
-    if (!db) {
-        return { success: false, error: "La base de datos no está inicializada." };
-    }
-    if (!id) {
-        return { success: false, error: "Se requiere el ID del gasto." };
-    }
-
-    try {
-        const { auth } = getFirebaseAuth();
-        // En un entorno real, verificaríamos el token de sesión del usuario aquí.
-        const expenseRef = doc(db, "expenses", id);
-        await deleteDoc(expenseRef);
-        return { success: true };
-    } catch (error: any) {
-        console.error("Error al eliminar gasto: ", error);
-        // Devuelve un mensaje de error más específico si es un error de permisos
-        if (error.code === 'permission-denied') {
-            return { success: false, error: "No tienes permiso para eliminar este gasto." };
-        }
-        return { success: false, error: "No se pudo eliminar el gasto." };
-    }
-}
-
 
 export async function processCsvExpensesAction(csvContent: string): Promise<{ data: ProcessCsvExpensesOutput | null; error: string | null }> {
   if (!csvContent) {
