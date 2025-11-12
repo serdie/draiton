@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useContext } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PerfilSettings } from "./perfil-settings";
@@ -11,11 +11,13 @@ import { AparienciaSettings } from "./apariencia-settings";
 import { SuscripcionSettings } from "./suscripcion-settings";
 import { User, Building, Bell, Palette, CreditCard } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AuthContext } from '@/context/auth-context';
 
 function ConfiguracionContent() {
   const isMobile = useIsMobile();
   const searchParams = useSearchParams();
   const tab = searchParams.get('tab') || 'perfil';
+  const { isEmployee } = useContext(AuthContext);
 
   return (
     <div className="space-y-6">
@@ -31,10 +33,12 @@ function ConfiguracionContent() {
             <User className="mr-2 h-4 w-4" />
             Perfil
           </TabsTrigger>
-          <TabsTrigger value="empresa" className="w-full justify-start md:justify-center">
-            <Building className="mr-2 h-4 w-4" />
-            Empresa
-          </TabsTrigger>
+          {!isEmployee && (
+            <TabsTrigger value="empresa" className="w-full justify-start md:justify-center">
+                <Building className="mr-2 h-4 w-4" />
+                Empresa
+            </TabsTrigger>
+          )}
           <TabsTrigger value="suscripcion" className="w-full justify-start md:justify-center">
             <CreditCard className="mr-2 h-4 w-4" />
             Suscripción
@@ -50,7 +54,9 @@ function ConfiguracionContent() {
         </TabsList>
         <div className="mt-6 md:mt-0 md:pl-4 w-full">
             <TabsContent value="perfil"><PerfilSettings /></TabsContent>
-            <TabsContent value="empresa"><EmpresaSettings /></TabsContent>
+            {!isEmployee && (
+                <TabsContent value="empresa"><EmpresaSettings /></TabsContent>
+            )}
             <TabsContent value="suscripcion"><SuscripcionSettings /></TabsContent>
             <TabsContent value="notificaciones"><NotificacionesSettings /></TabsContent>
             <TabsContent value="apariencia"><AparienciaSettings /></TabsContent>
