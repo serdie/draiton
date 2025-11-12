@@ -153,14 +153,14 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                    <Calendar 
-                        mode="single" 
-                        selected={hireDate} 
-                        onSelect={setHireDate} 
+                    <Calendar
+                        mode="single"
+                        selected={hireDate}
+                        onSelect={setHireDate}
                         captionLayout="dropdown-buttons"
                         fromYear={1980}
                         toYear={new Date().getFullYear()}
-                        initialFocus 
+                        initialFocus
                         locale={es}
                     />
                 </PopoverContent>
