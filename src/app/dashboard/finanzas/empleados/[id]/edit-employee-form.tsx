@@ -161,6 +161,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                         fromYear={1980}
                         toYear={new Date().getFullYear()}
                         initialFocus 
+                        locale={es}
                     />
                 </PopoverContent>
             </Popover>
