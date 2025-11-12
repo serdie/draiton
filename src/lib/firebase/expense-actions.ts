@@ -5,6 +5,8 @@ import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from './config';
 import { processCsvExpenses, type ProcessCsvExpensesOutput } from '@/ai/flows/process-csv-expenses';
 import { processPdfExpenses, type ProcessPdfExpensesOutput } from '@/ai/flows/process-pdf-expenses';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 export async function deleteExpense(id: string): Promise<{ success: boolean; error?: string }> {
     if (!db) {
@@ -15,14 +17,25 @@ export async function deleteExpense(id: string): Promise<{ success: boolean; err
         return { success: false, error: "Se requiere el ID del gasto." };
     }
 
-    try {
-        await deleteDoc(doc(db, "expenses", id));
-        return { success: true };
-    } catch (error: any) {
-        console.error("Error al eliminar gasto: ", error);
-        return { success: false, error: error.message };
-    }
+    const expenseRef = doc(db, 'expenses', id);
+
+    deleteDoc(expenseRef)
+        .then(() => {
+            // El éxito se maneja en el lado del cliente (optimistic UI)
+        })
+        .catch((serverError) => {
+            console.error("Server error on delete:", serverError);
+            const permissionError = new FirestorePermissionError({
+                path: expenseRef.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+
+    // Devolvemos éxito inmediatamente para la UI optimista. El error se manejará de forma asíncrona.
+    return { success: true };
 }
+
 
 export async function processCsvExpensesAction(csvContent: string): Promise<{ data: ProcessCsvExpensesOutput | null; error: string | null }> {
   if (!csvContent) {

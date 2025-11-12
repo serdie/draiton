@@ -70,10 +70,8 @@ service cloud.firestore {
     
     // Ausencias (Vacaciones, Bajas, etc.)
     match /absences/{absenceId} {
-      // El dueño puede crear, leer, actualizar y borrar las ausencias de su empresa.
       allow create: if request.auth.uid == request.resource.data.ownerId;
       allow read, update, delete: if request.auth.uid == resource.data.ownerId;
-      // Permite al dueño de la empresa listar todas las ausencias ordenadas por fecha de inicio.
       allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
     
