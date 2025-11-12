@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useContext } from 'react';
@@ -7,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Loader2, User, HardHat, FileText, BarChart2, Clock, Lock } from 'lucide-react';
+import { PlusCircle, Loader2, User, HardHat, FileText, BarChart2, Clock, Lock, CalendarOff } from 'lucide-react';
 import { CreateProjectModal } from './create-project-modal';
 import { AuthContext } from '@/context/auth-context';
 import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
@@ -30,6 +29,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { FichajeEmpleadoTab } from './fichaje-empleado-tab';
+import { EmployeeAbsenceCalendar } from './employee-absence-calendar';
 
 
 export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';
@@ -116,6 +116,7 @@ export default function OperacionesPage() {
     
     const tabsForEmployee = [
         { value: 'fichajes', label: 'Fichajes', icon: Clock, component: <FichajeEmpleadoTab /> },
+        { value: 'ausencias', label: 'Mis Ausencias', icon: CalendarOff, component: <EmployeeAbsenceCalendar /> },
         { value: 'proyectos', label: 'Proyectos', icon: HardHat, component: <KanbanBoard projects={projects} loading={loading} /> },
         { value: 'tareas', label: 'Tareas', icon: FileText, component: <TareasPage /> },
     ];
