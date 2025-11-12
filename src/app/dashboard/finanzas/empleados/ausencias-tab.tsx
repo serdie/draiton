@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useContext, useEffect, useMemo } from 'react';
+import { useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,7 +35,6 @@ const getAbsenceTypeColor = (type: Absence['type']) => {
         case 'Baja por enfermedad': return 'bg-orange-500';
         case 'Paternidad/Maternidad': return 'bg-purple-500';
         case 'Día propio': return 'bg-green-500';
-        case 'Festivo': return 'bg-pink-500';
         default: return 'bg-gray-500';
     }
 };
@@ -49,7 +48,7 @@ const getAbsenceBadgeClass = (status: AbsenceStatus) => {
   }
 };
 
-const absenceTypes: AbsenceType[] = ['Vacaciones', 'Baja por enfermedad', 'Paternidad/Maternidad', 'Día propio', 'Festivo', 'Otro'];
+const absenceTypes: AbsenceType[] = ['Vacaciones', 'Baja por enfermedad', 'Paternidad/Maternidad', 'Día propio', 'Otro'];
 const absenceStatuses: AbsenceStatus[] = ['Aprobada', 'Pendiente', 'Rechazada'];
 
 
@@ -72,28 +71,39 @@ export function AusenciasTab() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    // Unified useEffect for data loading
+    const handleEmployeeSelection = useCallback((employee: Employee) => {
+        setSelectedEmployee(employee);
+    }, []);
+
+    // Effect for employees
     useEffect(() => {
         if (!user) {
             setLoading(false);
             return;
         }
-
+        setLoading(true);
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
             if (!selectedEmployee && fetchedEmployees.length > 0) {
-                setSelectedEmployee(fetchedEmployees[0]);
+                handleEmployeeSelection(fetchedEmployees[0]);
             }
-             setLoading(false);
+            setLoading(false);
         }, (error) => {
             console.error("Error fetching employees:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
             setLoading(false);
         });
 
-        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
+        return () => unsubscribeEmployees();
+    }, [user, toast, handleEmployeeSelection, selectedEmployee]);
+
+    // Effect for absences
+    useEffect(() => {
+        if (!user) return;
+        
+        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid));
         const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
             const fetchedAbsences = snapshot.docs.map(doc => {
                 const data = doc.data();
@@ -111,11 +121,8 @@ export function AusenciasTab() {
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las ausencias.'});
         });
         
-        return () => {
-            unsubscribeEmployees();
-            unsubscribeAbsences();
-        }
-    }, [user, toast, selectedEmployee]);
+        return () => unsubscribeAbsences;
+    }, [user, toast]);
 
 
     const employeeAbsences = useMemo(() => {
@@ -228,7 +235,7 @@ export function AusenciasTab() {
                             {employees.length > 0 ? employees.map(employee => (
                                 <div
                                     key={employee.id}
-                                    onClick={() => setSelectedEmployee(employee)}
+                                    onClick={() => handleEmployeeSelection(employee)}
                                     className={cn(
                                         'flex items-center justify-between gap-3 p-2 rounded-lg cursor-pointer transition-colors',
                                         selectedEmployee?.id === employee.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
