@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, PlusCircle, CalendarOff, FilterX, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AuthContext } from '@/context/auth-context';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, onSnapshot, deleteDoc, doc, orderBy, Timestamp } from 'firebase/firestore';
@@ -103,7 +104,7 @@ export function AusenciasTab() {
     useEffect(() => {
         if (!user) return;
         
-        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid));
+        const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
         const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
             const fetchedAbsences = snapshot.docs.map(doc => {
                 const data = doc.data();
