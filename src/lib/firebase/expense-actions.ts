@@ -5,35 +5,30 @@ import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from './config';
 import { processCsvExpenses, type ProcessCsvExpensesOutput } from '@/ai/flows/process-csv-expenses';
 import { processPdfExpenses, type ProcessPdfExpensesOutput } from '@/ai/flows/process-pdf-expenses';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { getFirebaseAuth } from './firebase-admin';
 
 export async function deleteExpense(id: string): Promise<{ success: boolean; error?: string }> {
     if (!db) {
         return { success: false, error: "La base de datos no está inicializada." };
     }
-
     if (!id) {
         return { success: false, error: "Se requiere el ID del gasto." };
     }
 
-    const expenseRef = doc(db, 'expenses', id);
-
-    deleteDoc(expenseRef)
-        .then(() => {
-            // El éxito se maneja en el lado del cliente (optimistic UI)
-        })
-        .catch((serverError) => {
-            console.error("Server error on delete:", serverError);
-            const permissionError = new FirestorePermissionError({
-                path: expenseRef.path,
-                operation: 'delete',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        });
-
-    // Devolvemos éxito inmediatamente para la UI optimista. El error se manejará de forma asíncrona.
-    return { success: true };
+    try {
+        const { auth } = getFirebaseAuth();
+        // En un entorno real, verificaríamos el token de sesión del usuario aquí.
+        const expenseRef = doc(db, "expenses", id);
+        await deleteDoc(expenseRef);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error al eliminar gasto: ", error);
+        // Devuelve un mensaje de error más específico si es un error de permisos
+        if (error.code === 'permission-denied') {
+            return { success: false, error: "No tienes permiso para eliminar este gasto." };
+        }
+        return { success: false, error: "No se pudo eliminar el gasto." };
+    }
 }
 
 

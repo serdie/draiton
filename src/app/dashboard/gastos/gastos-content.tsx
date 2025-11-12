@@ -22,6 +22,7 @@ import { RegisterExpenseModal } from './register-expense-modal';
 import { deleteExpense } from '@/lib/firebase/expense-actions';
 import type { ExtractReceiptDataOutput } from '@/ai/flows/extract-receipt-data';
 import type { Expense } from './page';
+import { EditExpenseModal } from './edit-expense-modal';
 
 const getCategoryBadgeClass = (category: string) => {
     switch (category) {
@@ -43,6 +44,8 @@ export function GastosContent() {
     const [loading, setLoading] = useState(true);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
     const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
     const [initialData, setInitialData] = useState<ExtractReceiptDataOutput | undefined>(undefined);
     
@@ -125,6 +128,11 @@ export function GastosContent() {
         setIsModalOpen(false);
         setInitialData(undefined);
     };
+
+    const handleOpenEditModal = (expense: Expense) => {
+        setExpenseToEdit(expense);
+        setIsEditModalOpen(true);
+    }
     
      const handleDelete = useCallback(async () => {
         if (!expenseToDelete) return;
@@ -147,6 +155,13 @@ export function GastosContent() {
             onOpenModal={handleOpenModal}
             initialData={initialData}
         />
+        {expenseToEdit && (
+            <EditExpenseModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                expense={expenseToEdit}
+            />
+        )}
         <AlertDialog open={!!expenseToDelete} onOpenChange={(open) => !open && setExpenseToDelete(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -235,7 +250,7 @@ export function GastosContent() {
                                                         <Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleOpenEditModal(expense)}>
                                                             <Pencil className="mr-2 h-4 w-4" />
                                                             Editar
                                                         </DropdownMenuItem>
