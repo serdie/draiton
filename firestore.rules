@@ -36,7 +36,8 @@ service cloud.firestore {
     // Gastos
     match /expenses/{expenseId} {
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow read, update, delete: if resource.data.ownerId == request.auth.uid;
+      allow read, update: if resource.data.ownerId == request.auth.uid;
+      allow delete: if resource.data.ownerId == request.auth.uid;
     }
 
     // Contactos
