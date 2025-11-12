@@ -50,6 +50,7 @@ import { es } from 'date-fns/locale';
 import { AiAssistantChat } from './ai-assistant-chat';
 import type { Task } from './tareas/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { EmployeeDashboard } from './employee/employee-dashboard';
 
 type ActivityItem = {
     id: string;
@@ -68,7 +69,7 @@ const initialFinancialChartData = Array.from({ length: 6 }, (_, i) => {
 
 
 export default function DashboardPage() {
-    const { user } = useContext(AuthContext);
+    const { user, isEmployee } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
     const [periodo, setPeriodo] = useState<Period>('semestral');
     
@@ -83,7 +84,7 @@ export default function DashboardPage() {
     const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
 
     useEffect(() => {
-        if (!user || !db) {
+        if (!user || !db || isEmployee) {
             setLoading(false);
             return;
         }
@@ -236,7 +237,11 @@ export default function DashboardPage() {
         };
 
         fetchData();
-    }, [user, periodo]);
+    }, [user, periodo, isEmployee]);
+
+    if (isEmployee) {
+        return <EmployeeDashboard />;
+    }
     
     const netProfit = income - expenses;
     const formatCurrency = (amount: number) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
