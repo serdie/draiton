@@ -83,6 +83,12 @@ export function EmployeeDashboard() {
         ? `${employeeData.workModality} (${employeeData.presencialPercentage || 50}% Presencial / ${employeeData.remotePercentage || 50}% Teletrabajo)`
         : employeeData.workModality;
 
+    const salaryLabel = employeeData.salaryType ? `Salario ${employeeData.salaryType}` : 'Salario Bruto Anual';
+    const salaryValue = employeeData.salaryType === 'Según Convenio' 
+        ? 'Según Convenio' 
+        : new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(employeeData.grossAnnualSalary);
+
+
     return (
         <div className="space-y-6">
              <div className="space-y-1">
@@ -117,7 +123,7 @@ export function EmployeeDashboard() {
                         <InfoRow icon={Briefcase} label="Tipo de Contrato" value={employeeData.contractType} />
                         <InfoRow icon={BadgeInfo} label="NIF" value={employeeData.nif} />
                         <InfoRow icon={Hash} label="Nº Seguridad Social" value={employeeData.socialSecurityNumber} />
-                        <InfoRow icon={FileText} label="Salario Bruto Anual" value={new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(employeeData.grossAnnualSalary)} />
+                        <InfoRow icon={FileText} label={salaryLabel} value={salaryValue} />
                          <InfoRow icon={FileText} label="Modalidad" value={modalityValue} />
                         <InfoRow icon={FileText} label="Frecuencia de Pago" value={employeeData.paymentFrequency} />
                     </div>
