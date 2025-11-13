@@ -153,7 +153,7 @@ export function TrainingModule({ employee }: TrainingModuleProps) {
                  <div className="space-y-4">
                     <Progress value={progress} className="w-full" />
                     {progress < 100 ? (
-                        <Carousel setApi={setApi} className="w-full max-w-full overflow-hidden">
+                        <Carousel setApi={setApi} className="w-full">
                             <CarouselContent>
                                 {trainingSteps.map((step, index) => (
                                     <CarouselItem key={index}>
