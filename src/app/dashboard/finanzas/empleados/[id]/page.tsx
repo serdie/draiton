@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -74,14 +75,12 @@ export default function EmployeeDetailPage() {
         </div>
 
         <Card>
-            <CardHeader>
-                <CardTitle>Información del Empleado</CardTitle>
-                <CardDescription>Aquí puedes editar todos los datos contractuales y personales del empleado.</CardDescription>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
                 <EditEmployeeForm employee={employee} onClose={() => router.push('/dashboard/finanzas?tab=empleados')} />
             </CardContent>
         </Card>
     </div>
   )
 }
+
+    
