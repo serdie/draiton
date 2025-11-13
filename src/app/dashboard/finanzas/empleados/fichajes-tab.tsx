@@ -12,7 +12,6 @@ import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { ViewFichajeModal } from '../../proyectos/view-fichaje-modal';
-import { FichajesHistoryTable } from './fichajes-history-table';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -134,7 +133,6 @@ export function FichajesTab() {
                     </div>
                 </CardContent>
             </Card>
-            <FichajesHistoryTable allFichajes={fichajes} employees={employees} />
         </div>
         </>
     );
