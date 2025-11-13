@@ -148,7 +148,16 @@
             "ownerId": { "type": "string" },
             "companyOwnerId": { "type": "string" },
             "employeePortalActive": { "type": "boolean", "description": "Whether the employee portal is active." },
-            "employeePortalId": { "type": "string", "description": "A unique ID for the employee portal URL." }
+            "employeePortalId": { "type": "string", "description": "A unique ID for the employee portal URL." },
+            "rgpdTrainingProgress": { "type": "number", "description": "Progress of the mandatory GDPR and time tracking training (0-100)." },
+            "rgpdTrainingCompletedAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the training was completed and signed." },
+            "rgpdTrainingSignature": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string", "description": "Full name used for the signature." },
+                    "nif": { "type": "string", "description": "NIF/DNI used for the signature." }
+                }
+            }
         },
         "required": ["name", "email", "ownerId", "companyOwnerId", "employeePortalActive", "employeePortalId"]
     },

@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Mail, Phone, Calendar, Briefcase, FileText, Hash, BadgeInfo } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { TrainingModule } from './training-module';
 
 const InfoRow = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: React.ReactNode }) => (
     <div className="flex items-start gap-4">
@@ -85,9 +86,11 @@ export function EmployeeDashboard() {
                 Bienvenido, {employeeData.name.split(' ')[0]}
                 </h1>
                 <p className="text-muted-foreground">
-                Aquí tienes un resumen de tu información laboral.
+                Aquí tienes un resumen de tu información laboral y formación pendiente.
                 </p>
             </div>
+
+            <TrainingModule employee={employeeData} />
 
             <Card>
                 <CardHeader>

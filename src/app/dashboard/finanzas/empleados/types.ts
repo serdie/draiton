@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Timestamp } from 'firebase/firestore';
@@ -21,6 +22,12 @@ export type Employee = {
     avatar?: string;
     employeePortalActive?: boolean;
     employeePortalId?: string;
+    rgpdTrainingProgress?: number;
+    rgpdTrainingCompletedAt?: Timestamp;
+    rgpdTrainingSignature?: {
+        name: string;
+        nif: string;
+    };
 };
 
 export type BreakDetails = {
