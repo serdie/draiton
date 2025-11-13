@@ -78,6 +78,10 @@ export function EmployeeDashboard() {
             </Card>
         )
     }
+    
+    const modalityValue = employeeData.workModality === 'Mixto' 
+        ? `${employeeData.workModality} (${employeeData.presencialPercentage || 50}% Presencial / ${employeeData.remotePercentage || 50}% Teletrabajo)`
+        : employeeData.workModality;
 
     return (
         <div className="space-y-6">
@@ -114,7 +118,7 @@ export function EmployeeDashboard() {
                         <InfoRow icon={BadgeInfo} label="NIF" value={employeeData.nif} />
                         <InfoRow icon={Hash} label="Nº Seguridad Social" value={employeeData.socialSecurityNumber} />
                         <InfoRow icon={FileText} label="Salario Bruto Anual" value={new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(employeeData.grossAnnualSalary)} />
-                         <InfoRow icon={FileText} label="Modalidad" value={employeeData.workModality} />
+                         <InfoRow icon={FileText} label="Modalidad" value={modalityValue} />
                         <InfoRow icon={FileText} label="Frecuencia de Pago" value={employeeData.paymentFrequency} />
                     </div>
                 </CardContent>
