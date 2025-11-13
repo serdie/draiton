@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
@@ -12,6 +11,7 @@ import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { ViewFichajeModal } from '../../proyectos/view-fichaje-modal';
+import { useToast } from '@/hooks/use-toast';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -21,54 +21,58 @@ const getInitials = (name: string) => {
 
 export function FichajesTab() {
     const { user } = useContext(AuthContext);
+    const { toast } = useToast();
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [fichajes, setFichajes] = useState<Fichaje[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [loading, setLoading] = useState(true);
     const [fichajeToView, setFichajeToView] = useState<Fichaje | null>(null);
 
+     // Effect to fetch employees
     useEffect(() => {
         if (!user) {
             setLoading(false);
             return;
         }
-
-        let isMounted = true;
         setLoading(true);
-
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
-            if (!isMounted) return;
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
-            if (!selectedEmployee && fetchedEmployees.length > 0) {
+            if (fetchedEmployees.length > 0) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching employees:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
+            setLoading(false);
         });
-        
+        return () => unsubscribeEmployees();
+    }, [user, toast]);
+
+    // Effect to fetch fichajes for all employees (for pending requests badge) and then filter
+    useEffect(() => {
+        if (!user) return;
         const fichajesQuery = query(collection(db, 'fichajes'), where('ownerId', '==', user.uid), orderBy('timestamp', 'desc'));
         const unsubscribeFichajes = onSnapshot(fichajesQuery, (snapshot) => {
-            if (!isMounted) return;
             const fetchedFichajes = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
                     id: doc.id,
                     ...data,
-                    timestamp: data.timestamp.toDate(),
-                    requestedTimestamp: data.requestedTimestamp ? data.requestedTimestamp.toDate() : undefined
+                    timestamp: (data.timestamp as Timestamp).toDate(),
+                    requestedTimestamp: data.requestedTimestamp ? (data.requestedTimestamp as Timestamp).toDate() : undefined
                 } as Fichaje;
             });
             setFichajes(fetchedFichajes);
-            setLoading(false); // Set loading to false after both subscriptions are set up
+        }, (error) => {
+            console.error("Error fetching fichajes:", error);
+             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los registros de fichajes.'});
         });
+        return () => unsubscribeFichajes();
+    }, [user, toast]);
 
-        return () => {
-            isMounted = false;
-            unsubscribeEmployees();
-            unsubscribeFichajes();
-        }
-
-    }, [user, selectedEmployee]);
 
     if (loading) {
         return <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin"/></div>
