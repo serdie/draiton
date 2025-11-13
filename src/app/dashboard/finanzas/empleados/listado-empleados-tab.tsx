@@ -98,7 +98,7 @@ export function ListadoEmpleadosTab({ employees, loading }: ListadoEmpleadosTabP
                                 <TableRow>
                                     <TableHead>Nombre</TableHead>
                                     <TableHead>Puesto</TableHead>
-                                    <TableHead>Salario Bruto Anual</TableHead>
+                                    <TableHead>Salario</TableHead>
                                     <TableHead className="text-right">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -109,7 +109,10 @@ export function ListadoEmpleadosTab({ employees, loading }: ListadoEmpleadosTabP
                                         <TableCell className="font-medium">{employee.name}</TableCell>
                                         <TableCell>{employee.position}</TableCell>
                                         <TableCell>
-                                            {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(employee.grossAnnualSalary)}
+                                            {employee.salaryType === 'Según Convenio' 
+                                                ? 'Según Convenio' 
+                                                : new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(employee.grossAnnualSalary)
+                                            }
                                         </TableCell>
                                         <TableCell className="text-right">
                                              <DropdownMenu>
