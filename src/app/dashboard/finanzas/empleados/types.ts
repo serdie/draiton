@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import type { Timestamp } from 'firebase/firestore';
@@ -77,7 +76,3 @@ export interface Absence {
   notes?: string;
   createdAt: Date;
 }
-
-    
-
-    

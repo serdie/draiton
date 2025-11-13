@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useContext, useEffect, useMemo, useCallback } from 'react';
@@ -94,7 +95,7 @@ export function AusenciasTab() {
         setLoading(false);
     });
 
-    const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid));
+    const absencesQuery = query(collection(db, 'absences'), where('ownerId', '==', user.uid), orderBy('startDate', 'desc'));
     const unsubscribeAbsences = onSnapshot(absencesQuery, (snapshot) => {
         const fetchedAbsences = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -106,7 +107,7 @@ export function AusenciasTab() {
                 createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
             } as Absence;
         });
-        setAbsences(fetchedAbsences.sort((a, b) => b.startDate.getTime() - a.startDate.getTime()));
+        setAbsences(fetchedAbsences);
     }, (error) => {
         console.error("Error fetching absences:", error);
         toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar las ausencias.'});
@@ -116,7 +117,7 @@ export function AusenciasTab() {
         unsubscribeEmployees();
         unsubscribeAbsences();
     }
-}, [user, toast]); // Removed selectedEmployee from dependencies
+}, [user, toast]); 
 
 
     const employeeAbsences = useMemo(() => {
