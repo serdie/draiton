@@ -9,7 +9,7 @@ import { doc, onSnapshot, Timestamp } from 'firebase/firestore';
 import type { Employee } from '../finanzas/empleados/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Mail, Phone, Calendar, Briefcase, FileText, Hash, BadgeInfo } from 'lucide-react';
+import { Loader2, Mail, Phone, Calendar, Briefcase, FileText, Hash, BadgeInfo, Coins } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TrainingModule } from './training-module';
@@ -88,6 +88,10 @@ export function EmployeeDashboard() {
     const salaryValue = employeeData.salaryType === 'Según Convenio' 
         ? 'Según Convenio' 
         : new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(employeeData.grossAnnualSalary);
+    
+    const extraPaysValue = employeeData.proratedExtraPays 
+        ? "Prorrateadas mensualmente" 
+        : (employeeData.extraPaysConfig || "2 Pagas (Julio y Diciembre)");
 
 
     return (
@@ -128,6 +132,7 @@ export function EmployeeDashboard() {
                          <InfoRow icon={FileText} label="Modalidad" value={modalityValue} />
                         <InfoRow icon={FileText} label="Frecuencia de Pago" value={employeeData.paymentFrequency} />
                         <InfoRow icon={Calendar} label="Días de Vacaciones Anuales" value={employeeData.vacationDays || 23} />
+                        <InfoRow icon={Coins} label="Pagas Extra" value={extraPaysValue} />
                     </div>
                 </CardContent>
             </Card>
