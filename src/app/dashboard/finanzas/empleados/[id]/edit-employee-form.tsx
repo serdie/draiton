@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Percent } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Timestamp } from 'firebase/firestore';
 import type { Employee } from '../types';
@@ -39,6 +39,8 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [socialSecurityNumber, setSocialSecurityNumber] = useState(employee.socialSecurityNumber);
   const [contractType, setContractType] = useState(employee.contractType);
   const [workModality, setWorkModality] = useState(employee.workModality || 'Presencial');
+  const [presencialPercentage, setPresencialPercentage] = useState(String(employee.presencialPercentage || 50));
+  const [remotePercentage, setRemotePercentage] = useState(String(employee.remotePercentage || 50));
   const [weeklyHours, setWeeklyHours] = useState(String(employee.weeklyHours || 40));
   const [paymentFrequency, setPaymentFrequency] = useState(employee.paymentFrequency || 'Mensual');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
@@ -58,6 +60,8 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setSocialSecurityNumber(employee.socialSecurityNumber);
     setContractType(employee.contractType);
     setWorkModality(employee.workModality || 'Presencial');
+    setPresencialPercentage(String(employee.presencialPercentage || 50));
+    setRemotePercentage(String(employee.remotePercentage || 50));
     setWeeklyHours(String(employee.weeklyHours || 40));
     setPaymentFrequency(employee.paymentFrequency || 'Mensual');
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
@@ -76,7 +80,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     e.preventDefault();
 
     startTransition(async () => {
-      const updatedData = {
+      const updatedData: Partial<Employee> = {
         name,
         email,
         phone,
@@ -89,8 +93,13 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         paymentFrequency,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
         proratedExtraPays,
-        hireDate: hireDate || null,
+        hireDate: hireDate || undefined,
       };
+
+      if (workModality === 'Mixto') {
+        updatedData.presencialPercentage = parseInt(presencialPercentage, 10);
+        updatedData.remotePercentage = parseInt(remotePercentage, 10);
+      }
 
       const result = await updateEmployeeAction(employee.id, updatedData);
 
@@ -191,6 +200,21 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                 </Select>
             </div>
         </div>
+        {workModality === 'Mixto' && (
+             <div className="p-4 border rounded-md space-y-4">
+                <Label>Distribución Modalidad Mixta</Label>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                        <Input type="number" value={presencialPercentage} onChange={e => setPresencialPercentage(e.target.value)} className="pr-8" />
+                        <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="relative">
+                        <Input type="number" value={remotePercentage} onChange={e => setRemotePercentage(e.target.value)} className="pr-8" />
+                        <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    </div>
+                </div>
+            </div>
+        )}
          <div className="space-y-2">
             <Label htmlFor="payment-frequency">Frecuencia de Pago</Label>
                 <Select value={paymentFrequency} onValueChange={setPaymentFrequency} required>

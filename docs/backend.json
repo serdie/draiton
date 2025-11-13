@@ -140,6 +140,8 @@
             "socialSecurityNumber": { "type": "string" },
             "contractType": { "type": "string", "enum": ["Indefinido", "Temporal", "Formación", "Prácticas"] },
             "workModality": { "type": "string", "enum": ["Presencial", "Mixto", "Teletrabajo"], "description": "Work modality for the employee." },
+            "presencialPercentage": { "type": "number", "description": "Percentage of time working in person for hybrid modality." },
+            "remotePercentage": { "type": "number", "description": "Percentage of time working remotely for hybrid modality." },
             "paymentFrequency": { "type": "string", "enum": ["Mensual", "Diario", "Semanal", "Quincenal", "Personalizar"] },
             "grossAnnualSalary": { "type": "number" },
             "weeklyHours": { "type": "number", "description": "Contracted weekly work hours." },

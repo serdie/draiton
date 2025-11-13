@@ -14,6 +14,8 @@ export type Employee = {
     socialSecurityNumber: string;
     contractType: 'Indefinido' | 'Temporal' | 'Formación' | 'Prácticas';
     workModality: 'Presencial' | 'Mixto' | 'Teletrabajo';
+    presencialPercentage?: number;
+    remotePercentage?: number;
     paymentFrequency: 'Mensual' | 'Diario' | 'Semanal' | 'Quincenal' | 'Personalizar';
     grossAnnualSalary: number;
     weeklyHours?: number;
