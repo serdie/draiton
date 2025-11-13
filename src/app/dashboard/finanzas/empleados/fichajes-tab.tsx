@@ -5,15 +5,14 @@ import { useState, useContext, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { EmployeeClocksCalendar } from './employee-clocks-calendar';
-import { type Fichaje, type Employee } from './types';
+import { EmployeeClocksCalendar } from '../../proyectos/employee-clocks-calendar';
+import { type Fichaje, type Employee } from '../../proyectos/types';
 import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { ViewFichajeModal } from '../../proyectos/view-fichaje-modal';
 import { useToast } from '@/hooks/use-toast';
-import { FichajesHistoryTable } from './fichajes-history-table';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -45,15 +44,19 @@ export function FichajesTab() {
             if (fetchedEmployees.length > 0 && !selectedEmployee) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-            setLoading(false); // Can set loading false here as employees list is primary dependency
+            // Set loading to false after employees are loaded, as it's the main dependency
+            if (isMounted) setLoading(false);
         }, (error) => {
             console.error("Error fetching employees:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
-            setLoading(false);
+            if (isMounted) {
+                toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
+                setLoading(false);
+            }
         });
 
         const fichajesQuery = query(collection(db, 'fichajes'), where('ownerId', '==', user.uid), orderBy('timestamp', 'desc'));
         const unsubscribeFichajes = onSnapshot(fichajesQuery, (snapshot) => {
+            if (!isMounted) return;
             const fetchedFichajes = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
@@ -66,14 +69,16 @@ export function FichajesTab() {
             setAllFichajes(fetchedFichajes);
         }, (error) => {
             console.error("Error fetching fichajes:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los registros de fichajes.'});
+            if (isMounted) toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los registros de fichajes.'});
         });
 
+        let isMounted = true;
         return () => {
+            isMounted = false;
             unsubscribeEmployees();
             unsubscribeFichajes();
         };
-    }, [user, toast, selectedEmployee]); // dependency on selectedEmployee is removed to avoid re-fetch
+    }, [user, toast, selectedEmployee]);
 
     const employeeHasPendingRequests = (employeeId: string) => {
         return allFichajes.some(f => f.employeeId === employeeId && f.requestStatus === 'pending');
@@ -143,7 +148,6 @@ export function FichajesTab() {
                     </div>
                 </CardContent>
             </Card>
-            <FichajesHistoryTable allFichajes={allFichajes} employees={employees} />
         </div>
         </>
     );
