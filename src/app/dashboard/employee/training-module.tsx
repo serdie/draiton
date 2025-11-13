@@ -156,7 +156,7 @@ export function TrainingModule({ employee }: TrainingModuleProps) {
                         <Carousel setApi={setApi} className="w-full">
                             <CarouselContent>
                                 {trainingSteps.map((step, index) => (
-                                    <CarouselItem key={index}>
+                                    <CarouselItem key={index} className="basis-full">
                                         <div className="p-1">
                                             <div className="p-6 rounded-lg bg-muted flex flex-col items-center text-center min-h-[16rem] justify-start">
                                                 {step.icon}
