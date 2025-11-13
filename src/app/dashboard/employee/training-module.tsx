@@ -29,27 +29,27 @@ const trainingSteps = [
     {
         icon: <Shield className="h-8 w-8 text-primary" />,
         title: "Protección de Datos Personales (RGPD)",
-        content: "La empresa, como Responsable del Tratamiento, recopila tus datos (identificativos, bancarios, de Seguridad Social, etc.) con la única finalidad de gestionar la relación laboral, elaborar nóminas y cumplir con las obligaciones legales en materia laboral, fiscal y de Seguridad Social. La base legal es tu contrato de trabajo.",
+        content: "La empresa, como Responsable del Tratamiento, recopila tus datos (identificativos, bancarios, de Seguridad Social, etc.) con la única finalidad de gestionar la relación laboral, elaborar nóminas y cumplir con las obligaciones legales en materia laboral, fiscal y de Seguridad Social. La base legal para este tratamiento es tu contrato de trabajo.",
     },
     {
         icon: <Shield className="h-8 w-8 text-primary" />,
         title: "Cesión y Conservación de Datos",
-        content: "Tus datos solo se cederán a terceros cuando exista una obligación legal (ej. AEAT, TGSS, Mutuas). Se conservarán durante el tiempo que dure la relación laboral y, posteriormente, durante los plazos legalmente exigidos para la prescripción de responsabilidades.",
+        content: "Tus datos personales solo se cederán a terceros cuando exista una obligación legal para ello (ej. a la Agencia Tributaria, Tesorería General de la Seguridad Social, Mutuas Colaboradoras, etc.). Tus datos se conservarán mientras dure la relación laboral y, una vez finalizada, durante los plazos legalmente exigidos para la prescripción de posibles responsabilidades.",
     },
     {
         icon: <Eye className="h-8 w-8 text-primary" />,
         title: "Tus Derechos (ARSOPOL-i)",
-        content: "Tienes derecho de Acceso, Rectificación, Supresión, Oposición, Portabilidad, Limitación del tratamiento e a no ser objeto de decisiones individualizadas automatizadas. Puedes ejercerlos contactando con la empresa. También tienes derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (aepd.es).",
+        content: "Puedes ejercer tus derechos de Acceso, Rectificación, Supresión, Oposición, Portabilidad de los datos, Limitación del tratamiento y a no ser objeto de decisiones individualizadas automatizadas. Para ello, contacta con la empresa. También tienes derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (aepd.es) si consideras que tus derechos han sido vulnerados.",
     },
     {
         icon: <Clock className="h-8 w-8 text-primary" />,
-        title: "Registro de Jornada Obligatorio",
-        content: "Según el Real Decreto-ley 8/2019, es obligatorio registrar diariamente el inicio y fin de tu jornada laboral, incluyendo las pausas. Este registro garantiza el cumplimiento de los límites de tiempo de trabajo y la correcta remuneración de las horas extraordinarias si las hubiera.",
+        title: "Registro de Jornada Obligatorio (RDL 8/2019)",
+        content: "De acuerdo con el Real Decreto-ley 8/2019, es obligatorio el registro diario de la jornada de trabajo. Debes registrar la hora exacta de inicio y fin de tu jornada laboral, así como todas las pausas que realices durante la misma. Este registro sirve para garantizar el cumplimiento de los límites de tiempo de trabajo y la correcta remuneración de las horas extraordinarias si las hubiera.",
     },
     {
         icon: <Clock className="h-8 w-8 text-primary" />,
         title: "Funcionamiento del Sistema de Fichaje",
-        content: "Debes usar el sistema de fichaje proporcionado en tu portal para registrar cada entrada, salida y pausa. La empresa tiene la obligación de conservar estos registros durante un periodo de 4 años, estando a disposición de los trabajadores, sus representantes y la Inspección de Trabajo.",
+        content: "Debes utilizar el sistema de fichaje proporcionado en tu portal de empleado para registrar cada entrada, salida y pausa. Es tu responsabilidad asegurar que todos los registros son correctos y reflejan tu jornada real. La empresa está obligada a conservar estos registros durante un periodo de 4 años, estando a disposición de los trabajadores, sus representantes legales y la Inspección de Trabajo y Seguridad Social.",
     },
     {
         icon: <CheckCircle className="h-8 w-8 text-primary" />,
@@ -158,7 +158,7 @@ export function TrainingModule({ employee }: TrainingModuleProps) {
                                 {trainingSteps.map((step, index) => (
                                     <CarouselItem key={index}>
                                         <div className="p-1">
-                                            <div className="p-6 rounded-lg bg-muted flex flex-col items-center text-center h-64 justify-center">
+                                            <div className="p-6 rounded-lg bg-muted flex flex-col items-center text-center min-h-[16rem] justify-start">
                                                 {step.icon}
                                                 <h3 className="text-lg font-semibold mt-4">{step.title}</h3>
                                                 <p className="text-sm text-muted-foreground mt-2">{step.content}</p>
