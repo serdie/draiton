@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { Timestamp } from 'firebase/firestore';
@@ -21,6 +22,7 @@ export type Employee = {
     convenio?: 'Personalizado' | 'Según convenio';
     grossAnnualSalary: number;
     weeklyHours?: number;
+    annualHours?: number;
     vacationDays?: number;
     proratedExtraPays: boolean;
     extraPaysConfig?: string;
@@ -75,5 +77,7 @@ export interface Absence {
   notes?: string;
   createdAt: Date;
 }
+
+    
 
     

@@ -49,6 +49,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [contractType, setContractType] = useState('');
   const [workModality, setWorkModality] = useState('Presencial');
   const [weeklyHours, setWeeklyHours] = useState('40');
+  const [annualHours, setAnnualHours] = useState('1710');
   const [salaryType, setSalaryType] = useState<Employee['salaryType']>('Bruto Anual');
   const [convenio, setConvenio] = useState<Employee['convenio']>('Personalizado');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState('');
@@ -73,6 +74,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     setContractType('');
     setWorkModality('Presencial');
     setWeeklyHours('40');
+    setAnnualHours('1710');
     setSalaryType('Bruto Anual');
     setConvenio('Personalizado');
     setGrossAnnualSalary('');
@@ -103,6 +105,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         contractType,
         workModality,
         weeklyHours: parseInt(weeklyHours, 10),
+        annualHours: parseInt(annualHours, 10),
         paymentFrequency,
         salaryType,
         convenio,
@@ -284,11 +287,15 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
                     <Label htmlFor="weekly-hours">Horas Semanales</Label>
                     <Input id="weekly-hours" type="number" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} required />
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="vacation-days">Días de Vacaciones Anuales</Label>
-                    <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
+                 <div className="space-y-2">
+                    <Label htmlFor="annual-hours">Jornada Anual (horas)</Label>
+                    <Input id="annual-hours" type="number" value={annualHours} onChange={(e) => setAnnualHours(e.target.value)} required />
                 </div>
              </div>
+             <div className="space-y-2">
+                <Label htmlFor="vacation-days">Días de Vacaciones Anuales</Label>
+                <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
+            </div>
              <div className="flex items-center pt-2 space-x-2">
                 <Checkbox id="prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
                 <Label htmlFor="prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
@@ -308,3 +315,5 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     </Dialog>
   );
 }
+
+    

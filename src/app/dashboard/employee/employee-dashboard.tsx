@@ -9,7 +9,7 @@ import { doc, onSnapshot, Timestamp } from 'firebase/firestore';
 import type { Employee } from '../finanzas/empleados/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Mail, Phone, Calendar, Briefcase, FileText, Hash, BadgeInfo, Coins } from 'lucide-react';
+import { Loader2, Mail, Phone, Calendar, Briefcase, FileText, Hash, BadgeInfo, Coins, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TrainingModule } from './training-module';
@@ -132,6 +132,8 @@ export function EmployeeDashboard() {
                         <InfoRow icon={Briefcase} label="Convenio" value={employeeData.convenio || 'Personalizado'} />
                         <InfoRow icon={FileText} label="Modalidad" value={modalityValue} />
                         <InfoRow icon={FileText} label="Frecuencia de Pago" value={employeeData.paymentFrequency} />
+                        <InfoRow icon={Clock} label="Horas Semanales" value={employeeData.weeklyHours ? `${employeeData.weeklyHours} horas` : 'No especificado'} />
+                        <InfoRow icon={Clock} label="Jornada Anual" value={employeeData.annualHours ? `${employeeData.annualHours} horas` : 'No especificada'} />
                         <InfoRow icon={Calendar} label="Días de Vacaciones Anuales" value={employeeData.vacationDays || 23} />
                         <InfoRow icon={Coins} label="Pagas Extra" value={extraPaysValue} />
                     </div>
@@ -140,3 +142,5 @@ export function EmployeeDashboard() {
         </div>
     )
 }
+
+    

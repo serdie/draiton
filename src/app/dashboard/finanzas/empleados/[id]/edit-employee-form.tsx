@@ -42,6 +42,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [presencialPercentage, setPresencialPercentage] = useState(String(employee.presencialPercentage || 50));
   const [remotePercentage, setRemotePercentage] = useState(String(employee.remotePercentage || 50));
   const [weeklyHours, setWeeklyHours] = useState(String(employee.weeklyHours || 40));
+  const [annualHours, setAnnualHours] = useState(String(employee.annualHours || 1710));
   const [vacationDays, setVacationDays] = useState(String(employee.vacationDays || 23));
   const [paymentFrequency, setPaymentFrequency] = useState(employee.paymentFrequency || 'Mensual');
   const [salaryType, setSalaryType] = useState<Employee['salaryType']>(employee.salaryType || 'Bruto Anual');
@@ -68,6 +69,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setPresencialPercentage(String(employee.presencialPercentage || 50));
     setRemotePercentage(String(employee.remotePercentage || 50));
     setWeeklyHours(String(employee.weeklyHours || 40));
+    setAnnualHours(String(employee.annualHours || 1710));
     setVacationDays(String(employee.vacationDays || 23));
     setPaymentFrequency(employee.paymentFrequency || 'Mensual');
     setSalaryType(employee.salaryType || 'Bruto Anual');
@@ -134,6 +136,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         contractType,
         workModality,
         weeklyHours: parseInt(weeklyHours, 10),
+        annualHours: parseInt(annualHours, 10),
         vacationDays: parseInt(vacationDays, 10),
         paymentFrequency,
         salaryType,
@@ -320,10 +323,14 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                 <Label htmlFor="edit-weekly-hours">Horas Semanales</Label>
                 <Input id="edit-weekly-hours" type="number" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} required />
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="vacation-days">Días de Vacaciones Anuales</Label>
-                <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
+            <div className="space-y-2">
+                <Label htmlFor="edit-annual-hours">Jornada Anual (horas)</Label>
+                <Input id="edit-annual-hours" type="number" value={annualHours} onChange={(e) => setAnnualHours(e.target.value)} required />
             </div>
+        </div>
+         <div className="space-y-2">
+            <Label htmlFor="vacation-days">Días de Vacaciones Anuales</Label>
+            <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
         </div>
         <div className="space-y-2 pt-2">
             <div className="flex items-center space-x-2">
@@ -362,3 +369,5 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     </form>
   );
 }
+
+    

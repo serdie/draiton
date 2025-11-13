@@ -147,6 +147,7 @@
             "convenio": { "type": "string", "enum": ["Personalizado", "Según convenio"], "description": "Type of agreement for salary and conditions." },
             "grossAnnualSalary": { "type": "number" },
             "weeklyHours": { "type": "number", "description": "Contracted weekly work hours." },
+            "annualHours": { "type": "number", "description": "Total contracted annual work hours." },
             "vacationDays": { "type": "number", "description": "Total de días de vacaciones anuales." },
             "proratedExtraPays": { "type": "boolean", "description": "Whether extra pays are prorated monthly." },
             "extraPaysConfig": { "type": "string", "description": "Configuration for non-prorated extra pays." },
@@ -281,3 +282,5 @@
     }
   }
 }
+
+    

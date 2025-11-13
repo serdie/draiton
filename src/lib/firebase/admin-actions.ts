@@ -79,6 +79,7 @@ export async function createEmployeeUser(employeeData: {
   contractType: string;
   workModality: string;
   weeklyHours: number;
+  annualHours: number;
   vacationDays: number;
   grossAnnualSalary: number;
   hireDate?: Date;
@@ -200,3 +201,5 @@ export async function updateEmployeePasswordAction(employeeId: string, newPasswo
     return { success: false, error: 'No se pudo actualizar la contraseña.' };
   }
 }
+
+    
