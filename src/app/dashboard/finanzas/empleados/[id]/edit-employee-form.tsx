@@ -76,6 +76,35 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     }
   }, [employee]);
   
+  const handlePresencialPercentageChange = (value: string) => {
+    const numValue = parseInt(value, 10);
+    if (isNaN(numValue) || numValue < 0) {
+        setPresencialPercentage('0');
+        setRemotePercentage('100');
+    } else if (numValue > 100) {
+        setPresencialPercentage('100');
+        setRemotePercentage('0');
+    } else {
+        setPresencialPercentage(String(numValue));
+        setRemotePercentage(String(100 - numValue));
+    }
+  };
+
+  const handleRemotePercentageChange = (value: string) => {
+      const numValue = parseInt(value, 10);
+      if (isNaN(numValue) || numValue < 0) {
+          setRemotePercentage('0');
+          setPresencialPercentage('100');
+      } else if (numValue > 100) {
+          setRemotePercentage('100');
+          setPresencialPercentage('0');
+      } else {
+          setRemotePercentage(String(numValue));
+          setPresencialPercentage(String(100 - numValue));
+      }
+  };
+
+
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -202,15 +231,20 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         </div>
         {workModality === 'Mixto' && (
              <div className="p-4 border rounded-md space-y-4">
-                <Label>Distribución Modalidad Mixta</Label>
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                        <Input type="number" value={presencialPercentage} onChange={e => setPresencialPercentage(e.target.value)} className="pr-8" />
-                        <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <div className="space-y-2">
+                        <Label>Presencial (%)</Label>
+                        <div className="relative">
+                            <Input type="number" value={presencialPercentage} onChange={e => handlePresencialPercentageChange(e.target.value)} className="pr-8" />
+                            <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        </div>
                     </div>
-                    <div className="relative">
-                        <Input type="number" value={remotePercentage} onChange={e => setRemotePercentage(e.target.value)} className="pr-8" />
-                        <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                     <div className="space-y-2">
+                         <Label>Teletrabajo (%)</Label>
+                        <div className="relative">
+                            <Input type="number" value={remotePercentage} onChange={e => handleRemotePercentageChange(e.target.value)} className="pr-8" />
+                            <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        </div>
                     </div>
                 </div>
             </div>
