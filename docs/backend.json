@@ -147,7 +147,7 @@
             "grossAnnualSalary": { "type": "number" },
             "weeklyHours": { "type": "number", "description": "Contracted weekly work hours." },
             "vacationDays": { "type": "number", "description": "Total de días de vacaciones anuales." },
-            "proratedExtraPays": { "type": "boolean" },
+            "proratedExtraPays": { "type": "boolean", "description": "Whether extra pays are prorated monthly." },
             "hireDate": { "type": "string", "format": "date-time" },
             "ownerId": { "type": "string" },
             "companyOwnerId": { "type": "string" },
