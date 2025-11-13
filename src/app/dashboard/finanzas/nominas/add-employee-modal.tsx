@@ -51,6 +51,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [weeklyHours, setWeeklyHours] = useState('40');
   const [salaryType, setSalaryType] = useState<Employee['salaryType']>('Bruto Anual');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState('');
+  const [vacationDays, setVacationDays] = useState('23');
   const [hireDate, setHireDate] = useState<Date | undefined>();
   const [paymentFrequency, setPaymentFrequency] = useState('Mensual');
   const [proratedExtraPays, setProratedExtraPays] = useState(true);
@@ -73,6 +74,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     setWeeklyHours('40');
     setSalaryType('Bruto Anual');
     setGrossAnnualSalary('');
+    setVacationDays('23');
     setHireDate(undefined);
     setPaymentFrequency('Mensual');
     setProratedExtraPays(true);
@@ -102,6 +104,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         paymentFrequency,
         salaryType,
         grossAnnualSalary: salaryType === 'Según Convenio' ? 0 : parseFloat(grossAnnualSalary),
+        vacationDays: parseInt(vacationDays, 10),
         proratedExtraPays,
         hireDate,
         ownerId: user.uid,
@@ -264,15 +267,19 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
                 </div>
              </div>
              <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
+                <div className="space-y-2">
                     <Label htmlFor="weekly-hours">Horas Semanales</Label>
                     <Input id="weekly-hours" type="number" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} required />
                 </div>
-                <div className="flex items-center pt-8 space-x-2">
-                    <Checkbox id="prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
-                    <Label htmlFor="prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
+                <div className="space-y-2">
+                    <Label htmlFor="vacation-days">Días de Vacaciones Anuales</Label>
+                    <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
                 </div>
              </div>
+             <div className="flex items-center pt-2 space-x-2">
+                <Checkbox id="prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
+                <Label htmlFor="prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
+            </div>
              <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
                 Cancelar

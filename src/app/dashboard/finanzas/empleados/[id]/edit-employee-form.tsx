@@ -42,6 +42,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [presencialPercentage, setPresencialPercentage] = useState(String(employee.presencialPercentage || 50));
   const [remotePercentage, setRemotePercentage] = useState(String(employee.remotePercentage || 50));
   const [weeklyHours, setWeeklyHours] = useState(String(employee.weeklyHours || 40));
+  const [vacationDays, setVacationDays] = useState(String(employee.vacationDays || 23));
   const [paymentFrequency, setPaymentFrequency] = useState(employee.paymentFrequency || 'Mensual');
   const [salaryType, setSalaryType] = useState<Employee['salaryType']>(employee.salaryType || 'Bruto Anual');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
@@ -64,6 +65,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setPresencialPercentage(String(employee.presencialPercentage || 50));
     setRemotePercentage(String(employee.remotePercentage || 50));
     setWeeklyHours(String(employee.weeklyHours || 40));
+    setVacationDays(String(employee.vacationDays || 23));
     setPaymentFrequency(employee.paymentFrequency || 'Mensual');
     setSalaryType(employee.salaryType || 'Bruto Anual');
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
@@ -127,6 +129,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         contractType,
         workModality,
         weeklyHours: parseInt(weeklyHours, 10),
+        vacationDays: parseInt(vacationDays, 10),
         paymentFrequency,
         salaryType,
         grossAnnualSalary: salaryType === 'Según Convenio' ? 0 : parseFloat(grossAnnualSalary),
@@ -242,16 +245,16 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
              <div className="p-4 border rounded-md space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label>Presencial (%)</Label>
+                        <Label htmlFor="presencial-percentage">Presencial (%)</Label>
                         <div className="relative">
-                            <Input type="number" value={presencialPercentage} onChange={e => handlePresencialPercentageChange(e.target.value)} className="pr-8" />
+                            <Input id="presencial-percentage" type="number" value={presencialPercentage} onChange={e => handlePresencialPercentageChange(e.target.value)} className="pr-8" />
                             <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         </div>
                     </div>
                      <div className="space-y-2">
-                         <Label>Teletrabajo (%)</Label>
+                         <Label htmlFor="remote-percentage">Teletrabajo (%)</Label>
                         <div className="relative">
-                            <Input type="number" value={remotePercentage} onChange={e => handleRemotePercentageChange(e.target.value)} className="pr-8" />
+                            <Input id="remote-percentage" type="number" value={remotePercentage} onChange={e => handleRemotePercentageChange(e.target.value)} className="pr-8" />
                             <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         </div>
                     </div>
@@ -300,10 +303,14 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                 <Label htmlFor="edit-weekly-hours">Horas Semanales</Label>
                 <Input id="edit-weekly-hours" type="number" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} required />
             </div>
-            <div className="flex items-center pt-8 space-x-2">
-                <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
-                <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
+             <div className="space-y-2">
+                <Label htmlFor="vacation-days">Días de Vacaciones Anuales</Label>
+                <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
             </div>
+        </div>
+        <div className="flex items-center pt-2 space-x-2">
+            <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
+            <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
         </div>
         
         <Separator className="my-6" />

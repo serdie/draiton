@@ -20,6 +20,7 @@ export type Employee = {
     salaryType?: 'Bruto Anual' | 'Neto Anual' | 'Según Convenio';
     grossAnnualSalary: number;
     weeklyHours?: number;
+    vacationDays?: number;
     proratedExtraPays: boolean;
     hireDate?: Date;
     avatar?: string;

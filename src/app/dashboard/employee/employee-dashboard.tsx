@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useContext } from 'react';
@@ -126,6 +127,7 @@ export function EmployeeDashboard() {
                         <InfoRow icon={FileText} label={salaryLabel} value={salaryValue} />
                          <InfoRow icon={FileText} label="Modalidad" value={modalityValue} />
                         <InfoRow icon={FileText} label="Frecuencia de Pago" value={employeeData.paymentFrequency} />
+                        <InfoRow icon={Calendar} label="Días de Vacaciones Anuales" value={employeeData.vacationDays || 23} />
                     </div>
                 </CardContent>
             </Card>
