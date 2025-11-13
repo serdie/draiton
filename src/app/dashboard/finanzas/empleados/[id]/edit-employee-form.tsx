@@ -77,6 +77,12 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         setHireDate(undefined);
     }
   }, [employee]);
+
+  useEffect(() => {
+    if (salaryType === 'Según Convenio') {
+      setGrossAnnualSalary('0');
+    }
+  }, [salaryType]);
   
   const handlePresencialPercentageChange = (value: string) => {
     const numValue = parseInt(value, 10);
@@ -123,7 +129,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         weeklyHours: parseInt(weeklyHours, 10),
         paymentFrequency,
         salaryType,
-        grossAnnualSalary: parseFloat(grossAnnualSalary),
+        grossAnnualSalary: salaryType === 'Según Convenio' ? 0 : parseFloat(grossAnnualSalary),
         proratedExtraPays,
         hireDate: hireDate || undefined,
       };
@@ -279,7 +285,14 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="edit-salary">Salario Anual (€)</Label>
-                <Input id="edit-salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
+                <Input 
+                    id="edit-salary" 
+                    type="number" 
+                    value={grossAnnualSalary} 
+                    onChange={(e) => setGrossAnnualSalary(e.target.value)} 
+                    required={salaryType !== 'Según Convenio'}
+                    disabled={salaryType === 'Según Convenio'}
+                />
             </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -310,4 +323,3 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   );
 }
 
-    

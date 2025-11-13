@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useContext, useTransition } from 'react';
+import { useState, useContext, useTransition, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -55,6 +55,11 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [paymentFrequency, setPaymentFrequency] = useState('Mensual');
   const [proratedExtraPays, setProratedExtraPays] = useState(true);
 
+  useEffect(() => {
+    if (salaryType === 'Según Convenio') {
+      setGrossAnnualSalary('');
+    }
+  }, [salaryType]);
 
   const resetForm = () => {
     setName('');
@@ -96,7 +101,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         weeklyHours: parseInt(weeklyHours, 10),
         paymentFrequency,
         salaryType,
-        grossAnnualSalary: parseFloat(grossAnnualSalary),
+        grossAnnualSalary: salaryType === 'Según Convenio' ? 0 : parseFloat(grossAnnualSalary),
         proratedExtraPays,
         hireDate,
         ownerId: user.uid,
@@ -248,7 +253,14 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="salary">Salario Anual (€)</Label>
-                    <Input id="salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
+                    <Input 
+                        id="salary" 
+                        type="number" 
+                        value={grossAnnualSalary} 
+                        onChange={(e) => setGrossAnnualSalary(e.target.value)} 
+                        required={salaryType !== 'Según Convenio'}
+                        disabled={salaryType === 'Según Convenio'}
+                    />
                 </div>
              </div>
              <div className="grid grid-cols-2 gap-4">
@@ -277,4 +289,3 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   );
 }
 
-    
