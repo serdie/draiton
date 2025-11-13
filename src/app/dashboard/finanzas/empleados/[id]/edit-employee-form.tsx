@@ -47,6 +47,8 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [salaryType, setSalaryType] = useState<Employee['salaryType']>(employee.salaryType || 'Bruto Anual');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
   const [proratedExtraPays, setProratedExtraPays] = useState(employee.proratedExtraPays ?? true);
+  const [extraPaysConfig, setExtraPaysConfig] = useState(employee.extraPaysConfig || '2 Pagas (Julio y Diciembre)');
+
   const [hireDate, setHireDate] = useState<Date | undefined>(() => {
     if (!employee.hireDate) return undefined;
     const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
@@ -70,6 +72,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setSalaryType(employee.salaryType || 'Bruto Anual');
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
     setProratedExtraPays(employee.proratedExtraPays ?? true);
+    setExtraPaysConfig(employee.extraPaysConfig || '2 Pagas (Julio y Diciembre)');
     if (employee.hireDate) {
       const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
        if (isValid(date)) {
@@ -134,6 +137,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         salaryType,
         grossAnnualSalary: salaryType === 'Según Convenio' ? 0 : parseFloat(grossAnnualSalary),
         proratedExtraPays,
+        extraPaysConfig: proratedExtraPays ? undefined : extraPaysConfig,
         hireDate: hireDate || undefined,
       };
 
@@ -308,9 +312,25 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                 <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
             </div>
         </div>
-        <div className="flex items-center pt-2 space-x-2">
-            <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
-            <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
+        <div className="space-y-2 pt-2">
+            <div className="flex items-center space-x-2">
+                <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
+                <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra mensualmente</Label>
+            </div>
+            {!proratedExtraPays && (
+                <div className="pl-6 pt-2">
+                    <Label htmlFor="extra-pays-config">Configuración de Pagas Extra</Label>
+                    <Select value={extraPaysConfig} onValueChange={(v) => setExtraPaysConfig(v as any)}>
+                        <SelectTrigger id="extra-pays-config">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="2 Pagas (Julio y Diciembre)">2 Pagas (Julio y Diciembre)</SelectItem>
+                            <SelectItem value="3 Pagas (Julio, Diciembre y Beneficios)">3 Pagas (Julio, Diciembre y Beneficios)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
         </div>
         
         <Separator className="my-6" />
@@ -329,4 +349,3 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     </form>
   );
 }
-
