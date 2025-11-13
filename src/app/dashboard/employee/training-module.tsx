@@ -150,10 +150,10 @@ export function TrainingModule({ employee }: TrainingModuleProps) {
                 <CardDescription>Completa este curso para cumplir con la normativa.</CardDescription>
             </CardHeader>
             <CardContent>
-                 <div className="space-y-4 overflow-hidden px-1">
+                 <div className="space-y-4">
                     <Progress value={progress} className="w-full" />
                     {progress < 100 ? (
-                        <Carousel setApi={setApi} className="w-full">
+                        <Carousel setApi={setApi} className="w-full max-w-full overflow-hidden">
                             <CarouselContent>
                                 {trainingSteps.map((step, index) => (
                                     <CarouselItem key={index}>
