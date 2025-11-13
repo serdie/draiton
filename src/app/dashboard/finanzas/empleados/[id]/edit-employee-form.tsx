@@ -173,7 +173,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
 
   return (
     <form onSubmit={handleUpdate} className="space-y-4">
-        <Accordion type="multiple" defaultValue={['item-1', 'item-2']} className="w-full">
+        <Accordion type="multiple" className="w-full">
             <AccordionItem value="item-1">
                 <AccordionTrigger>Datos Personales de {name}</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
