@@ -143,7 +143,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         convenio,
         grossAnnualSalary: salaryType === 'Según Convenio' ? 0 : parseFloat(grossAnnualSalary),
         proratedExtraPays,
-        extraPaysConfig: proratedExtraPays ? undefined : extraPaysConfig,
+        extraPaysConfig: extraPaysConfig,
         hireDate: hireDate || undefined,
       };
 
@@ -332,25 +332,23 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
             <Label htmlFor="vacation-days">Días de Vacaciones Anuales</Label>
             <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
         </div>
-        <div className="space-y-2 pt-2">
+        <div className="space-y-4 pt-2">
             <div className="flex items-center space-x-2">
                 <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
                 <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra mensualmente</Label>
             </div>
-            {!proratedExtraPays && (
-                <div className="pl-6 pt-2">
-                    <Label htmlFor="extra-pays-config">Configuración de Pagas Extra</Label>
-                    <Select value={extraPaysConfig} onValueChange={(v) => setExtraPaysConfig(v as any)}>
-                        <SelectTrigger id="extra-pays-config">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="2 Pagas (Julio y Diciembre)">2 Pagas (Julio y Diciembre)</SelectItem>
-                            <SelectItem value="3 Pagas (Julio, Diciembre y Beneficios)">3 Pagas (Julio, Diciembre y Beneficios)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            )}
+            <div className="space-y-2">
+                <Label htmlFor="extra-pays-config">Configuración de Pagas Extra</Label>
+                <Select value={extraPaysConfig} onValueChange={(v) => setExtraPaysConfig(v as any)}>
+                    <SelectTrigger id="extra-pays-config">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="2 Pagas (Julio y Diciembre)">2 Pagas (Julio y Diciembre)</SelectItem>
+                        <SelectItem value="3 Pagas (Julio, Diciembre y Beneficios)">3 Pagas (Julio, Diciembre y Beneficios)</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
         </div>
         
         <Separator className="my-6" />

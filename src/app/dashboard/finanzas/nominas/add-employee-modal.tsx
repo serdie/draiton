@@ -57,6 +57,8 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [hireDate, setHireDate] = useState<Date | undefined>();
   const [paymentFrequency, setPaymentFrequency] = useState('Mensual');
   const [proratedExtraPays, setProratedExtraPays] = useState(true);
+  const [extraPaysConfig, setExtraPaysConfig] = useState('2 Pagas (Julio y Diciembre)');
+
 
   useEffect(() => {
     if (salaryType === 'Según Convenio') {
@@ -82,6 +84,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     setHireDate(undefined);
     setPaymentFrequency('Mensual');
     setProratedExtraPays(true);
+    setExtraPaysConfig('2 Pagas (Julio y Diciembre)');
     setCreatedUserInfo(null);
   };
 
@@ -112,6 +115,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         grossAnnualSalary: salaryType === 'Según Convenio' ? 0 : parseFloat(grossAnnualSalary),
         vacationDays: parseInt(vacationDays, 10),
         proratedExtraPays,
+        extraPaysConfig,
         hireDate,
         ownerId: user.uid,
       };
@@ -296,9 +300,23 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
                 <Label htmlFor="vacation-days">Días de Vacaciones Anuales</Label>
                 <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
             </div>
-             <div className="flex items-center pt-2 space-x-2">
-                <Checkbox id="prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
-                <Label htmlFor="prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
+             <div className="space-y-4 pt-2">
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
+                    <Label htmlFor="prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="extra-pays-config">Configuración de Pagas Extra</Label>
+                    <Select value={extraPaysConfig} onValueChange={(v) => setExtraPaysConfig(v as any)}>
+                        <SelectTrigger id="extra-pays-config">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="2 Pagas (Julio y Diciembre)">2 Pagas (Julio y Diciembre)</SelectItem>
+                            <SelectItem value="3 Pagas (Julio, Diciembre y Beneficios)">3 Pagas (Julio, Diciembre y Beneficios)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
              <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>

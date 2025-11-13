@@ -89,8 +89,8 @@ export function EmployeeDashboard() {
         ? 'Según Convenio' 
         : new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(employeeData.grossAnnualSalary);
     
-    const extraPaysValue = employeeData.proratedExtraPays 
-        ? "Prorrateadas mensualmente" 
+    const extraPaysValue = employeeData.proratedExtraPays
+        ? `Prorrateadas mensualmente (${employeeData.extraPaysConfig || '2 Pagas'})`
         : (employeeData.extraPaysConfig || "2 Pagas (Julio y Diciembre)");
 
 
