@@ -308,4 +308,3 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     </Dialog>
   );
 }
-
