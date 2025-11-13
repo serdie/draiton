@@ -30,7 +30,7 @@ export async function updateUser(uid: string, data: UserUpdateData): Promise<voi
 /**
  * Actualiza el rol de un usuario en Firestore.
  * @param uid - El ID del usuario a actualizar.
- * @param newRole - El nuevo rol a asignar ('free', 'pro', 'admin', 'empresa').
+ * @param newRole - El nuevo rol a asignar ('free', 'pro', 'admin', 'empresa', 'employee').
  */
 export async function updateUserRole(uid: string, newRole: 'free' | 'pro' | 'admin' | 'empresa' | 'employee'): Promise<void> {
   const { db } = getFirebaseAuth();
@@ -74,6 +74,7 @@ export async function createEmployeeUser(employeeData: {
   phone?: string;
   ownerId: string; // The company owner's UID
   position: string;
+  professionalGroup: string;
   nif: string;
   socialSecurityNumber: string;
   contractType: string;
@@ -85,6 +86,7 @@ export async function createEmployeeUser(employeeData: {
   hireDate?: Date;
   paymentFrequency: string;
   proratedExtraPays: boolean;
+  extraPaysConfig: string;
   salaryType: string;
   convenio: string;
   companyOwnerId?: string; // For admin simulation
@@ -201,5 +203,3 @@ export async function updateEmployeePasswordAction(employeeId: string, newPasswo
     return { success: false, error: 'No se pudo actualizar la contraseña.' };
   }
 }
-
-    

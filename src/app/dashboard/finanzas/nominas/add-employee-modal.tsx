@@ -44,6 +44,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [position, setPosition] = useState('');
+  const [professionalGroup, setProfessionalGroup] = useState('');
   const [nif, setNif] = useState('');
   const [socialSecurityNumber, setSocialSecurityNumber] = useState('');
   const [contractType, setContractType] = useState('');
@@ -71,6 +72,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     setEmail('');
     setPhone('');
     setPosition('');
+    setProfessionalGroup('');
     setNif('');
     setSocialSecurityNumber('');
     setContractType('');
@@ -103,6 +105,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         email,
         phone,
         position,
+        professionalGroup,
         nif,
         socialSecurityNumber,
         contractType,
@@ -240,6 +243,10 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
                 </div>
             </div>
              <div className="space-y-2">
+                <Label htmlFor="professionalGroup">Categoría Profesional</Label>
+                <Input id="professionalGroup" value={professionalGroup} onChange={(e) => setProfessionalGroup(e.target.value)} required />
+             </div>
+             <div className="space-y-2">
                 <Label htmlFor="payment-frequency">Frecuencia de Pago</Label>
                     <Select value={paymentFrequency} onValueChange={setPaymentFrequency} required>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -333,5 +340,3 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     </Dialog>
   );
 }
-
-    

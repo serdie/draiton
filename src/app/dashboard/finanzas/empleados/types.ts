@@ -10,6 +10,7 @@ export type Employee = {
     email: string;
     phone?: string;
     position: string;
+    professionalGroup: string;
     nif: string;
     socialSecurityNumber: string;
     contractType: 'Indefinido' | 'Temporal' | 'Formación' | 'Prácticas';

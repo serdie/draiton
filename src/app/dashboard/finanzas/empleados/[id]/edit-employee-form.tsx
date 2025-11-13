@@ -36,6 +36,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [email, setEmail] = useState(employee.email);
   const [phone, setPhone] = useState(employee.phone || '');
   const [position, setPosition] = useState(employee.position);
+  const [professionalGroup, setProfessionalGroup] = useState(employee.professionalGroup || '');
   const [nif, setNif] = useState(employee.nif);
   const [socialSecurityNumber, setSocialSecurityNumber] = useState(employee.socialSecurityNumber);
   const [contractType, setContractType] = useState(employee.contractType);
@@ -63,6 +64,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setEmail(employee.email);
     setPhone(employee.phone || '');
     setPosition(employee.position);
+    setProfessionalGroup(employee.professionalGroup || '');
     setNif(employee.nif);
     setSocialSecurityNumber(employee.socialSecurityNumber);
     setContractType(employee.contractType);
@@ -132,6 +134,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         email,
         phone,
         position,
+        professionalGroup,
         nif,
         socialSecurityNumber,
         contractType,
@@ -173,7 +176,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
 
   return (
     <form onSubmit={handleUpdate} className="space-y-4">
-        <Accordion type="multiple" className="w-full">
+        <Accordion type="multiple" className="w-full" >
             <AccordionItem value="item-1">
                 <AccordionTrigger>Datos Personales de {name}</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
@@ -282,6 +285,10 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                         </div>
                     )}
                     <div className="space-y-2">
+                        <Label htmlFor="professionalGroup">Categoría Profesional</Label>
+                        <Input id="professionalGroup" value={professionalGroup} onChange={(e) => setProfessionalGroup(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
                         <Label htmlFor="payment-frequency">Frecuencia de Pago</Label>
                             <Select value={paymentFrequency} onValueChange={setPaymentFrequency} required>
                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -345,7 +352,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                     <div className="space-y-4 pt-2">
                         <div className="flex items-center space-x-2">
                             <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
-                            <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra mensualmente</Label>
+                            <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="extra-pays-config">Configuración de Pagas Extra</Label>
@@ -380,7 +387,3 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     </form>
   );
 }
-
-    
-
-    
