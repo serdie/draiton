@@ -51,7 +51,7 @@ export function FichajesTab() {
             setLoading(false);
         });
         return () => unsubscribeEmployees();
-    }, [user, toast, selectedEmployee]);
+    }, [user, toast]);
 
     // Effect to fetch fichajes for all employees (for pending requests badge) and then filter
     useEffect(() => {
