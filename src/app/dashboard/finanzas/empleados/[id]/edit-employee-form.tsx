@@ -43,6 +43,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [remotePercentage, setRemotePercentage] = useState(String(employee.remotePercentage || 50));
   const [weeklyHours, setWeeklyHours] = useState(String(employee.weeklyHours || 40));
   const [paymentFrequency, setPaymentFrequency] = useState(employee.paymentFrequency || 'Mensual');
+  const [salaryType, setSalaryType] = useState<Employee['salaryType']>(employee.salaryType || 'Bruto Anual');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
   const [proratedExtraPays, setProratedExtraPays] = useState(employee.proratedExtraPays ?? true);
   const [hireDate, setHireDate] = useState<Date | undefined>(() => {
@@ -64,6 +65,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setRemotePercentage(String(employee.remotePercentage || 50));
     setWeeklyHours(String(employee.weeklyHours || 40));
     setPaymentFrequency(employee.paymentFrequency || 'Mensual');
+    setSalaryType(employee.salaryType || 'Bruto Anual');
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
     setProratedExtraPays(employee.proratedExtraPays ?? true);
     if (employee.hireDate) {
@@ -120,6 +122,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         workModality,
         weeklyHours: parseInt(weeklyHours, 10),
         paymentFrequency,
+        salaryType,
         grossAnnualSalary: parseFloat(grossAnnualSalary),
         proratedExtraPays,
         hireDate: hireDate || undefined,
@@ -262,19 +265,32 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                 </SelectContent>
             </Select>
         </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="edit-salary">Salario Bruto Anual (€)</Label>
-                    <Input id="edit-salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="edit-weekly-hours">Horas Semanales</Label>
-                    <Input id="edit-weekly-hours" type="number" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} required />
-                </div>
+        <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <Label htmlFor="salary-type">Tipo de Salario</Label>
+                <Select value={salaryType} onValueChange={(v) => setSalaryType(v as Employee['salaryType'])} required>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Bruto Anual">Bruto Anual</SelectItem>
+                        <SelectItem value="Neto Anual">Neto Anual</SelectItem>
+                        <SelectItem value="Según Convenio">Según Convenio</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
-        <div className="flex items-center space-x-2">
-            <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
-            <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra en la nómina mensual</Label>
+            <div className="space-y-2">
+                <Label htmlFor="edit-salary">Salario Anual (€)</Label>
+                <Input id="edit-salary" type="number" value={grossAnnualSalary} onChange={(e) => setGrossAnnualSalary(e.target.value)} required />
+            </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <Label htmlFor="edit-weekly-hours">Horas Semanales</Label>
+                <Input id="edit-weekly-hours" type="number" value={weeklyHours} onChange={(e) => setWeeklyHours(e.target.value)} required />
+            </div>
+            <div className="flex items-center pt-8 space-x-2">
+                <Checkbox id="edit-prorated-pays" checked={proratedExtraPays} onCheckedChange={(checked) => setProratedExtraPays(checked as boolean)} />
+                <Label htmlFor="edit-prorated-pays" className="text-sm font-normal">Prorratear pagas extra</Label>
+            </div>
         </div>
         
         <Separator className="my-6" />
@@ -293,3 +309,5 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     </form>
   );
 }
+
+    

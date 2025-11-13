@@ -17,6 +17,7 @@ export type Employee = {
     presencialPercentage?: number;
     remotePercentage?: number;
     paymentFrequency: 'Mensual' | 'Diario' | 'Semanal' | 'Quincenal' | 'Personalizar';
+    salaryType?: 'Bruto Anual' | 'Neto Anual' | 'Según Convenio';
     grossAnnualSalary: number;
     weeklyHours?: number;
     proratedExtraPays: boolean;
@@ -71,3 +72,5 @@ export interface Absence {
   notes?: string;
   createdAt: Date;
 }
+
+    

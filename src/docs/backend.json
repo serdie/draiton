@@ -140,7 +140,10 @@
             "socialSecurityNumber": { "type": "string" },
             "contractType": { "type": "string", "enum": ["Indefinido", "Temporal", "Formación", "Prácticas"] },
             "workModality": { "type": "string", "enum": ["Presencial", "Mixto", "Teletrabajo"], "description": "Work modality for the employee." },
+            "presencialPercentage": { "type": "number", "description": "Percentage of time working in person for hybrid modality." },
+            "remotePercentage": { "type": "number", "description": "Percentage of time working remotely for hybrid modality." },
             "paymentFrequency": { "type": "string", "enum": ["Mensual", "Diario", "Semanal", "Quincenal", "Personalizar"] },
+            "salaryType": { "type": "string", "enum": ["Bruto Anual", "Neto Anual", "Según Convenio"] },
             "grossAnnualSalary": { "type": "number" },
             "weeklyHours": { "type": "number", "description": "Contracted weekly work hours." },
             "proratedExtraPays": { "type": "boolean" },
@@ -148,7 +151,16 @@
             "ownerId": { "type": "string" },
             "companyOwnerId": { "type": "string" },
             "employeePortalActive": { "type": "boolean", "description": "Whether the employee portal is active." },
-            "employeePortalId": { "type": "string", "description": "A unique ID for the employee portal URL." }
+            "employeePortalId": { "type": "string", "description": "A unique ID for the employee portal URL." },
+            "rgpdTrainingProgress": { "type": "number", "description": "Progress of the mandatory GDPR and time tracking training (0-100)." },
+            "rgpdTrainingCompletedAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the training was completed and signed." },
+            "rgpdTrainingSignature": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string", "description": "Full name used for the signature." },
+                    "nif": { "type": "string", "description": "NIF/DNI used for the signature." }
+                }
+            }
         },
         "required": ["name", "email", "ownerId", "companyOwnerId", "employeePortalActive", "employeePortalId"]
     },
