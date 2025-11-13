@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
@@ -12,6 +13,7 @@ import { AuthContext } from '@/context/auth-context';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { ViewFichajeModal } from '../../proyectos/view-fichaje-modal';
 import { useToast } from '@/hooks/use-toast';
+import { FichajesHistoryTable } from './fichajes-history-table';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -39,7 +41,7 @@ export function FichajesTab() {
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
-            if (fetchedEmployees.length > 0) {
+            if (fetchedEmployees.length > 0 && !selectedEmployee) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
             setLoading(false);
@@ -49,7 +51,7 @@ export function FichajesTab() {
             setLoading(false);
         });
         return () => unsubscribeEmployees();
-    }, [user, toast]);
+    }, [user, toast, selectedEmployee]);
 
     // Effect to fetch fichajes for all employees (for pending requests badge) and then filter
     useEffect(() => {
@@ -137,6 +139,7 @@ export function FichajesTab() {
                     </div>
                 </CardContent>
             </Card>
+            <FichajesHistoryTable allFichajes={fichajes} employees={employees} />
         </div>
         </>
     );
