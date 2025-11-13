@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { EmployeeClocksCalendar } from './employee-clocks-calendar';
 import { type Fichaje, type Employee } from './types';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -29,22 +29,27 @@ export function FichajesTab() {
     const [fichajeToView, setFichajeToView] = useState<Fichaje | null>(null);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+
+        let isMounted = true;
+        setLoading(true);
 
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
+            if (!isMounted) return;
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
             if (!selectedEmployee && fetchedEmployees.length > 0) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-            if (fetchedEmployees.length === 0) {
-                setLoading(false);
-            }
         });
         
         const fichajesQuery = query(collection(db, 'fichajes'), where('ownerId', '==', user.uid), orderBy('timestamp', 'desc'));
         const unsubscribeFichajes = onSnapshot(fichajesQuery, (snapshot) => {
+            if (!isMounted) return;
             const fetchedFichajes = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
@@ -55,10 +60,11 @@ export function FichajesTab() {
                 } as Fichaje;
             });
             setFichajes(fetchedFichajes);
-            setLoading(false);
+            setLoading(false); // Set loading to false after both subscriptions are set up
         });
 
         return () => {
+            isMounted = false;
             unsubscribeEmployees();
             unsubscribeFichajes();
         }
