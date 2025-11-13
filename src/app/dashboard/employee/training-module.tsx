@@ -23,28 +23,38 @@ interface TrainingModuleProps {
 const trainingSteps = [
     {
         icon: <BookOpen className="h-8 w-8 text-primary" />,
-        title: "Introducción a la Formación",
-        content: "Este módulo es obligatorio y cubre la normativa de Protección de Datos (RGPD/LOPD) y el sistema de registro de jornada laboral. Completarlo y firmarlo acredita que has recibido y comprendido esta información crucial.",
+        title: "Introducción a la Formación Obligatoria",
+        content: "Este módulo es un requisito legal. Cubre la normativa de Protección de Datos (RGPD y LOPD-GDD) y el sistema de Registro de Jornada. Al finalizar y firmar, acreditas haber recibido y comprendido esta información crucial para tu relación laboral.",
     },
     {
         icon: <Shield className="h-8 w-8 text-primary" />,
-        title: "Protección de Datos (RGPD/LOPD)",
-        content: "La empresa trata tus datos personales (nómina, SS, etc.) con la única finalidad de cumplir con las obligaciones legales laborales, fiscales y de Seguridad Social. Tus datos no se cederán a terceros, salvo obligación legal.",
+        title: "Protección de Datos Personales (RGPD)",
+        content: "La empresa, como Responsable del Tratamiento, recopila tus datos (identificativos, bancarios, de Seguridad Social, etc.) con la única finalidad de gestionar la relación laboral, elaborar nóminas y cumplir con las obligaciones legales en materia laboral, fiscal y de Seguridad Social. La base legal es tu contrato de trabajo.",
+    },
+    {
+        icon: <Shield className="h-8 w-8 text-primary" />,
+        title: "Cesión y Conservación de Datos",
+        content: "Tus datos solo se cederán a terceros cuando exista una obligación legal (ej. AEAT, TGSS, Mutuas). Se conservarán durante el tiempo que dure la relación laboral y, posteriormente, durante los plazos legalmente exigidos para la prescripción de responsabilidades.",
     },
     {
         icon: <Eye className="h-8 w-8 text-primary" />,
-        title: "Tus Derechos ARSOPOL",
-        content: "Tienes derecho de Acceso, Rectificación, Supresión, Oposición, Portabilidad y Limitación del tratamiento de tus datos. Puedes ejercerlos contactando con la empresa.",
+        title: "Tus Derechos (ARSOPOL-i)",
+        content: "Tienes derecho de Acceso, Rectificación, Supresión, Oposición, Portabilidad, Limitación del tratamiento e a no ser objeto de decisiones individualizadas automatizadas. Puedes ejercerlos contactando con la empresa. También tienes derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (aepd.es).",
     },
     {
         icon: <Clock className="h-8 w-8 text-primary" />,
-        title: "Registro de Jornada",
-        content: "El registro de la jornada es obligatorio por ley (Real Decreto-ley 8/2019). Debes fichar al inicio y fin de tu jornada, así como en las pausas. El sistema almacena esta información de forma segura.",
+        title: "Registro de Jornada Obligatorio",
+        content: "Según el Real Decreto-ley 8/2019, es obligatorio registrar diariamente el inicio y fin de tu jornada laboral, incluyendo las pausas. Este registro garantiza el cumplimiento de los límites de tiempo de trabajo y la correcta remuneración de las horas extraordinarias si las hubiera.",
+    },
+    {
+        icon: <Clock className="h-8 w-8 text-primary" />,
+        title: "Funcionamiento del Sistema de Fichaje",
+        content: "Debes usar el sistema de fichaje proporcionado en tu portal para registrar cada entrada, salida y pausa. La empresa tiene la obligación de conservar estos registros durante un periodo de 4 años, estando a disposición de los trabajadores, sus representantes y la Inspección de Trabajo.",
     },
     {
         icon: <CheckCircle className="h-8 w-8 text-primary" />,
-        title: "Finalización del Curso",
-        content: "Has completado la formación. Para finalizar, debes firmar digitalmente el documento en la siguiente sección como acuse de recibo de esta información.",
+        title: "Finalización y Firma",
+        content: "Has completado la formación teórica. Para finalizar y acreditar que has recibido y comprendido toda la información anterior, debes firmar digitalmente el documento en la siguiente, y última, sección.",
     }
 ];
 
@@ -169,7 +179,7 @@ export function TrainingModule({ employee }: TrainingModuleProps) {
                     )}
                 </div>
             </CardContent>
-            {progress === 100 && (
+            {progress >= (100 / trainingSteps.length) * (trainingSteps.length -1) && !isSigned && (
                 <CardFooter className="flex-col items-start space-y-4 border-t pt-6">
                     <div className="space-y-2 w-full">
                          <h3 className="font-semibold flex items-center gap-2">
