@@ -329,7 +329,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
             </div>
         </div>
          <div className="space-y-2">
-            <Label htmlFor="vacation-days">Días de Vacaciones Anuales</Label>
+            <Label htmlFor="vacation-days">Días de Vacaciones Anuales laborables</Label>
             <Input id="vacation-days" type="number" value={vacationDays} onChange={(e) => setVacationDays(e.target.value)} required />
         </div>
         <div className="space-y-4 pt-2">
