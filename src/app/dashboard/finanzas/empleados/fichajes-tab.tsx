@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -25,18 +25,19 @@ export function FichajesTab() {
     const { user } = useContext(AuthContext);
     const { toast } = useToast();
     const [employees, setEmployees] = useState<Employee[]>([]);
-    const [fichajes, setFichajes] = useState<Fichaje[]>([]);
+    const [allFichajes, setAllFichajes] = useState<Fichaje[]>([]);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [loading, setLoading] = useState(true);
     const [fichajeToView, setFichajeToView] = useState<Fichaje | null>(null);
 
-     // Effect to fetch employees
+    // Effect to fetch employees and all fichajes
     useEffect(() => {
         if (!user) {
             setLoading(false);
             return;
         }
         setLoading(true);
+
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
@@ -44,18 +45,13 @@ export function FichajesTab() {
             if (fetchedEmployees.length > 0 && !selectedEmployee) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-            setLoading(false);
+            setLoading(false); // Can set loading false here as employees list is primary dependency
         }, (error) => {
             console.error("Error fetching employees:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
             setLoading(false);
         });
-        return () => unsubscribeEmployees();
-    }, [user, toast]);
 
-    // Effect to fetch fichajes for all employees (for pending requests badge) and then filter
-    useEffect(() => {
-        if (!user) return;
         const fichajesQuery = query(collection(db, 'fichajes'), where('ownerId', '==', user.uid), orderBy('timestamp', 'desc'));
         const unsubscribeFichajes = onSnapshot(fichajesQuery, (snapshot) => {
             const fetchedFichajes = snapshot.docs.map(doc => {
@@ -67,21 +63,29 @@ export function FichajesTab() {
                     requestedTimestamp: data.requestedTimestamp ? (data.requestedTimestamp as Timestamp).toDate() : undefined
                 } as Fichaje;
             });
-            setFichajes(fetchedFichajes);
+            setAllFichajes(fetchedFichajes);
         }, (error) => {
             console.error("Error fetching fichajes:", error);
-             toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los registros de fichajes.'});
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los registros de fichajes.'});
         });
-        return () => unsubscribeFichajes();
-    }, [user, toast]);
 
+        return () => {
+            unsubscribeEmployees();
+            unsubscribeFichajes();
+        };
+    }, [user, toast, selectedEmployee]); // dependency on selectedEmployee is removed to avoid re-fetch
+
+    const employeeHasPendingRequests = (employeeId: string) => {
+        return allFichajes.some(f => f.employeeId === employeeId && f.requestStatus === 'pending');
+    }
+
+    const fichajesForSelectedEmployee = useMemo(() => {
+        if (!selectedEmployee) return [];
+        return allFichajes.filter(f => f.employeeId === selectedEmployee.id);
+    }, [allFichajes, selectedEmployee]);
 
     if (loading) {
         return <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin"/></div>
-    }
-
-    const employeeHasPendingRequests = (employeeId: string) => {
-        return fichajes.some(f => f.employeeId === employeeId && f.requestStatus === 'pending');
     }
 
     return (
@@ -128,7 +132,7 @@ export function FichajesTab() {
                        {selectedEmployee ? (
                             <EmployeeClocksCalendar 
                                 employee={selectedEmployee}
-                                fichajes={fichajes.filter(f => f.employeeId === selectedEmployee.id)}
+                                fichajes={fichajesForSelectedEmployee}
                                 onViewFichaje={setFichajeToView}
                             />
                        ) : (
@@ -139,7 +143,7 @@ export function FichajesTab() {
                     </div>
                 </CardContent>
             </Card>
-            <FichajesHistoryTable allFichajes={fichajes} employees={employees} />
+            <FichajesHistoryTable allFichajes={allFichajes} employees={employees} />
         </div>
         </>
     );
