@@ -144,9 +144,12 @@
             "remotePercentage": { "type": "number", "description": "Percentage of time working remotely for hybrid modality." },
             "paymentFrequency": { "type": "string", "enum": ["Mensual", "Diario", "Semanal", "Quincenal", "Personalizar"] },
             "salaryType": { "type": "string", "enum": ["Bruto Anual", "Neto Anual", "Según Convenio"] },
+            "convenio": { "type": "string", "enum": ["Personalizado", "Según convenio"], "description": "Type of agreement for salary and conditions." },
             "grossAnnualSalary": { "type": "number" },
             "weeklyHours": { "type": "number", "description": "Contracted weekly work hours." },
-            "proratedExtraPays": { "type": "boolean" },
+            "vacationDays": { "type": "number", "description": "Total de días de vacaciones anuales." },
+            "proratedExtraPays": { "type": "boolean", "description": "Whether extra pays are prorated monthly." },
+            "extraPaysConfig": { "type": "string", "description": "Configuration for non-prorated extra pays." },
             "hireDate": { "type": "string", "format": "date-time" },
             "ownerId": { "type": "string" },
             "companyOwnerId": { "type": "string" },
@@ -278,5 +281,3 @@
     }
   }
 }
-
-    

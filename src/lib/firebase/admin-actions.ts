@@ -84,6 +84,8 @@ export async function createEmployeeUser(employeeData: {
   hireDate?: Date;
   paymentFrequency: string;
   proratedExtraPays: boolean;
+  salaryType: string;
+  convenio: string;
   companyOwnerId?: string; // For admin simulation
 }): Promise<{ uid: string; tempPassword?: string; message: string }> {
   const { auth, db } = getFirebaseAuth();

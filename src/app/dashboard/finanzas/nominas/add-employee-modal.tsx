@@ -50,6 +50,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
   const [workModality, setWorkModality] = useState('Presencial');
   const [weeklyHours, setWeeklyHours] = useState('40');
   const [salaryType, setSalaryType] = useState<Employee['salaryType']>('Bruto Anual');
+  const [convenio, setConvenio] = useState<Employee['convenio']>('Personalizado');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState('');
   const [vacationDays, setVacationDays] = useState('23');
   const [hireDate, setHireDate] = useState<Date | undefined>();
@@ -73,6 +74,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
     setWorkModality('Presencial');
     setWeeklyHours('40');
     setSalaryType('Bruto Anual');
+    setConvenio('Personalizado');
     setGrossAnnualSalary('');
     setVacationDays('23');
     setHireDate(undefined);
@@ -103,6 +105,7 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
         weeklyHours: parseInt(weeklyHours, 10),
         paymentFrequency,
         salaryType,
+        convenio,
         grossAnnualSalary: salaryType === 'Según Convenio' ? 0 : parseFloat(grossAnnualSalary),
         vacationDays: parseInt(vacationDays, 10),
         proratedExtraPays,
@@ -239,6 +242,16 @@ export function AddEmployeeModal({ isOpen, onClose, onEmployeeAdded }: AddEmploy
                         <SelectItem value="Semanal">Semanal</SelectItem>
                         <SelectItem value="Quincenal">Quincenal</SelectItem>
                         <SelectItem value="Personalizar">Personalizar</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="convenio">Convenio del Trabajador</Label>
+                <Select value={convenio} onValueChange={(v) => setConvenio(v as Employee['convenio'])} required>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Personalizado">Personalizado</SelectItem>
+                        <SelectItem value="Según convenio">Según convenio</SelectItem>
                     </SelectContent>
                 </Select>
             </div>

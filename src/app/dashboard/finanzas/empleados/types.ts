@@ -18,10 +18,12 @@ export type Employee = {
     remotePercentage?: number;
     paymentFrequency: 'Mensual' | 'Diario' | 'Semanal' | 'Quincenal' | 'Personalizar';
     salaryType?: 'Bruto Anual' | 'Neto Anual' | 'Según Convenio';
+    convenio?: 'Personalizado' | 'Según convenio';
     grossAnnualSalary: number;
     weeklyHours?: number;
     vacationDays?: number;
     proratedExtraPays: boolean;
+    extraPaysConfig?: string;
     hireDate?: Date;
     avatar?: string;
     employeePortalActive?: boolean;

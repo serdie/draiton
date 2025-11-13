@@ -45,6 +45,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [vacationDays, setVacationDays] = useState(String(employee.vacationDays || 23));
   const [paymentFrequency, setPaymentFrequency] = useState(employee.paymentFrequency || 'Mensual');
   const [salaryType, setSalaryType] = useState<Employee['salaryType']>(employee.salaryType || 'Bruto Anual');
+  const [convenio, setConvenio] = useState<Employee['convenio']>(employee.convenio || 'Personalizado');
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
   const [proratedExtraPays, setProratedExtraPays] = useState(employee.proratedExtraPays ?? true);
   const [extraPaysConfig, setExtraPaysConfig] = useState(employee.extraPaysConfig || '2 Pagas (Julio y Diciembre)');
@@ -70,6 +71,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setVacationDays(String(employee.vacationDays || 23));
     setPaymentFrequency(employee.paymentFrequency || 'Mensual');
     setSalaryType(employee.salaryType || 'Bruto Anual');
+    setConvenio(employee.convenio || 'Personalizado');
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
     setProratedExtraPays(employee.proratedExtraPays ?? true);
     setExtraPaysConfig(employee.extraPaysConfig || '2 Pagas (Julio y Diciembre)');
@@ -135,6 +137,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         vacationDays: parseInt(vacationDays, 10),
         paymentFrequency,
         salaryType,
+        convenio,
         grossAnnualSalary: salaryType === 'Según Convenio' ? 0 : parseFloat(grossAnnualSalary),
         proratedExtraPays,
         extraPaysConfig: proratedExtraPays ? undefined : extraPaysConfig,
@@ -275,6 +278,16 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                     <SelectItem value="Semanal">Semanal</SelectItem>
                     <SelectItem value="Quincenal">Quincenal</SelectItem>
                     <SelectItem value="Personalizar">Personalizar</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor="convenio">Convenio del Trabajador</Label>
+            <Select value={convenio} onValueChange={(v) => setConvenio(v as Employee['convenio'])} required>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="Personalizado">Personalizado</SelectItem>
+                    <SelectItem value="Según convenio">Según convenio</SelectItem>
                 </SelectContent>
             </Select>
         </div>
