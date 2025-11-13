@@ -1,3 +1,4 @@
+
 // AÑADIDO: El tipo 'Employee' que faltaba
 export type Employee = {
     id: string;

@@ -5,20 +5,20 @@ import { useState, useContext, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { EmployeeClocksCalendar } from './employee-clocks-calendar';
-import { type Fichaje, type Employee } from './types'; 
+import { EmployeeClocksCalendar } from '../../proyectos/employee-clocks-calendar';
+import { type Fichaje, type Employee } from '../../proyectos/types'; 
 import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { ViewFichajeModal } from '../../proyectos/view-fichaje-modal';
 import { useToast } from '@/hooks/use-toast';
-import { FichajesHistoryTable } from './fichajes-history-table';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
 }
+
 
 export function FichajesTab() {
     const { user } = useContext(AuthContext);
@@ -29,7 +29,6 @@ export function FichajesTab() {
     const [loading, setLoading] = useState(true);
     const [fichajeToView, setFichajeToView] = useState<Fichaje | null>(null);
 
-    // Effect to fetch employees and all fichajes for the company
     useEffect(() => {
         if (!user) {
             setLoading(false);
@@ -48,16 +47,14 @@ export function FichajesTab() {
             if (fetchedEmployees.length > 0 && !selectedEmployee) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-            setLoading(false); 
         }, (error) => {
             console.error("Error fetching employees:", error);
             if (isMounted) {
                 toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.' });
-                setLoading(false);
             }
         });
-
-        const fichajesQuery = query(collection(db, 'fichajes'), where('ownerId', '==', user.uid), orderBy('timestamp', 'desc'));
+        
+        const fichajesQuery = query(collection(db, 'fichajes'), where('ownerId', '==', user.uid));
         const unsubscribeFichajes = onSnapshot(fichajesQuery, (snapshot) => {
             if (!isMounted) return;
             const fetchedFichajes = snapshot.docs.map(doc => {
@@ -66,11 +63,10 @@ export function FichajesTab() {
                     id: doc.id,
                     ...data,
                     timestamp: (data.timestamp as Timestamp).toDate(),
-                    requestedTimestamp: data.requestedTimestamp ? (data.requestedTimestamp as Timestamp).toDate() : undefined,
-                    requestedAt: data.requestedAt ? (data.requestedAt as Timestamp).toDate() : undefined,
                 } as Fichaje;
             });
             setAllFichajes(fetchedFichajes);
+            setLoading(false);
         }, (error) => {
             console.error("Error fetching fichajes:", error);
             if (isMounted) toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los registros de fichajes.' });
@@ -81,16 +77,13 @@ export function FichajesTab() {
             unsubscribeEmployees();
             unsubscribeFichajes();
         };
-    }, [user, toast]); 
-
-    const employeeHasPendingRequests = (employeeId: string) => {
-        return allFichajes.some(f => f.employeeId === employeeId && f.requestStatus === 'pending');
-    }
+    }, [user, toast]);
 
     const fichajesForSelectedEmployee = useMemo(() => {
         if (!selectedEmployee) return [];
         return allFichajes.filter(f => f.employeeId === selectedEmployee.id);
     }, [allFichajes, selectedEmployee]);
+
 
     if (loading) {
         return <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin"/></div>
@@ -130,9 +123,6 @@ export function FichajesTab() {
                                     </Avatar>
                                     <span className="font-medium">{employee.name}</span>
                                 </div>
-                                {employeeHasPendingRequests(employee.id) && (
-                                    <AlertCircle className="h-5 w-5 text-yellow-500" />
-                                )}
                             </div>
                         )) : <p className="text-sm text-muted-foreground">No tienes empleados registrados.</p>}
                     </div>
@@ -151,8 +141,6 @@ export function FichajesTab() {
                     </div>
                 </CardContent>
             </Card>
-
-            <FichajesHistoryTable allFichajes={allFichajes} employees={employees} />
         </div>
         </>
     );
