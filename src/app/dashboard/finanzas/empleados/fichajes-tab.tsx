@@ -7,11 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { EmployeeClocksCalendar } from './employee-clocks-calendar';
 import { type Fichaje, type Employee } from './types';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { ViewFichajeModal } from '../../proyectos/view-fichaje-modal';
+import { FichajesHistoryTable } from './fichajes-history-table';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -42,7 +43,7 @@ export function FichajesTab() {
             }
         });
         
-        const fichajesQuery = query(collection(db, 'fichajes'), where('ownerId', '==', user.uid));
+        const fichajesQuery = query(collection(db, 'fichajes'), where('ownerId', '==', user.uid), orderBy('timestamp', 'desc'));
         const unsubscribeFichajes = onSnapshot(fichajesQuery, (snapshot) => {
             const fetchedFichajes = snapshot.docs.map(doc => {
                 const data = doc.data();
@@ -81,51 +82,54 @@ export function FichajesTab() {
                 fichaje={fichajeToView}
             />
         )}
-        <Card>
-            <CardHeader>
-                <CardTitle>Registro de Fichajes de Empleados</CardTitle>
-                <CardDescription>Selecciona un empleado para ver su calendario de control horario y gestionar solicitudes.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="md:col-span-1 space-y-2">
-                     <h3 className="font-semibold">Empleados</h3>
-                    {employees.length > 0 ? employees.map(employee => (
-                        <div
-                            key={employee.id}
-                            onClick={() => setSelectedEmployee(employee)}
-                            className={cn(
-                                'flex items-center justify-between gap-3 p-2 rounded-lg cursor-pointer transition-colors',
-                                selectedEmployee?.id === employee.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-                            )}
-                        >
-                            <div className="flex items-center gap-3">
-                                <Avatar className="h-9 w-9">
-                                    <AvatarImage src={(employee as any).avatar} alt={employee.name} />
-                                    <AvatarFallback>{getInitials(employee.name)}</AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium">{employee.name}</span>
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Registro de Fichajes de Empleados</CardTitle>
+                    <CardDescription>Selecciona un empleado para ver su calendario de control horario y gestionar solicitudes.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="md:col-span-1 space-y-2">
+                         <h3 className="font-semibold">Empleados</h3>
+                        {employees.length > 0 ? employees.map(employee => (
+                            <div
+                                key={employee.id}
+                                onClick={() => setSelectedEmployee(employee)}
+                                className={cn(
+                                    'flex items-center justify-between gap-3 p-2 rounded-lg cursor-pointer transition-colors',
+                                    selectedEmployee?.id === employee.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                                )}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="h-9 w-9">
+                                        <AvatarImage src={(employee as any).avatar} alt={employee.name} />
+                                        <AvatarFallback>{getInitials(employee.name)}</AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium">{employee.name}</span>
+                                </div>
+                                 {employeeHasPendingRequests(employee.id) && (
+                                    <AlertCircle className="h-5 w-5 text-yellow-500" />
+                                )}
                             </div>
-                             {employeeHasPendingRequests(employee.id) && (
-                                <AlertCircle className="h-5 w-5 text-yellow-500" />
-                            )}
-                        </div>
-                    )) : <p className="text-sm text-muted-foreground">No tienes empleados registrados.</p>}
-                </div>
-                <div className="md:col-span-3">
-                   {selectedEmployee ? (
-                        <EmployeeClocksCalendar 
-                            employee={selectedEmployee}
-                            fichajes={fichajes.filter(f => f.employeeId === selectedEmployee.id)}
-                            onViewFichaje={setFichajeToView}
-                        />
-                   ) : (
-                       <div className="flex items-center justify-center h-full text-muted-foreground">
-                           <p>Selecciona un empleado para ver sus fichajes.</p>
-                       </div>
-                   )}
-                </div>
-            </CardContent>
-        </Card>
+                        )) : <p className="text-sm text-muted-foreground">No tienes empleados registrados.</p>}
+                    </div>
+                    <div className="md:col-span-3">
+                       {selectedEmployee ? (
+                            <EmployeeClocksCalendar 
+                                employee={selectedEmployee}
+                                fichajes={fichajes.filter(f => f.employeeId === selectedEmployee.id)}
+                                onViewFichaje={setFichajeToView}
+                            />
+                       ) : (
+                           <div className="flex items-center justify-center h-full text-muted-foreground">
+                               <p>Selecciona un empleado para ver sus fichajes.</p>
+                           </div>
+                       )}
+                    </div>
+                </CardContent>
+            </Card>
+            <FichajesHistoryTable allFichajes={fichajes} employees={employees} />
+        </div>
         </>
     );
 }
