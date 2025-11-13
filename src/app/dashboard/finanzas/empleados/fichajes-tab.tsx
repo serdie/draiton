@@ -5,20 +5,20 @@ import { useState, useContext, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { EmployeeClocksCalendar } from '../../proyectos/employee-clocks-calendar';
-import { type Fichaje, type Employee } from '../../proyectos/types';
+import { EmployeeClocksCalendar } from './employee-clocks-calendar';
+import { type Fichaje, type Employee } from './types'; 
 import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { ViewFichajeModal } from '../../proyectos/view-fichaje-modal';
 import { useToast } from '@/hooks/use-toast';
+import { FichajesHistoryTable } from './fichajes-history-table';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
 }
-
 
 export function FichajesTab() {
     const { user } = useContext(AuthContext);
@@ -29,27 +29,30 @@ export function FichajesTab() {
     const [loading, setLoading] = useState(true);
     const [fichajeToView, setFichajeToView] = useState<Fichaje | null>(null);
 
-    // Effect to fetch employees and all fichajes
+    // Effect to fetch employees and all fichajes for the company
     useEffect(() => {
         if (!user) {
             setLoading(false);
             return;
         }
+
+        let isMounted = true;
         setLoading(true);
 
         const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
         const unsubscribeEmployees = onSnapshot(employeesQuery, (snapshot) => {
+            if (!isMounted) return;
             const fetchedEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
             setEmployees(fetchedEmployees);
+            
             if (fetchedEmployees.length > 0 && !selectedEmployee) {
                 setSelectedEmployee(fetchedEmployees[0]);
             }
-            // Set loading to false after employees are loaded, as it's the main dependency
-            if (isMounted) setLoading(false);
+            setLoading(false); 
         }, (error) => {
             console.error("Error fetching employees:", error);
             if (isMounted) {
-                toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.'});
+                toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los empleados.' });
                 setLoading(false);
             }
         });
@@ -63,22 +66,22 @@ export function FichajesTab() {
                     id: doc.id,
                     ...data,
                     timestamp: (data.timestamp as Timestamp).toDate(),
-                    requestedTimestamp: data.requestedTimestamp ? (data.requestedTimestamp as Timestamp).toDate() : undefined
+                    requestedTimestamp: data.requestedTimestamp ? (data.requestedTimestamp as Timestamp).toDate() : undefined,
+                    requestedAt: data.requestedAt ? (data.requestedAt as Timestamp).toDate() : undefined,
                 } as Fichaje;
             });
             setAllFichajes(fetchedFichajes);
         }, (error) => {
             console.error("Error fetching fichajes:", error);
-            if (isMounted) toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los registros de fichajes.'});
+            if (isMounted) toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los registros de fichajes.' });
         });
 
-        let isMounted = true;
         return () => {
             isMounted = false;
             unsubscribeEmployees();
             unsubscribeFichajes();
         };
-    }, [user, toast, selectedEmployee]);
+    }, [user, toast]); 
 
     const employeeHasPendingRequests = (employeeId: string) => {
         return allFichajes.some(f => f.employeeId === employeeId && f.requestStatus === 'pending');
@@ -110,7 +113,7 @@ export function FichajesTab() {
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="md:col-span-1 space-y-2">
-                         <h3 className="font-semibold">Empleados</h3>
+                        <h3 className="font-semibold">Empleados</h3>
                         {employees.length > 0 ? employees.map(employee => (
                             <div
                                 key={employee.id}
@@ -127,27 +130,29 @@ export function FichajesTab() {
                                     </Avatar>
                                     <span className="font-medium">{employee.name}</span>
                                 </div>
-                                 {employeeHasPendingRequests(employee.id) && (
+                                {employeeHasPendingRequests(employee.id) && (
                                     <AlertCircle className="h-5 w-5 text-yellow-500" />
                                 )}
                             </div>
                         )) : <p className="text-sm text-muted-foreground">No tienes empleados registrados.</p>}
                     </div>
                     <div className="md:col-span-3">
-                       {selectedEmployee ? (
+                        {selectedEmployee ? (
                             <EmployeeClocksCalendar 
                                 employee={selectedEmployee}
                                 fichajes={fichajesForSelectedEmployee}
-                                onViewFichaje={setFichajeToView}
+                                onViewFichaje={setFichajeToView} 
                             />
-                       ) : (
-                           <div className="flex items-center justify-center h-full text-muted-foreground">
-                               <p>Selecciona un empleado para ver sus fichajes.</p>
-                           </div>
-                       )}
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                                <p>Selecciona un empleado para ver sus fichajes.</p>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
+
+            <FichajesHistoryTable allFichajes={allFichajes} employees={employees} />
         </div>
         </>
     );

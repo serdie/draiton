@@ -9,7 +9,7 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-f
 import { es } from 'date-fns/locale';
 import type { Fichaje, Employee } from './types';
 import { Button } from '@/components/ui/button';
-import { Download, Calendar as CalendarIcon, Edit, Eye, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Calendar as CalendarIcon, Eye, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
