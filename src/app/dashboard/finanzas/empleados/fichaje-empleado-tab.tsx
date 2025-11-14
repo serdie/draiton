@@ -24,9 +24,8 @@ type PostModalityAction = 'Entrada' | 'Fin Descanso';
 // Helper to check if current time is within any of the time slots for the day, including courtesy margin
 const isWithinScheduleWithMargin = (workDay?: WorkDay, margin: number = 0): boolean => {
     if (!workDay || workDay.type === 'no-laboral' || !workDay.timeSlots || workDay.timeSlots.length === 0) {
-        // If there's no defined schedule for a workday, allow clock-in.
-        // Incidents for this should be handled elsewhere if needed.
-        return true; 
+        // If there's no defined schedule for a workday, we consider it "out of schedule" for strict mode.
+        return false; 
     }
     const now = new Date();
     
@@ -230,8 +229,8 @@ export function FichajeEmpleadoTab() {
     
     const isWithinWorkHours = isWithinScheduleWithMargin(todaySchedule, margin);
 
-    const clockInDisabled = isLoading || isProcessing || isOnBreak || (isStrict && !isWithinWorkHours);
-    const clockOutDisabled = isLoading || isProcessing || isOnBreak;
+    const clockInDisabled = isClockIn || isLoading || isProcessing || isOnBreak || (isStrict && !isWithinWorkHours);
+    const clockOutDisabled = !isClockIn || isLoading || isProcessing || isOnBreak;
 
 
     return (
