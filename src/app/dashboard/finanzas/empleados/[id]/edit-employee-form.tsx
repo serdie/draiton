@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { EmployeePortalCard } from './employee-portal-card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { WorkScheduleForm, calculateTotalHours } from './work-schedule';
+import { Switch } from '@/components/ui/switch';
 
 interface EditEmployeeFormProps {
   onClose: () => void;
@@ -54,6 +55,8 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [proratedExtraPays, setProratedExtraPays] = useState(employee.proratedExtraPays ?? true);
   const [extraPaysConfig, setExtraPaysConfig] = useState(employee.extraPaysConfig || '2 Pagas (Julio y Diciembre)');
   const [workSchedule, setWorkSchedule] = useState<WorkSchedule | undefined>(employee.workSchedule);
+  const [strictSchedule, setStrictSchedule] = useState(employee.strictSchedule ?? true);
+  const [courtesyMargin, setCourtesyMargin] = useState(String(employee.courtesyMargin || 10));
 
 
   const [hireDate, setHireDate] = useState<Date | undefined>(() => {
@@ -86,6 +89,8 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setProratedExtraPays(employee.proratedExtraPays ?? true);
     setExtraPaysConfig(employee.extraPaysConfig || '2 Pagas (Julio y Diciembre)');
     setWorkSchedule(employee.workSchedule);
+    setStrictSchedule(employee.strictSchedule ?? true);
+    setCourtesyMargin(String(employee.courtesyMargin || 10));
     if (employee.hireDate) {
       const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
        if (isValid(date)) {
@@ -156,6 +161,8 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         extraPaysConfig: extraPaysConfig,
         hireDate: hireDate || undefined,
         workSchedule: workSchedule,
+        strictSchedule,
+        courtesyMargin: parseInt(courtesyMargin, 10),
       };
 
       if (workModality === 'Mixto') {
@@ -400,6 +407,34 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                         </span>
                     </div>
                     <WorkScheduleForm initialSchedule={workSchedule} onChange={setWorkSchedule} />
+                    <Separator className="my-4"/>
+                    <div className="space-y-4">
+                         <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="strict-schedule" className="font-medium">
+                                    Ser estricto con el horario en fichajes
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Impedir fichar fuera del horario establecido (con margen).
+                                </p>
+                            </div>
+                            <Switch
+                                id="strict-schedule"
+                                checked={strictSchedule}
+                                onCheckedChange={setStrictSchedule}
+                            />
+                        </div>
+                        <div className="space-y-2 rounded-lg border p-4">
+                             <Label htmlFor="courtesy-margin">Margen de cortesía (minutos)</Label>
+                             <Input 
+                                id="courtesy-margin" 
+                                type="number"
+                                value={courtesyMargin}
+                                onChange={(e) => setCourtesyMargin(e.target.value)}
+                                disabled={!strictSchedule}
+                            />
+                        </div>
+                    </div>
                 </AccordionContent>
             </AccordionItem>
         </Accordion>
