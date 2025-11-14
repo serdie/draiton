@@ -415,7 +415,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                                     Ser estricto con el horario en fichajes
                                 </Label>
                                 <p className="text-xs text-muted-foreground">
-                                    Impedir fichar fuera del horario establecido (con margen).
+                                    Alertar sobre fichajes fuera de horario y registrar la incidencia.
                                 </p>
                             </div>
                             <Switch
