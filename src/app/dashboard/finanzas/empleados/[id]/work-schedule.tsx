@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,6 +9,37 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import type { WorkSchedule, WorkDay, WorkDayType } from '../types';
+import { differenceInMinutes, parse } from 'date-fns';
+
+
+export const calculateTotalHours = (schedule?: WorkSchedule): number => {
+    if (!schedule) return 0;
+    let totalMinutes = 0;
+
+    Object.values(schedule).forEach(day => {
+        if (day.type !== 'no-laboral' && day.timeSlots) {
+            day.timeSlots.forEach(slot => {
+                if (slot.start && slot.end) {
+                    try {
+                        const start = parse(slot.start, 'HH:mm', new Date());
+                        const end = parse(slot.end, 'HH:mm', new Date());
+                        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                            const diff = differenceInMinutes(end, start);
+                            if (diff > 0) {
+                                totalMinutes += diff;
+                            }
+                        }
+                    } catch (e) {
+                        // Ignore parsing errors for now
+                    }
+                }
+            });
+        }
+    });
+
+    return totalMinutes / 60;
+};
+
 
 interface WorkScheduleFormProps {
   initialSchedule?: WorkSchedule;
@@ -75,7 +107,7 @@ export function WorkScheduleForm({ initialSchedule, onChange }: WorkScheduleForm
         <div key={day} className="p-4 border rounded-lg space-y-3">
           <div className="flex items-center justify-between">
             <Label className="font-semibold">{dayLabels[day]}</Label>
-            <Select value={schedule[day].type} onValueChange={(value: WorkDayType) => handleDayTypeChange(day, value)}>
+            <Select value={schedule[day]?.type || 'no-laboral'} onValueChange={(value: WorkDayType) => handleDayTypeChange(day, value)}>
                 <SelectTrigger className="w-[180px]">
                     <SelectValue />
                 </SelectTrigger>
@@ -87,7 +119,7 @@ export function WorkScheduleForm({ initialSchedule, onChange }: WorkScheduleForm
             </Select>
           </div>
           
-          {schedule[day].type !== 'no-laboral' && (
+          {schedule[day]?.type !== 'no-laboral' && (
              <div className="space-y-2 pl-4 border-l-2 ml-2">
                 {schedule[day].timeSlots.map((slot, index) => (
                     <div key={index} className="flex items-center gap-2">

@@ -2,26 +2,26 @@
 
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Calendar as CalendarIcon, Percent } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Percent, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Timestamp } from 'firebase/firestore';
 import type { Employee, WorkSchedule } from '../types';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { format, isValid } from 'date-fns';
+import { format, isValid, differenceInMinutes, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { updateEmployeeAction } from '@/lib/firebase/admin-actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { EmployeePortalCard } from './employee-portal-card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { WorkScheduleForm } from './work-schedule';
+import { WorkScheduleForm, calculateTotalHours } from './work-schedule';
 
 interface EditEmployeeFormProps {
   onClose: () => void;
@@ -61,6 +61,8 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
     return isValid(date) ? date : undefined;
   });
+
+  const totalScheduledHours = useMemo(() => calculateTotalHours(workSchedule), [workSchedule]);
 
   useEffect(() => {
     setName(employee.name);
@@ -178,6 +180,8 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
       }
     });
   };
+
+  const hoursMatch = totalScheduledHours === parseFloat(weeklyHours);
 
   return (
     <form onSubmit={handleUpdate} className="space-y-4">
@@ -375,8 +379,26 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                 </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
-                <AccordionTrigger>Horario Semanal de Trabajo</AccordionTrigger>
-                <AccordionContent className="pt-4">
+                <AccordionTrigger>
+                    <div className="flex items-center justify-between w-full pr-2">
+                        <span>Horario Semanal de Trabajo</span>
+                        {!hoursMatch && (
+                            <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 text-xs">
+                                <AlertTriangle className="h-4 w-4"/>
+                                <span>El horario no coincide</span>
+                            </div>
+                        )}
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 space-y-4">
+                     <div className="p-3 bg-muted rounded-md flex justify-between items-center text-sm">
+                        <span className="font-semibold">Horas contratadas:</span>
+                        <span className="font-bold">{weeklyHours}h / semana</span>
+                        <span className="font-semibold">Horas planificadas:</span>
+                        <span className={cn("font-bold", hoursMatch ? "text-green-600" : "text-destructive")}>
+                            {totalScheduledHours.toFixed(2)}h / semana
+                        </span>
+                    </div>
                     <WorkScheduleForm initialSchedule={workSchedule} onChange={setWorkSchedule} />
                 </AccordionContent>
             </AccordionItem>
