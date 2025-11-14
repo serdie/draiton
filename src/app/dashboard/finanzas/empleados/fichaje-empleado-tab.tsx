@@ -287,7 +287,7 @@ export function FichajeEmpleadoTab() {
 
     const contractedHours = currentEmployee?.weeklyHours || 40;
     
-    const remainingTotalSeconds = Math.max(0, (contractedHours * 60 * 60) - (weeklyWorkedMinutes * 60));
+    const remainingTotalSeconds = Math.max(0, (contractedHours * 60) - weeklyWorkedMinutes) * 60;
     const remainingHours = Math.floor(remainingTotalSeconds / 3600);
     const remainingMinutes = Math.floor((remainingTotalSeconds % 3600) / 60);
     const remainingSeconds = Math.floor(remainingTotalSeconds % 60);
@@ -323,7 +323,7 @@ export function FichajeEmpleadoTab() {
                             {isLoading ? 'Cargando estado...' : (isClockIn ? (isOnBreak ? 'EN DESCANSO' : 'Actualmente DENTRO') : 'Actualmente FUERA')}
                         </p>
                         
-                         <div className="mt-2 text-center">
+                        <div className="mt-2 text-center">
                             <p className="text-sm text-muted-foreground">Horas restantes esta semana</p>
                             <p className="font-bold text-2xl text-primary font-mono tabular-nums">
                                 {String(remainingHours).padStart(2, '0')}:{String(remainingMinutes).padStart(2, '0')}:{String(remainingSeconds).padStart(2, '0')}
