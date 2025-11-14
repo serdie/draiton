@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useContext, useEffect, useMemo } from 'react';
@@ -285,12 +286,11 @@ export function FichajeEmpleadoTab() {
     const clockOutDisabled = !isClockIn || isLoading || isProcessing || isOnBreak;
 
     const contractedHours = currentEmployee?.weeklyHours || 40;
-    const workedHours = Math.floor(weeklyWorkedMinutes / 60);
-    const workedMinutes = weeklyWorkedMinutes % 60;
     
-    const remainingTotalMinutes = Math.max(0, (contractedHours * 60) - weeklyWorkedMinutes);
-    const remainingHours = Math.floor(remainingTotalMinutes / 60);
-    const remainingMinutes = remainingTotalMinutes % 60;
+    const remainingTotalSeconds = Math.max(0, (contractedHours * 60 * 60) - (weeklyWorkedMinutes * 60));
+    const remainingHours = Math.floor(remainingTotalSeconds / 3600);
+    const remainingMinutes = Math.floor((remainingTotalSeconds % 3600) / 60);
+    const remainingSeconds = Math.floor(remainingTotalSeconds % 60);
 
 
     return (
@@ -322,8 +322,16 @@ export function FichajeEmpleadoTab() {
                         <p className="font-semibold text-xl">
                             {isLoading ? 'Cargando estado...' : (isClockIn ? (isOnBreak ? 'EN DESCANSO' : 'Actualmente DENTRO') : 'Actualmente FUERA')}
                         </p>
+                        
+                         <div className="mt-2 text-center">
+                            <p className="text-sm text-muted-foreground">Horas restantes esta semana</p>
+                            <p className="font-bold text-2xl text-primary font-mono tabular-nums">
+                                {String(remainingHours).padStart(2, '0')}:{String(remainingMinutes).padStart(2, '0')}:{String(remainingSeconds).padStart(2, '0')}
+                            </p>
+                        </div>
+                        
                         {lastFichajeTime && !isLoading && (
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-muted-foreground mt-2">
                                 Último fichaje: {lastFichajeTime}
                             </p>
                         )}
@@ -333,21 +341,6 @@ export function FichajeEmpleadoTab() {
                                 {clockInWarning}
                             </div>
                         )}
-                    </div>
-
-                    <div className="w-full text-center p-3 bg-muted rounded-md space-y-2">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Horas trabajadas esta semana</p>
-                            <p className="font-bold text-lg">
-                                {workedHours}h {workedMinutes}m / <span className="text-muted-foreground">{contractedHours}h</span>
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">Horas restantes esta semana</p>
-                            <p className="font-bold text-lg text-primary">
-                                {remainingHours}h {remainingMinutes}m
-                            </p>
-                        </div>
                     </div>
 
                     <div className="w-full space-y-2">
@@ -379,5 +372,3 @@ export function FichajeEmpleadoTab() {
         </>
     );
 }
-
-    
