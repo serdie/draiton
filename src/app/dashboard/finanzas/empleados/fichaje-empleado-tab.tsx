@@ -8,7 +8,7 @@ import { LogIn, LogOut, Loader2, Power, Coffee, AlertTriangle } from 'lucide-rea
 import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { format, getDay, set, addMinutes, subMinutes, isWithinInterval, isToday, isWithinInterval as isWithinDateInterval } from 'date-fns';
+import { format, getDay, set, addMinutes, subMinutes, isWithinInterval, isToday, isWithinInterval as isWithinDateInterval, startOfWeek, endOfWeek, differenceInMinutes } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FichajeHistory } from '../../proyectos/fichaje-history';
 import type { Employee, Fichaje, BreakDetails, WorkDay, WorkSchedule, Absence } from './types';
@@ -62,6 +62,7 @@ export function FichajeEmpleadoTab() {
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
     const [postModalityAction, setPostModalityAction] = useState<PostModalityAction | null>(null);
     const [absences, setAbsences] = useState<Absence[]>([]);
+    const [weeklyWorkedMinutes, setWeeklyWorkedMinutes] = useState(0);
 
     // Effect to get current employee profile
     useEffect(() => {
@@ -86,7 +87,7 @@ export function FichajeEmpleadoTab() {
         return () => unsubscribe();
     }, [user]);
 
-    // Effect to determine initial status and load all fichajes
+    // Effect to determine initial status, load all fichajes, and calculate weekly hours
     useEffect(() => {
         if (!user?.uid) {
             setStatus('out');
@@ -138,7 +139,35 @@ export function FichajeEmpleadoTab() {
                 setBreakStatus('working');
                 setLastFichajeTime(null);
             }
-             setLoading(false);
+
+            // Calculate weekly hours
+            const now = new Date();
+            const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+            const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+
+            const weeklyFichajes = fichajesList
+                .filter(f => f.timestamp >= weekStart && f.timestamp <= weekEnd)
+                .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+            
+            let totalMinutes = 0;
+            let entryTime: Date | null = null;
+            let breakTime: Date | null = null;
+
+            for (const fichaje of weeklyFichajes) {
+                if (fichaje.type === 'Entrada') {
+                    entryTime = fichaje.timestamp;
+                } else if (fichaje.type === 'Salida' && entryTime) {
+                    totalMinutes += differenceInMinutes(fichaje.timestamp, entryTime);
+                    entryTime = null;
+                } else if (fichaje.type === 'Inicio Descanso') {
+                    breakTime = fichaje.timestamp;
+                } else if (fichaje.type === 'Fin Descanso' && breakTime) {
+                    totalMinutes -= differenceInMinutes(fichaje.timestamp, breakTime);
+                    breakTime = null;
+                }
+            }
+            setWeeklyWorkedMinutes(totalMinutes);
+            setLoading(false);
         }, (error) => {
             console.error("Error al obtener el estado de fichaje:", error);
             setStatus('out');
@@ -255,6 +284,10 @@ export function FichajeEmpleadoTab() {
     
     const clockOutDisabled = !isClockIn || isLoading || isProcessing || isOnBreak;
 
+    const workedHours = Math.floor(weeklyWorkedMinutes / 60);
+    const workedMinutes = weeklyWorkedMinutes % 60;
+    const contractedHours = currentEmployee?.weeklyHours || 40;
+
 
     return (
         <>
@@ -297,6 +330,14 @@ export function FichajeEmpleadoTab() {
                             </div>
                         )}
                     </div>
+
+                    <div className="w-full text-center p-3 bg-muted rounded-md">
+                        <p className="text-sm text-muted-foreground">Horas esta semana</p>
+                        <p className="font-bold text-lg">
+                            {workedHours}h {workedMinutes}m / <span className="text-muted-foreground">{contractedHours}h</span>
+                        </p>
+                    </div>
+
                     <div className="w-full space-y-2">
                         <Button 
                             size="lg" 
