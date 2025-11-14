@@ -167,6 +167,7 @@
             "name": { "type": "string" },
             "email": { "type": "string", "format": "email" },
             "position": { "type": "string" },
+            "professionalGroup": { "type": "string" },
             "nif": { "type": "string" },
             "phone": { "type": "string" },
             "socialSecurityNumber": { "type": "string" },
@@ -197,7 +198,9 @@
                     "nif": { "type": "string", "description": "NIF/DNI used for the signature." }
                 }
             },
-            "workSchedule": { "$ref": "#/entities/WorkSchedule" }
+            "workSchedule": { "$ref": "#/entities/WorkSchedule" },
+            "strictSchedule": { "type": "boolean", "description": "Enforce clock-in/out times based on the work schedule." },
+            "courtesyMargin": { "type": "number", "description": "Courtesy margin in minutes for clocking in." }
         },
         "required": ["name", "email", "ownerId", "companyOwnerId", "employeePortalActive", "employeePortalId"]
     },

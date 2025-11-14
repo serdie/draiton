@@ -61,6 +61,8 @@ export type Employee = {
         nif: string;
     };
     workSchedule?: WorkSchedule;
+    strictSchedule?: boolean;
+    courtesyMargin?: number;
 };
 
 export type BreakDetails = {
