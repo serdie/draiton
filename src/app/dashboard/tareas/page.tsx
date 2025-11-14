@@ -20,18 +20,24 @@ export default function TareasPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
     const [users, setUsers] = useState<{ id: string; name: string; }[]>([]);
-    const [loading, setLoading] = useState(true);
+
+    // Separate loading states for each data source
+    const [tasksLoading, setTasksLoading] = useState(true);
+    const [projectsLoading, setProjectsLoading] = useState(true);
+    const [usersLoading, setUsersLoading] = useState(true);
+
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
     useEffect(() => {
         if (!user || !db) {
-            setLoading(false);
+            setTasksLoading(false);
+            setProjectsLoading(false);
+            setUsersLoading(false);
             return;
         }
 
         let isMounted = true;
-        setLoading(true);
 
         const handleError = (error: any, type: string) => {
             if (isMounted) {
@@ -40,7 +46,7 @@ export default function TareasPage() {
             }
         };
         
-        // Setup listeners
+        // Listener for tasks
         const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid));
         const tasksUnsubscribe = onSnapshot(tasksQuery, (tasksSnapshot) => {
             if (!isMounted) return;
@@ -53,26 +59,33 @@ export default function TareasPage() {
                 } as Task;
             });
             setTasks(fetchedTasks);
-        }, (error) => handleError(error, 'tareas'));
+            setTasksLoading(false);
+        }, (error) => {
+            handleError(error, 'tareas');
+            if (isMounted) setTasksLoading(false);
+        });
 
+        // Listener for projects
         const projectsQuery = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
         const projectsUnsubscribe = onSnapshot(projectsQuery, (projectsSnapshot) => {
              if (!isMounted) return;
             const fetchedProjects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
             setProjects(fetchedProjects);
-        }, (error) => handleError(error, 'proyectos'));
+            setProjectsLoading(false);
+        }, (error) => {
+            handleError(error, 'proyectos');
+            if(isMounted) setProjectsLoading(false);
+        });
         
-        // Fetch all data initially to set loading state correctly
-        const fetchAllData = async () => {
+        // Fetch users (owner + employees)
+        const fetchUsers = async () => {
+             if (!isMounted) return;
+             setUsersLoading(true);
              const userList = new Map<string, { id: string; name: string; }>();
              const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
              const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
 
             try {
-                // We use getDocs here for the initial load to manage the loading state
-                // onSnapshot will keep the data fresh afterwards
-                await getDocs(tasksQuery);
-                await getDocs(projectsQuery);
                 const [selfSnapshot, employeesSnapshot] = await Promise.all([getDocs(selfQuery), getDocs(employeesQuery)]);
                 
                 if (!isMounted) return;
@@ -86,15 +99,15 @@ export default function TareasPage() {
                 setUsers(Array.from(userList.values()));
 
             } catch (error) {
-                 handleError(error, 'datos iniciales');
+                 handleError(error, 'usuarios');
             } finally {
                 if (isMounted) {
-                    setLoading(false);
+                    setUsersLoading(false);
                 }
             }
         };
 
-        fetchAllData();
+        fetchUsers();
 
         return () => {
             isMounted = false;
@@ -104,6 +117,7 @@ export default function TareasPage() {
 
     }, [user, toast]);
 
+    const loading = tasksLoading || projectsLoading || usersLoading;
 
     const handleEditTask = (task: Task) => {
         setTaskToEdit(task);
