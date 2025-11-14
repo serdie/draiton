@@ -39,15 +39,15 @@ export default function TareasPage() {
                 toast({ variant: 'destructive', title: 'Error', description: `No se pudieron cargar los ${type}. Revisa los permisos de Firestore.` });
             }
         };
-
+        
+        // Setup listeners
         const tasksQuery = query(collection(db, 'tasks'), where('ownerId', '==', user.uid));
         const tasksUnsubscribe = onSnapshot(tasksQuery, (tasksSnapshot) => {
             if (!isMounted) return;
             const fetchedTasks = tasksSnapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
-                    id: doc.id,
-                    ...data,
+                    id: doc.id, ...data,
                     dueDate: data.dueDate ? (data.dueDate as Timestamp).toDate() : undefined,
                     createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : new Date(),
                 } as Task;
@@ -62,14 +62,21 @@ export default function TareasPage() {
             setProjects(fetchedProjects);
         }, (error) => handleError(error, 'proyectos'));
         
-        const fetchUsers = async () => {
-            const userList = new Map<string, { id: string; name: string; }>();
-            const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-            const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+        // Fetch all data initially to set loading state correctly
+        const fetchAllData = async () => {
+             const userList = new Map<string, { id: string; name: string; }>();
+             const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
+             const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
 
             try {
+                // We use getDocs here for the initial load to manage the loading state
+                // onSnapshot will keep the data fresh afterwards
+                await getDocs(tasksQuery);
+                await getDocs(projectsQuery);
                 const [selfSnapshot, employeesSnapshot] = await Promise.all([getDocs(selfQuery), getDocs(employeesQuery)]);
-                 if (!isMounted) return;
+                
+                if (!isMounted) return;
+
                 selfSnapshot.forEach(doc => {
                     userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
                 });
@@ -77,18 +84,17 @@ export default function TareasPage() {
                     userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
                 });
                 setUsers(Array.from(userList.values()));
+
             } catch (error) {
-                handleError(error, 'usuarios');
+                 handleError(error, 'datos iniciales');
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
 
-        Promise.all([
-           getDocs(tasksQuery),
-           getDocs(projectsQuery),
-           fetchUsers()
-        ]).finally(() => {
-            if (isMounted) setLoading(false);
-        });
+        fetchAllData();
 
         return () => {
             isMounted = false;
