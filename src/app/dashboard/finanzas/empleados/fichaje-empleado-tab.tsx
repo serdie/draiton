@@ -284,9 +284,13 @@ export function FichajeEmpleadoTab() {
     
     const clockOutDisabled = !isClockIn || isLoading || isProcessing || isOnBreak;
 
+    const contractedHours = currentEmployee?.weeklyHours || 40;
     const workedHours = Math.floor(weeklyWorkedMinutes / 60);
     const workedMinutes = weeklyWorkedMinutes % 60;
-    const contractedHours = currentEmployee?.weeklyHours || 40;
+    
+    const remainingTotalMinutes = Math.max(0, (contractedHours * 60) - weeklyWorkedMinutes);
+    const remainingHours = Math.floor(remainingTotalMinutes / 60);
+    const remainingMinutes = remainingTotalMinutes % 60;
 
 
     return (
@@ -331,11 +335,19 @@ export function FichajeEmpleadoTab() {
                         )}
                     </div>
 
-                    <div className="w-full text-center p-3 bg-muted rounded-md">
-                        <p className="text-sm text-muted-foreground">Horas esta semana</p>
-                        <p className="font-bold text-lg">
-                            {workedHours}h {workedMinutes}m / <span className="text-muted-foreground">{contractedHours}h</span>
-                        </p>
+                    <div className="w-full text-center p-3 bg-muted rounded-md space-y-2">
+                        <div>
+                            <p className="text-sm text-muted-foreground">Horas trabajadas esta semana</p>
+                            <p className="font-bold text-lg">
+                                {workedHours}h {workedMinutes}m / <span className="text-muted-foreground">{contractedHours}h</span>
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-muted-foreground">Horas restantes esta semana</p>
+                            <p className="font-bold text-lg text-primary">
+                                {remainingHours}h {remainingMinutes}m
+                            </p>
+                        </div>
                     </div>
 
                     <div className="w-full space-y-2">
@@ -367,3 +379,5 @@ export function FichajeEmpleadoTab() {
         </>
     );
 }
+
+    
