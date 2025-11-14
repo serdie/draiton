@@ -4,14 +4,14 @@
 import { useState, useContext, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LogIn, LogOut, Loader2, Power, Coffee } from 'lucide-react';
+import { LogIn, LogOut, Loader2, Power, Coffee, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { format, getDay, set, addMinutes, subMinutes, isWithinInterval } from 'date-fns';
+import { format, getDay, set, addMinutes, subMinutes, isWithinInterval, isToday, isWithinInterval as isWithinDateInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FichajeHistory } from '../../proyectos/fichaje-history';
-import type { Employee, Fichaje, BreakDetails, WorkDay, TimeSlot, WorkSchedule } from './types';
+import type { Employee, Fichaje, BreakDetails, WorkDay, WorkSchedule, Absence } from './types';
 import { StartBreakModal } from './start-break-modal';
 import { SelectWorkModalityModal } from './select-work-modality-modal';
 import { AuthContext } from '@/context/auth-context';
@@ -61,6 +61,7 @@ export function FichajeEmpleadoTab() {
     const [isWorkModalityModalOpen, setIsWorkModalityModalOpen] = useState(false);
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
     const [postModalityAction, setPostModalityAction] = useState<PostModalityAction | null>(null);
+    const [absences, setAbsences] = useState<Absence[]>([]);
 
     // Effect to get current employee profile
     useEffect(() => {
@@ -70,6 +71,17 @@ export function FichajeEmpleadoTab() {
             if (doc.exists()) {
                 setCurrentEmployee({ id: doc.id, ...doc.data() } as Employee);
             }
+        });
+        return () => unsubscribe();
+    }, [user]);
+
+    // Effect to get employee's absences
+    useEffect(() => {
+        if (!user) return;
+        const q = query(collection(db, 'absences'), where('employeeId', '==', user.uid), where('status', '==', 'Aprobada'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const userAbsences = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, startDate: doc.data().startDate.toDate(), endDate: doc.data().endDate.toDate() } as Absence));
+            setAbsences(userAbsences);
         });
         return () => unsubscribe();
     }, [user]);
@@ -226,8 +238,21 @@ export function FichajeEmpleadoTab() {
     const margin = currentEmployee?.courtesyMargin ?? 0;
     
     const isWithinWorkHours = isWithinScheduleWithMargin(todaySchedule, margin);
+    const todayAbsence = absences.find(a => isWithinDateInterval(new Date(), { start: a.startDate, end: a.endDate }));
 
-    const clockInDisabled = isClockIn || isLoading || isProcessing || isOnBreak || (isStrict && !isWithinWorkHours);
+    let clockInDisabled = isClockIn || isLoading || isProcessing || isOnBreak;
+    let clockInWarning = '';
+
+    if (!isClockIn) {
+        if (todayAbsence) {
+            clockInDisabled = true;
+            clockInWarning = `No puedes fichar. Estás de ${todayAbsence.type.toLowerCase()}.`;
+        } else if (isStrict && !isWithinWorkHours) {
+            clockInDisabled = true;
+            clockInWarning = 'Estás fuera de tu horario laboral.';
+        }
+    }
+    
     const clockOutDisabled = !isClockIn || isLoading || isProcessing || isOnBreak;
 
 
@@ -265,8 +290,11 @@ export function FichajeEmpleadoTab() {
                                 Último fichaje: {lastFichajeTime}
                             </p>
                         )}
-                         {isStrict && !isWithinWorkHours && !isClockIn && !isLoading && (
-                            <p className="text-xs text-destructive mt-1">Estás fuera de tu horario laboral.</p>
+                        {clockInWarning && (
+                            <div className="mt-2 text-xs font-semibold text-yellow-600 dark:text-yellow-400 flex items-center justify-center gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                {clockInWarning}
+                            </div>
                         )}
                     </div>
                     <div className="w-full space-y-2">
