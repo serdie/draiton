@@ -24,8 +24,7 @@ type PostModalityAction = 'Entrada' | 'Fin Descanso';
 // Helper to check if current time is within any of the time slots for the day, including courtesy margin
 const isWithinScheduleWithMargin = (workDay?: WorkDay, margin: number = 0): boolean => {
     if (!workDay || workDay.type === 'no-laboral' || !workDay.timeSlots || workDay.timeSlots.length === 0) {
-        // If there's no defined schedule for a workday, we consider it "out of schedule" for strict mode.
-        return false; 
+        return false;
     }
     const now = new Date();
     
@@ -38,14 +37,13 @@ const isWithinScheduleWithMargin = (workDay?: WorkDay, margin: number = 0): bool
             const baseStartTime = set(now, { hours: startHours, minutes: startMinutes, seconds: 0, milliseconds: 0 });
             const baseEndTime = set(now, { hours: endHours, minutes: endMinutes, seconds: 0, milliseconds: 0 });
             
-            // Apply courtesy margin
             const startTimeWithMargin = subMinutes(baseStartTime, margin);
             const endTimeWithMargin = addMinutes(baseEndTime, margin);
 
             return isWithinInterval(now, { start: startTimeWithMargin, end: endTimeWithMargin });
         } catch (e) {
             console.error("Error parsing time slot for schedule check", e);
-            return false; // Fail safely
+            return false;
         }
     });
 };
