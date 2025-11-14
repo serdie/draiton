@@ -1,7 +1,31 @@
 
+
 'use client';
 
 import type { Timestamp } from 'firebase/firestore';
+
+export type WorkDayType = 'no-laboral' | 'continua' | 'partida';
+
+export type TimeSlot = {
+    start: string;
+    end: string;
+};
+
+export type WorkDay = {
+    type: WorkDayType;
+    timeSlots: TimeSlot[];
+};
+
+export type WorkSchedule = {
+    monday: WorkDay;
+    tuesday: WorkDay;
+    wednesday: WorkDay;
+    thursday: WorkDay;
+    friday: WorkDay;
+    saturday: WorkDay;
+    sunday: WorkDay;
+};
+
 
 export type Employee = {
     id: string;
@@ -36,6 +60,7 @@ export type Employee = {
         name: string;
         nif: string;
     };
+    workSchedule?: WorkSchedule;
 };
 
 export type BreakDetails = {

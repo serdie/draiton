@@ -1,17 +1,18 @@
 
+
 'use client';
 
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Loader2, Power, Coffee } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { format } from 'date-fns';
+import { format, getDay, set } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FichajeHistory } from '../../proyectos/fichaje-history';
-import type { Employee, Fichaje, BreakDetails } from './types';
+import type { Employee, Fichaje, BreakDetails, WorkDay, TimeSlot } from './types';
 import { StartBreakModal } from './start-break-modal';
 import { SelectWorkModalityModal } from './select-work-modality-modal';
 import { AuthContext } from '@/context/auth-context';
@@ -20,6 +21,24 @@ import { AuthContext } from '@/context/auth-context';
 type FichajeStatus = 'out' | 'in';
 type BreakStatus = 'working' | 'on_break';
 type PostModalityAction = 'Entrada' | 'Fin Descanso';
+
+// Helper to check if current time is within any of the time slots for the day
+const isWithinSchedule = (workDay?: WorkDay): boolean => {
+    if (!workDay || workDay.type === 'no-laboral' || !workDay.timeSlots) {
+        return false;
+    }
+    const now = new Date();
+    
+    return workDay.timeSlots.some(slot => {
+        const [startHours, startMinutes] = slot.start.split(':').map(Number);
+        const [endHours, endMinutes] = slot.end.split(':').map(Number);
+        
+        const startTime = set(now, { hours: startHours, minutes: startMinutes, seconds: 0, milliseconds: 0 });
+        const endTime = set(now, { hours: endHours, minutes: endMinutes, seconds: 0, milliseconds: 0 });
+
+        return now >= startTime && now <= endTime;
+    });
+};
 
 
 export function FichajeEmpleadoTab() {
@@ -35,6 +54,9 @@ export function FichajeEmpleadoTab() {
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
     const [postModalityAction, setPostModalityAction] = useState<PostModalityAction | null>(null);
 
+    // State for clocking in/out availability
+    const [isClockInAllowed, setIsClockInAllowed] = useState(false);
+
 
     // Effect to get current employee profile
     useEffect(() => {
@@ -47,6 +69,29 @@ export function FichajeEmpleadoTab() {
         });
         return () => unsubscribe();
     }, [user]);
+    
+    // This effect checks the schedule every second to enable/disable the clock-in button
+    useEffect(() => {
+        const checkSchedule = () => {
+            if (!currentEmployee?.workSchedule) {
+                // If there's no schedule, always allow clock-in (default behavior)
+                setIsClockInAllowed(true);
+                return;
+            }
+
+            const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0, Sunday = 6
+            const dayKey = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][todayIndex] as keyof typeof currentEmployee.workSchedule;
+            const todaySchedule = currentEmployee.workSchedule[dayKey];
+            
+            setIsClockInAllowed(isWithinSchedule(todaySchedule));
+        };
+
+        checkSchedule(); // Check immediately on load
+        const intervalId = setInterval(checkSchedule, 1000); // Check every second
+
+        return () => clearInterval(intervalId);
+    }, [currentEmployee]);
+
 
     // Effect to determine initial status and load all fichajes
     useEffect(() => {
@@ -190,6 +235,12 @@ export function FichajeEmpleadoTab() {
     const isClockIn = status === 'in';
     const isOnBreak = breakStatus === 'on_break';
     const isLoading = status === 'loading';
+    
+    // Disable clock-in if not within schedule and not already in
+    const clockInDisabled = (!isClockInAllowed && !isClockIn) || isLoading || isProcessing || isOnBreak;
+    // Clock-out should always be possible if clocked in, regardless of schedule
+    const clockOutDisabled = isLoading || isProcessing || isOnBreak;
+
 
     return (
         <>
@@ -231,7 +282,7 @@ export function FichajeEmpleadoTab() {
                             size="lg" 
                             className={`w-full ${isClockIn ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
                             onClick={() => (isClockIn ? handleFichaje('Salida') : handleClockIn())}
-                            disabled={isLoading || isProcessing || isOnBreak}
+                            disabled={isClockIn ? clockOutDisabled : clockInDisabled}
                         >
                             {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isClockIn ? <LogOut className="mr-2 h-5 w-5"/> : <LogIn className="mr-2 h-5 w-5"/>) }
                             {isProcessing ? 'Registrando...' : (isClockIn ? 'Fichar Salida' : 'Fichar Entrada')}

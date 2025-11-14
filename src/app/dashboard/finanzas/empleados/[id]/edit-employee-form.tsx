@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Calendar as CalendarIcon, Percent } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Timestamp } from 'firebase/firestore';
-import type { Employee } from '../types';
+import type { Employee, WorkSchedule } from '../types';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { EmployeePortalCard } from './employee-portal-card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { WorkScheduleForm } from './work-schedule';
 
 interface EditEmployeeFormProps {
   onClose: () => void;
@@ -52,6 +53,8 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
   const [grossAnnualSalary, setGrossAnnualSalary] = useState(String(employee.grossAnnualSalary));
   const [proratedExtraPays, setProratedExtraPays] = useState(employee.proratedExtraPays ?? true);
   const [extraPaysConfig, setExtraPaysConfig] = useState(employee.extraPaysConfig || '2 Pagas (Julio y Diciembre)');
+  const [workSchedule, setWorkSchedule] = useState<WorkSchedule | undefined>(employee.workSchedule);
+
 
   const [hireDate, setHireDate] = useState<Date | undefined>(() => {
     if (!employee.hireDate) return undefined;
@@ -80,6 +83,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
     setGrossAnnualSalary(String(employee.grossAnnualSalary));
     setProratedExtraPays(employee.proratedExtraPays ?? true);
     setExtraPaysConfig(employee.extraPaysConfig || '2 Pagas (Julio y Diciembre)');
+    setWorkSchedule(employee.workSchedule);
     if (employee.hireDate) {
       const date = employee.hireDate instanceof Timestamp ? employee.hireDate.toDate() : new Date(employee.hireDate);
        if (isValid(date)) {
@@ -149,6 +153,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
         proratedExtraPays,
         extraPaysConfig: extraPaysConfig,
         hireDate: hireDate || undefined,
+        workSchedule: workSchedule,
       };
 
       if (workModality === 'Mixto') {
@@ -176,7 +181,7 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
 
   return (
     <form onSubmit={handleUpdate} className="space-y-4">
-        <Accordion type="multiple" className="w-full" >
+        <Accordion type="multiple" className="w-full" defaultValue={['item-1']}>
             <AccordionItem value="item-1">
                 <AccordionTrigger>Datos Personales de {name}</AccordionTrigger>
                 <AccordionContent className="space-y-4 pt-4">
@@ -367,6 +372,12 @@ export function EditEmployeeForm({ onClose, employee }: EditEmployeeFormProps) {
                             </Select>
                         </div>
                     </div>
+                </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3">
+                <AccordionTrigger>Horario Semanal de Trabajo</AccordionTrigger>
+                <AccordionContent className="pt-4">
+                    <WorkScheduleForm initialSchedule={workSchedule} onChange={setWorkSchedule} />
                 </AccordionContent>
             </AccordionItem>
         </Accordion>
