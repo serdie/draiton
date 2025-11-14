@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useContext, useEffect, useMemo } from 'react';
@@ -9,10 +8,10 @@ import { LogIn, LogOut, Loader2, Power, Coffee } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, Timestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { format, getDay, set, addMinutes, subMinutes } from 'date-fns';
+import { format, getDay, set, addMinutes, subMinutes, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FichajeHistory } from '../../proyectos/fichaje-history';
-import type { Employee, Fichaje, BreakDetails, WorkDay, TimeSlot } from './types';
+import type { Employee, Fichaje, BreakDetails, WorkDay, TimeSlot, WorkSchedule } from './types';
 import { StartBreakModal } from './start-break-modal';
 import { SelectWorkModalityModal } from './select-work-modality-modal';
 import { AuthContext } from '@/context/auth-context';
@@ -24,26 +23,31 @@ type PostModalityAction = 'Entrada' | 'Fin Descanso';
 
 // Helper to check if current time is within any of the time slots for the day, including courtesy margin
 const isWithinScheduleWithMargin = (workDay?: WorkDay, margin: number = 0): boolean => {
-    if (!workDay || workDay.type === 'no-laboral' || !workDay.timeSlots) {
-        // If there is no schedule defined for the day, we can consider it "within schedule" to not block clock-ins.
-        // The incidence logic will handle the notification.
+    if (!workDay || workDay.type === 'no-laboral' || !workDay.timeSlots || workDay.timeSlots.length === 0) {
+        // If there's no defined schedule for a workday, allow clock-in.
+        // Incidents for this should be handled elsewhere if needed.
         return true; 
     }
     const now = new Date();
     
     return workDay.timeSlots.some(slot => {
-        const [startHours, startMinutes] = slot.start.split(':').map(Number);
-        const [endHours, endMinutes] = slot.end.split(':').map(Number);
-        
-        const baseStartTime = set(now, { hours: startHours, minutes: startMinutes, seconds: 0, milliseconds: 0 });
-        const baseEndTime = set(now, { hours: endHours, minutes: endMinutes, seconds: 0, milliseconds: 0 });
-        
-        // Apply courtesy margin
-        const startTimeWithMargin = subMinutes(baseStartTime, margin);
-        const endTimeWithMargin = addMinutes(baseEndTime, margin);
+        if (!slot.start || !slot.end) return false;
+        try {
+            const [startHours, startMinutes] = slot.start.split(':').map(Number);
+            const [endHours, endMinutes] = slot.end.split(':').map(Number);
+            
+            const baseStartTime = set(now, { hours: startHours, minutes: startMinutes, seconds: 0, milliseconds: 0 });
+            const baseEndTime = set(now, { hours: endHours, minutes: endMinutes, seconds: 0, milliseconds: 0 });
+            
+            // Apply courtesy margin
+            const startTimeWithMargin = subMinutes(baseStartTime, margin);
+            const endTimeWithMargin = addMinutes(baseEndTime, margin);
 
-
-        return now >= startTimeWithMargin && now <= endTimeWithMargin;
+            return isWithinInterval(now, { start: startTimeWithMargin, end: endTimeWithMargin });
+        } catch (e) {
+            console.error("Error parsing time slot for schedule check", e);
+            return false; // Fail safely
+        }
     });
 };
 
@@ -177,29 +181,12 @@ export function FichajeEmpleadoTab() {
         
         setIsProcessing(true);
 
-        const now = new Date();
-        const todayIndex = (now.getDay() + 6) % 7;
-        const dayKey = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][todayIndex] as keyof WorkSchedule;
-        const todaySchedule = currentEmployee.workSchedule?.[dayKey];
-        const isStrict = currentEmployee.strictSchedule ?? false;
-        const margin = currentEmployee.courtesyMargin ?? 0;
-
-        let incidence: string | null = null;
-        if (isStrict && todaySchedule && todaySchedule.type !== 'no-laboral') {
-            const isWithinTime = isWithinScheduleWithMargin(todaySchedule, margin);
-            if (!isWithinTime && (type === 'Entrada' || type === 'Salida')) {
-                incidence = `${type} fuera de horario`;
-            }
-        }
-
-
         const fichajeData: any = {
             employeeId: user.uid,
             ownerId: companyOwnerId,
             employeeName: user.displayName,
             type: type,
             timestamp: serverTimestamp(),
-            incidence: incidence,
         };
 
         if (details) {
@@ -212,20 +199,10 @@ export function FichajeEmpleadoTab() {
         try {
             await addDoc(collection(db, 'fichajes'), fichajeData);
 
-            if (incidence) {
-                // TODO: Enviar notificación al manager (dueño de la empresa)
-                console.log(`Incidencia registrada: ${incidence}. Se debe notificar a ${companyOwnerId}.`);
-                 toast({
-                    variant: "destructive",
-                    title: 'Fichaje Fuera de Horario',
-                    description: `Se ha registrado una incidencia por fichar ${type.toLowerCase()} fuera de tu horario laboral.`,
-                });
-            } else {
-                toast({
-                    title: `Fichaje de ${type} registrado`,
-                    description: `Has registrado tu ${type.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
-                });
-            }
+            toast({
+                title: `Fichaje de ${type} registrado`,
+                description: `Has registrado tu ${type.toLowerCase()} a las ${format(new Date(), 'HH:mm')}.`,
+            });
 
         } catch (error) {
             console.error("Error al registrar fichaje:", error);
@@ -243,10 +220,17 @@ export function FichajeEmpleadoTab() {
     const isClockIn = status === 'in';
     const isOnBreak = breakStatus === 'on_break';
     const isLoading = status === 'loading';
+
+    // Get current day's schedule to check if clock-in is allowed
+    const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0, ..., Sunday = 6
+    const dayKey = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][todayIndex] as keyof WorkSchedule;
+    const todaySchedule = currentEmployee?.workSchedule?.[dayKey];
+    const isStrict = currentEmployee?.strictSchedule ?? false;
+    const margin = currentEmployee?.courtesyMargin ?? 0;
     
-    // La lógica de deshabilitar el botón se ha eliminado para permitir siempre el fichaje,
-    // la validación se hace ahora en `handleFichaje` para registrar incidencias.
-    const clockInDisabled = isLoading || isProcessing || isOnBreak;
+    const isWithinWorkHours = isWithinScheduleWithMargin(todaySchedule, margin);
+
+    const clockInDisabled = isLoading || isProcessing || isOnBreak || (isStrict && !isWithinWorkHours);
     const clockOutDisabled = isLoading || isProcessing || isOnBreak;
 
 
@@ -284,13 +268,16 @@ export function FichajeEmpleadoTab() {
                                 Último fichaje: {lastFichajeTime}
                             </p>
                         )}
+                         {isStrict && !isWithinWorkHours && !isClockIn && !isLoading && (
+                            <p className="text-xs text-destructive mt-1">Estás fuera de tu horario laboral.</p>
+                        )}
                     </div>
                     <div className="w-full space-y-2">
                         <Button 
                             size="lg" 
                             className={`w-full ${isClockIn ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
                             onClick={() => (isClockIn ? handleFichaje('Salida') : handleClockIn())}
-                            disabled={clockInDisabled}
+                            disabled={isClockIn ? clockOutDisabled : clockInDisabled}
                         >
                             {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isClockIn ? <LogOut className="mr-2 h-5 w-5"/> : <LogIn className="mr-2 h-5 w-5"/>) }
                             {isProcessing ? 'Registrando...' : (isClockIn ? 'Fichar Salida' : 'Fichar Entrada')}
