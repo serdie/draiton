@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FichajeEmpleadoTab } from './fichaje-empleado-tab';
 import { EmployeeAbsenceCalendar } from './employee-absence-calendar';
+import type { Task } from '../tareas/types';
 
 
 export type ProjectStatus = 'Planificación' | 'En Progreso' | 'En Espera' | 'Completado' | 'Cancelado';

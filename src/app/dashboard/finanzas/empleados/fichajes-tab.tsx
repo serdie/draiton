@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { EmployeeClocksCalendar } from '../../proyectos/employee-clocks-calendar';
-import { type Fichaje, type Employee } from '../../proyectos/types'; 
+import { type Fichaje, type Employee } from './types'; 
 import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { AuthContext } from '@/context/auth-context';
