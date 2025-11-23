@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Image as ImageIcon, Loader2, Save, Trash2 } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Save, Trash2, BookOpen, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -18,6 +18,8 @@ import Image from 'next/image';
 import { uploadCompanyLogo } from '@/lib/firebase/storage-actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { provincias } from '@/lib/provincias';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ConvenioFinder } from './convenio-finder';
 
 
 export function EmpresaSettings() {
@@ -27,6 +29,7 @@ export function EmpresaSettings() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [logoPreview, setLogoPreview] = useState(user?.company?.logoUrl || null);
+    const [convenio, setConvenio] = useState(user?.company?.convenio || '');
 
     const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -60,6 +63,7 @@ export function EmpresaSettings() {
             brandColor: formData.get('brandColor') as string,
             iban: formData.get('companyIban') as string,
             logoUrl: logoPreview || '',
+            convenio: convenio,
         };
 
         try {
@@ -115,6 +119,14 @@ export function EmpresaSettings() {
             setIsUploading(false);
         }
     };
+
+    const handleSelectConvenio = (convenioTitle: string) => {
+        setConvenio(convenioTitle);
+        toast({
+            title: 'Convenio Seleccionado',
+            description: 'El convenio se ha asignado. Guarda los cambios para confirmarlo.',
+        });
+    }
     
     const companyData = user?.company;
     const addressData = user?.company?.address;
@@ -162,6 +174,25 @@ export function EmpresaSettings() {
                 </div>
             </div>
             
+            <Separator />
+
+             <Collapsible>
+                <CollapsibleTrigger className="flex w-full justify-between items-center text-lg font-medium">
+                    <div className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5" />
+                        Convenio Colectivo
+                    </div>
+                    <ChevronDown className="h-5 w-5 transition-transform data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4 space-y-4">
+                    <div className="space-y-2">
+                        <Label>Convenio Actual Seleccionado</Label>
+                        <Input value={convenio || 'Ninguno seleccionado'} readOnly className="bg-muted" />
+                    </div>
+                     <ConvenioFinder onSelect={handleSelectConvenio} />
+                </CollapsibleContent>
+            </Collapsible>
+
             <Separator />
             
             {/* Branding Section */}

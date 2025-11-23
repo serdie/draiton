@@ -36,7 +36,8 @@
             "iban": { "type": "string" },
             "logoUrl": { "type": "string", "format": "uri" },
             "phone": { "type": "string" },
-            "terminos": { "type": "string" }
+            "terminos": { "type": "string" },
+            "convenio": { "type": "string", "description": "Nombre del convenio colectivo aplicable." }
           }
         }
       },

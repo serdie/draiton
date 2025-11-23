@@ -23,6 +23,7 @@ export type CompanySettings = {
     logoUrl?: string;
     terminos?: string;
     phone?: string;
+    convenio?: string;
 }
 
 export type UserProfileData = {
