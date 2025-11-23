@@ -1,43 +1,42 @@
 
 'use client';
 
-import { useActionState, useState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Search, Terminal, BookOpen, ExternalLink, CheckCircle } from 'lucide-react';
+import { Loader2, Search, Terminal, ExternalLink, CheckCircle } from 'lucide-react';
 import { findCollectiveAgreementAction } from './actions';
 import type { FindCollectiveAgreementOutput } from '@/ai/flows/find-collective-agreement';
 import { provincias } from '@/lib/provincias';
 import Link from 'next/link';
 
+// Definimos el estado aquí para que no dependa de `useActionState`
 type FormState = {
   output: FindCollectiveAgreementOutput | null;
   error: string | null;
 };
 
-// El botón ahora usa useFormStatus para reaccionar al estado del formulario padre
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
-    </Button>
-  );
-}
-
 export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => void }) {
-  const initialState: FormState = { output: null, error: null };
-  const [state, formAction] = useActionState(findCollectiveAgreementAction, initialState);
+  const [state, setState] = useState<FormState>({ output: null, error: null });
+  const [isPending, startTransition] = useTransition();
   const [scope, setScope] = useState<'nacional' | 'autonomico' | 'provincial'>('nacional');
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+
+    startTransition(async () => {
+      const result = await findCollectiveAgreementAction({ output: null, error: null }, formData);
+      setState(result);
+    });
+  };
 
   return (
     <div className="p-4 border rounded-lg bg-background/50 space-y-6">
-        {/* El `action` del formulario se encarga de todo. No necesitamos un `onSubmit` personalizado. */}
-        <form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div className="space-y-2">
                     <Label htmlFor="scope">Ámbito</Label>
@@ -77,8 +76,9 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                     <Input id="sectorKeyword" name="sectorKeyword" required placeholder="Ej: Hostelería, Construcción, Metal..." />
                 </div>
             </div>
-            {/* El SubmitButton ahora leerá el estado 'pending' del formulario automáticamente */}
-            <SubmitButton />
+            <Button type="submit" disabled={isPending}>
+                {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
+            </Button>
         </form>
 
          {state.error && (
