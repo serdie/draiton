@@ -164,7 +164,7 @@ export function EmpresaSettings() {
                          <Select name="province" defaultValue={addressData?.province}>
                             <SelectTrigger><SelectValue placeholder="Provincia" /></SelectTrigger>
                             <SelectContent>
-                                {provincias.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                                {provincias.provincias.map(p => <SelectItem key={p.codigo} value={p.nombre}>{p.nombre}</SelectItem>)}
                             </SelectContent>
                         </Select>
                         <Input name="country" placeholder="País" defaultValue={addressData?.country || 'España'} />

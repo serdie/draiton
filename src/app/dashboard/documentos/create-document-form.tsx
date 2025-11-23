@@ -426,7 +426,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                                 <Select value={clientAddress.province || ''} onValueChange={value => setClientAddress(prev => ({...prev, province: value}))}>
                                     <SelectTrigger><SelectValue placeholder="Provincia" /></SelectTrigger>
                                     <SelectContent>
-                                        {provincias.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                                        {provincias.provincias.map(p => <SelectItem key={p.codigo} value={p.nombre}>{p.nombre}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                                <Input placeholder="País" value={clientAddress.country || 'España'} onChange={e => setClientAddress(prev => ({...prev, country: e.target.value}))} />

@@ -216,9 +216,9 @@ export function AddContactForm({ onClose }: { onClose: () => void }) {
                     <FormItem>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Provincia" /></SelectTrigger></FormControl>
-                            <SelectContent><SelectContent>
-                                {provincias.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                            </SelectContent></SelectContent>
+                            <SelectContent>
+                                {provincias.provincias.map(p => <SelectItem key={p.codigo} value={p.nombre}>{p.nombre}</SelectItem>)}
+                            </SelectContent>
                         </Select>
                     </FormItem>
                 )} />
