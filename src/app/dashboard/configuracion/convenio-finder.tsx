@@ -26,9 +26,10 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsPending(true);
-    setState({ output: null, error: null }); // Reset previous state
+    setState({ output: null, error: null });
 
     const formData = new FormData(event.currentTarget);
+    
     try {
         const result = await findCollectiveAgreementAction({ output: null, error: null }, formData);
         setState(result);
@@ -71,7 +72,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                         <Select name="province" required>
                              <SelectTrigger id="province"><SelectValue placeholder="Selecciona..."/></SelectTrigger>
                              <SelectContent>
-                                {provincias.provincias.map(p => <SelectItem key={p.nombre} value={p.nombre}>{p.nombre}</SelectItem>)}
+                                {provincias.provincias.map(p => <SelectItem key={p.codigo} value={p.nombre}>{p.nombre}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
