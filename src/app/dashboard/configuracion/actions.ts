@@ -1,3 +1,4 @@
+
 'use server';
 
 import { findCollectiveAgreement, type FindCollectiveAgreementInput, type FindCollectiveAgreementOutput } from '@/ai/flows/find-collective-agreement';
