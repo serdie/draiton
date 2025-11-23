@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useActionState, useState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,40 +19,25 @@ type FormState = {
   error: string | null;
 };
 
-// Componente de botón que depende de un estado de carga simple
-function SubmitButton({ isPending }: { isPending: boolean }) {
+// El botón ahora usa useFormStatus para reaccionar al estado del formulario padre
+function SubmitButton() {
+  const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={isPending}>
-      {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
+    <Button type="submit" disabled={pending}>
+      {pending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
     </Button>
   );
 }
 
 export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => void }) {
   const initialState: FormState = { output: null, error: null };
-  // Usamos useActionState para manejar la respuesta de la acción del servidor
   const [state, formAction] = useActionState(findCollectiveAgreementAction, initialState);
-  
-  // Estado local para controlar el estado de carga del botón, esto nos da control inmediato
-  const [isPending, setIsPending] = useState(false);
-  
   const [scope, setScope] = useState<'nacional' | 'autonomico' | 'provincial'>('nacional');
-
-  // Cada vez que el `state` del servidor cambia (termina la búsqueda), ponemos `isPending` a `false`
-  useEffect(() => {
-    setIsPending(false);
-  }, [state]);
-
-  const handleFormAction = (formData: FormData) => {
-    // Al enviar el formulario, ponemos `isPending` a `true` INMEDIATAMENTE
-    setIsPending(true);
-    // Luego llamamos a la acción del servidor
-    formAction(formData);
-  };
 
   return (
     <div className="p-4 border rounded-lg bg-background/50 space-y-6">
-        <form action={handleFormAction} className="space-y-4">
+        {/* El `action` del formulario se encarga de todo. No necesitamos un `onSubmit` personalizado. */}
+        <form action={formAction} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div className="space-y-2">
                     <Label htmlFor="scope">Ámbito</Label>
@@ -91,8 +77,8 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                     <Input id="sectorKeyword" name="sectorKeyword" required placeholder="Ej: Hostelería, Construcción, Metal..." />
                 </div>
             </div>
-            {/* Pasamos el estado de carga local al botón */}
-            <SubmitButton isPending={isPending} />
+            {/* El SubmitButton ahora leerá el estado 'pending' del formulario automáticamente */}
+            <SubmitButton />
         </form>
 
          {state.error && (
