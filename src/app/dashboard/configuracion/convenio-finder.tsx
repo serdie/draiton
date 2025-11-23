@@ -35,7 +35,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
     } catch (error) {
         setState({ output: null, error: 'Ha ocurrido un error inesperado al contactar con el servidor.' });
     } finally {
-        setIsPending(false); // Ensure loading state is always turned off
+        setIsPending(false);
     }
   };
 
