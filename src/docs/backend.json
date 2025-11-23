@@ -36,7 +36,8 @@
             "iban": { "type": "string" },
             "logoUrl": { "type": "string", "format": "uri" },
             "phone": { "type": "string" },
-            "terminos": { "type": "string" }
+            "terminos": { "type": "string" },
+            "convenio": { "type": "string", "description": "Nombre del convenio colectivo aplicable." }
           }
         }
       },
@@ -127,6 +128,38 @@
         },
         "required": ["name", "email", "type", "ownerId"]
     },
+    "WorkSchedule": {
+      "title": "Work Schedule",
+      "description": "Defines the weekly work schedule for an employee.",
+      "type": "object",
+      "properties": {
+        "monday": { "$ref": "#/entities/WorkDay" },
+        "tuesday": { "$ref": "#/entities/WorkDay" },
+        "wednesday": { "$ref": "#/entities/WorkDay" },
+        "thursday": { "$ref": "#/entities/WorkDay" },
+        "friday": { "$ref": "#/entities/WorkDay" },
+        "saturday": { "$ref": "#/entities/WorkDay" },
+        "sunday": { "$ref": "#/entities/WorkDay" }
+      }
+    },
+    "WorkDay": {
+      "title": "Work Day",
+      "description": "Defines the schedule for a single day.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["no-laboral", "continua", "partida"] },
+        "timeSlots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": { "type": "string", "format": "time" },
+              "end": { "type": "string", "format": "time" }
+            }
+          }
+        }
+      }
+    },
     "Employee": {
         "title": "Employee",
         "description": "Represents an employee of a company.",
@@ -135,6 +168,7 @@
             "name": { "type": "string" },
             "email": { "type": "string", "format": "email" },
             "position": { "type": "string" },
+            "professionalGroup": { "type": "string" },
             "nif": { "type": "string" },
             "phone": { "type": "string" },
             "socialSecurityNumber": { "type": "string" },
@@ -164,7 +198,10 @@
                     "name": { "type": "string", "description": "Full name used for the signature." },
                     "nif": { "type": "string", "description": "NIF/DNI used for the signature." }
                 }
-            }
+            },
+            "workSchedule": { "$ref": "#/entities/WorkSchedule" },
+            "strictSchedule": { "type": "boolean", "description": "Enforce clock-in/out times based on the work schedule." },
+            "courtesyMargin": { "type": "number", "description": "Courtesy margin in minutes for clocking in." }
         },
         "required": ["name", "email", "ownerId", "companyOwnerId", "employeePortalActive", "employeePortalId"]
     },
@@ -282,5 +319,3 @@
     }
   }
 }
-
-    
