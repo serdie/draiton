@@ -64,6 +64,8 @@ export function EmpresaSettings() {
             iban: formData.get('companyIban') as string,
             logoUrl: logoPreview || '',
             convenio: convenio,
+            phone: user.company?.phone || '', // Persist existing phone
+            terminos: user.company?.terminos || '' // Persist existing terminos
         };
 
         try {

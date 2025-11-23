@@ -8,9 +8,10 @@ export async function findCollectiveAgreementAction(
   currentState: { output: FindCollectiveAgreementOutput | null; error: string | null },
   formData: FormData
 ): Promise<{ output: FindCollectiveAgreementOutput | null; error: string | null }> {
+  
   const scope = formData.get('scope') as FindCollectiveAgreementInput['scope'];
-  const region = formData.get('region') as string;
-  const province = formData.get('province') as string;
+  const region = formData.get('region') as string | undefined;
+  const province = formData.get('province') as string | undefined;
   const sectorKeyword = formData.get('sectorKeyword') as string;
 
   if (!scope || !sectorKeyword) {
