@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,6 @@ import type { FindCollectiveAgreementOutput } from '@/ai/flows/find-collective-a
 import { provincias } from '@/lib/provincias';
 import Link from 'next/link';
 
-// Definimos el estado aquí para que no dependa de `useActionState`
 type FormState = {
   output: FindCollectiveAgreementOutput | null;
   error: string | null;
@@ -21,17 +20,23 @@ type FormState = {
 
 export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => void }) {
   const [state, setState] = useState<FormState>({ output: null, error: null });
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [scope, setScope] = useState<'nacional' | 'autonomico' | 'provincial'>('nacional');
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    setIsPending(true);
+    setState({ output: null, error: null }); // Reset previous state
 
-    startTransition(async () => {
-      const result = await findCollectiveAgreementAction({ output: null, error: null }, formData);
-      setState(result);
-    });
+    const formData = new FormData(event.currentTarget);
+    try {
+        const result = await findCollectiveAgreementAction({ output: null, error: null }, formData);
+        setState(result);
+    } catch (error) {
+        setState({ output: null, error: 'Ha ocurrido un error inesperado al contactar con el servidor.' });
+    } finally {
+        setIsPending(false); // Ensure loading state is always turned off
+    }
   };
 
   return (
