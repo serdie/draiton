@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useActionState, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useActionState, useEffect, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,18 +19,11 @@ type FormState = {
   error: string | null;
 };
 
-const comunidadesAutonomas = [
-  "Andalucía", "Aragón", "Asturias", "Islas Baleares", "Canarias", "Cantabria", 
-  "Castilla y León", "Castilla-La Mancha", "Cataluña", "Comunidad Valenciana", 
-  "Extremadura", "Galicia", "Madrid", "Murcia", "Navarra", "País Vasco", "La Rioja",
-  "Ceuta", "Melilla"
-];
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
+// Componente de botón simplificado que solo muestra el estado
+function SubmitButton({ isPending }: { isPending: boolean }) {
   return (
-    <Button type="submit" disabled={pending}>
-      {pending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
+    <Button type="submit" disabled={isPending}>
+      {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
     </Button>
   );
 }
@@ -40,10 +32,18 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
   const initialState: FormState = { output: null, error: null };
   const [state, formAction] = useActionState(findCollectiveAgreementAction, initialState);
   const [scope, setScope] = useState<'nacional' | 'autonomico' | 'provincial'>('nacional');
+  // Usamos useTransition para controlar el estado de carga manualmente
+  const [isPending, startTransition] = useTransition();
+
+  const handleFormAction = (formData: FormData) => {
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
 
   return (
     <div className="p-4 border rounded-lg bg-background/50 space-y-6">
-        <form action={formAction} className="space-y-4">
+        <form action={handleFormAction} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div className="space-y-2">
                     <Label htmlFor="scope">Ámbito</Label>
@@ -62,7 +62,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                         <Select name="region" required>
                             <SelectTrigger id="region"><SelectValue placeholder="Selecciona..."/></SelectTrigger>
                             <SelectContent>
-                                {comunidadesAutonomas.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                {provincias.comunidades.map(c => <SelectItem key={c.nombre} value={c.nombre}>{c.nombre}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -73,7 +73,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                         <Select name="province" required>
                              <SelectTrigger id="province"><SelectValue placeholder="Selecciona..."/></SelectTrigger>
                              <SelectContent>
-                                {provincias.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                                {provincias.provincias.map(p => <SelectItem key={p.nombre} value={p.nombre}>{p.nombre}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -83,7 +83,8 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                     <Input id="sectorKeyword" name="sectorKeyword" required placeholder="Ej: Hostelería, Construcción, Metal..." />
                 </div>
             </div>
-            <SubmitButton />
+            {/* Pasamos el estado de carga al botón */}
+            <SubmitButton isPending={isPending} />
         </form>
 
          {state.error && (
