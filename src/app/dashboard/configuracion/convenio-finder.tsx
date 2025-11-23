@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useActionState, useEffect, useTransition } from 'react';
+import { useActionState, useEffect, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Search, Terminal, BookOpen, ExternalLink, CheckCircle } from 'lucide-react';
 import { findCollectiveAgreementAction } from './actions';
 import type { FindCollectiveAgreementOutput } from '@/ai/flows/find-collective-agreement';
-import { useState } from 'react';
 import { provincias } from '@/lib/provincias';
 import Link from 'next/link';
 
@@ -19,7 +18,7 @@ type FormState = {
   error: string | null;
 };
 
-// Componente de botón simplificado que solo muestra el estado
+// Componente de botón que depende de un estado de carga simple
 function SubmitButton({ isPending }: { isPending: boolean }) {
   return (
     <Button type="submit" disabled={isPending}>
@@ -30,15 +29,24 @@ function SubmitButton({ isPending }: { isPending: boolean }) {
 
 export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => void }) {
   const initialState: FormState = { output: null, error: null };
+  // Usamos useActionState para manejar la respuesta de la acción del servidor
   const [state, formAction] = useActionState(findCollectiveAgreementAction, initialState);
+  
+  // Estado local para controlar el estado de carga del botón, esto nos da control inmediato
+  const [isPending, setIsPending] = useState(false);
+  
   const [scope, setScope] = useState<'nacional' | 'autonomico' | 'provincial'>('nacional');
-  // Usamos useTransition para controlar el estado de carga manualmente
-  const [isPending, startTransition] = useTransition();
+
+  // Cada vez que el `state` del servidor cambia (termina la búsqueda), ponemos `isPending` a `false`
+  useEffect(() => {
+    setIsPending(false);
+  }, [state]);
 
   const handleFormAction = (formData: FormData) => {
-    startTransition(() => {
-      formAction(formData);
-    });
+    // Al enviar el formulario, ponemos `isPending` a `true` INMEDIATAMENTE
+    setIsPending(true);
+    // Luego llamamos a la acción del servidor
+    formAction(formData);
   };
 
   return (
@@ -83,7 +91,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                     <Input id="sectorKeyword" name="sectorKeyword" required placeholder="Ej: Hostelería, Construcción, Metal..." />
                 </div>
             </div>
-            {/* Pasamos el estado de carga al botón */}
+            {/* Pasamos el estado de carga local al botón */}
             <SubmitButton isPending={isPending} />
         </form>
 
