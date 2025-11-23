@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Image as ImageIcon, Loader2, Save, Trash2, BookOpen, ChevronDown } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Save, Trash2, BookOpen, ChevronDown, FileUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -27,9 +27,12 @@ export function EmpresaSettings() {
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const convenioFileRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [logoPreview, setLogoPreview] = useState(user?.company?.logoUrl || null);
     const [convenio, setConvenio] = useState(user?.company?.convenio || '');
+    const [convenioFileName, setConvenioFileName] = useState('');
+
 
     const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -129,6 +132,19 @@ export function EmpresaSettings() {
             description: 'El convenio se ha asignado. Guarda los cambios para confirmarlo.',
         });
     }
+
+    const handleConvenioFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setConvenioFileName(file.name);
+            // Aquí iría la lógica para subir el archivo.
+            // Por ahora, solo mostramos una notificación.
+            toast({
+                title: 'Archivo Seleccionado',
+                description: `Has seleccionado "${file.name}". Guarda los cambios para subirlo. (Funcionalidad de subida pendiente)`,
+            });
+        }
+    }
     
     const companyData = user?.company;
     const addressData = user?.company?.address;
@@ -136,6 +152,7 @@ export function EmpresaSettings() {
   return (
     <Card>
       <input type="file" ref={fileInputRef} onChange={handleLogoChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
+      <input type="file" ref={convenioFileRef} onChange={handleConvenioFileChange} className="hidden" accept=".pdf" />
       <CardHeader>
         <CardTitle>Configuración de la Empresa</CardTitle>
         <CardDescription>Configura los detalles de tu empresa, marca y plantillas de facturas.</CardDescription>
@@ -191,7 +208,23 @@ export function EmpresaSettings() {
                         <Label>Convenio Actual Seleccionado</Label>
                         <Input value={convenio || 'Ninguno seleccionado'} readOnly className="bg-muted" />
                     </div>
-                     <ConvenioFinder onSelect={handleSelectConvenio} />
+                    <ConvenioFinder onSelect={handleSelectConvenio} />
+                    <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-card px-2 text-muted-foreground">O</span>
+                        </div>
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Subir Convenio Manualmente</Label>
+                        <Button variant="outline" type="button" onClick={() => convenioFileRef.current?.click()} className="w-full">
+                           <FileUp className="mr-2 h-4 w-4"/> 
+                           Subir PDF del convenio
+                        </Button>
+                        {convenioFileName && <p className="text-sm text-muted-foreground">Archivo seleccionado: {convenioFileName}</p>}
+                    </div>
                 </CollapsibleContent>
             </Collapsible>
 
