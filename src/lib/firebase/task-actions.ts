@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { doc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
@@ -36,30 +35,6 @@ export async function deleteTaskClient(id: string): Promise<{ success: boolean; 
     } catch (error: any) {
         console.error("Error al eliminar la tarea desde la acción del servidor: ", error);
         return { success: false, error: "No se pudo eliminar la tarea en el servidor." };
-    }
-}
-
-
-export async function updateTask(id: string, updatedData: Partial<Task>): Promise<void> {
-     if (!db) {
-        throw new Error("La base de datos no está inicializada.");
-    }
-    if (!id) {
-        throw new Error("Se requiere el ID de la tarea.");
-    }
-
-    const taskRef = doc(db, 'tasks', id);
-    
-    try {
-        await updateDoc(taskRef, updatedData);
-    } catch (serverError) {
-        const permissionError = new FirestorePermissionError({
-            path: taskRef.path,
-            operation: 'update',
-            requestResourceData: updatedData,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        throw serverError; // Re-throw for local handling
     }
 }
 
