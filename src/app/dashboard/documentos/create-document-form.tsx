@@ -333,7 +333,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
             await addDoc(contactsRef, {
                 ownerId: user.uid,
                 name: clientName,
-                company: '',
+                company: '', // Placeholder, can be added in CRM
                 cif: clientCif,
                 address: clientAddress,
                 email: clientEmail,
