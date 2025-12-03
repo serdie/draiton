@@ -4,96 +4,97 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Regla para la colección de usuarios
-    match /users/{userId} {
-      allow read, update: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
+    // Helper function to check ownership of an existing resource.
+    function isResourceOwner() {
+      return request.auth != null && request.auth.uid == resource.data.ownerId;
     }
 
-    // Reglas para colecciones propiedad del usuario
-    function isOwner(resource) {
-      return get(/databases/$(database)/documents/$(collectionName)/$(request.resource.id)).data.ownerId == request.auth.uid;
+    // Helper function to check if the user is an employee of the company that owns the resource.
+    function isEmployeeOfResourceOwner() {
+       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyOwnerId == resource.data.ownerId;
     }
-    
-    // Proyectos
+
+    // --- User Profiles ---
+    // A user can create their own profile.
+    // A user can only read or update their own profile.
+    match /users/{userId} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // --- Owner-based Collections ---
+
+    // Projects
     match /projects/{projectId} {
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow read, update, delete: if resource.data.ownerId == request.auth.uid;
+      allow read, update, delete: if isResourceOwner();
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
 
-    // Tareas
+    // Tasks
     match /tasks/{taskId} {
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow read, update, delete: if resource.data.ownerId == request.auth.uid || resource.data.assigneeId == request.auth.uid;
+      allow read, update, delete: if isResourceOwner() || (resource.data.assigneeId == request.auth.uid);
+      allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.assigneeId == request.auth.uid);
     }
 
-    // Facturas y otros documentos
+    // Invoices and other documents
     match /invoices/{invoiceId} {
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow read, update, delete: if resource.data.ownerId == request.auth.uid;
+      allow read, update, delete: if isResourceOwner();
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
     
-    // Gastos
+    // Expenses
     match /expenses/{expenseId} {
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow read, update: if resource.data.ownerId == request.auth.uid;
-      allow delete: if resource.data.ownerId == request.auth.uid;
+      allow read, update, delete: if isResourceOwner();
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
 
-    // Contactos
+    // Contacts
     match /contacts/{contactId} {
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow read, update, delete: if resource.data.ownerId == request.auth.uid;
+      allow read, update, delete: if isResourceOwner();
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
 
-    // Empleados
+    // Employees
     match /employees/{employeeId} {
-      // El dueño de la empresa puede gestionar a sus empleados.
-      // Un empleado puede leer sus propios datos.
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow read: if resource.data.ownerId == request.auth.uid || request.auth.uid == employeeId;
-      allow update, delete: if resource.data.ownerId == request.auth.uid;
+      allow read: if isResourceOwner() || request.auth.uid == employeeId;
+      allow update, delete: if isResourceOwner();
+      allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
 
-    // Fichajes (Control Horario)
+    // Time Clocking (Fichajes)
     match /fichajes/{fichajeId} {
-        // Un empleado puede crear su propio fichaje.
         allow create: if request.auth.uid == request.resource.data.employeeId;
-        // El dueño puede leer todos los fichajes de su empresa.
-        // El empleado puede leer sus propios fichajes.
-        allow read: if request.auth != null && (resource.data.ownerId == request.auth.uid || resource.data.employeeId == request.auth.uid);
-        // Permite la consulta de fichajes por empleado o por empresa
+        allow read: if isResourceOwner() || request.auth.uid == resource.data.employeeId;
+        allow update: if request.auth.uid == resource.data.employeeId || isResourceOwner();
         allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
-        // El empleado puede solicitar un cambio, el jefe puede aprobar/rechazar.
-        allow update: if request.auth.uid == resource.data.employeeId || request.auth.uid == resource.data.ownerId;
     }
     
-    // Ausencias (Vacaciones, Bajas, etc.)
+    // Absences
     match /absences/{absenceId} {
-      allow create: if request.auth.uid == request.resource.data.ownerId;
-      // El dueño puede gestionar, el empleado puede leer.
-      allow read: if request.auth != null && (resource.data.ownerId == request.auth.uid || resource.data.employeeId == request.auth.uid);
-      allow update, delete: if request.auth.uid == resource.data.ownerId;
-      // Permite al dueño y al empleado listar sus ausencias correspondientes.
+      allow create: if request.auth.uid == request.resource.data.employeeId; // An employee creates their own absence request
+      allow read: if isResourceOwner() || request.auth.uid == resource.data.employeeId;
+      allow update, delete: if isResourceOwner();
       allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
     }
     
     // Notifications
     match /notifications/{notificationId} {
-      // Un usuario solo puede leer y escribir sus propias notificaciones
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.recipientId;
       allow create: if request.auth != null;
-      // Permite la consulta para obtener notificaciones por destinatario
+      allow read, write: if request.auth != null && resource.data.recipientId == request.auth.uid;
       allow list: if request.auth != null && request.query.where.recipientId == request.auth.uid;
     }
 
-    // Nóminas
+    // Payrolls
     match /payrolls/{payrollId} {
-        // El dueño puede crear y gestionar las nóminas.
-        // El empleado puede leer sus propias nóminas.
         allow create: if request.auth.uid == request.resource.data.ownerId;
-        allow read, delete: if resource.data.ownerId == request.auth.uid || request.auth.uid == resource.data.employeeId;
+        allow read, delete: if isResourceOwner() || request.auth.uid == resource.data.employeeId;
+        allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
     }
-    
   }
 }
