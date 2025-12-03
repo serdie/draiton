@@ -23,7 +23,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { AuthContext } from '@/context/auth-context';
 import { Loader2, PlusCircle } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -57,6 +58,7 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 export function EditContactForm({ contact, onClose }: { contact: Contact, onClose: () => void }) {
   const { toast } = useToast();
+  const { user } = useContext(AuthContext);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contactTypes, setContactTypes] = useState(['Cliente', 'Proveedor', 'Lead', 'Colaborador']);
   const [newTypeName, setNewTypeName] = useState('');
@@ -94,11 +96,26 @@ export function EditContactForm({ contact, onClose }: { contact: Contact, onClos
 
   async function onSubmit(data: ContactFormValues) {
     setIsSubmitting(true);
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Error de autenticación',
+            description: 'Debes iniciar sesión para actualizar un contacto.',
+        });
+        setIsSubmitting(false);
+        return;
+    }
     
     const contactRef = doc(db, "contacts", contact.id);
 
+    // Combine form data with the essential ownerId from the original contact
+    const finalData = {
+        ...data,
+        ownerId: contact.ownerId, 
+    };
+
     try {
-        await updateDoc(contactRef, data);
+        await updateDoc(contactRef, finalData);
         toast({
             title: 'Contacto Actualizado',
             description: `Se han guardado los cambios para ${data.name}.`,
@@ -263,6 +280,7 @@ export function EditContactForm({ contact, onClose }: { contact: Contact, onClos
                         </DialogContent>
                     </Dialog>
                 </div>
+                 <FormMessage />
             </FormItem>
           )}
         />
