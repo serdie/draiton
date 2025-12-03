@@ -49,7 +49,7 @@ const contactFormSchema = z.object({
   company: z.string().optional(),
   cif: z.string().optional(),
   address: addressSchema.optional(),
-  type: z.enum(['Cliente', 'Proveedor', 'Lead', 'Colaborador']),
+  type: z.string().min(1, { message: 'El tipo es obligatorio.' }),
   notes: z.string().optional(),
 });
 
