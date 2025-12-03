@@ -11,7 +11,7 @@ service cloud.firestore {
     }
 
     // Reglas para colecciones propiedad del usuario
-    function isOwner(collectionName) {
+    function isOwner(resource) {
       return get(/databases/$(database)/documents/$(collectionName)/$(request.resource.id)).data.ownerId == request.auth.uid;
     }
     
