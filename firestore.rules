@@ -20,6 +20,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
       allow read, update: if request.auth != null && request.auth.uid == userId;
+      // Allow a company owner to list their own profile and their employees' profiles.
+      allow list: if request.auth != null && (request.query.where.uid == request.auth.uid || request.query.where.companyOwnerId == request.auth.uid);
     }
 
     // --- Owner-based Collections ---
