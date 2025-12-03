@@ -9,6 +9,8 @@ import {
 import { CreateDocumentForm } from './create-document-form';
 import type { DocumentType, Document } from './page';
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
+import type { Contact } from '../contactos/page';
+
 
 interface CreateDocumentModalProps {
   isOpen: boolean;
@@ -16,9 +18,10 @@ interface CreateDocumentModalProps {
   documentType: DocumentType;
   initialData?: ExtractInvoiceDataOutput;
   documents: Document[];
+  contacts: Contact[];
 }
 
-export function CreateDocumentModal({ isOpen, onClose, documentType, initialData, documents }: CreateDocumentModalProps) {
+export function CreateDocumentModal({ isOpen, onClose, documentType, initialData, documents, contacts }: CreateDocumentModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
@@ -27,6 +30,7 @@ export function CreateDocumentModal({ isOpen, onClose, documentType, initialData
             documentType={documentType}
             initialData={initialData}
             documents={documents}
+            contacts={contacts}
             />
       </DialogContent>
     </Dialog>

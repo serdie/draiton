@@ -29,6 +29,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import type { ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { AuthContext } from '@/context/auth-context';
 import type { Document, DocumentType, DocumentStatus } from './page';
+import type { Contact } from '../contactos/page';
 
 const getBadgeClass = (estado: string) => {
   switch (estado?.toLowerCase()) {
@@ -63,6 +64,7 @@ export function DocumentosContent() {
   const [initialDataForForm, setInitialDataForForm] = useState<ExtractInvoiceDataOutput | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<DocumentType>('factura');
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -108,7 +110,16 @@ export function DocumentosContent() {
         setLoading(false);
     });
 
-    return () => unsubscribe();
+    const contactsQuery = query(collection(db, 'contacts'), where('ownerId', '==', user.uid));
+    const unsubscribeContacts = onSnapshot(contactsQuery, (snapshot) => {
+        const contactsList = snapshot.docs.map(doc => ({id: doc.id, ...doc.data() } as Contact));
+        setContacts(contactsList);
+    });
+
+    return () => {
+      unsubscribe();
+      unsubscribeContacts();
+    }
 }, [activeTab, toast, user]);
 
   const handleCreateNew = (initialData?: ExtractInvoiceDataOutput) => {
@@ -341,6 +352,7 @@ export function DocumentosContent() {
             documentType={activeTab}
             initialData={initialDataForForm}
             documents={documents}
+            contacts={contacts}
         />
       )}
       {docToEdit && (

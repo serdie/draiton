@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useContext } from 'react';
+import { useState, useEffect, useMemo, useContext, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DialogHeader,
@@ -34,6 +34,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Checkbox } from '@/components/ui/checkbox';
 import { provincias } from '@/lib/provincias';
 import { type Address } from '@/lib/firebase/user-settings-actions';
+import type { Contact } from '../contactos/page';
 
 type LineItem = DocLineItem & {
   id: number;
@@ -44,6 +45,7 @@ interface CreateDocumentFormProps {
   documentType: DocumentType;
   initialData?: ExtractInvoiceDataOutput;
   documents: Document[];
+  contacts: Contact[];
 }
 
 const getDocumentTypeLabel = (type: DocumentType) => {
@@ -58,7 +60,7 @@ const getDocumentTypeLabel = (type: DocumentType) => {
 const units = ['cantidad', 'horas', 'día', 'mes', 'kg', 'minuto', 'palabra', 'paquete', 'tonelada', 'metro', 'm2', 'm3', 'noche', 'km', 'semana', 'litro'];
 
 
-export function CreateDocumentForm({ onClose, documentType, initialData, documents }: CreateDocumentFormProps) {
+export function CreateDocumentForm({ onClose, documentType, initialData, documents, contacts }: CreateDocumentFormProps) {
   const { user } = useContext(AuthContext);
   const [docType, setDocType] = useState(documentType);
   const [docNumber, setDocNumber] = useState('');
@@ -87,6 +89,9 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   
+  const [suggestions, setSuggestions] = useState<Contact[]>([]);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  
   const companyData = user?.company;
 
   useEffect(() => {
@@ -103,7 +108,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   }, [documentType]);
   
   useEffect(() => {
-    if (initialData) return; // Do not generate number if we are filling from OCR
+    if (initialData) return;
 
     const prefixMap = {
       factura: "FACT",
@@ -145,7 +150,6 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
       setClientName(initialData.clientName || '');
       setClientCif(initialData.clientCif || '');
       
-      // Simple address string to address object conversion
       if (initialData.clientAddress) {
           setClientAddress({
             addressLine1: initialData.clientAddress.split(',')[0] || '',
@@ -184,6 +188,16 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         setTaxRate(21);
     }
   }, [initialData, docNumber]);
+  
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setSuggestions([]);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleAddLine = () => {
     const newLine: LineItem = {
@@ -217,6 +231,26 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
     setLineItems(updatedItems);
   };
   
+  const handleClientNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setClientName(value);
+    if (value.length > 1) {
+        const filtered = contacts.filter(c => c.name.toLowerCase().includes(value.toLowerCase()));
+        setSuggestions(filtered);
+    } else {
+        setSuggestions([]);
+    }
+  };
+
+  const handleSuggestionClick = (contact: Contact) => {
+    setClientName(contact.name);
+    setClientCif(contact.cif || '');
+    setClientAddress(contact.address || { country: 'España'});
+    setClientEmail(contact.email || '');
+    setClientPhone(contact.phone || '');
+    setSuggestions([]);
+  };
+
   const { subtotal, taxAmount, irpfAmount, total } = useMemo(() => {
     const subtotal = lineItems.reduce((acc, item) => acc + item.total, 0);
     const taxAmountValue = taxRate === 0 ? 0 : (subtotal * taxRate) / 100;
@@ -406,9 +440,19 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                         <CardTitle className="text-base">Detalles del Cliente</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                         <div>
+                         <div className="relative">
                             <Label>Nombre Cliente</Label>
-                            <Input placeholder="Nombre del Cliente" value={clientName} onChange={e => setClientName(e.target.value)} />
+                            <Input placeholder="Nombre del Cliente" value={clientName} onChange={handleClientNameChange} />
+                            {suggestions.length > 0 && (
+                                <div ref={suggestionsRef} className="absolute z-10 w-full bg-card border rounded-md mt-1 max-h-40 overflow-y-auto">
+                                    {suggestions.map(contact => (
+                                        <div key={contact.id} onClick={() => handleSuggestionClick(contact)} className="p-2 hover:bg-muted cursor-pointer">
+                                            <p className="font-semibold">{contact.name}</p>
+                                            <p className="text-xs text-muted-foreground">{contact.email}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                          <div>
                             <Label>CIF/NIF Cliente</Label>
@@ -417,19 +461,19 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                         <div className="space-y-2">
                             <Label>Dirección Cliente</Label>
                             <div className="space-y-2 rounded-md border p-4">
-                               <Input placeholder="Línea 1 de la dirección" value={clientAddress.addressLine1 || ''} onChange={e => setClientAddress(prev => ({...prev, addressLine1: e.target.value}))} />
-                               <Input placeholder="Línea 2 (Opcional)" value={clientAddress.addressLine2 || ''} onChange={e => setClientAddress(prev => ({...prev, addressLine2: e.target.value}))} />
+                               <Input placeholder="Línea 1 de la dirección" value={clientAddress?.addressLine1 || ''} onChange={e => setClientAddress(prev => ({...prev, addressLine1: e.target.value}))} />
+                               <Input placeholder="Línea 2 (Opcional)" value={clientAddress?.addressLine2 || ''} onChange={e => setClientAddress(prev => ({...prev, addressLine2: e.target.value}))} />
                                 <div className="grid grid-cols-2 gap-2">
-                                   <Input placeholder="Ciudad" value={clientAddress.city || ''} onChange={e => setClientAddress(prev => ({...prev, city: e.target.value}))} />
-                                   <Input placeholder="Código Postal" value={clientAddress.postalCode || ''} onChange={e => setClientAddress(prev => ({...prev, postalCode: e.target.value}))} />
+                                   <Input placeholder="Ciudad" value={clientAddress?.city || ''} onChange={e => setClientAddress(prev => ({...prev, city: e.target.value}))} />
+                                   <Input placeholder="Código Postal" value={clientAddress?.postalCode || ''} onChange={e => setClientAddress(prev => ({...prev, postalCode: e.target.value}))} />
                                 </div>
-                                <Select value={clientAddress.province || ''} onValueChange={value => setClientAddress(prev => ({...prev, province: value}))}>
+                                <Select value={clientAddress?.province || ''} onValueChange={value => setClientAddress(prev => ({...prev, province: value}))}>
                                     <SelectTrigger><SelectValue placeholder="Provincia" /></SelectTrigger>
                                     <SelectContent>
                                         {provincias.provincias.map(p => <SelectItem key={p.codigo} value={p.nombre}>{p.nombre}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
-                               <Input placeholder="País" value={clientAddress.country || 'España'} onChange={e => setClientAddress(prev => ({...prev, country: e.target.value}))} />
+                               <Input placeholder="País" value={clientAddress?.country || 'España'} onChange={e => setClientAddress(prev => ({...prev, country: e.target.value}))} />
                             </div>
                         </div>
                          <div className="grid grid-cols-2 gap-2">
