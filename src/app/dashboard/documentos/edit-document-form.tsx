@@ -439,7 +439,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </div>
 
             <div className="flex flex-col items-end space-y-2">
-                <div className="w-[180px] space-y-2">
+                <div className="w-full space-y-2 p-4 rounded-lg border-2 border-primary/20 bg-primary/5">
                     <Label>Estado del Documento</Label>
                     <Select value={status} onValueChange={(v) => setStatus(v as DocumentStatus)}>
                         <SelectTrigger>
@@ -457,7 +457,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="w-[240px] space-y-1 text-right p-4 bg-muted rounded-md">
+                <div className="w-full space-y-1 text-right p-4 bg-muted rounded-md mt-4">
                     <div className="flex justify-between"><span>Subtotal:</span><span>{subtotal.toFixed(2)} EUR</span></div>
                     <div className="flex justify-between"><span>IVA ({taxRate}%):</span><span>{taxAmount.toFixed(2)} EUR</span></div>
                     {applyIrpf && <div className="flex justify-between text-destructive"><span>IRPF (15%):</span><span>-{irpfAmount.toFixed(2)} EUR</span></div>}
@@ -466,10 +466,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </div>
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
-          <Button type="submit" disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? "Guardando..." : "Guardar Cambios"}
+          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading ? "Guardando..." : "Guardar Cambios"}
           </Button>
         </div>
     </form>
