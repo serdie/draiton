@@ -61,6 +61,8 @@ import { tourStepsBase, tourStepsPro, tourStepsFree, tourStepsAdmin } from '@/co
 import { collection, query, where, onSnapshot, updateDoc, doc, Timestamp, orderBy } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Script from 'next/script';
+
 
 type Notification = {
     id: string;
@@ -381,8 +383,12 @@ export default function DashboardLayout({
   return (
     <TourProvider>
       <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      <Script
+        src="https://unpkg.com/@elevenlabs/convai-widget-embed"
+        async
+        strategy="lazyOnload"
+      />
+      <elevenlabs-convai agent-id="agent_0501kbn9512cf21tbh0ypf8xz7v3"></elevenlabs-convai>
     </TourProvider>
   )
 }
-
-    
