@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 's0.wordpress.com',
         port: '',
-        pathname: '/mshots/v1/**',
+        pathname: '/**',
       },
       {
         protocol: 'https',
@@ -40,12 +40,6 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
-        hostname: 'www.paypalobjects.com',
-        port: '',
-        pathname: '/**',
-      },
-       {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
         port: '',

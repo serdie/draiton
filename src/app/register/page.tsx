@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal, Loader2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Logo } from '@/components/logo';
+import Image from 'next/image';
 import { GoogleIcon } from '../dashboard/conexiones/google-icon';
 
 export default function RegisterPage() {
@@ -55,6 +55,7 @@ export default function RegisterPage() {
         uid: user.uid,
         displayName: name,
         email: user.email,
+        photoURL: user.photoURL,
         role: 'free', 
         createdAt: serverTimestamp(),
         providerData: user.providerData.map(p => ({
@@ -121,7 +122,7 @@ export default function RegisterPage() {
         <CardHeader className="text-center">
             <div className="mb-4 inline-block">
                 <Link href="/" >
-                    <Logo className="h-10 w-10 mx-auto"/>
+                     <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={40} height={40} className="h-10 w-auto mx-auto rounded-lg"/>
                 </Link>
             </div>
             <CardTitle>Crea tu Cuenta Gratis</CardTitle>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,7 +8,7 @@ import { db } from '@/lib/firebase/config';
 import { type Project, type ProjectStatus } from '@/app/dashboard/proyectos/page';
 import { type Task } from '@/app/dashboard/tareas/types';
 import { type Document } from '@/app/dashboard/documentos/page';
-import { Logo } from '@/components/logo';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -75,8 +76,8 @@ export default function ClientPortalPage() {
       }
 
       setProject({
-          // id: projectDoc.id, // <-- LÍNEA 78 (ELIMINADA)
-          ...projectData,   // <-- LÍNEA 79 (AHORA LÍNEA 78)
+          id: projectDoc.id, 
+          ...projectData,
           startDate: projectData.startDate ? (projectData.startDate as any).toDate() : null,
           endDate: projectData.endDate ? (projectData.endDate as any).toDate() : null,
       });
@@ -137,7 +138,7 @@ export default function ClientPortalPage() {
         <header className="bg-background border-b">
             <div className="container mx-auto flex h-16 items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Logo className="h-6 w-6"/>
+                    <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={24} height={24} className="h-6 w-auto rounded-sm"/>
                     <span className="font-bold">Portal del Cliente</span>
                 </div>
                  <p className="text-sm text-muted-foreground">Proyecto de <span className="font-semibold text-foreground">{project.client}</span></p>

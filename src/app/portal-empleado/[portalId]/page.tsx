@@ -7,13 +7,12 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/config';
 import { signInWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth';
 import type { Employee } from '@/app/dashboard/finanzas/empleados/types';
-import { Logo } from '@/components/logo';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, User, FileText, Clock, Terminal } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -219,7 +218,7 @@ export default function EmployeePortalPage() {
         <header className="bg-background border-b">
             <div className="container mx-auto flex h-16 items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Logo className="h-6 w-6"/>
+                    <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={24} height={24} className="h-6 w-auto rounded-sm"/>
                     <span className="font-bold">Portal del Empleado</span>
                 </div>
                  {authenticatedUser && (
