@@ -138,8 +138,7 @@ export default function ClientPortalPage() {
         <header className="bg-background border-b">
             <div className="container mx-auto flex h-16 items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={24} height={24} className="h-6 w-auto rounded-sm"/>
-                    <span className="font-bold">Portal del Cliente</span>
+                    <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-7 w-auto"/>
                 </div>
                  <p className="text-sm text-muted-foreground">Proyecto de <span className="font-semibold text-foreground">{project.client}</span></p>
             </div>

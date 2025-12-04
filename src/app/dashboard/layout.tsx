@@ -190,7 +190,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       <Sidebar>
         <SidebarHeader className="p-4 flex justify-center">
             <Link href="/dashboard" className="flex items-center gap-2" id="tour-logo">
-                <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={32} height={32} className="h-8 w-8 rounded-lg"/>
+                <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-8 w-auto"/>
             </Link>
         </SidebarHeader>
         <SidebarContent>
