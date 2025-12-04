@@ -38,9 +38,6 @@ export function Header() {
         <div className="mr-4 flex items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={24} height={24} className="h-6 w-auto rounded-sm" />
-            <span className="font-bold sm:inline-block">
-              Draiton
-            </span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm md:flex">
             <Link
