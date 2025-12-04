@@ -13,7 +13,6 @@ import { db } from '@/lib/firebase/config';
 import { useToast } from '@/hooks/use-toast';
 import type { Project } from '../proyectos/page';
 import jsPDF from 'jspdf';
-import { Logo } from '@/components/logo';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -21,6 +20,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
+import Image from 'next/image';
 
 
 export default function InformesPage() {
@@ -244,7 +244,7 @@ El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo pl
                             <div ref={printableRef} className="p-6 bg-background rounded-md">
                                 <header id="report-header" className="flex justify-between items-start mb-6 pb-4 border-b">
                                     <div>
-                                        <Logo className="h-8 w-8 mb-2" />
+                                        <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-8 w-auto mb-2" />
                                         <h2 className="font-bold text-lg">{user?.company?.name || 'Tu Empresa'}</h2>
                                         <p className="text-sm text-muted-foreground">{user?.company?.cif || 'Tu CIF'}</p>
                                     </div>
