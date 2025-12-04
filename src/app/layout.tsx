@@ -4,10 +4,14 @@ import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/auth-context';
 import './globals.css';
+import Head from 'next/head';
 
 export const metadata: Metadata = {
   title: 'Draiton',
   description: 'Tu centro de operaciones para autónomos y pequeñas empresas.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
@@ -18,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
