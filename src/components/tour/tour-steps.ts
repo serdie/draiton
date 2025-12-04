@@ -10,7 +10,7 @@ export type TourStep = {
 export const tourStepsBase: TourStep[] = [
   {
     id: "tour-logo",
-    title: "Bienvenido a GestorIA",
+    title: "Bienvenido a Draiton",
     content: "¡Empecemos un rápido recorrido por la plataforma! Este es el logo, siempre te llevará al escritorio principal.",
     side: "right",
     align: "start",

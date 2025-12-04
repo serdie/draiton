@@ -15,7 +15,7 @@ export function Hero() {
             Transforma la gestión de tu negocio
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-white/80">
-            Centraliza tus finanzas, marketing y operaciones con el poder de la IA. GestorIA es la herramienta definitiva para autónomos y pymes que buscan crecer.
+            Centraliza tus finanzas, marketing y operaciones con el poder de la IA. Draiton es la herramienta definitiva para autónomos y pymes que buscan crecer.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild>

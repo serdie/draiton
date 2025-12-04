@@ -191,7 +191,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         <SidebarHeader className="p-4">
             <Link href="/dashboard" className="flex items-center gap-2" id="tour-logo">
                 <Logo className="h-6 w-auto" />
-                <span className="font-bold text-lg tracking-tight">GestorIA</span>
+                <span className="font-bold text-lg tracking-tight">Draiton</span>
             </Link>
         </SidebarHeader>
         <SidebarContent>
@@ -383,12 +383,8 @@ export default function DashboardLayout({
   return (
     <TourProvider>
       <DashboardLayoutContent>{children}</DashboardLayoutContent>
-      <Script
-        src="https://unpkg.com/@elevenlabs/convai-widget-embed"
-        async
-        strategy="lazyOnload"
-      />
-      <elevenlabs-convai agent-id="agent_0501kbn9512cf21tbh0ypf8xz7v3"></elevenlabs-convai>
+       <elevenlabs-convai agent-id="agent_0501kbn9512cf21tbh0ypf8xz7v3"></elevenlabs-convai>
+       <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></Script>
     </TourProvider>
   )
 }

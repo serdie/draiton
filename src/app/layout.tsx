@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/auth-context';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GestorIA',
+  title: 'Draiton',
   description: 'Tu centro de operaciones para autónomos y pequeñas empresas.',
 };
 

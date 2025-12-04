@@ -21,7 +21,7 @@ export function MobileHeader({ title }: { title: string }) {
             <div className="container flex items-center justify-between h-14">
                 <Link href="/dashboard" className="flex items-center gap-2">
                     <Logo className="h-6 w-6" />
-                    <span className="font-bold">GestorIA</span>
+                    <span className="font-bold">Draiton</span>
                 </Link>
                 <div className="flex items-center gap-4">
                      <div className="flex items-center gap-3">

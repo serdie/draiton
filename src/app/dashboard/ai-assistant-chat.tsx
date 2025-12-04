@@ -117,7 +117,7 @@ export function AiAssistantChat() {
                             <Sparkles className="h-5 w-5"/>
                         </div>
                         <p className="text-sm text-secondary-foreground pt-1.5">
-                            ¡Hola! Soy GestorIA. Pregúntame sobre impuestos, facturas, o sube un documento para que lo analice.
+                            ¡Hola! Soy tu asistente. Pregúntame sobre impuestos, facturas, o sube un documento para que lo analice.
                         </p>
                     </div>
                     {messages.map((msg, index) => (
