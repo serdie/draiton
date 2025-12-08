@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { format } from "date-fns"
+import { format, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Document, DocumentType, DocumentStatus } from './page';
 import { cn } from '@/lib/utils';
@@ -193,12 +193,12 @@ export function ViewDocumentModal({ isOpen, onClose, document }: ViewDocumentMod
                         </div>
                         <div className="grid grid-cols-2">
                             <span className="font-semibold text-gray-500">Fecha Emisión:</span>
-                            <span className="font-medium">{format(document.fechaEmision, "dd/MM/yyyy", { locale: es })}</span>
+                            <span className="font-medium">{isValid(document.fechaEmision) ? format(document.fechaEmision, "dd/MM/yyyy", { locale: es }) : 'Fecha inválida'}</span>
                         </div>
-                         {document.fechaVto && (
+                         {document.fechaVto && isValid(new Date(document.fechaVto)) && (
                             <div className="grid grid-cols-2">
                                 <span className="font-semibold text-gray-500">Fecha Vencimiento:</span>
-                                <span className="font-medium">{format(document.fechaVto, "dd/MM/yyyy", { locale: es })}</span>
+                                <span className="font-medium">{format(new Date(document.fechaVto), "dd/MM/yyyy", { locale: es })}</span>
                             </div>
                         )}
                     </div>
