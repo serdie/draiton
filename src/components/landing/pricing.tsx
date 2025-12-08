@@ -1,10 +1,15 @@
 
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const freeFeatures = [
   'Panel de control principal',
@@ -36,7 +41,20 @@ const enterpriseFeatures = [
     'Soporte prioritario 24/7',
 ];
 
+const pricing = {
+    mensual: {
+        pro: 9.95,
+        empresa: 39,
+    },
+    anual: {
+        pro: 4.95,
+        empresa: 29,
+    }
+};
+
 export function Pricing() {
+    const [billingCycle, setBillingCycle] = useState<'anual' | 'mensual'>('anual');
+
   return (
     <section id="pricing" className="container py-20 md:py-24 mx-auto">
       <div className="mx-auto mb-12 max-w-2xl text-center">
@@ -44,6 +62,20 @@ export function Pricing() {
         <p className="mt-4 text-muted-foreground">
           Comienza gratis y escala cuando lo necesites. Sin compromisos, cancela cuando quieras.
         </p>
+      </div>
+       <div className="flex justify-center items-center gap-4 mb-10">
+        <Label htmlFor="billing-cycle" className={billingCycle === 'mensual' ? 'text-primary font-semibold' : 'text-muted-foreground'}>
+          Pago Mensual
+        </Label>
+        <Switch
+          id="billing-cycle"
+          checked={billingCycle === 'anual'}
+          onCheckedChange={(checked) => setBillingCycle(checked ? 'anual' : 'mensual')}
+        />
+        <Label htmlFor="billing-cycle" className={billingCycle === 'anual' ? 'text-primary font-semibold' : 'text-muted-foreground'}>
+          Pago Anual
+          <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">Ahorra un 50%</Badge>
+        </Label>
       </div>
       <div className="grid max-w-7xl mx-auto gap-8 md:grid-cols-1 lg:grid-cols-3">
         {/* Plan Gratis */}
@@ -87,7 +119,7 @@ export function Pricing() {
             <CardDescription>Para profesionales que quieren llevar su negocio al siguiente nivel.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 flex-grow">
-            <div className="text-4xl font-bold">4.95€<span className="text-xl font-normal text-muted-foreground">/mes</span></div>
+             <div className="text-4xl font-bold">{pricing[billingCycle].pro.toLocaleString('es-ES')}€<span className="text-xl font-normal text-muted-foreground">/mes</span></div>
             <ul className="space-y-2">
               {proFeatures.map((feature, i) => (
                 <li key={i} className="flex items-center gap-2">
@@ -120,7 +152,7 @@ export function Pricing() {
             <CardDescription>Para negocios en crecimiento que necesitan más potencia y colaboración.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 flex-grow">
-            <div className="text-4xl font-bold">29€<span className="text-xl font-normal text-muted-foreground">/mes</span></div>
+            <div className="text-4xl font-bold">{pricing[billingCycle].empresa.toLocaleString('es-ES')}€<span className="text-xl font-normal text-muted-foreground">/mes</span></div>
             <ul className="space-y-2">
               {enterpriseFeatures.map((feature, i) => (
                 <li key={i} className="flex items-center gap-2">
