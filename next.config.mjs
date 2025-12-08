@@ -43,12 +43,23 @@ const nextConfig = {
         hostname: 'firebasestorage.googleapis.com',
         port: '',
         pathname: '/**',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.paypalobjects.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {
     // Este bloque experimental se queda como lo tenías (vacío o con lo que tuviera)
   },
+
+  // ======================================================
+  // AQUÍ ESTÁ EL ARREGLO:
+  // Esta línea va FUERA de "experimental"
+  // ======================================================
 };
 
 export default nextConfig;
