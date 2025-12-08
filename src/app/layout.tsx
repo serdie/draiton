@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: 'Draiton',
   description: 'Tu centro de operaciones para autónomos y pequeñas empresas.',
   icons: {
-    icon: 'https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e',
+    icon: 'https://storage.googleapis.com/project-sparkle-b0a41.appspot.com/uploads/2024-12-08/NlWz0kGvS9C5.png',
   },
 };
 
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" sizes="any" />
+        <link rel="icon" href="https://storage.googleapis.com/project-sparkle-b0a41.appspot.com/uploads/2024-12-08/NlWz0kGvS9C5.png" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
