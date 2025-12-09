@@ -15,12 +15,7 @@ import {
 } from '@/ai/schemas/collective-agreement-schemas';
 
 
-export async function findCollectiveAgreement(input: FindCollectiveAgreementInput): Promise<FindCollectiveAgreementOutput> {
-  return findCollectiveAgreementFlow(input);
-}
-
-
-const findCollectiveAgreementFlow = ai.defineFlow(
+export const findCollectiveAgreement = ai.defineFlow(
   {
     name: 'findCollectiveAgreementFlow',
     inputSchema: FindCollectiveAgreementInputSchema,
