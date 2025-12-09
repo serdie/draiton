@@ -74,7 +74,9 @@ const findCollectiveAgreementFlow = ai.defineFlow(
     ${searchResultsText}
     """
 
-    Extrae todos los convenios en el array 'agreements'. Para cada uno, proporciona el 'title' (título completo), 'publicationDate' (en formato AAAA-MM-DD) y 'sourceLink' (URL válida). Responde ÚNICAMENTE con el JSON.`;
+    Extrae todos los convenios en el array 'agreements'. Para cada uno, proporciona el 'title' (título completo), 'publicationDate' (en formato AAAA-MM-DD) y 'sourceLink'.
+    MUY IMPORTANTE: Si en el texto no encuentras una URL directa y válida para un convenio, simplemente OMITE ese convenio de la lista final. NO inventes texto para el campo 'sourceLink'.
+    Responde ÚNICAMENTE con el JSON.`;
 
     try {
       const llmResponse = await ai.generate({
