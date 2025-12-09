@@ -21,12 +21,18 @@ type FormState = {
 export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => void }) {
   const [state, setState] = useState<FormState>({ output: null, error: null });
   const [scope, setScope] = useState<'nacional' | 'autonomico' | 'provincial'>('nacional');
+  const [region, setRegion] = useState('');
+  const [province, setProvince] = useState('');
+  const [sectorKeyword, setSectorKeyword] = useState('');
   const [isPending, startTransition] = useTransition();
   
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault(); 
-      const formData = new FormData(event.currentTarget);
-      
+  const handleSearch = () => {
+      const formData = new FormData();
+      formData.append('scope', scope);
+      if (region && scope === 'autonomico') formData.append('region', region);
+      if (province && scope === 'provincial') formData.append('province', province);
+      formData.append('sectorKeyword', sectorKeyword);
+
       startTransition(async () => {
           setState({ output: null, error: null }); 
           const result = await findCollectiveAgreementAction({ output: null, error: null }, formData);
@@ -36,7 +42,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
   
   return (
     <div className="p-4 border rounded-lg bg-background/50 space-y-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div className="space-y-2">
                     <Label htmlFor="scope">Ámbito</Label>
@@ -52,7 +58,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                  {scope === 'autonomico' && (
                     <div className="space-y-2">
                         <Label htmlFor="region">Comunidad Autónoma</Label>
-                        <Select name="region" required>
+                        <Select name="region" value={region} onValueChange={setRegion} required>
                             <SelectTrigger id="region"><SelectValue placeholder="Selecciona..."/></SelectTrigger>
                             <SelectContent>
                                 {provincias.comunidades.map(c => <SelectItem key={c.nombre} value={c.nombre}>{c.nombre}</SelectItem>)}
@@ -63,7 +69,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                  {scope === 'provincial' && (
                     <div className="space-y-2">
                         <Label htmlFor="province">Provincia</Label>
-                        <Select name="province" required>
+                        <Select name="province" value={province} onValueChange={setProvince} required>
                              <SelectTrigger id="province"><SelectValue placeholder="Selecciona..."/></SelectTrigger>
                              <SelectContent>
                                 {provincias.provincias.map(p => <SelectItem key={p.codigo} value={p.nombre}>{p.nombre}</SelectItem>)}
@@ -73,13 +79,13 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                 )}
                  <div className="space-y-2 md:col-span-3">
                     <Label htmlFor="sectorKeyword">Sector (Palabra clave)</Label>
-                    <Input id="sectorKeyword" name="sectorKeyword" required placeholder="Ej: Hostelería, Construcción, Metal..." />
+                    <Input id="sectorKeyword" name="sectorKeyword" value={sectorKeyword} onChange={(e) => setSectorKeyword(e.target.value)} required placeholder="Ej: Hostelería, Construcción, Metal..." />
                 </div>
             </div>
-             <Button type="submit" disabled={isPending}>
+             <Button type="button" onClick={handleSearch} disabled={isPending}>
                 {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
             </Button>
-        </form>
+        </div>
 
          {isPending && (
              <div className="flex items-center justify-center text-sm text-muted-foreground">
