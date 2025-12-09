@@ -382,8 +382,10 @@ export default function DashboardLayout({
   return (
     <TourProvider>
       <DashboardLayoutContent>{children}</DashboardLayoutContent>
-       <elevenlabs-convai agent-id="agent_0501kbn9512cf21tbh0ypf8xz7v3"></elevenlabs-convai>
-       <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></Script>
+      <div className="hidden md:block">
+        <elevenlabs-convai agent-id="agent_0501kbn9512cf21tbh0ypf8xz7v3"></elevenlabs-convai>
+        <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></Script>
+      </div>
     </TourProvider>
   )
 }

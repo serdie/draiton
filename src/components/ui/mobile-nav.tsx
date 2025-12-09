@@ -29,12 +29,9 @@ export function MobileNav() {
         return item.roles.includes(effectiveRole || 'free');
     });
 
-    const gridColsClass = `grid-cols-${visibleNavItems.length}`;
-
-
     return (
         <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50 md:hidden">
-            <div className={cn("grid h-full max-w-lg mx-auto", gridColsClass)}>
+            <div className="grid grid-flow-col h-full max-w-lg mx-auto">
                 {visibleNavItems.map(item => {
                     const isActive = (pathname === item.href) || (item.href !== '/dashboard' && pathname.startsWith(item.href));
                     let label = item.label;
