@@ -11,21 +11,28 @@ export async function findCollectiveAgreementAction(
 ): Promise<{ output: FindCollectiveAgreementOutput | null; error: string | null }> {
   
   const scope = formData.get('scope') as FindCollectiveAgreementInput['scope'];
-  const region = formData.get('region') as string | undefined;
-  const province = formData.get('province') as string | undefined;
+  const region = formData.get('region') as string | null;
+  const province = formData.get('province') as string | null;
   const sectorKeyword = formData.get('sectorKeyword') as string;
 
   if (!scope || !sectorKeyword) {
     return { output: null, error: "El ámbito y el sector son campos obligatorios." };
   }
   
+  const input: FindCollectiveAgreementInput = {
+    scope,
+    sectorKeyword,
+  };
+
+  if (region) {
+    input.region = region;
+  }
+  if (province) {
+    input.province = province;
+  }
+  
   try {
-    const result = await findCollectiveAgreement({
-        scope,
-        region,
-        province,
-        sectorKeyword
-    });
+    const result = await findCollectiveAgreement(input);
     return { output: result, error: null };
   } catch (e: any) {
     console.error(e);
