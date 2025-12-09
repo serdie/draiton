@@ -129,11 +129,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     router.push(notification.link);
   };
 
-
-  if (!user) {
-    return null;
-  }
-  
   const isActive = (href: string) => {
     return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
   };
@@ -175,7 +170,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   if (isMobile) {
     return (
       <div className="flex flex-col h-screen">
-          <MobileHeader title={getPageTitle()} />
+          {user && <MobileHeader title={getPageTitle()} />}
           <main className="flex-1 overflow-y-auto bg-background p-4">
               {children}
           </main>
@@ -321,7 +316,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <div id="tour-perfil" className='flex items-center gap-3 cursor-pointer'>
-                        <UserAvatar user={user} />
+                        {user && <UserAvatar user={user} />}
                         <div className="hidden md:flex flex-col items-start">
                           <span className="font-semibold text-sm">{user?.displayName || 'Usuario'}</span>
                           <span className="text-xs text-muted-foreground">{getRoleDisplayName(user?.role)}</span>

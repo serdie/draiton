@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/auth-context';
 import './globals.css';
-import Head from 'next/head';
 
 export const metadata: Metadata = {
   title: 'Draiton',
