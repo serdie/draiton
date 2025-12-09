@@ -18,20 +18,6 @@ type FormState = {
   error: string | null;
 };
 
-function SubmitButton() {
-  const [isPending, startTransition] = useTransition();
-
-  // We can't use useFormStatus here without <form>, so we use our own transition state.
-  // This is a common pattern when you can't wrap everything in a form.
-
-  return (
-    <Button type="submit" disabled={isPending}>
-        {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
-    </Button>
-  );
-}
-
-
 export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => void }) {
   const [state, setState] = useState<FormState>({ output: null, error: null });
   const [scope, setScope] = useState<'nacional' | 'autonomico' | 'provincial'>('nacional');
@@ -42,6 +28,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
       const formData = new FormData(event.currentTarget);
       
       startTransition(async () => {
+          setState({ output: null, error: null }); // Reset state before new search
           const result = await findCollectiveAgreementAction({ output: null, error: null }, formData);
           setState(result);
       });
@@ -93,6 +80,13 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                 {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
             </Button>
         </form>
+
+         {isPending && (
+             <div className="flex items-center justify-center text-sm text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Buscando convenios en fuentes oficiales...
+             </div>
+         )}
 
          {state.error && (
             <Alert variant="destructive">
