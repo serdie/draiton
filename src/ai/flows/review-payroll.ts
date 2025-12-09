@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -15,28 +16,24 @@ import {
     type ReviewPayrollOutput 
 } from '@/ai/schemas/payroll-schemas'; // Asumimos schemas importados de aquí
 
-// ======================================================
-// AQUÍ ESTÁ EL ARREGLO:
-// Re-exportamos el tipo para que 'actions.ts' pueda encontrarlo
-// ======================================================
 export type { ReviewPayrollOutput } from '@/ai/schemas/payroll-schemas';
-// ======================================================
 
 
 export async function reviewPayroll(input: ReviewPayrollInput): Promise<ReviewPayrollOutput> {
     return reviewPayrollFlow(input);
 }
 
-// --- PROMPT (Instrucciones en español, el modelo se añade en el flow) ---
+// --- PROMPT MODIFICADO ---
+// Se elimina JSON.stringify del prompt y se espera una variable `payrollDataString`
 const prompt = ai.definePrompt({
   name: 'reviewPayrollPrompt',
-  input: { schema: ReviewPayrollInputSchema },
+  input: { schema: ReviewPayrollInputSchema.extend({ payrollDataString: z.string() }) }, // Esperamos el string
   output: { schema: ReviewPayrollOutputSchema },
   prompt: `Eres un experto asesor laboral en España. Analiza la siguiente nómina generada (en formato JSON) y proporciona una explicación clara y sencilla de cómo se ha calculado cada uno de los conceptos clave.
 
 **Datos de la Nómina a Revisar:**
 \`\`\`json
-{{{JSON.stringify payrollData}}}
+{{{payrollDataString}}}
 \`\`\`
 
 **Tu Tarea:**
@@ -56,14 +53,17 @@ const reviewPayrollFlow = ai.defineFlow(
     inputSchema: ReviewPayrollInputSchema,
     outputSchema: ReviewPayrollOutputSchema,
   },
-  async (input: ReviewPayrollInput) => { // Añadimos tipo a input
+  async (input: ReviewPayrollInput) => {
     try {
-      // 1. Llamamos al prompt especificando el modelo
-      const { output } = await prompt(input, {
-        model: googleAI.model('gemini-2.5-flash-lite'), // Modelo añadido aquí
+      // 1. Convertimos el objeto a string ANTES de llamar al prompt
+      const payrollDataString = JSON.stringify(input.payrollData, null, 2);
+
+      // 2. Llamamos al prompt con el string ya preparado
+      const { output } = await prompt({ ...input, payrollDataString }, {
+        model: googleAI.model('gemini-2.5-flash-lite'),
       });
 
-      // 2. Validamos la salida con safeParse
+      // 3. Validamos la salida con safeParse
       const parsed = ReviewPayrollOutputSchema.safeParse(output);
 
       if (!parsed.success) {
@@ -75,7 +75,7 @@ const reviewPayrollFlow = ai.defineFlow(
       return parsed.data; // Devolvemos los datos validados
 
     } catch (error) {
-      // 3. Capturamos cualquier error y lo devolvemos en español
+      // 4. Capturamos cualquier error y lo devolvemos en español
       console.error(`Error en reviewPayrollFlow:`, error);
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`No se pudo generar la explicación de la nómina. Error: ${message}`);
