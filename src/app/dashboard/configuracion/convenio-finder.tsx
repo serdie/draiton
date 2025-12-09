@@ -24,11 +24,11 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
   const [isPending, startTransition] = useTransition();
   
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
+      event.preventDefault(); // Evita la recarga de la página
       const formData = new FormData(event.currentTarget);
       
       startTransition(async () => {
-          setState({ output: null, error: null }); // Reset state before new search
+          setState({ output: null, error: null }); // Resetea el estado antes de una nueva búsqueda
           const result = await findCollectiveAgreementAction({ output: null, error: null }, formData);
           setState(result);
       });
