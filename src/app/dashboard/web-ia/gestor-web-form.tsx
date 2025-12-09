@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,8 +39,15 @@ export function GestorWebForm({ action, setGeneratedSite }: {
     action: (currentState: FormState, formData: FormData) => Promise<FormState>,
     setGeneratedSite: (site: AIPoweredWebManagementOutput | null) => void 
 }) {
-  const initialState: FormState = { output: null, error: null };
-  const [state, formAction] = useActionState(action, initialState);
+  const [state, setState] = useState<FormState>({ output: null, error: null });
+  const [isPending, startTransition] = useTransition();
+
+  const formAction = async (formData: FormData) => {
+    startTransition(async () => {
+      const result = await action(state, formData);
+      setState(result);
+    });
+  };
 
   useEffect(() => {
     if(state.output) {
