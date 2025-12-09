@@ -1,7 +1,8 @@
 
 'use server';
 
-import { findCollectiveAgreement, type FindCollectiveAgreementInput, type FindCollectiveAgreementOutput } from '@/ai/flows/find-collective-agreement';
+import { findCollectiveAgreement } from '@/ai/flows/find-collective-agreement';
+import type { FindCollectiveAgreementInput, FindCollectiveAgreementOutput } from '@/ai/schemas/collective-agreement-schemas';
 
 
 export async function findCollectiveAgreementAction(

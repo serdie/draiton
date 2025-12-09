@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Search, Terminal, ExternalLink, CheckCircle } from 'lucide-react';
 import { findCollectiveAgreementAction } from './actions';
-import type { FindCollectiveAgreementOutput } from '@/ai/flows/find-collective-agreement';
+import type { FindCollectiveAgreementOutput } from '@/ai/schemas/collective-agreement-schemas';
 import { provincias } from '@/lib/provincias';
 import Link from 'next/link';
 
@@ -26,7 +26,8 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
   const [sectorKeyword, setSectorKeyword] = useState('');
   const [isPending, startTransition] = useTransition();
   
-  const handleSearch = () => {
+  const handleSearch = (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault(); // Evita la recarga
       const formData = new FormData();
       formData.append('scope', scope);
       if (region && scope === 'autonomico') formData.append('region', region);
