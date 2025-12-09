@@ -8,7 +8,7 @@ import { FichajesTab } from './fichajes-tab';
 // ya que las pestañas se han movido al nivel superior de `finanzas/page.tsx`.
 // Por ahora, lo mantenemos simple.
 
-export function EmpleadosPageContent() {
+export default function EmpleadosPageContent() {
     return (
         <div className="space-y-6">
             <NominasTab />
