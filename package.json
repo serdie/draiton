@@ -3,19 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd workspace && npm run dev",
-    "genkit:dev": "cd workspace && npm run genkit:dev",
-    "genkit:watch": "cd workspace && npm run genkit:watch",
-    "build": "cd workspace && npm run build",
-    "start": "cd workspace && npm run start",
-    "lint": "cd workspace && npm run lint",
-    "typecheck": "cd workspace && npm run typecheck"
+    "dev": "npm run dev -w workspace",
+    "build": "npm run build -w workspace",
+    "start": "npm run start -w workspace",
+    "lint": "npm run lint -w workspace",
+    "typecheck": "npm run typecheck -w workspace",
+    "genkit:dev": "npm run genkit:dev -w workspace",
+    "genkit:watch": "npm run genkit:watch -w workspace"
   },
-  "dependencies": {
-    "genkit": "^1.13.0",
-    "tsx": "^4.16.2"
-  },
-  "devDependencies": {
-    "genkit-cli": "^1.13.0"
-  }
+  "workspaces": [
+    "workspace"
+  ]
 }
