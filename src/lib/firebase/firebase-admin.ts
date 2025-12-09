@@ -38,8 +38,7 @@ function getInitializedApp(): admin.app.App {
   return app;
 }
 
-// 2. Exportamos como ASYNC para cumplir con Next.js 15
-export async function getFirebaseAuth() {
+export function getFirebaseAuth() {
   const app = getInitializedApp();
   
   return {
