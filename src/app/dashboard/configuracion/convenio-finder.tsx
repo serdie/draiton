@@ -12,6 +12,7 @@ import { findCollectiveAgreementAction } from './actions';
 import type { FindCollectiveAgreementOutput } from '@/ai/schemas/collective-agreement-schemas';
 import { provincias } from '@/lib/provincias';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 type FormState = {
   output: FindCollectiveAgreementOutput | null;
@@ -25,6 +26,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
   const [province, setProvince] = useState('');
   const [sectorKeyword, setSectorKeyword] = useState('');
   const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
   
   const handleSearch = (event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault(); // Evita la recarga
@@ -41,6 +43,14 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
       });
   };
   
+    const handleSelectConvenio = (convenioTitle: string) => {
+        onSelect(convenioTitle);
+        toast({
+            title: 'Convenio Seleccionado',
+            description: 'El convenio se ha asignado. Guarda los cambios para confirmarlo.',
+        });
+    }
+
   return (
     <div className="p-4 border rounded-lg bg-background/50 space-y-6">
         <div className="space-y-4">
@@ -119,7 +129,7 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                                     </Link>
                                 </Button>
                             </div>
-                            <Button size="sm" variant="outline" onClick={() => onSelect(agreement.title)}>
+                            <Button size="sm" variant="outline" className="bg-green-500/10 text-green-700 border-green-500/30 hover:bg-green-500/20" onClick={() => handleSelectConvenio(agreement.title)}>
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Seleccionar
                             </Button>
