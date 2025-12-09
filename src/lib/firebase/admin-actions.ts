@@ -107,7 +107,6 @@ export async function createEmployeeUser(employeeData: {
         emailVerified: true,
         password: tempPassword,
         displayName: employeeData.name,
-        photoURL: '', // Provide a default or leave empty
       });
       message = `Se ha creado un usuario para ${employeeData.name}.`;
     } else {
