@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,23 +19,37 @@ type FormState = {
 };
 
 function SubmitButton() {
-  const { pending } = useFormStatus();
+  const [isPending, startTransition] = useTransition();
+
+  // We can't use useFormStatus here without <form>, so we use our own transition state.
+  // This is a common pattern when you can't wrap everything in a form.
+
   return (
-    <Button type="submit" disabled={pending}>
-        {pending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
+    <Button type="submit" disabled={isPending}>
+        {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
     </Button>
   );
 }
 
 
 export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => void }) {
-  const initialState: FormState = { output: null, error: null };
-  const [state, formAction] = useActionState(findCollectiveAgreementAction, initialState);
+  const [state, setState] = useState<FormState>({ output: null, error: null });
   const [scope, setScope] = useState<'nacional' | 'autonomico' | 'provincial'>('nacional');
+  const [isPending, startTransition] = useTransition();
+  
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      
+      startTransition(async () => {
+          const result = await findCollectiveAgreementAction({ output: null, error: null }, formData);
+          setState(result);
+      });
+  };
   
   return (
     <div className="p-4 border rounded-lg bg-background/50 space-y-6">
-        <form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div className="space-y-2">
                     <Label htmlFor="scope">Ámbito</Label>
@@ -76,7 +89,9 @@ export function ConvenioFinder({ onSelect }: { onSelect: (convenio: string) => v
                     <Input id="sectorKeyword" name="sectorKeyword" required placeholder="Ej: Hostelería, Construcción, Metal..." />
                 </div>
             </div>
-            <SubmitButton />
+             <Button type="submit" disabled={isPending}>
+                {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Buscando...</> : <><Search className="mr-2 h-4 w-4" /> Buscar Convenio</>}
+            </Button>
         </form>
 
          {state.error && (
