@@ -1,19 +1,10 @@
 
-'use server';
-
 import admin from 'firebase-admin';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-// Define a global symbol to store the initialized Firebase Admin app
-const FIREBASE_ADMIN_APP_SYMBOL = Symbol.for('firebase_admin_app');
-
-interface GlobalWithFirebase extends NodeJS.Global {
-  [FIREBASE_ADMIN_APP_SYMBOL]?: admin.app.App;
+// 1. Definición correcta de variable global para evitar reinicios en desarrollo
+declare global {
+  var firebaseAdminApp: admin.app.App | undefined;
 }
-
-const customGlobal = global as GlobalWithFirebase;
 
 function formatPrivateKey(key?: string): string {
   if (!key) return '';
@@ -21,8 +12,9 @@ function formatPrivateKey(key?: string): string {
 }
 
 function getInitializedApp(): admin.app.App {
-  if (customGlobal[FIREBASE_ADMIN_APP_SYMBOL]) {
-    return customGlobal[FIREBASE_ADMIN_APP_SYMBOL]!;
+  // Verificamos si ya existe la app en la variable global
+  if (global.firebaseAdminApp) {
+    return global.firebaseAdminApp;
   }
 
   const privateKey = formatPrivateKey(process.env.FIREBASE_PRIVATE_KEY);
@@ -30,9 +22,10 @@ function getInitializedApp(): admin.app.App {
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
   if (!privateKey || !clientEmail || !projectId) {
-      throw new Error('Las credenciales del servidor de Firebase (FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL, NEXT_PUBLIC_FIREBASE_PROJECT_ID) no están configuradas en las variables de entorno.');
+    throw new Error('Las credenciales del servidor de Firebase (FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL, NEXT_PUBLIC_FIREBASE_PROJECT_ID) no están configuradas en las variables de entorno.');
   }
 
+  // Inicializamos la app si no existe
   const app = admin.initializeApp({
     credential: admin.credential.cert({
       projectId,
@@ -41,11 +34,13 @@ function getInitializedApp(): admin.app.App {
     }),
   });
 
-  customGlobal[FIREBASE_ADMIN_APP_SYMBOL] = app;
+  // Guardamos la instancia en global
+  global.firebaseAdminApp = app;
   return app;
 }
 
-export function getFirebaseAuth() {
+// 2. Exportamos como ASYNC para evitar conflictos con Server Actions en Next.js 15
+export async function getFirebaseAuth() {
   const app = getInitializedApp();
   
   return {
