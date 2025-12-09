@@ -8,8 +8,12 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Draiton',
   description: 'Tu centro de operaciones para autónomos y pequeñas empresas.',
+  manifest: '/manifest.json',
   icons: {
-    icon: 'https://storage.googleapis.com/project-sparkle-b0a41.appspot.com/uploads/2024-12-08/NlWz0kGvS9C5.png',
+    icon: [
+        { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' }
+    ],
   },
 };
 
