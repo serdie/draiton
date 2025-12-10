@@ -196,7 +196,7 @@ export default function LoginPage() {
                     {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5" />}
                     Google
                  </Button>
-                  <Button variant="outline" className="w-full bg-[#1877F2] hover:bg-[#1877F2]/90 text-white font-medium" disabled={facebookLoading} onClick={handleFacebookSignIn}>
+                  <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-[#1877F2] font-medium" disabled={facebookLoading} onClick={handleFacebookSignIn}>
                     {facebookLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Facebook className="mr-2 h-5 w-5" />}
                     Facebook
                  </Button>
