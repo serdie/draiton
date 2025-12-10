@@ -44,7 +44,7 @@ const enterpriseFeatures = [
 const pricing = {
     mensual: {
         pro: 9.95,
-        empresa: 39,
+        empresa: 58,
     },
     anual: {
         pro: 4.95,
