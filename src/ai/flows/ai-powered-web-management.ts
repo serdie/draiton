@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -90,9 +91,9 @@ const prompt = ai.definePrompt({
 1.  **Conceptualización de Alto Nivel:** Basado en la descripción, define una Propuesta de Valor Única (PVU) y un tono de comunicación que resuene con el público objetivo. Refleja esto en todo el contenido que generes.
 2.  **Contenido de Calidad Profesional:** Crea textos (copywriting) que sean claros, concisos y orientados a la conversión. Cada palabra debe tener un propósito. Utiliza un lenguaje que inspire confianza y profesionalismo.
 3.  **Hero Section Impactante:**
-    *   **Título (`title`):** Debe ser magnético, captar la atención inmediatamente y comunicar el beneficio principal.
-    *   **Subtítulo (`subtitle`):** Debe expandir el título, resolver una duda clave o presentar el problema que solucionas.
-    *   **Prompt de Imagen (`imagePrompt`):** ¡Sé muy descriptivo! No te limites a "persona trabajando". Especifica el estilo (ej: "fotografía cinematográfica, luz natural, colores cálidos"), el ambiente (ej: "oficina moderna y minimalista"), la acción y la emoción. Ejemplo: "Fotografía de estudio profesional, un artesano sonríe mientras pule una pieza de madera, con herramientas desenfocadas en el fondo, luz cálida lateral".
+    -   **Título ('title'):** Debe ser magnético, captar la atención inmediatamente y comunicar el beneficio principal.
+    -   **Subtítulo ('subtitle'):** Debe expandir el título, resolver una duda clave o presentar el problema que solucionas.
+    -   **Prompt de Imagen ('imagePrompt'):** ¡Sé muy descriptivo! No te limites a "persona trabajando". Especifica el estilo (ej: "fotografía cinematográfica, luz natural, colores cálidos"), el ambiente (ej: "oficina moderna y minimalista"), la acción y la emoción. Ejemplo: "Fotografía de estudio profesional, un artesano sonríe mientras pule una pieza de madera, con herramientas desenfocadas en el fondo, luz cálida lateral".
 4.  **Sección "Sobre Nosotros" Convincente:** No te limites a contar la historia. Comunica la misión, los valores y por qué el cliente debería confiar en este negocio.
 5.  **Servicios Claros y Orientados a Beneficios:** Para cada servicio, describe no solo lo que es, sino el beneficio que aporta al cliente.
 6.  **Iconos Válidos:** Para los iconos de los servicios, proporciona siempre un nombre de icono válido y relevante de la librería 'lucide-react'.
