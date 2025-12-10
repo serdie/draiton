@@ -4,13 +4,13 @@
 import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, Loader2 } from 'lucide-react';
+import { Terminal, Loader2, Facebook } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
   const { user, loading: authLoading } = useContext(AuthContext);
   const router = useRouter();
 
@@ -89,6 +90,34 @@ export default function LoginPage() {
       setGoogleLoading(false);
     }
   };
+  
+    const handleFacebookSignIn = async () => {
+    setFacebookLoading(true);
+    setError(null);
+
+    if (!auth) {
+        setError('El servicio de autenticación no está disponible.');
+        setFacebookLoading(false);
+        return;
+    }
+
+    const provider = new FacebookAuthProvider();
+
+    try {
+        await signInWithPopup(auth, provider);
+        // Redirection and data sync is handled by AuthContext
+    } catch (err: any) {
+       if (err.code === 'auth/unauthorized-domain') {
+        setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
+      } else {
+        setError('No se pudo iniciar sesión con Facebook. Inténtalo más tarde.');
+      }
+      console.error(err);
+    } finally {
+      setFacebookLoading(false);
+    }
+  };
+
 
   // While auth is loading, we show nothing to prevent flicker, AuthProvider shows a global loader.
   // If user is logged in, the useEffect above will trigger a redirect.
@@ -162,10 +191,16 @@ export default function LoginPage() {
                     </span>
                 </div>
             </div>
-            <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-gray-700 font-medium" disabled={googleLoading} onClick={handleGoogleSignIn}>
-                {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5" />}
-                Google
-             </Button>
+            <div className="space-y-2">
+                <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-gray-700 font-medium" disabled={googleLoading} onClick={handleGoogleSignIn}>
+                    {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5" />}
+                    Google
+                 </Button>
+                  <Button variant="outline" className="w-full bg-[#1877F2] hover:bg-[#1877F2]/90 text-white font-medium" disabled={facebookLoading} onClick={handleFacebookSignIn}>
+                    {facebookLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Facebook className="mr-2 h-5 w-5" />}
+                    Facebook
+                 </Button>
+            </div>
              <p className="mt-6 text-center text-sm text-muted-foreground">
                 ¿No tienes cuenta?{' '}
                 <Link href="/register" className="font-medium text-primary hover:underline">

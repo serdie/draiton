@@ -4,14 +4,14 @@
 import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, Loader2 } from 'lucide-react';
+import { Terminal, Loader2, Facebook } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
@@ -24,6 +24,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
   const router = useRouter();
   const { user, loading: authLoading } = useContext(AuthContext);
 
@@ -107,6 +108,32 @@ export default function RegisterPage() {
       setGoogleLoading(false);
     }
   };
+  
+    const handleFacebookSignIn = async () => {
+    setFacebookLoading(true);
+    setError(null);
+    if (!auth || !db) {
+        setError('El servicio de registro no está disponible.');
+        setFacebookLoading(false);
+        return;
+    }
+
+    const provider = new FacebookAuthProvider();
+
+    try {
+      await signInWithPopup(auth, provider);
+      // La redirección y la sincronización de datos la manejará el AuthContext
+    } catch (err: any) {
+      if (err.code === 'auth/unauthorized-domain') {
+        setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
+      } else {
+        setError('No se pudo registrar con Facebook. Inténtalo más tarde.');
+      }
+      console.error(err);
+    } finally {
+      setFacebookLoading(false);
+    }
+  };
 
   if (authLoading || user) {
      return (
@@ -187,10 +214,16 @@ export default function RegisterPage() {
                 </div>
             </div>
 
-            <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-gray-700 font-medium" disabled={googleLoading} onClick={handleGoogleSignIn}>
-                {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5" />}
-                Registrarse con Google
-             </Button>
+            <div className="space-y-2">
+                <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-gray-700 font-medium" disabled={googleLoading} onClick={handleGoogleSignIn}>
+                    {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5" />}
+                    Registrarse con Google
+                 </Button>
+                 <Button variant="outline" className="w-full bg-[#1877F2] hover:bg-[#1877F2]/90 text-white font-medium" disabled={facebookLoading} onClick={handleFacebookSignIn}>
+                    {facebookLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Facebook className="mr-2 h-5 w-5" />}
+                    Registrarse con Facebook
+                 </Button>
+            </div>
             
             <p className="mt-6 text-center text-sm text-muted-foreground">
                 ¿Ya tienes una cuenta?{' '}
