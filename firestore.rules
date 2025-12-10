@@ -13,10 +13,6 @@ service cloud.firestore {
     function isEmployeeOfResourceOwner() {
        return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyOwnerId == resource.data.ownerId;
     }
-    
-    function isDeletingOwnData(userId) {
-        return request.auth != null && request.auth.uid == userId;
-    }
 
     // --- User Profiles ---
     // A user can create their own profile.
@@ -25,8 +21,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
       allow read, update: if request.auth != null && request.auth.uid == userId;
-      // Allow deletion only by the user themselves
-      allow delete: if isDeletingOwnData(userId);
+      allow delete: if request.auth != null && request.auth.uid == userId;
       // Allow a company owner to list their own profile and their employees' profiles.
       allow list: if request.auth != null && (request.query.where.uid == request.auth.uid || request.query.where.companyOwnerId == request.auth.uid);
     }
@@ -37,7 +32,7 @@ service cloud.firestore {
     match /projects/{projectId} {
       allow create: if request.auth.uid == request.resource.data.ownerId;
       allow read, update: if isResourceOwner();
-      allow delete: if isResourceOwner() || isDeletingOwnData(resource.data.ownerId);
+      allow delete: if isResourceOwner();
       allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
 
@@ -45,7 +40,7 @@ service cloud.firestore {
     match /tasks/{taskId} {
       allow create: if request.auth.uid == request.resource.data.ownerId;
       allow read, update: if isResourceOwner() || (resource.data.assigneeId == request.auth.uid);
-      allow delete: if isResourceOwner() || isDeletingOwnData(resource.data.ownerId);
+      allow delete: if isResourceOwner();
       allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.assigneeId == request.auth.uid);
     }
 
@@ -53,7 +48,7 @@ service cloud.firestore {
     match /invoices/{invoiceId} {
         allow create: if request.auth.uid == request.resource.data.ownerId;
         allow read, update: if isResourceOwner();
-        allow delete: if isResourceOwner() || isDeletingOwnData(resource.data.ownerId);
+        allow delete: if isResourceOwner();
         allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
     
@@ -61,7 +56,7 @@ service cloud.firestore {
     match /expenses/{expenseId} {
         allow create: if request.auth.uid == request.resource.data.ownerId;
         allow read, update: if isResourceOwner();
-        allow delete: if isResourceOwner() || isDeletingOwnData(resource.data.ownerId);
+        allow delete: if isResourceOwner();
         allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
 
@@ -69,7 +64,7 @@ service cloud.firestore {
     match /contacts/{contactId} {
         allow create: if request.auth.uid == request.resource.data.ownerId;
         allow read, update: if isResourceOwner();
-        allow delete: if isResourceOwner() || isDeletingOwnData(resource.data.ownerId);
+        allow delete: if isResourceOwner();
         allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
 
@@ -77,7 +72,7 @@ service cloud.firestore {
     match /employees/{employeeId} {
       allow create: if request.auth.uid == request.resource.data.ownerId;
       allow read: if isResourceOwner() || request.auth.uid == employeeId;
-      allow update, delete: if isResourceOwner() || isDeletingOwnData(resource.data.ownerId);
+      allow update, delete: if isResourceOwner();
       allow list: if request.auth != null && request.query.where.ownerId == request.auth.uid;
     }
 
@@ -86,7 +81,7 @@ service cloud.firestore {
         allow create: if request.auth.uid == request.resource.data.employeeId;
         allow read: if isResourceOwner() || request.auth.uid == resource.data.employeeId;
         allow update: if request.auth.uid == resource.data.employeeId || isResourceOwner();
-        allow delete: if isResourceOwner() || isDeletingOwnData(resource.data.ownerId);
+        allow delete: if isResourceOwner();
         allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
     }
     
@@ -94,7 +89,7 @@ service cloud.firestore {
     match /absences/{absenceId} {
       allow create: if request.auth.uid == request.resource.data.employeeId; 
       allow read: if isResourceOwner() || request.auth.uid == resource.data.employeeId;
-      allow update, delete: if isResourceOwner() || isDeletingOwnData(resource.data.ownerId);
+      allow update, delete: if isResourceOwner();
       allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
     }
     
@@ -110,7 +105,7 @@ service cloud.firestore {
     match /payrolls/{payrollId} {
         allow create: if request.auth.uid == request.resource.data.ownerId;
         allow read: if isResourceOwner() || request.auth.uid == resource.data.employeeId;
-        allow delete: if isResourceOwner() || isDeletingOwnData(resource.data.ownerId);
+        allow delete: if isResourceOwner();
         allow update: if isResourceOwner();
         allow list: if request.auth != null && (request.query.where.ownerId == request.auth.uid || request.query.where.employeeId == request.auth.uid);
     }
