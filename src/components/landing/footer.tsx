@@ -10,7 +10,6 @@ export function Footer() {
         <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2">
           <Link href="/politica-de-privacidad" className="text-sm text-muted-foreground hover:text-foreground">Política de Privacidad</Link>
           <Link href="/politica-de-cookies" className="text-sm text-muted-foreground hover:text-foreground">Política de Cookies</Link>
-          <Link href="/aviso-legal" className="text-sm text-muted-foreground hover:text-foreground">Aviso Legal</Link>
           <Link href="/condiciones-de-uso" className="text-sm text-muted-foreground hover:text-foreground">Condiciones de Uso</Link>
         </nav>
       </div>
