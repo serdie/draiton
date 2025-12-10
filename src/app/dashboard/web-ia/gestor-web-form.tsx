@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Sparkles, Terminal, PenTool, BarChart, ShieldCheck, MessageCircle, Mail, MapPin } from 'lucide-react';
+import { Loader2, Sparkles, Terminal, PenTool, BarChart, ShieldCheck, MessageCircle, Mail, MapPin, Save, Download, Pencil } from 'lucide-react';
 import type { AIPoweredWebManagementOutput } from '@/ai/flows/ai-powered-web-management';
 import Image from 'next/image';
 
@@ -103,11 +103,28 @@ export function GestorWebForm({ action, setGeneratedSite }: {
     </form>
     
     {state.output && (
-      <div className="mt-8 border-t pt-8 space-y-12">
-        <div className="text-center mb-12">
+      <div className="mt-8 border-t pt-8 space-y-8">
+        <div className="text-center">
             <h2 className="text-3xl font-bold tracking-tight">Vista Previa de tu Nuevo Sitio Web</h2>
             <p className="text-muted-foreground mt-2">"{state.output.siteTitle}"</p>
         </div>
+         {/* Action Buttons */}
+        <Card>
+            <CardContent className="p-4 flex flex-wrap items-center justify-center gap-4">
+                 <Button variant="outline">
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Editar
+                </Button>
+                <Button variant="outline">
+                    <Save className="mr-2 h-4 w-4" />
+                    Guardar como Plantilla
+                </Button>
+                <Button>
+                    <Download className="mr-2 h-4 w-4" />
+                    Descargar (HTML, CSS, JS)
+                </Button>
+            </CardContent>
+        </Card>
         
         {/* Hero Section */}
         <section className="relative h-96 rounded-lg overflow-hidden flex items-center justify-center text-center text-white bg-secondary">
