@@ -24,6 +24,9 @@ export async function updateUser(uid: string, data: UserUpdateData): Promise<voi
         throw new Error("Se requiere el ID del usuario.");
     }
     const userDocRef = doc(db, 'users', uid);
+    // This is not a real admin action, so we use updateDoc
+    // which respects security rules. In a real app, this would use
+    // the Admin SDK on a secure backend environment.
     await updateDoc(userDocRef, data);
 }
 
@@ -38,7 +41,9 @@ export async function updateUserRole(uid: string, newRole: 'free' | 'pro' | 'adm
     throw new Error("Se requiere el ID del usuario.");
   }
   const userDocRef = doc(db, 'users', uid);
-  await userDocRef.update({ role: newRole });
+  // This is not a real admin action. In a real app, this would use
+  // the Admin SDK on a secure backend environment.
+  await updateDoc(userDocRef, { role: newRole });
 }
 
 /**
@@ -50,7 +55,8 @@ export async function deleteUser(uid: string): Promise<void> {
     throw new Error("Se requiere el ID del usuario.");
   }
   const userDocRef = doc(db, 'users', uid);
-  await userDocRef.delete();
+  // This is not a real admin action.
+  await deleteDoc(userDocRef);
 }
 
 /**
