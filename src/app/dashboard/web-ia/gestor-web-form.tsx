@@ -37,8 +37,9 @@ const iconMap: { [key: string]: React.ComponentType<any> } = {
   ShieldCheck,
 };
 
-export function GestorWebForm({ action, setGeneratedSite, onSaveTemplate }: { 
+export function GestorWebForm({ action, generatedSite, setGeneratedSite, onSaveTemplate }: { 
     action: (currentState: FormState, formData: FormData) => Promise<FormState>,
+    generatedSite: AIPoweredWebManagementOutput | null;
     setGeneratedSite: (site: AIPoweredWebManagementOutput | null) => void,
     onSaveTemplate: (template: AIPoweredWebManagementOutput | null) => void;
 }) {
@@ -52,16 +53,16 @@ export function GestorWebForm({ action, setGeneratedSite, onSaveTemplate }: {
     startTransition(async () => {
       const result = await action(state, formData);
       setState(result);
-      if (result.output) {
-          setEditableContent(result.output);
-      }
     });
   };
 
   useEffect(() => {
-    if(state.output) {
+    setEditableContent(generatedSite);
+  }, [generatedSite]);
+
+  useEffect(() => {
+    if (state.output) {
         setGeneratedSite(state.output);
-        setEditableContent(state.output);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.output]);

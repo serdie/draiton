@@ -143,7 +143,12 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
               <CardDescription>Proporciona los detalles para que la IA pueda generar un concepto a tu medida.</CardDescription>
             </CardHeader>
             <CardContent>
-              <GestorWebForm action={getWebsiteConceptAction} setGeneratedSite={setGeneratedSite} onSaveTemplate={handleSaveTemplate} />
+              <GestorWebForm 
+                action={getWebsiteConceptAction}
+                generatedSite={generatedSite} 
+                setGeneratedSite={setGeneratedSite} 
+                onSaveTemplate={handleSaveTemplate} 
+              />
             </CardContent>
           </Card>
         </TabsContent>
