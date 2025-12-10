@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GestorWebForm } from './gestor-web-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,7 +81,30 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [connectedSites, setConnectedSites] = useState<Site[]>([]);
   const [generatedSite, setGeneratedSite] = useState<AIPoweredWebManagementOutput | null>(null);
+  
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
+
+  // Load templates from localStorage on initial render
+  useEffect(() => {
+    try {
+      const storedTemplates = localStorage.getItem('savedWebTemplates');
+      if (storedTemplates) {
+        setSavedTemplates(JSON.parse(storedTemplates));
+      }
+    } catch (error) {
+      console.error("Failed to load templates from localStorage", error);
+    }
+  }, []);
+
+  // Save templates to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('savedWebTemplates', JSON.stringify(savedTemplates));
+    } catch (error) {
+      console.error("Failed to save templates to localStorage", error);
+    }
+  }, [savedTemplates]);
+
 
   const handleConnectSite = (newSite: Omit<Site, 'id'>) => {
     setConnectedSites(prevSites => [
@@ -98,9 +121,9 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
     const newTemplate: SavedTemplate = {
         ...templateContent,
         id: `template-${Date.now()}`,
-        name: `Plantilla - ${new Date().toLocaleString()}`,
+        name: `Plantilla - ${new Date().toLocaleString('es-ES')}`,
     };
-    setSavedTemplates(prev => [...prev, newTemplate]);
+    setSavedTemplates(prev => [newTemplate, ...prev]);
   };
 
   const handleLoadTemplate = (template: SavedTemplate) => {
