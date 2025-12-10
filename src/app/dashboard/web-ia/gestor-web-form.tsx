@@ -53,6 +53,9 @@ export function GestorWebForm({ action, generatedSite, setGeneratedSite, onSaveT
     startTransition(async () => {
       const result = await action(state, formData);
       setState(result);
+      if (result.output) {
+        setGeneratedSite(result.output);
+      }
     });
   };
 
@@ -60,12 +63,6 @@ export function GestorWebForm({ action, generatedSite, setGeneratedSite, onSaveT
     setEditableContent(generatedSite);
   }, [generatedSite]);
 
-  useEffect(() => {
-    if (state.output) {
-        setGeneratedSite(state.output);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.output]);
 
   const handleContentChange = (section: string, value: string, index?: number, field?: string) => {
     if (!editableContent) return;
