@@ -36,18 +36,15 @@ export function PerfilSettings() {
         try {
             const downloadURL = await uploadAvatar(user.uid, file);
             
-            // POR AHORA, SOLO MOSTRAMOS QUE LA SUBIDA FUE EXITOSA
-            console.log("Imagen subida a Firebase Storage:", downloadURL);
-            toast({
-                title: '¡Subida Exitosa!',
-                description: 'La imagen se ha guardado en Firebase Storage. Ahora vamos a conectar la base de datos.',
-            });
+            await updateUserProfile(user.uid, { photoURL: downloadURL });
+            if(auth.currentUser) {
+                await updateProfile(auth.currentUser, { photoURL: downloadURL });
+            }
 
-            // LA LÓGICA PARA ACTUALIZAR LA BASE DE DATOS Y EL PERFIL SE HA COMENTADO TEMPORALMENTE
-            // await updateUserProfile(user.uid, { photoURL: downloadURL });
-            // if(auth.currentUser) {
-            //     await updateProfile(auth.currentUser, { photoURL: downloadURL });
-            // }
+             toast({
+                title: 'Avatar Actualizado',
+                description: 'Tu imagen de perfil ha sido cambiada.',
+            });
             
         } catch (error) {
             console.error(error);
