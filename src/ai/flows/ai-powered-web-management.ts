@@ -71,23 +71,35 @@ export async function aiPoweredWebManagement(input: AIPoweredWebManagementInput)
   return aiPoweredWebManagementFlow(input);
 }
 
-// --- PROMPT (Sin cambios, el modelo se añade en el flow) ---
+// --- PROMPT MEJORADO ---
 const prompt = ai.definePrompt({
   name: 'aiPoweredWebManagementPrompt',
   input: { schema: AIPoweredWebManagementInputSchema },
   output: { schema: AIPoweredWebManagementOutputSchema },
-  prompt: `You are an expert web developer and copywriter. Your task is to generate a complete, personalized website template structure based on the user's business information. Generate compelling and professional content for each section.
+  prompt: `Eres un director de arte y estratega de marketing de élite, especializado en la creación de sitios web de alto impacto para autónomos y pymes. Tu tarea es generar una estructura de sitio web completa y personalizada que no solo sea profesional, sino también visualmente atractiva y persuasiva.
 
-Business Information:
-- Business Description: {{{businessDescription}}}
-- Website Type: {{{websiteType}}}
-- Design Preferences: {{{designPreferences}}}
-- Example Websites: {{{exampleWebsites}}}
-- Additional Features: {{{additionalFeatures}}}
+**Información del Negocio:**
+- Descripción del Negocio: {{{businessDescription}}}
+- Tipo de Sitio Web: {{{websiteType}}}
+- Preferencias de Diseño: {{{designPreferences}}}
+- Sitios Web de Ejemplo: {{{exampleWebsites}}}
+- Funcionalidades Adicionales: {{{additionalFeatures}}}
 
-Based on this, create a full website structure. Be creative and professional. Ensure the content is tailored to the business description provided. For icon keywords, suggest valid icon names from the 'lucide-react' library. Respond ONLY with the JSON structure.
-`,
+**Tus Instrucciones:**
+
+1.  **Conceptualización de Alto Nivel:** Basado en la descripción, define una Propuesta de Valor Única (PVU) y un tono de comunicación que resuene con el público objetivo. Refleja esto en todo el contenido que generes.
+2.  **Contenido de Calidad Profesional:** Crea textos (copywriting) que sean claros, concisos y orientados a la conversión. Cada palabra debe tener un propósito. Utiliza un lenguaje que inspire confianza y profesionalismo.
+3.  **Hero Section Impactante:**
+    *   **Título (`title`):** Debe ser magnético, captar la atención inmediatamente y comunicar el beneficio principal.
+    *   **Subtítulo (`subtitle`):** Debe expandir el título, resolver una duda clave o presentar el problema que solucionas.
+    *   **Prompt de Imagen (`imagePrompt`):** ¡Sé muy descriptivo! No te limites a "persona trabajando". Especifica el estilo (ej: "fotografía cinematográfica, luz natural, colores cálidos"), el ambiente (ej: "oficina moderna y minimalista"), la acción y la emoción. Ejemplo: "Fotografía de estudio profesional, un artesano sonríe mientras pule una pieza de madera, con herramientas desenfocadas en el fondo, luz cálida lateral".
+4.  **Sección "Sobre Nosotros" Convincente:** No te limites a contar la historia. Comunica la misión, los valores y por qué el cliente debería confiar en este negocio.
+5.  **Servicios Claros y Orientados a Beneficios:** Para cada servicio, describe no solo lo que es, sino el beneficio que aporta al cliente.
+6.  **Iconos Válidos:** Para los iconos de los servicios, proporciona siempre un nombre de icono válido y relevante de la librería 'lucide-react'.
+
+Genera una estructura web completa basada en estas directrices. Responde ÚNICAMENTE con la estructura JSON requerida.`,
 });
+
 
 // --- FLUJO CORREGIDO Y ROBUSTO ---
 const aiPoweredWebManagementFlow = ai.defineFlow(
