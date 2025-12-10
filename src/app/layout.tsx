@@ -3,7 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/auth-context';
-import { CookieConsent } from '@/components/cookie-consent'; // Importación
+import { CookieConsent } from '@/components/cookie-consent';
+import Script from 'next/script';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -47,6 +48,8 @@ export default function RootLayout({
         />
       </head>
       <body className={cn("font-body antialiased", "min-h-screen bg-background font-sans")}>
+         <div id="elevenlabs-platform-widget" data-voice-id="onimxr3LdAtbZ71sESnP"></div>
+         <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></Script>
         <AuthProvider>
           <ThemeProvider
             attribute="class"
