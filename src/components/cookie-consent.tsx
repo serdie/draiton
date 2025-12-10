@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -45,8 +46,8 @@ export function CookieConsent() {
   useEffect(() => {
     // This function would interact with Google Tag Manager or your analytics script
     const updateGtagConsent = (value: AnalyticsConsent) => {
-        if (typeof window.gtag === 'function') {
-            window.gtag('consent', 'update', {
+        if (typeof (window as any).gtag === 'function') {
+            (window as any).gtag('consent', 'update', {
                 'analytics_storage': value
             });
         }
