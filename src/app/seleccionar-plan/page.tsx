@@ -86,7 +86,7 @@ const plans = (billingCycle: 'anual' | 'mensual') => [
         ],
         plan: 'gestoria',
         buttonText: 'Contactar',
-        buttonLink: 'mailto:info@draiton.es'
+        buttonLink: 'mailto:info@draiton.es?subject=Plan%20Gestoría'
     }
 ];
 
