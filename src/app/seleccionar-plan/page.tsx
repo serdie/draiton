@@ -19,6 +19,8 @@ const plans = [
             '1 Proyecto'
         ],
         plan: 'free',
+        buttonText: 'Empezar con el Plan Gratis',
+        buttonLink: '/register?plan=free'
     },
     {
         name: 'Autónomo (Pro)',
@@ -32,6 +34,8 @@ const plans = [
             'Automatizaciones'
         ],
         plan: 'pro',
+        buttonText: 'Elegir Plan Pro',
+        buttonLink: '/register?plan=pro'
     },
     {
         name: 'Empresa',
@@ -45,6 +49,23 @@ const plans = [
             'Control Horario (Fichajes)'
         ],
         plan: 'empresa',
+        buttonText: 'Elegir Plan Empresa',
+        buttonLink: '/register?plan=empresa'
+    },
+    {
+        name: 'Gestorías',
+        description: 'Una solución a medida para gestorías y asesorías.',
+        price: 'Personalizado',
+        icon: <Briefcase className="h-8 w-8 text-primary" />,
+        features: [
+            'Todo lo del plan Empresa',
+            'Gestión multi-cliente',
+            'Panel de control para gestor',
+            'Marca blanca y soporte dedicado'
+        ],
+        plan: 'gestoria',
+        buttonText: 'Contactar',
+        buttonLink: 'mailto:info@draiton.es'
     }
 ];
 
@@ -60,7 +81,7 @@ export default function SeleccionarPlanPage() {
             </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {plans.map((plan) => (
             <Card key={plan.name} className="flex flex-col">
               <CardHeader className="items-center text-center">
@@ -83,8 +104,8 @@ export default function SeleccionarPlanPage() {
               </CardContent>
               <CardContent>
                 <Button className="w-full" asChild>
-                  <Link href={`/register?plan=${plan.plan}`}>
-                    Empezar con el Plan {plan.name}
+                  <Link href={plan.buttonLink}>
+                    {plan.buttonText}
                   </Link>
                 </Button>
               </CardContent>
