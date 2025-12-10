@@ -60,7 +60,7 @@ export default function SeleccionarPlanPage() {
             </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {plans.map((plan) => (
             <Card key={plan.name} className="flex flex-col">
               <CardHeader className="items-center text-center">
