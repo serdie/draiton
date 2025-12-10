@@ -6,7 +6,7 @@ import { GestorWebForm } from './gestor-web-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MonitorCog, PlusCircle, ExternalLink, Settings, Sparkles, Wand2 } from 'lucide-react';
+import { MonitorCog, PlusCircle, ExternalLink, Settings, Sparkles, Wand2, Trash2, Upload } from 'lucide-react';
 import type { AIPoweredWebManagementOutput } from '@/ai/flows/ai-powered-web-management';
 import { ConnectSiteModal } from './connect-site-modal';
 import Image from 'next/image';
@@ -31,6 +31,12 @@ export type Site = {
     url: string;
     description: string;
 }
+
+type SavedTemplate = AIPoweredWebManagementOutput & {
+    id: string;
+    name: string;
+};
+
 
 const SiteCard = ({ site }: { site: Site }) => {
     const screenshotUrl = `https://s0.wordpress.com/mshots/v1/${encodeURIComponent(site.url)}?w=400&h=300`;
@@ -75,6 +81,7 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [connectedSites, setConnectedSites] = useState<Site[]>([]);
   const [generatedSite, setGeneratedSite] = useState<AIPoweredWebManagementOutput | null>(null);
+  const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
 
   const handleConnectSite = (newSite: Omit<Site, 'id'>) => {
     setConnectedSites(prevSites => [
@@ -85,6 +92,25 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
         }
     ]);
   }
+
+  const handleSaveTemplate = (templateContent: AIPoweredWebManagementOutput | null) => {
+    if (!templateContent) return;
+    const newTemplate: SavedTemplate = {
+        ...templateContent,
+        id: `template-${Date.now()}`,
+        name: `Plantilla - ${new Date().toLocaleString()}`,
+    };
+    setSavedTemplates(prev => [...prev, newTemplate]);
+  };
+
+  const handleLoadTemplate = (template: SavedTemplate) => {
+      setGeneratedSite(template);
+  }
+
+  const handleDeleteTemplate = (templateId: string) => {
+      setSavedTemplates(prev => prev.filter(t => t.id !== templateId));
+  }
+
 
   return (
     <>
@@ -117,7 +143,7 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
               <CardDescription>Proporciona los detalles para que la IA pueda generar un concepto a tu medida.</CardDescription>
             </CardHeader>
             <CardContent>
-              <GestorWebForm action={getWebsiteConceptAction} setGeneratedSite={setGeneratedSite} />
+              <GestorWebForm action={getWebsiteConceptAction} setGeneratedSite={setGeneratedSite} onSaveTemplate={handleSaveTemplate} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -138,10 +164,42 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
         <TabsContent value="gestionar" className="mt-6">
             <div className="space-y-6">
                     <Card>
+                        <CardHeader>
+                            <CardTitle>Mis Plantillas Guardadas</CardTitle>
+                            <CardDescription>Carga una plantilla para seguir editándola o descargarla.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {savedTemplates.length > 0 ? (
+                                <div className="space-y-3">
+                                    {savedTemplates.map(template => (
+                                        <div key={template.id} className="flex items-center justify-between p-3 border rounded-md">
+                                            <div>
+                                                <p className="font-semibold">{template.name}</p>
+                                                <p className="text-sm text-muted-foreground">{template.hero.title}</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" onClick={() => handleLoadTemplate(template)}>
+                                                    <Upload className="mr-2 h-4 w-4" />
+                                                    Cargar
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="text-destructive h-9 w-9" onClick={() => handleDeleteTemplate(template.id)}>
+                                                    <Trash2 className="h-4 w-4"/>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center py-4">No tienes plantillas guardadas.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                        <CardTitle>Mis Sitios Web</CardTitle>
-                        <CardDescription>Gestiona tus sitios generados y externos.</CardDescription>
+                        <CardTitle>Mis Sitios Web Conectados</CardTitle>
+                        <CardDescription>Gestiona tus sitios externos.</CardDescription>
                         </div>
                         <Button variant="outline" onClick={() => setIsConnectModalOpen(true)}>
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -156,10 +214,9 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
                                 ))}
                         </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[300px]">
-                                <MonitorCog className="h-16 w-16 mb-4" />
-                                <p>Aún no has generado ni conectado ningún sitio web.</p>
-                                <p className="text-sm">Usa los botones de arriba para empezar.</p>
+                            <div className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[200px]">
+                                <MonitorCog className="h-12 w-12 mb-4" />
+                                <p>Aún no has conectado ningún sitio web externo.</p>
                             </div>
                         )}
                     </CardContent>

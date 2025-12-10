@@ -37,9 +37,10 @@ const iconMap: { [key: string]: React.ComponentType<any> } = {
   ShieldCheck,
 };
 
-export function GestorWebForm({ action, setGeneratedSite }: { 
+export function GestorWebForm({ action, setGeneratedSite, onSaveTemplate }: { 
     action: (currentState: FormState, formData: FormData) => Promise<FormState>,
-    setGeneratedSite: (site: AIPoweredWebManagementOutput | null) => void 
+    setGeneratedSite: (site: AIPoweredWebManagementOutput | null) => void,
+    onSaveTemplate: (template: AIPoweredWebManagementOutput | null) => void;
 }) {
   const [state, setState] = useState<FormState>({ output: null, error: null });
   const [isPending, startTransition] = useTransition();
@@ -60,6 +61,7 @@ export function GestorWebForm({ action, setGeneratedSite }: {
   useEffect(() => {
     if(state.output) {
         setGeneratedSite(state.output);
+        setEditableContent(state.output);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.output]);
@@ -182,9 +184,14 @@ input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #cc
     });
   }
 
-  const handleSaveTemplate = () => {
-    toast({ title: "Plantilla Guardada (Simulación)", description: "Tu diseño actual ha sido guardado en tus plantillas." });
-    // In a real app, you would save `editableContent` to Firestore here.
+  const handleSaveClick = () => {
+    if (isEditing) {
+        setIsEditing(false); 
+        toast({title: "Cambios guardados en la vista previa"});
+    } else {
+        onSaveTemplate(editableContent);
+        toast({ title: "Plantilla Guardada", description: "Tu diseño actual ha sido guardado en 'Gestionar Sitios'." });
+    }
   }
 
   return (
@@ -246,17 +253,11 @@ input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #cc
                     <Pencil className="mr-2 h-4 w-4" />
                     {isEditing ? 'Finalizar Edición' : 'Editar'}
                 </Button>
-                {isEditing && (
-                     <Button onClick={() => {setIsEditing(false); toast({title: "Cambios guardados en la vista previa"})}}>
-                        <Save className="mr-2 h-4 w-4" />
-                        Guardar Cambios
-                    </Button>
-                )}
-                <Button variant="outline" onClick={handleSaveTemplate}>
+                <Button onClick={handleSaveClick}>
                     <Save className="mr-2 h-4 w-4" />
-                    Guardar como Plantilla
+                    {isEditing ? 'Guardar Cambios' : 'Guardar como Plantilla'}
                 </Button>
-                <Button onClick={handleDownload}>
+                <Button onClick={handleDownload} variant="outline">
                     <Download className="mr-2 h-4 w-4" />
                     Descargar (ZIP)
                 </Button>
