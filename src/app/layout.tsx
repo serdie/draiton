@@ -48,8 +48,6 @@ export default function RootLayout({
         />
       </head>
       <body className={cn("font-body antialiased", "min-h-screen bg-background font-sans")}>
-         <div id="elevenlabs-platform-widget" data-voice-id="onimxr3LdAtbZ71sESnP"></div>
-         <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></Script>
         <AuthProvider>
           <ThemeProvider
             attribute="class"
@@ -62,6 +60,8 @@ export default function RootLayout({
             <CookieConsent />
           </ThemeProvider>
         </AuthProvider>
+        <div id="elevenlabs-platform-widget" data-voice-id="onimxr3LdAtbZ71sESnP"></div>
+        <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></Script>
       </body>
     </html>
   );
