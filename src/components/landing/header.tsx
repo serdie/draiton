@@ -98,7 +98,7 @@ export function Header() {
                 <Link href="/login">Iniciar Sesión</Link>
               </Button>
               <Button asChild>
-                <Link href="/register">Registrarse</Link>
+                <Link href="/seleccionar-plan">Registrarse</Link>
               </Button>
             </>
           )}

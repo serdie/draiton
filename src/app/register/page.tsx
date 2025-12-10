@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useContext, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useContext, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
@@ -12,12 +12,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal, Loader2, Facebook } from 'lucide-react';
-import { AuthContext } from '@/context/auth-context';
+import { AuthContext, type UserRole } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { GoogleIcon } from '../dashboard/conexiones/google-icon';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,13 +27,14 @@ export default function RegisterPage() {
   const [facebookLoading, setFacebookLoading] = useState(false);
   const router = useRouter();
   const { user, loading: authLoading } = useContext(AuthContext);
+  const searchParams = useSearchParams();
+  const plan = (searchParams.get('plan') as UserRole | null) || 'free';
 
   useEffect(() => {
     if (!authLoading && user) {
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
-
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +58,7 @@ export default function RegisterPage() {
         displayName: name,
         email: user.email,
         photoURL: user.photoURL,
-        role: 'free', 
+        role: plan, 
         createdAt: serverTimestamp(),
         providerData: user.providerData.map(p => ({
           providerId: p.providerId,
@@ -68,7 +69,6 @@ export default function RegisterPage() {
         })),
       });
       
-      // La redirección y la sincronización de datos la manejará el AuthContext
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
         setError('Este correo electrónico ya está en uso.');
@@ -95,8 +95,28 @@ export default function RegisterPage() {
     const provider = new GoogleAuthProvider();
 
     try {
-      await signInWithPopup(auth, provider);
-      // La redirección y la sincronización de datos la manejará el AuthContext
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+         await setDoc(userDocRef, {
+            uid: user.uid,
+            displayName: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+            role: plan,
+            createdAt: serverTimestamp(),
+            providerData: user.providerData.map(p => ({
+              providerId: p.providerId,
+              uid: p.uid,
+              displayName: p.displayName,
+              email: p.email,
+              photoURL: p.photoURL,
+            })),
+          });
+      }
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
@@ -109,7 +129,7 @@ export default function RegisterPage() {
     }
   };
   
-    const handleFacebookSignIn = async () => {
+  const handleFacebookSignIn = async () => {
     setFacebookLoading(true);
     setError(null);
     if (!auth || !db) {
@@ -121,8 +141,27 @@ export default function RegisterPage() {
     const provider = new FacebookAuthProvider();
 
     try {
-      await signInWithPopup(auth, provider);
-      // La redirección y la sincronización de datos la manejará el AuthContext
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+            uid: user.uid,
+            displayName: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+            role: plan,
+            createdAt: serverTimestamp(),
+            providerData: user.providerData.map(p => ({
+              providerId: p.providerId,
+              uid: p.uid,
+              displayName: p.displayName,
+              email: p.email,
+              photoURL: p.photoURL,
+            })),
+          });
+      }
     } catch (err: any) {
       if (err.code === 'auth/unauthorized-domain') {
         setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
@@ -152,7 +191,7 @@ export default function RegisterPage() {
                      <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-9 w-auto mx-auto"/>
                 </Link>
             </div>
-            <CardTitle>Crea tu Cuenta Gratis</CardTitle>
+            <CardTitle>Crea tu Cuenta - Plan {plan.charAt(0).toUpperCase() + plan.slice(1)}</CardTitle>
             <CardDescription>Empieza a transformar tu negocio hoy mismo.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -259,4 +298,13 @@ export default function RegisterPage() {
       </Card>
     </main>
   );
+}
+
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen w-screen items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+            <RegisterForm />
+        </Suspense>
+    )
 }
