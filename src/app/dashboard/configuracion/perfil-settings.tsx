@@ -13,10 +13,11 @@ import { useContext, useRef, useState } from 'react';
 import { AuthContext } from '@/context/auth-context';
 import { uploadAvatar } from '@/lib/firebase/storage-actions';
 import { updateUserProfile } from '@/lib/firebase/user-settings-actions';
-import { updateProfile, reauthenticateWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signOut } from 'firebase/auth';
+import { updateProfile, reauthenticateWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signOut, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { deleteUserAndDataAction } from '@/lib/firebase/auth-actions';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export function PerfilSettings() {
     const { user } = useContext(AuthContext);
@@ -27,6 +28,8 @@ export function PerfilSettings() {
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isReauthDialogOpen, setIsReauthDialogOpen] = useState(false);
+    const [passwordForReauth, setPasswordForReauth] = useState('');
 
     const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -85,50 +88,24 @@ export function PerfilSettings() {
 
     const triggerFileSelect = () => fileInputRef.current?.click();
     const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
-
-    const handleDeleteAccount = async () => {
+    
+    const proceedWithDeletion = async () => {
         if (!auth.currentUser) return;
+
+        toast({ title: "Procesando eliminación...", description: "Estamos eliminando todos tus datos. Esto puede tardar un momento." });
         
-        setIsDeleting(true);
-
-        const providerId = auth.currentUser.providerData[0]?.providerId;
-        let provider;
-        if (providerId === 'google.com') provider = new GoogleAuthProvider();
-        else if (providerId === 'facebook.com') provider = new FacebookAuthProvider();
-        else if (providerId === 'microsoft.com') provider = new OAuthProvider('microsoft.com');
-
-        if (!provider) {
-             toast({
-                variant: 'destructive',
-                title: 'Error de autenticación',
-                description: 'La eliminación de cuentas con email/contraseña no está soportada en este momento.',
-            });
-            setIsDeleting(false);
-            setIsDeleteDialogOpen(false);
-            return;
-        }
-
         try {
-            // Step 1: Re-authenticate user
-            await reauthenticateWithPopup(auth.currentUser, provider);
-            
-            // Step 2: Call the server action to delete all data and the user
-            toast({ title: "Procesando eliminación...", description: "Estamos eliminando todos tus datos. Esto puede tardar un momento." });
             const result = await deleteUserAndDataAction(auth.currentUser.uid);
-
             if (result.success) {
-                // The server action clears the cookie, now we sign out the client
                 await signOut(auth); 
                 toast({
                     title: 'Cuenta Eliminada',
                     description: 'Tu cuenta y todos tus datos han sido eliminados permanentemente.',
                 });
-                // AuthProvider will redirect to /login
             } else {
                 throw new Error(result.error);
             }
-
-        } catch (error: any) {
+        } catch(error: any) {
              toast({
                 variant: 'destructive',
                 title: 'Error al eliminar la cuenta',
@@ -137,8 +114,80 @@ export function PerfilSettings() {
         } finally {
             setIsDeleting(false);
             setIsDeleteDialogOpen(false);
+            setIsReauthDialogOpen(false);
         }
     }
+
+
+    const handleDeleteAccount = async () => {
+        if (!auth.currentUser) return;
+        
+        setIsDeleting(true);
+
+        const providerId = auth.currentUser.providerData[0]?.providerId;
+        
+        // Handle password provider
+        if (providerId === 'password') {
+            setIsReauthDialogOpen(true);
+            setIsDeleting(false); // We'll set it back when they submit password
+            return;
+        }
+
+        // Handle social providers
+        let provider;
+        if (providerId === 'google.com') provider = new GoogleAuthProvider();
+        else if (providerId === 'facebook.com') provider = new FacebookAuthProvider();
+        else if (providerId === 'microsoft.com') provider = new OAuthProvider('microsoft.com');
+
+        if (provider) {
+             try {
+                await reauthenticateWithPopup(auth.currentUser, provider);
+                await proceedWithDeletion();
+             } catch (error: any) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Error de autenticación',
+                    description: `No se pudo confirmar tu identidad: ${error.message}`,
+                });
+                setIsDeleting(false);
+                setIsDeleteDialogOpen(false);
+             }
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Método no soportado',
+                description: 'No se reconoce el proveedor de autenticación para esta acción.',
+            });
+            setIsDeleting(false);
+            setIsDeleteDialogOpen(false);
+        }
+    }
+    
+    const handleReauthenticateWithPassword = async () => {
+        if (!auth.currentUser || !passwordForReauth) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Introduce tu contraseña.' });
+            return;
+        }
+        setIsDeleting(true);
+        setIsReauthDialogOpen(false);
+        
+        const credential = EmailAuthProvider.credential(auth.currentUser.email!, passwordForReauth);
+        
+        try {
+            await reauthenticateWithCredential(auth.currentUser, credential);
+            await proceedWithDeletion();
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error de autenticación',
+                description: `La contraseña es incorrecta o ha ocurrido un error.`,
+            });
+            setIsDeleting(false);
+            setIsDeleteDialogOpen(false);
+        } finally {
+             setPasswordForReauth('');
+        }
+    };
 
   return (
       <>
@@ -162,6 +211,38 @@ export function PerfilSettings() {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <Dialog open={isReauthDialogOpen} onOpenChange={setIsReauthDialogOpen}>
+            <DialogContent>
+                 <DialogHeader>
+                    <DialogTitle>Confirmar Identidad</DialogTitle>
+                    <DialogDescription>
+                        Por seguridad, introduce tu contraseña para confirmar la eliminación de tu cuenta.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2 py-4">
+                    <Label htmlFor="reauth-password">Contraseña</Label>
+                    <Input 
+                        id="reauth-password"
+                        type="password"
+                        value={passwordForReauth}
+                        onChange={(e) => setPasswordForReauth(e.target.value)}
+                    />
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancelar</Button>
+                    </DialogClose>
+                    <Button
+                        variant="destructive"
+                        onClick={handleReauthenticateWithPassword}
+                    >
+                        Confirmar y Eliminar
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
 
         <Card>
         <CardHeader>

@@ -43,7 +43,7 @@ export async function deleteUserAndDataAction(userId: string): Promise<{ success
 
         const batch = writeBatch(db);
 
-        // Delete associated data from all collections
+        // Delete associated data from all collections where user is the owner
         for (const collectionName of collectionsToDeleteFrom) {
             const q = query(collection(db, collectionName), where('ownerId', '==', userId));
             const snapshot = await getDocs(q);
@@ -51,10 +51,24 @@ export async function deleteUserAndDataAction(userId: string): Promise<{ success
                 batch.delete(doc.ref);
             });
         }
+        
+        // If user is an employee, delete their specific records
+        const employeeFichajesQuery = query(collection(db, 'fichajes'), where('employeeId', '==', userId));
+        const employeeAbsencesQuery = query(collection(db, 'absences'), where('employeeId', '==', userId));
+        const [fichajesSnapshot, absencesSnapshot] = await Promise.all([
+            getDocs(employeeFichajesQuery),
+            getDocs(employeeAbsencesQuery)
+        ]);
+        fichajesSnapshot.forEach(doc => batch.delete(doc.ref));
+        absencesSnapshot.forEach(doc => batch.delete(doc.ref));
+        
 
-        // Delete the main user profile document
+        // Delete the main user profile and employee document
         const userDocRef = doc(db, 'users', userId);
+        const employeeDocRef = doc(db, 'employees', userId);
         batch.delete(userDocRef);
+        batch.delete(employeeDocRef);
+
 
         // Commit all deletions
         await batch.commit();
