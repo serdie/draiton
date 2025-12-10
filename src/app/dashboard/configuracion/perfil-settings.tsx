@@ -127,7 +127,7 @@ export function PerfilSettings() {
             <CardDescription>Gestiona tu información personal y detalles de la cuenta.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
-            <input type="file" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" accept="image/png, image/jpeg" />
+            <input type="file" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
             <div className="flex items-center gap-6">
                 <Avatar className="h-20 w-20">
                     <AvatarImage src={user?.photoURL ?? ''} alt="Avatar de usuario" />
