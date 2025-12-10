@@ -74,7 +74,7 @@ export function Pricing() {
         />
         <Label htmlFor="billing-cycle" className={billingCycle === 'anual' ? 'text-primary font-semibold' : 'text-muted-foreground'}>
           Pago Anual
-          <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">Oferta de lanzamiento</Badge>
+          <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">Oferta de lanzamiento 50% descuento</Badge>
         </Label>
       </div>
       <div className="grid max-w-7xl mx-auto gap-8 md:grid-cols-1 lg:grid-cols-3">
