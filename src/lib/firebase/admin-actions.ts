@@ -47,19 +47,6 @@ export async function updateUserRole(uid: string, newRole: 'free' | 'pro' | 'adm
 }
 
 /**
- * Elimina un documento de usuario de la colección 'users' en Firestore.
- * This function now only deletes the Firestore document. Deleting the auth user should be a separate, more secure action.
- */
-export async function deleteUser(uid: string): Promise<void> {
-  if (!uid) {
-    throw new Error("Se requiere el ID del usuario.");
-  }
-  const userDocRef = doc(db, 'users', uid);
-  // This is not a real admin action.
-  await deleteDoc(userDocRef);
-}
-
-/**
  * Creates a new employee user in Firebase Auth and Firestore.
  * This is a complex server action and requires careful implementation.
  * For now, this is a simplified version.
@@ -150,4 +137,18 @@ export async function updateEmployeePasswordAction(employeeId: string, newPasswo
    console.log(`Simulating password change for employee ${employeeId}`);
 
   return { success: true };
+}
+
+/**
+ * Deletes a user document from Firestore.
+ * This action does NOT delete the Firebase Auth user.
+ * @deprecated Use `deleteUserAndDataAction` from `auth-actions.ts` for full deletion.
+ */
+export async function deleteUser(uid: string): Promise<void> {
+  if (!uid) {
+    throw new Error("Se requiere el ID del usuario.");
+  }
+  console.warn("`deleteUser` is deprecated. It only deletes the Firestore user document. Use `deleteUserAndDataAction` for complete user deletion.");
+  const userDocRef = doc(db, 'users', uid);
+  await deleteDoc(userDocRef);
 }

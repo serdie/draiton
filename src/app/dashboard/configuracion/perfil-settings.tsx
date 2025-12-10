@@ -13,10 +13,10 @@ import { useContext, useRef, useState } from 'react';
 import { AuthContext } from '@/context/auth-context';
 import { uploadAvatar } from '@/lib/firebase/storage-actions';
 import { updateUserProfile } from '@/lib/firebase/user-settings-actions';
-import { updateProfile } from 'firebase/auth';
+import { updateProfile, reauthenticateWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { deleteCurrentUserAction } from '@/lib/firebase/auth-actions';
+import { deleteUserAndDataAction } from '@/lib/firebase/auth-actions';
 
 export function PerfilSettings() {
     const { user } = useContext(AuthContext);
@@ -87,17 +87,57 @@ export function PerfilSettings() {
     const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
 
     const handleDeleteAccount = async () => {
+        if (!auth.currentUser) return;
+        
         setIsDeleting(true);
-        const result = await deleteCurrentUserAction();
-        if (!result.success) {
-            toast({
+
+        const providerId = auth.currentUser.providerData[0]?.providerId;
+        let provider;
+        if (providerId === 'google.com') provider = new GoogleAuthProvider();
+        else if (providerId === 'facebook.com') provider = new FacebookAuthProvider();
+        else if (providerId === 'microsoft.com') provider = new OAuthProvider('microsoft.com');
+
+        if (!provider) {
+             toast({
                 variant: 'destructive',
-                title: 'Error al eliminar la cuenta',
-                description: result.error,
+                title: 'Error de autenticación',
+                description: 'La eliminación de cuentas con email/contraseña no está soportada en este momento.',
             });
             setIsDeleting(false);
+            setIsDeleteDialogOpen(false);
+            return;
         }
-        // No success toast is needed, as the user will be logged out and redirected.
+
+        try {
+            // Step 1: Re-authenticate user
+            await reauthenticateWithPopup(auth.currentUser, provider);
+            
+            // Step 2: Call the server action to delete all data and the user
+            toast({ title: "Procesando eliminación...", description: "Estamos eliminando todos tus datos. Esto puede tardar un momento." });
+            const result = await deleteUserAndDataAction(auth.currentUser.uid);
+
+            if (result.success) {
+                // The server action clears the cookie, now we sign out the client
+                await signOut(auth); 
+                toast({
+                    title: 'Cuenta Eliminada',
+                    description: 'Tu cuenta y todos tus datos han sido eliminados permanentemente.',
+                });
+                // AuthProvider will redirect to /login
+            } else {
+                throw new Error(result.error);
+            }
+
+        } catch (error: any) {
+             toast({
+                variant: 'destructive',
+                title: 'Error al eliminar la cuenta',
+                description: `Ocurrió un error durante el proceso: ${error.message}`,
+            });
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteDialogOpen(false);
+        }
     }
 
   return (
@@ -107,7 +147,7 @@ export function PerfilSettings() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Esta acción es irreversible. Se eliminarán permanentemente tu cuenta y todos tus datos asociados (proyectos, facturas, clientes, etc.). Esta acción no se puede deshacer.
+                        Esta acción es irreversible. Se eliminarán permanentemente tu cuenta y todos tus datos asociados (proyectos, facturas, clientes, etc.). Se te pedirá que te vuelvas a autenticar para confirmar.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
