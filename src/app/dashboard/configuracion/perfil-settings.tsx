@@ -15,7 +15,7 @@ import { uploadAvatar } from '@/lib/firebase/storage-actions';
 import { updateUserProfile } from '@/lib/firebase/user-settings-actions';
 import { updateProfile } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { deleteCurrentUserAction } from '@/lib/firebase/auth-actions';
 
 export function PerfilSettings() {
@@ -34,22 +34,27 @@ export function PerfilSettings() {
 
         setIsUploading(true);
         try {
-            const photoURL = await uploadAvatar(user.uid, file);
-            await updateUserProfile(user.uid, { photoURL });
-            if(auth.currentUser) {
-                await updateProfile(auth.currentUser, { photoURL });
-            }
-
+            const downloadURL = await uploadAvatar(user.uid, file);
+            
+            // POR AHORA, SOLO MOSTRAMOS QUE LA SUBIDA FUE EXITOSA
+            console.log("Imagen subida a Firebase Storage:", downloadURL);
             toast({
-                title: 'Avatar Actualizado',
-                description: 'Tu nueva foto de perfil se ha guardado.',
+                title: '¡Subida Exitosa!',
+                description: 'La imagen se ha guardado en Firebase Storage. Ahora vamos a conectar la base de datos.',
             });
+
+            // LA LÓGICA PARA ACTUALIZAR LA BASE DE DATOS Y EL PERFIL SE HA COMENTADO TEMPORALMENTE
+            // await updateUserProfile(user.uid, { photoURL: downloadURL });
+            // if(auth.currentUser) {
+            //     await updateProfile(auth.currentUser, { photoURL: downloadURL });
+            // }
+            
         } catch (error) {
             console.error(error);
             toast({
                 variant: 'destructive',
-                title: 'Error',
-                description: 'No se pudo subir la imagen. Inténtalo de nuevo.',
+                title: 'Error de Subida',
+                description: 'No se pudo subir la imagen a Storage. Revisa la consola y las reglas de CORS/Storage.',
             });
         } finally {
             setIsUploading(false);
