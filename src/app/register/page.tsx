@@ -225,7 +225,31 @@ export default function RegisterPage() {
                  </Button>
             </div>
             
-            <p className="mt-6 text-center text-sm text-muted-foreground">
+            <p className="mt-6 px-8 text-center text-xs text-muted-foreground">
+              Al continuar confirmas que aceptas nuestros{' '}
+              <Link
+                href="/condiciones-de-uso"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Condiciones de uso
+              </Link>
+              ,{' '}
+              <Link
+                href="/politica-de-privacidad"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Política de Privacidad
+              </Link>{' '}
+              y{' '}
+              <Link
+                href="/politica-de-cookies"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Cookies
+              </Link>
+              .
+            </p>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
                 ¿Ya tienes una cuenta?{' '}
                 <Link href="/login" className="font-medium text-primary hover:underline">
                 Inicia sesión
