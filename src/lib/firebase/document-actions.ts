@@ -3,7 +3,6 @@
 
 import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from './config';
-import { getFirebaseAuth } from './firebase-admin';
 import type { Document } from '@/app/dashboard/documentos/page';
 import { extractInvoiceData, type ExtractInvoiceDataOutput } from '@/ai/flows/extract-invoice-data';
 import { processCsvInvoices, type ProcessCsvInvoicesOutput } from '@/ai/flows/process-csv-invoices';
@@ -27,9 +26,8 @@ export async function deleteDocument(id: string): Promise<{ success: boolean, er
 
 export async function updateDocumentAction(id: string, documentData: Partial<Omit<Document, 'id' | 'ownerId' | 'fechaCreacion'>>): Promise<{ success: boolean; error?: string }> {
     try {
-        const { db: adminDb } = getFirebaseAuth();
-        const docRef = adminDb.collection('invoices').doc(id);
-        await docRef.update(documentData);
+        const docRef = doc(db, 'invoices', id);
+        await updateDoc(docRef, documentData);
         return { success: true };
     } catch (error: any) {
         console.error("Error al actualizar documento: ", error);

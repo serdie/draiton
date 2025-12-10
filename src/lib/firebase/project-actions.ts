@@ -1,9 +1,9 @@
+
 'use server';
 
 import { doc, updateDoc, addDoc, serverTimestamp, collection } from 'firebase/firestore';
-import { db } from './config';
+import { db, auth } from './config';
 import type { Project, ProjectStatus } from '@/app/dashboard/proyectos/page';
-import { getFirebaseAuth } from './firebase-admin';
 import { nanoid } from 'nanoid';
 
 export async function createProject(projectData: {
@@ -15,13 +15,14 @@ export async function createProject(projectData: {
   budget?: number;
   status: ProjectStatus;
 }) {
-  const { auth, db: adminDb } = getFirebaseAuth();
-  // Here, you would typically verify the user's session cookie.
-  // For simplicity, we'll assume the user is authenticated.
-  const ownerId = "some-user-id"; // In a real app, get this from the session
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+      return { success: false, error: "Usuario no autenticado." };
+  }
+  const ownerId = currentUser.uid;
 
   try {
-    const docRef = await addDoc(collection(adminDb, 'projects'), {
+    const docRef = await addDoc(collection(db, 'projects'), {
       ...projectData,
       ownerId,
       progress: 0,

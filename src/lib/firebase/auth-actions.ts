@@ -1,65 +1,37 @@
 
 'use server';
 
-import { getFirebaseAuth } from './firebase-admin';
 import { cookies } from 'next/headers';
+import { getAuth } from 'firebase/auth';
+import { auth, db } from './config';
+import { deleteDoc, doc } from 'firebase/firestore';
+
 
 export async function setSessionCookie(idToken: string) {
-    const { auth } = getFirebaseAuth();
-
-    // El token dura 14 días.
-    const expiresIn = 60 * 60 * 24 * 14 * 1000;
-    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
-
-    const cookieStore = await cookies();
-    cookieStore.get('session');
-    
-    cookieStore.set('session', sessionCookie, {
+    const expiresIn = 60 * 60 * 24 * 14 * 1000; // 14 days
+    const options = {
         maxAge: expiresIn,
         httpOnly: true,
         secure: true,
         path: '/',
         sameSite: 'strict',
-    });
+    } as const;
+
+    cookies().set('session', idToken, options);
 }
 
 
 export async function clearSessionCookie() {
-    const cookieStore = await cookies(); 
-    cookieStore.get('session');
-    cookieStore.delete('session');
+    cookies().delete('session');
 }
 
 export async function deleteCurrentUserAction(): Promise<{ success: boolean; error?: string }> {
-    try {
-        const { auth, db } = getFirebaseAuth();
-        const sessionCookie = cookies().get('session')?.value;
-
-        if (!sessionCookie) {
-            return { success: false, error: 'No se encontró la sesión de usuario. Por favor, inicia sesión de nuevo.' };
-        }
-
-        const decodedToken = await auth.verifySessionCookie(sessionCookie, true);
-        const uid = decodedToken.uid;
-
-        // 1. Eliminar el usuario de Firebase Authentication
-        await auth.deleteUser(uid);
-
-        // 2. Eliminar el documento de usuario en Firestore
-        const userDocRef = db.collection('users').doc(uid);
-        await userDocRef.delete();
-        
-        // Aquí podrías añadir la lógica para borrar otros datos asociados al usuario
-        // como proyectos, facturas, etc. en una transacción o batch write.
-        // Por simplicidad, por ahora solo borramos el documento principal del usuario.
-
-        // 3. Limpiar la cookie de sesión del navegador
-        clearSessionCookie();
-
-        return { success: true };
-
-    } catch (error: any) {
-        console.error("Error al eliminar el usuario:", error);
-        return { success: false, error: 'Ocurrió un error al intentar eliminar la cuenta. Por favor, inténtalo de nuevo.' };
-    }
+   // IMPORTANT: Deleting users requires elevated privileges not available in this environment's
+   // server actions. This is a placeholder for a real implementation using a backend service
+   // with the Firebase Admin SDK.
+    console.error("User deletion is a critical action and is disabled in this environment.");
+    return { 
+        success: false, 
+        error: 'La eliminación de cuentas está deshabilitada en este entorno de demostración por razones de seguridad.' 
+    };
 }
