@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useContext, useState, useEffect } from 'react';
@@ -62,6 +63,7 @@ import { collection, query, where, onSnapshot, updateDoc, doc, Timestamp, orderB
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Script from 'next/script';
+import Head from 'next/head';
 
 
 type Notification = {
@@ -181,197 +183,202 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="p-4 flex justify-center">
-            <Link href="/dashboard" className="flex items-center gap-2" id="tour-logo">
-                <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-8 w-auto"/>
-            </Link>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem id="tour-escritorio">
-              <Link href="/dashboard">
-                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Escritorio">
-                  <Home />
-                  <span>Escritorio</span>
-                </SidebarMenuButton>
+    <>
+      <Head>
+        <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></Script>
+      </Head>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader className="p-4 flex justify-center">
+              <Link href="/dashboard" className="flex items-center gap-2" id="tour-logo">
+                  <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-8 w-auto"/>
               </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem id="tour-finanzas">
-              <Link href="/dashboard/finanzas">
-                <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
-                  <Wallet />
-                  <span>Finanzas</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem id="tour-operaciones">
-              <Link href="/dashboard/proyectos">
-                <SidebarMenuButton isActive={isActive('/dashboard/proyectos')} tooltip="Operaciones">
-                  <Blocks />
-                  <span>Operaciones</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              <SidebarMenuItem id="tour-escritorio">
+                <Link href="/dashboard">
+                  <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Escritorio">
+                    <Home />
+                    <span>Escritorio</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem id="tour-finanzas">
+                <Link href="/dashboard/finanzas">
+                  <SidebarMenuButton isActive={isActive('/dashboard/finanzas')} tooltip="Finanzas">
+                    <Wallet />
+                    <span>Finanzas</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem id="tour-operaciones">
+                <Link href="/dashboard/proyectos">
+                  <SidebarMenuButton isActive={isActive('/dashboard/proyectos')} tooltip="Operaciones">
+                    <Blocks />
+                    <span>Operaciones</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
 
-            {!isEmployee && (
-                 <SidebarMenuItem id="tour-ia">
-                    <Link href="/dashboard/gestor-ia">
-                        <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
-                        <FlaskConical />
-                        <span>Herramientas IA</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            )}
+              {!isEmployee && (
+                  <SidebarMenuItem id="tour-ia">
+                      <Link href="/dashboard/gestor-ia">
+                          <SidebarMenuButton isActive={isActive('/dashboard/gestor-ia')} tooltip="Herramientas IA">
+                          <FlaskConical />
+                          <span>Herramientas IA</span>
+                          </SidebarMenuButton>
+                      </Link>
+                  </SidebarMenuItem>
+              )}
 
-            {!isEmployee && (
-                <SidebarMenuItem>
-                    <Link href="/dashboard/conexiones">
-                        <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
-                        <Network />
-                        <span>Conexiones</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            )}
-            
+              {!isEmployee && (
+                  <SidebarMenuItem>
+                      <Link href="/dashboard/conexiones">
+                          <SidebarMenuButton isActive={isActive('/dashboard/conexiones')} tooltip="Conexiones">
+                          <Network />
+                          <span>Conexiones</span>
+                          </SidebarMenuButton>
+                      </Link>
+                  </SidebarMenuItem>
+              )}
+              
+              <SidebarMenuItem>
+                <Link href="/dashboard/configuracion">
+                  <SidebarMenuButton isActive={isActive('/dashboard/configuracion')} tooltip="Configuración">
+                    <Settings />
+                    <span>Configuración</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {isAdmin && (
+                  <SidebarMenuItem id="tour-admin">
+                      <Link href="/admin/dashboard">
+                      <SidebarMenuButton isActive={isActive('/admin/dashboard')} tooltip="Admin Panel">
+                          <UserCog />
+                          <span>Administración</span>
+                      </SidebarMenuButton>
+                      </Link>
+                  </SidebarMenuItem>
+              )}
+            </SidebarMenu>
+          </SidebarContent>
+          <SidebarFooter className='p-4 space-y-4'>
             <SidebarMenuItem>
-              <Link href="/dashboard/configuracion">
-                <SidebarMenuButton isActive={isActive('/dashboard/configuracion')} tooltip="Configuración">
-                  <Settings />
-                  <span>Configuración</span>
-                </SidebarMenuButton>
-              </Link>
+              <SidebarMenuButton tooltip="Configuración de Cookies">
+                <Cookie />
+                <span>Cookies</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
-
-             {isAdmin && (
-                <SidebarMenuItem id="tour-admin">
-                    <Link href="/admin/dashboard">
-                    <SidebarMenuButton isActive={isActive('/admin/dashboard')} tooltip="Admin Panel">
-                        <UserCog />
-                        <span>Administración</span>
-                    </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
+            {isFree && (
+              <div id="tour-upgrade" className='p-4 bg-secondary rounded-lg text-center'>
+                <p className='font-bold'>Upgrade a Pro</p>
+                <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
+                <Button asChild size="sm" className="w-full">
+                  <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
+                </Button>
+              </div>
             )}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter className='p-4 space-y-4'>
-           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Configuración de Cookies">
-              <Cookie />
-              <span>Cookies</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          {isFree && (
-            <div id="tour-upgrade" className='p-4 bg-secondary rounded-lg text-center'>
-              <p className='font-bold'>Upgrade a Pro</p>
-              <p className='text-sm text-muted-foreground mt-1 mb-3'>Desbloquea todo el potencial de la IA para tu negocio.</p>
-              <Button asChild size="sm" className="w-full">
-                 <Link href="/dashboard/configuracion?tab=suscripcion">Ver Planes</Link>
-              </Button>
-            </div>
-          )}
-        </SidebarFooter>
-      </Sidebar>
-      <div className="flex-1 flex flex-col">
-        <header className="flex h-20 items-center justify-between border-b bg-background px-4 lg:px-8">
-            <div className="text-xl font-semibold">
-              {getPageTitle()}
-            </div>
-            <div className="flex-1 flex justify-end items-center gap-4">
-                <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Buscar proyectos, facturas..." className="pl-10 bg-muted border-muted focus:bg-background" />
-                </div>
-                {user?.role === 'pro' && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
-                {user?.role === 'empresa' && <Badge variant="outline" className={cn('border-purple-400 bg-purple-400/10 text-purple-500 dark:border-purple-400 dark:text-purple-400')}>EMPRESA</Badge>}
+          </SidebarFooter>
+        </Sidebar>
+        <div className="flex-1 flex flex-col">
+          <header className="flex h-20 items-center justify-between border-b bg-background px-4 lg:px-8">
+              <div className="text-xl font-semibold">
+                {getPageTitle()}
+              </div>
+              <div className="flex-1 flex justify-end items-center gap-4">
+                  <div className="relative w-full max-w-sm">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Buscar proyectos, facturas..." className="pl-10 bg-muted border-muted focus:bg-background" />
+                  </div>
+                  {user?.role === 'pro' && <Badge variant="outline" className='border-yellow-400 bg-yellow-400/10 text-yellow-500 dark:border-yellow-400 dark:text-yellow-400'>PRO</Badge>}
+                  {user?.role === 'empresa' && <Badge variant="outline" className={cn('border-purple-400 bg-purple-400/10 text-purple-500 dark:border-purple-400 dark:text-purple-400')}>EMPRESA</Badge>}
 
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="relative">
-                            <Bell className="h-5 w-5"/>
-                             {unreadNotificationsCount > 0 && (
-                                <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background" />
-                            )}
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-80" align="end">
-                        <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {notifications.length === 0 ? (
-                            <div className="px-2 py-1.5 text-sm text-muted-foreground">No tienes notificaciones</div>
-                        ) : (
-                            notifications.map(notif => (
-                                <DropdownMenuItem key={notif.id} onSelect={() => handleNotificationClick(notif)} className={cn("flex items-start gap-3 cursor-pointer", !notif.isRead && "font-semibold")}>
-                                     {!notif.isRead && <span className="block h-2 w-2 mt-1.5 rounded-full bg-primary flex-shrink-0" />}
-                                     <div className={cn(notif.isRead && "pl-5")}>
-                                        <p>{notif.senderName} {notif.message}</p>
-                                        <p className="text-xs text-muted-foreground font-normal">{formatDistanceToNow(notif.createdAt, { addSuffix: true, locale: es })}</p>
-                                    </div>
-                                </DropdownMenuItem>
-                            ))
-                        )}
-                         <DropdownMenuSeparator />
-                         <DropdownMenuItem className="justify-center text-xs text-muted-foreground">Marcar todas como leídas</DropdownMenuItem>
-                    </DropdownMenuContent>
-                 </DropdownMenu>
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="relative">
+                              <Bell className="h-5 w-5"/>
+                              {unreadNotificationsCount > 0 && (
+                                  <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background" />
+                              )}
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-80" align="end">
+                          <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {notifications.length === 0 ? (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">No tienes notificaciones</div>
+                          ) : (
+                              notifications.map(notif => (
+                                  <DropdownMenuItem key={notif.id} onSelect={() => handleNotificationClick(notif)} className={cn("flex items-start gap-3 cursor-pointer", !notif.isRead && "font-semibold")}>
+                                      {!notif.isRead && <span className="block h-2 w-2 mt-1.5 rounded-full bg-primary flex-shrink-0" />}
+                                      <div className={cn(notif.isRead && "pl-5")}>
+                                          <p>{notif.senderName} {notif.message}</p>
+                                          <p className="text-xs text-muted-foreground font-normal">{formatDistanceToNow(notif.createdAt, { addSuffix: true, locale: es })}</p>
+                                      </div>
+                                  </DropdownMenuItem>
+                              ))
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="justify-center text-xs text-muted-foreground">Marcar todas como leídas</DropdownMenuItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
 
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <div id="tour-perfil" className='flex items-center gap-3 cursor-pointer'>
-                        {user && <UserAvatar user={user} />}
-                        <div className="hidden md:flex flex-col items-start">
-                          <span className="font-semibold text-sm">{user?.displayName || 'Usuario'}</span>
-                          <span className="text-xs text-muted-foreground">{getRoleDisplayName(user?.role)}</span>
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <div id="tour-perfil" className='flex items-center gap-3 cursor-pointer'>
+                          {user && <UserAvatar user={user} />}
+                          <div className="hidden md:flex flex-col items-start">
+                            <span className="font-semibold text-sm">{user?.displayName || 'Usuario'}</span>
+                            <span className="text-xs text-muted-foreground">{getRoleDisplayName(user?.role)}</span>
+                          </div>
                         </div>
-                      </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
-                        <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <Link href="/dashboard">
-                            <DropdownMenuItem>
-                            <Home className="mr-2 h-4 w-4" />
-                            <span>Escritorio</span>
-                            </DropdownMenuItem>
-                        </Link>
-                        <Link href="/dashboard/configuracion">
-                            <DropdownMenuItem>
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Configuración</span>
-                            </DropdownMenuItem>
-                        </Link>
-                        {isAdmin && (
-                          <Link href="/admin/dashboard">
-                            <DropdownMenuItem>
-                              <UserCog className="mr-2 h-4 w-4" />
-                              <span>Admin</span>
-                            </DropdownMenuItem>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
+                          <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <Link href="/dashboard">
+                              <DropdownMenuItem>
+                              <Home className="mr-2 h-4 w-4" />
+                              <span>Escritorio</span>
+                              </DropdownMenuItem>
                           </Link>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleStartTour}>
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            <span>Iniciar Tour</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Cerrar sesión</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-        </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/50 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-      <TourSpotlight />
-    </SidebarProvider>
+                          <Link href="/dashboard/configuracion">
+                              <DropdownMenuItem>
+                              <Settings className="mr-2 h-4 w-4" />
+                              <span>Configuración</span>
+                              </DropdownMenuItem>
+                          </Link>
+                          {isAdmin && (
+                            <Link href="/admin/dashboard">
+                              <DropdownMenuItem>
+                                <UserCog className="mr-2 h-4 w-4" />
+                                <span>Admin</span>
+                              </DropdownMenuItem>
+                            </Link>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={handleStartTour}>
+                              <BookOpen className="mr-2 h-4 w-4" />
+                              <span>Iniciar Tour</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={handleLogout}>
+                              <LogOut className="mr-2 h-4 w-4" />
+                              <span>Cerrar sesión</span>
+                          </DropdownMenuItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+              </div>
+          </header>
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/50 overflow-y-auto">
+            {children}
+          </main>
+        </div>
+        <TourSpotlight />
+      </SidebarProvider>
+    </>
   );
 }
 
@@ -383,10 +390,6 @@ export default function DashboardLayout({
   return (
     <TourProvider>
       <DashboardLayoutContent>{children}</DashboardLayoutContent>
-      <div className="hidden md:block">
-        <elevenlabs-convai agent-id="agent_0501kbn9512cf21tbh0ypf8xz7v3"></elevenlabs-convai>
-        <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></Script>
-      </div>
     </TourProvider>
   )
 }
