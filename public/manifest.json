@@ -1,38 +1,21 @@
 {
   "name": "DrAIton",
   "short_name": "DrAIton",
-  "description": "Tu gestoría inteligente con IA. Facturas, impuestos y RRHH en tu bolsillo.",
+  "description": "Tu centro de operaciones para autónomos y pequeñas empresas.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ffffff",
-  "orientation": "portrait",
-  "scope": "/",
-  "lang": "es-ES",
-  "categories": [
-    "finance",
-    "business",
-    "productivity"
-  ],
+  "theme_color": "#1D4ED8",
   "icons": [
     {
-      "src": "https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e",
-      "type": "image/jpeg",
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
-      "src": "https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e",
-      "type": "image/jpeg",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
-      "purpose": "any"
-    },
-    {
-      "src": "https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e",
-      "type": "image/jpeg",
-      "sizes": "512x512",
-      "purpose": "maskable"
+      "type": "image/png"
     }
-  ],
-  "screenshots": []
+  ]
 }

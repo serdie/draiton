@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/context/auth-context';
+import { CookieConsent } from '@/components/cookie-consent'; // Importación
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,6 +29,22 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+        {/* Google Analytics - Carga inicial con consentimiento denegado por defecto */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('consent', 'default', {
+                'analytics_storage': 'denied',
+                'ad_storage': 'denied'
+              });
+              gtag('js', new Date());
+              gtag('config', 'G-XXXXXXXXXX');
+            `,
+          }}
+        />
       </head>
       <body className={cn("font-body antialiased", "min-h-screen bg-background font-sans")}>
         <AuthProvider>
@@ -39,6 +56,7 @@ export default function RootLayout({
           >
             {children}
             <Toaster />
+            <CookieConsent />
           </ThemeProvider>
         </AuthProvider>
       </body>

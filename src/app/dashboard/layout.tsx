@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useState, useEffect } from 'react';
@@ -43,6 +42,7 @@ import {
   MessageSquare,
   Bell,
   CheckCircle,
+  Cookie,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -259,6 +259,12 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className='p-4 space-y-4'>
+           <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Configuración de Cookies">
+              <Cookie />
+              <span>Cookies</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           {isFree && (
             <div id="tour-upgrade" className='p-4 bg-secondary rounded-lg text-center'>
               <p className='font-bold'>Upgrade a Pro</p>
