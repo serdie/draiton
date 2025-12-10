@@ -17,7 +17,7 @@ type ConsentValue = 'accepted' | 'rejected' | 'unset';
 type AnalyticsConsent = 'granted' | 'denied';
 
 export function CookieConsent() {
-  const [consent, setConsent] = useState<ConsentValue>('unset');
+  const [consent, setConsent] = useState<ConsentValue | null>(null);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [analyticsAllowed, setAnalyticsAllowed] = useState(false);
 
@@ -44,7 +44,6 @@ export function CookieConsent() {
   }, []);
 
   useEffect(() => {
-    // This function would interact with Google Tag Manager or your analytics script
     const updateGtagConsent = (value: AnalyticsConsent) => {
         if (typeof (window as any).gtag === 'function') {
             (window as any).gtag('consent', 'update', {
