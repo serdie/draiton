@@ -16,4 +16,3 @@ gcloud storage buckets update gs://<YOUR_FIREBASE_PROJECT_ID>.appspot.com --cors
 
 To get started, take a look at src/app/page.tsx.
 
-```
