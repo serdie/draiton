@@ -1,15 +1,24 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { adminDb } from '@/lib/firebase-admin'; // <--- Importamos el Admin
-import { FieldValue } from 'firebase-admin/firestore'; // Tipos de Admin
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2025-11-17.clover', // Asegúrate que coincida con tu versión
+  apiVersion: '2025-11-17.clover', // Tu versión de API
   typescript: true,
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+// MAPA DE PRECIOS PARA DETECTAR ROL AUTOMÁTICAMENTE
+// Asegúrate de que estos IDs coinciden con los de tu modo TEST de Stripe
+const PRICE_ROLE_MAP: Record<string, string> = {
+  'price_1Sd7uhJ6FVppO7DRWoVImZmw': 'pro',      // Pro Mensual
+  'price_1Sd7wCJ6FVppO7DRaQ6eRJgQ': 'pro',      // Pro Anual
+  'price_1Sd7wpJ6FVppO7DRofNQGErY': 'empresa',  // Empresa Mensual
+  'price_1Sd7xeJ6FVppO7DRZPKWfniC': 'empresa',  // Empresa Anual
+};
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -18,61 +27,89 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    if (!signature || !webhookSecret) throw new Error('Falta firma o secreto');
+    if (!signature || !webhookSecret) throw new Error('Falta firma');
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err: any) {
-    console.error(`⚠️ Error de firma Webhook:`, err.message);
+    console.error(`⚠️ Error Webhook:`, err.message);
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
   try {
-    // 1. PAGO EXITOSO: Dar rol PRO ✅
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
+    // -------------------------------------------------------
+    // CASO 1: SE HA CREADO O ACTUALIZADO UNA SUSCRIPCIÓN
+    // -------------------------------------------------------
+    if (event.type === 'checkout.session.completed' || event.type === 'customer.subscription.updated') {
       
-      const userId = session.metadata?.userId;
-      const targetRole = session.metadata?.targetRole || 'pro';
+      let subscription: Stripe.Subscription;
+      let userId = '';
+
+      // A) Si viene del Checkout (Compra nueva)
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object as Stripe.Checkout.Session;
+        userId = session.metadata?.userId || '';
+        // Recuperamos la suscripción completa para tener las fechas
+        subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      } 
+      // B) Si viene del Portal (Cambio de plan)
+      else {
+        subscription = event.data.object as Stripe.Subscription;
+        // Buscamos al usuario en Firebase usando el Customer ID de Stripe
+        const snapshot = await adminDb.collection('users')
+          .where('stripeCustomerId', '==', subscription.customer)
+          .limit(1)
+          .get();
+        if (!snapshot.empty) userId = snapshot.docs[0].id;
+      }
 
       if (userId) {
-        console.log(`✅ [ADMIN] Pago recibido de ${userId}. Asignando rol: ${targetRole}`);
+        // Extraemos datos clave
+        // Usamos (subscription as any) para evitar errores de TypeScript si la versión difiere
+        const subData = subscription as any;
         
-        // Usamos adminDb para escribir SIN restricciones de seguridad
+        const priceItem = subData.items.data[0].price;
+        const priceId = priceItem.id;
+        const amount = priceItem.unit_amount ? priceItem.unit_amount / 100 : 0; 
+        const interval = priceItem.recurring?.interval || 'month';
+        const newRole = PRICE_ROLE_MAP[priceId] || 'pro'; 
+        
+        // CORRECCIÓN AQUÍ: Usamos subData para leer la fecha sin error rojo
+        const endDate = Timestamp.fromMillis(subData.current_period_end * 1000);
+
+        console.log(`🔄 Actualizando usuario ${userId}: Rol ${newRole}, Precio ${amount}€`);
+
         await adminDb.collection('users').doc(userId).update({
-            role: targetRole,
-            planPending: null,
-            subscriptionStatus: 'active',
+            role: newRole,
+            planPrice: amount,          
+            planInterval: interval,     
+            currentPeriodEnd: endDate,  
+            subscriptionStatus: subscription.status,
+            stripeSubscriptionId: subscription.id,
+            stripeCustomerId: subscription.customer as string,
             updatedAt: FieldValue.serverTimestamp(),
-            stripeSubscriptionId: session.subscription, // Guardamos ID suscripción
-            stripeCustomerId: session.customer as string,
         });
       }
     }
 
-    // 2. CANCELACIÓN: Quitar rol PRO 👋
+    // -------------------------------------------------------
+    // CASO 2: CANCELACIÓN
+    // -------------------------------------------------------
     if (event.type === 'customer.subscription.deleted') {
        const subscription = event.data.object as Stripe.Subscription;
-       console.log(`❌ [ADMIN] Suscripción cancelada: ${subscription.id}`);
+       const snapshot = await adminDb.collection('users').where('stripeSubscriptionId', '==', subscription.id).limit(1).get();
        
-       // Buscamos al usuario por su ID de suscripción
-       const snapshot = await adminDb.collection('users')
-         .where('stripeSubscriptionId', '==', subscription.id)
-         .limit(1)
-         .get();
-
        if (!snapshot.empty) {
-         const userDoc = snapshot.docs[0];
-         await userDoc.ref.update({
+         await snapshot.docs[0].ref.update({
            role: 'free',
            subscriptionStatus: 'canceled',
-           updatedAt: FieldValue.serverTimestamp()
+           planPrice: 0,
+           currentPeriodEnd: null
          });
-         console.log(`Usuario ${userDoc.id} degradado a FREE.`);
        }
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Error procesando webhook:', error);
-    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
+    console.error('Error Webhook:', error);
+    return NextResponse.json({ error: 'Fallo interno' }, { status: 500 });
   }
 }
