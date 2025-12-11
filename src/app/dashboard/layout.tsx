@@ -184,9 +184,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Head>
-        <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></Script>
-      </Head>
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader className="p-4 flex justify-center">
@@ -377,6 +374,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
           </main>
         </div>
         <TourSpotlight />
+        <elevenlabs-convai agent-id="agent_0501kbn9512cf21tbh0ypf8xz7v3"></elevenlabs-convai>
       </SidebarProvider>
     </>
   );
