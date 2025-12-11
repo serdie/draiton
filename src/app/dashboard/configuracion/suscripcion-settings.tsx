@@ -142,11 +142,8 @@ export function SuscripcionSettings() {
               </div>
               
               {user?.role !== 'admin' && user?.role !== 'employee' && (
-                // Botón que ahora lleva al Portal
-                <Button asChild variant="default" onClick={handlePortal} disabled={loadingPortal}>
-                  <Link href="/seleccionar-plan">
-                    {loadingPortal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Cambiar de Plan'}
-                  </Link>
+                <Button asChild>
+                  <Link href="/seleccionar-plan">Cambiar de Plan</Link>
                 </Button>
               )}
             </CardContent>
@@ -180,55 +177,6 @@ export function SuscripcionSettings() {
             )}
         </div>
         
-        <Separator />
-
-        {/* --- HISTORIAL DE FACTURACIÓN --- */}
-        <div className="space-y-4">
-             <h3 className="font-medium text-lg">Historial de Facturación</h3>
-             {user?.role === 'free' || user?.role === 'employee' ? (
-                <p className="text-sm text-muted-foreground">No tienes historial de facturación.</p>
-             ) : (
-                 <>
-                 <p className="text-sm text-muted-foreground mb-4">
-                    Estas son tus últimas facturas. Para descargar los originales oficiales, usa el botón "Gestionar en Stripe".
-                 </p>
-                 <Card>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Nº Factura</TableHead>
-                                <TableHead>Fecha</TableHead>
-                                <TableHead>Descripción</TableHead>
-                                <TableHead className="text-right">Importe</TableHead>
-                                <TableHead className="text-right">Acción</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {billingHistory.map((invoice) => (
-                                <TableRow key={invoice.id}>
-                                    <TableCell className="font-medium">{invoice.id}</TableCell>
-                                    <TableCell className="text-muted-foreground">{invoice.date}</TableCell>
-                                    <TableCell>{invoice.description}</TableCell>
-                                    <TableCell className="text-right">{invoice.amount}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => handleViewInvoice(invoice)}>
-                                            <Eye className="h-4 w-4" />
-                                            <span className="sr-only">Ver factura</span>
-                                        </Button>
-                                        <Button variant="ghost" size="icon">
-                                            <Download className="h-4 w-4" />
-                                            <span className="sr-only">Descargar factura</span>
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </Card>
-                </>
-             )}
-        </div>
-
       </CardContent>
     </Card>
     </>
