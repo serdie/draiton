@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useContext, useEffect, Suspense } from 'react';
@@ -12,10 +11,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal, Loader2, Facebook } from 'lucide-react';
-import { AuthContext, type UserRole } from '@/context/auth-context';
+import { AuthContext } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { GoogleIcon } from '../dashboard/conexiones/google-icon';
+
+// 1. TUS PRECIOS DE STRIPE (Los que me pasaste)
+const STRIPE_PRICES: Record<string, string> = {
+  'pro_mensual': 'price_1ScuabJ6FVppO7DRMLcE7bXF', 
+  'pro_anual': 'price_1ScubAJ6FVppO7DRFSozF6Q8',
+  'empresa_mensual': 'price_1ScubzJ6FVppO7DRfyW9xU5n',
+  'empresa_anual': 'price_1ScucUJ6FVppO7DRgJdGClvK',
+};
 
 function RegisterForm() {
   const [name, setName] = useState('');
@@ -25,16 +32,89 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [facebookLoading, setFacebookLoading] = useState(false);
+  
+  const [isPaymentRedirecting, setIsPaymentRedirecting] = useState(false);
+
   const router = useRouter();
   const { user, loading: authLoading } = useContext(AuthContext);
   const searchParams = useSearchParams();
-  const plan = (searchParams.get('plan') as UserRole | null) || 'free';
+  
+  // --- LÓGICA DE DETECCIÓN DE PLAN ---
+  const urlPlan = searchParams.get('plan'); 
+  let planKey = 'free';
+  
+  // 1. Si el plan viene completo (ej: pro_anual) y existe en nuestro mapa, lo usamos
+  if (urlPlan && STRIPE_PRICES[urlPlan]) {
+      planKey = urlPlan; 
+  } 
+  // 2. Si viene incompleto (ej: pro), le añadimos el billing
+  else if (urlPlan === 'pro' || urlPlan === 'empresa') {
+      const billing = searchParams.get('billing') || 'mensual';
+      planKey = `${urlPlan}_${billing}`;
+  }
+  
+  // Es de pago si la clave resultante existe en el mapa de precios
+  const isPaidPlan = planKey !== 'free' && !!STRIPE_PRICES[planKey];
 
   useEffect(() => {
-    if (!authLoading && user) {
+    // Solo redirigimos al dashboard si:
+    // 1. Usuario logueado
+    // 2. NO es un plan de pago (si es de pago, esperamos a que Stripe haga su magia)
+    // 3. NO estamos cargando
+    if (!authLoading && user && !isPaymentRedirecting && !loading && !googleLoading && !facebookLoading && !isPaidPlan) {
       router.push('/dashboard');
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, isPaymentRedirecting, loading, googleLoading, facebookLoading, isPaidPlan]);
+
+
+  // --- FUNCIÓN QUE CONECTA CON STRIPE (AQUÍ ESTÁ EL CHIVATO) ---
+  const handlePostRegistration = async (user: any) => {
+    console.log("Procesando post-registro. Plan:", planKey);
+
+    // Si es gratis o no encontramos el ID, al dashboard
+    if (!isPaidPlan) {
+      router.push('/dashboard');
+      return;
+    }
+
+    // Si es de pago, iniciamos Stripe
+    setIsPaymentRedirecting(true);
+    setError(null);
+
+    try {
+      const priceId = STRIPE_PRICES[planKey];
+      console.log("Intentando conectar con Stripe. ID Precio:", priceId);
+
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId: priceId,
+          userEmail: user.email,
+          userId: user.uid
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        // ÉXITO: Nos vamos a Stripe
+        window.location.href = data.url; 
+      } else {
+        // ERROR: Mostramos alerta para saber qué pasa
+        console.error('Error devuelto por API Checkout:', data);
+        setIsPaymentRedirecting(false); 
+        // 🛑 AQUÍ SALDRÁ EL ERROR EN PANTALLA 🛑
+        alert(`ERROR AL INICIAR PAGO:\n${data.error || JSON.stringify(data)}`);
+      }
+
+    } catch (err) {
+      console.error('Error de red/fetch:', err);
+      setIsPaymentRedirecting(false);
+      alert('ERROR DE CONEXIÓN CON EL SERVIDOR. Revisa la consola (F12).');
+    }
+  };
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,25 +122,26 @@ function RegisterForm() {
     setError(null);
     
     if (!auth || !db) {
-        setError('El servicio de registro no está disponible. Por favor, contacta al soporte.');
+        setError('El servicio no está disponible.');
         setLoading(false);
         return;
     }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const newUser = userCredential.user;
       
-      await updateProfile(user, { displayName: name });
+      await updateProfile(newUser, { displayName: name });
       
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
+      await setDoc(doc(db, "users", newUser.uid), {
+        uid: newUser.uid,
         displayName: name,
-        email: user.email,
-        photoURL: user.photoURL,
-        role: plan, 
+        email: newUser.email,
+        photoURL: newUser.photoURL,
+        role: 'free', 
+        planPending: planKey, 
         createdAt: serverTimestamp(),
-        providerData: user.providerData.map(p => ({
+        providerData: newUser.providerData.map(p => ({
           providerId: p.providerId,
           uid: p.uid,
           displayName: p.displayName,
@@ -69,28 +150,22 @@ function RegisterForm() {
         })),
       });
       
+      await handlePostRegistration(newUser);
+      
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
-        setError('Este correo electrónico ya está en uso.');
-      } else if (err.code === 'auth/unauthorized-domain') {
-        setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
+        setError('Este correo ya está registrado.');
       } else {
-        setError('Ocurrió un error durante el registro.');
+        setError('Error al registrar.');
       }
-      console.error(err);
-    } finally {
-      setLoading(false);
+      setLoading(false); 
     }
   };
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     setError(null);
-    if (!auth || !db) {
-        setError('El servicio de registro no está disponible.');
-        setGoogleLoading(false);
-        return;
-    }
+    if (!auth || !db) return;
 
     const provider = new GoogleAuthProvider();
 
@@ -106,7 +181,7 @@ function RegisterForm() {
             displayName: user.displayName,
             email: user.email,
             photoURL: user.photoURL,
-            role: plan,
+            role: 'free',
             createdAt: serverTimestamp(),
             providerData: user.providerData.map(p => ({
               providerId: p.providerId,
@@ -117,26 +192,17 @@ function RegisterForm() {
             })),
           });
       }
+      await handlePostRegistration(user);
     } catch (err: any) {
-      if (err.code === 'auth/unauthorized-domain') {
-        setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
-      } else {
-        setError('No se pudo registrar con Google. Inténtalo más tarde.');
-      }
-      console.error(err);
-    } finally {
-      setGoogleLoading(false);
+       setError('Error con Google.');
+       setGoogleLoading(false);
     }
   };
   
   const handleFacebookSignIn = async () => {
     setFacebookLoading(true);
     setError(null);
-    if (!auth || !db) {
-        setError('El servicio de registro no está disponible.');
-        setFacebookLoading(false);
-        return;
-    }
+    if (!auth || !db) return;
 
     const provider = new FacebookAuthProvider();
 
@@ -145,13 +211,14 @@ function RegisterForm() {
       const user = result.user;
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
+
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
             uid: user.uid,
             displayName: user.displayName,
             email: user.email,
             photoURL: user.photoURL,
-            role: plan,
+            role: 'free',
             createdAt: serverTimestamp(),
             providerData: user.providerData.map(p => ({
               providerId: p.providerId,
@@ -162,19 +229,20 @@ function RegisterForm() {
             })),
           });
       }
+      await handlePostRegistration(user);
     } catch (err: any) {
-      if (err.code === 'auth/unauthorized-domain') {
-        setError("Este dominio no está autorizado. Por favor, añade el dominio de esta página de vista previa a la lista de 'Dominios autorizados' en la configuración de Authentication de tu consola de Firebase.");
-      } else {
-        setError('No se pudo registrar con Facebook. Inténtalo más tarde.');
-      }
-      console.error(err);
-    } finally {
-      setFacebookLoading(false);
+       setError('Error con Facebook.');
+       setFacebookLoading(false);
     }
   };
 
-  if (authLoading || user) {
+  // Titulo dinámico
+  const planTitle = planKey === 'free' ? 'Gratis' : 
+                    planKey.includes('pro') ? 'Pro' : 
+                    planKey.includes('empresa') ? 'Empresa' : 'Gratis';
+
+  // Mostrar loading pantalla completa SOLO si estamos cargando auth o redirigiendo al dashboard por ser free
+  if (authLoading || (user && !isPaymentRedirecting && !isPaidPlan && !loading && !googleLoading && !facebookLoading)) {
      return (
         <div className="flex h-screen w-screen items-center justify-center bg-background">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -191,17 +259,22 @@ function RegisterForm() {
                      <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-9 w-auto mx-auto"/>
                 </Link>
             </div>
-            <CardTitle>Crea tu Cuenta - Plan {plan.charAt(0).toUpperCase() + plan.slice(1)}</CardTitle>
-            <CardDescription>Empieza a transformar tu negocio hoy mismo.</CardDescription>
+            <CardTitle>Crea tu Cuenta - Plan {planTitle}</CardTitle>
+            <CardDescription>
+                {isPaidPlan
+                    ? 'Estás a un paso de activar tu suscripción.' 
+                    : 'Empieza a transformar tu negocio hoy mismo.'}
+            </CardDescription>
         </CardHeader>
         <CardContent>
              {error && (
                 <Alert variant="destructive" className="mb-4">
                 <Terminal className="h-4 w-4" />
-                <AlertTitle>Error de Registro</AlertTitle>
+                <AlertTitle>Error</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
+            
              <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="name">Nombre</Label>
@@ -236,9 +309,9 @@ function RegisterForm() {
                         minLength={6}
                     />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Crear Cuenta
+                <Button type="submit" className="w-full" disabled={loading || isPaymentRedirecting}>
+                    {(loading || isPaymentRedirecting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isPaymentRedirecting ? 'Redirigiendo al pago...' : 'Crear Cuenta'}
                 </Button>
             </form>
 
@@ -254,11 +327,11 @@ function RegisterForm() {
             </div>
 
             <div className="space-y-2">
-                <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-gray-700 font-medium" disabled={googleLoading} onClick={handleGoogleSignIn}>
+                <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-gray-700 font-medium" disabled={googleLoading || isPaymentRedirecting} onClick={handleGoogleSignIn}>
                     {googleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5" />}
                     Registrarse con Google
                  </Button>
-                 <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-[#1877F2] font-medium" disabled={facebookLoading} onClick={handleFacebookSignIn}>
+                 <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-[#1877F2] font-medium" disabled={facebookLoading || isPaymentRedirecting} onClick={handleFacebookSignIn}>
                     {facebookLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Facebook className="mr-2 h-5 w-5" />}
                     Registrarse con Facebook
                  </Button>
@@ -266,27 +339,16 @@ function RegisterForm() {
             
             <p className="mt-6 px-8 text-center text-xs text-muted-foreground">
               Al continuar confirmas que aceptas nuestros{' '}
-              <Link
-                href="/condiciones-de-uso"
-                className="underline underline-offset-4 hover:text-primary"
-              >
+              <Link href="/condiciones-de-uso" className="underline underline-offset-4 hover:text-primary">
                 Condiciones de uso
-              </Link>
-              ,{' '}
-              <Link
-                href="/politica-de-privacidad"
-                className="underline underline-offset-4 hover:text-primary"
-              >
+              </Link>,{' '}
+              <Link href="/politica-de-privacidad" className="underline underline-offset-4 hover:text-primary">
                 Política de Privacidad
               </Link>{' '}
               y{' '}
-              <Link
-                href="/politica-de-cookies"
-                className="underline underline-offset-4 hover:text-primary"
-              >
+              <Link href="/politica-de-cookies" className="underline underline-offset-4 hover:text-primary">
                 Cookies
-              </Link>
-              .
+              </Link>.
             </p>
             <p className="mt-4 text-center text-sm text-muted-foreground">
                 ¿Ya tienes una cuenta?{' '}
@@ -299,7 +361,6 @@ function RegisterForm() {
     </main>
   );
 }
-
 
 export default function RegisterPage() {
     return (

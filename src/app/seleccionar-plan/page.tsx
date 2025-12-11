@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useState, useContext } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/landing/header';
 import { Footer } from '@/components/landing/footer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, User, Briefcase, Building, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -15,22 +14,38 @@ import { AuthContext } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
-// --- NUEVO: Componente para el botón de suscripción ---
-const SubscriptionButton = ({ planId, user, disabled }: { planId: string, user: any, disabled: boolean }) => {
+// --- COMPONENTE CORREGIDO ---
+// Ahora acepta 'planType' y 'billingCycle' explícitamente
+const SubscriptionButton = ({ 
+    planId, 
+    user, 
+    disabled, 
+    planType, 
+    billingCycle 
+}: { 
+    planId: string, 
+    user: any, 
+    disabled: boolean, 
+    planType: string, 
+    billingCycle: string 
+}) => {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
     const router = useRouter();
 
     const handleCheckout = async () => {
         setLoading(true);
+        
         if (!user) {
-            // Si el usuario no está logueado, lo mandamos a registrarse con el plan correcto.
-            const planName = planId.includes(process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID_ANUAL!) || planId.includes(process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID_MENSUAL!) ? 'pro' : 'empresa';
-            const billing = planId.includes('_anual') ? 'anual' : 'mensual';
-            router.push(`/register?plan=${planName}&billing=${billing}`);
+            // CORRECCIÓN: Construimos la URL limpia directamente (ej: pro_anual)
+            // Esto encajará perfecto con el código de RegisterPage
+            const cleanPlanParam = `${planType}_${billingCycle}`;
+            console.log("Redirigiendo a registro con plan:", cleanPlanParam);
+            router.push(`/register?plan=${cleanPlanParam}`);
             return;
         }
 
+        // Si ya está logueado, iniciamos pago directo
         try {
             const res = await fetch('/api/checkout', {
                 method: 'POST',
@@ -59,7 +74,7 @@ const SubscriptionButton = ({ planId, user, disabled }: { planId: string, user: 
         </Button>
     )
 }
-// --- FIN NUEVO COMPONENTE ---
+// --- FIN COMPONENTE ---
 
 
 const pricing = {
@@ -103,7 +118,7 @@ const plans = (billingCycle: 'anual' | 'mensual') => [
             'Herramientas IA de Marketing y Web',
             'Automatizaciones'
         ],
-        plan: 'pro',
+        plan: 'pro', // Este string es importante
         buttonText: 'Elegir Plan Pro',
         priceId: billingCycle === 'anual' ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID_ANUAL : process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID_MENSUAL,
     },
@@ -119,7 +134,7 @@ const plans = (billingCycle: 'anual' | 'mensual') => [
             'Generación de Nóminas',
             'Control Horario (Fichajes)'
         ],
-        plan: 'empresa',
+        plan: 'empresa', // Este string es importante
         buttonText: 'Elegir Plan Empresa',
         priceId: billingCycle === 'anual' ? process.env.NEXT_PUBLIC_STRIPE_EMPRESA_PRICE_ID_ANUAL : process.env.NEXT_PUBLIC_STRIPE_EMPRESA_PRICE_ID_MENSUAL,
     },
@@ -201,7 +216,14 @@ export default function SeleccionarPlanPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <SubscriptionButton planId={plan.priceId!} user={user} disabled={!plan.priceId} />
+                  // AQUÍ PASAMOS LOS DATOS CORRECTAMENTE:
+                  <SubscriptionButton 
+                      planId={plan.priceId!} 
+                      user={user} 
+                      disabled={!plan.priceId}
+                      planType={plan.plan} // 'pro' o 'empresa'
+                      billingCycle={billingCycle} // 'anual' o 'mensual'
+                  />
                 )}
               </CardContent>
             </Card>

@@ -98,7 +98,7 @@ export function SuscripcionSettings() {
               </div>
               {user?.role !== 'admin' && user?.role !== 'employee' && (
                 <Button asChild>
-                    <Link href="/#pricing">Cambiar de Plan</Link>
+                    <Link href="/seleccionar-plan">Cambiar de Plan</Link>
                 </Button>
               )}
             </CardContent>
