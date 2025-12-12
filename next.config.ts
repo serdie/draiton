@@ -51,12 +51,6 @@ const nextConfig: NextConfig = {
   experimental: {
      serverComponentsExternalPackages: ['@genkit-ai/core', '@opentelemetry/instrumentation'],
   },
-   webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals = [...config.externals, '@genkit-ai/core', '@opentelemetry/instrumentation'];
-    }
-    return config;
-  },
   allowedDevOrigins: ["https://*.cloudworkstations.dev"],
 };
 
