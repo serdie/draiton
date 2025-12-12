@@ -14,10 +14,10 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 // MAPA DE PRECIOS PARA DETECTAR ROL AUTOMÁTICAMENTE
 // Asegúrate de que estos IDs coinciden con los de tu modo TEST de Stripe
 const PRICE_ROLE_MAP: Record<string, string> = {
-  'price_1Sd7uhJ6FVppO7DRWoVImZmw': 'pro',      // Pro Mensual
-  'price_1Sd7wCJ6FVppO7DRaQ6eRJgQ': 'pro',      // Pro Anual
-  'price_1Sd7wpJ6FVppO7DRofNQGErY': 'empresa',  // Empresa Mensual
-  'price_1Sd7xeJ6FVppO7DRZPKWfniC': 'empresa',  // Empresa Anual
+  'price_1SdamoDaJWPk1oF9vTeHa0g4': 'pro',      // Pro Mensual
+  'price_1Sdam5DaJWPk1oF9IQyia1Ui': 'pro',      // Pro Anual
+  'price_1SdanqDaJWPk1oF94oQKfJ4c': 'empresa',  // Empresa Mensual
+  'price_1Sdan8DaJWPk1oF9fRGdppbU': 'empresa',  // Empresa Anual
 };
 
 export async function POST(req: Request) {

@@ -13,13 +13,13 @@ export async function POST(req: Request) {
 
     // LISTAS DE PRECIOS (Más ordenado y seguro)
     const proPrices = [
-        'price_1Sd7uhJ6FVppO7DRWoVImZmw', // Pro Mensual
-        'price_1Sd7wCJ6FVppO7DRaQ6eRJgQ'  // Pro Anual
+        'price_1SdamoDaJWPk1oF9vTeHa0g4', // Pro Mensual
+        'price_1Sdam5DaJWPk1oF9IQyia1Ui'  // Pro Anual
     ];
 
     const empresaPrices = [
-        'price_1Sd7wpJ6FVppO7DRofNQGErY', // Empresa Mensual
-        'price_1Sd7xeJ6FVppO7DRZPKWfniC'  // Empresa Anual
+        'price_1SdanqDaJWPk1oF94oQKfJ4c', // Empresa Mensual
+        'price_1Sdan8DaJWPk1oF9fRGdppbU'  // Empresa Anual
     ];
 
     // LÓGICA DE DETECCIÓN DE ROL
