@@ -119,7 +119,7 @@ export function PerfilSettings() {
     }
 
 
-    const handleDeleteAccount = async () => {
+    const handleDeleteRequest = async () => {
         if (!auth.currentUser) return;
         
         setIsDeleting(true);
@@ -202,7 +202,7 @@ export function PerfilSettings() {
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
                     <AlertDialogAction 
-                        onClick={handleDeleteAccount}
+                        onClick={handleDeleteRequest}
                         disabled={isDeleting}
                         className="bg-destructive hover:bg-destructive/90">
                         {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
