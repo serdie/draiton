@@ -54,7 +54,6 @@ import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileNav } from '@/components/ui/mobile-nav';
 import { MobileHeader } from '@/components/ui/mobile-header';
-import { clearSessionCookie } from '@/lib/firebase/auth-actions';
 import { cn } from '@/lib/utils';
 import { TourProvider, useTour } from '@/context/tour-context';
 import { TourSpotlight } from '@/components/tour/tour-spotlight';
@@ -108,7 +107,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   
   const handleLogout = async () => {
     await signOut(auth);
-    await clearSessionCookie();
   };
 
   const handleStartTour = () => {

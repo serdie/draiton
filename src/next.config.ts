@@ -2,7 +2,6 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -21,7 +20,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 's0.wordpress.com',
         port: '',
-        pathname: '/mshots/v1/**',
+        pathname: '/**',
       },
       {
         protocol: 'https',
@@ -38,6 +37,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'www.diemy.es',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
         port: '',
         pathname: '/**',
       }

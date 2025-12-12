@@ -2,14 +2,12 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot, setDoc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore'; 
 import { auth as clientAuth, db, analytics } from '@/lib/firebase/config';
 import type { CompanySettings } from '@/lib/firebase/user-settings-actions';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { setSessionCookie, clearSessionCookie } from '@/lib/firebase/auth-actions';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export type UserRole = 'free' | 'pro' | 'admin' | 'empresa' | 'employee';
 
@@ -53,7 +51,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Initialize Analytics
     if (analytics) {
       console.log('Firebase Analytics initialized');
     }
@@ -66,11 +63,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const unsubscribe = onIdTokenChanged(clientAuth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(clientAuth, async (firebaseUser) => {
       if (firebaseUser) {
-        const idToken = await firebaseUser.getIdToken();
-        await setSessionCookie(idToken);
-
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         
         const freshProviderData = firebaseUser.providerData.map(p => ({
@@ -98,9 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         } catch (error) {
              console.error("Error syncing user profile:", error);
-             // Continue loading user even if sync fails, but log the error
         }
-
 
         const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -118,7 +110,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         return () => unsubscribeDoc();
       } else {
-        await clearSessionCookie();
         setUser(null);
         setSimulatedRole(null);
         setLoading(false);
@@ -169,7 +160,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ user, loading, ...roles, effectiveRole, setSimulatedRole }}>
-      <FirebaseErrorListener />
       {children}
     </AuthContext.Provider>
   );

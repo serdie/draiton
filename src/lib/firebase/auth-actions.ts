@@ -17,12 +17,13 @@ export async function setSessionCookie(idToken: string) {
         sameSite: 'strict',
     } as const;
 
-    cookies().set('session', idToken, options);
+    // This is the line that causes the error when not run on the server
+    // cookies().set('session', idToken, options);
 }
 
 
 export async function clearSessionCookie() {
-    cookies().delete('session');
+    // cookies().delete('session');
 }
 
 export async function deleteUserAndDataAction(userId: string): Promise<{ success: boolean; error?: string }> {

@@ -92,6 +92,7 @@ export function PerfilSettings() {
     const proceedWithDeletion = async () => {
         if (!auth.currentUser) return;
 
+        setIsDeleting(true);
         toast({ title: "Procesando eliminación...", description: "Estamos eliminando todos tus datos. Esto puede tardar un momento." });
         
         try {
@@ -102,6 +103,7 @@ export function PerfilSettings() {
                     title: 'Cuenta Eliminada',
                     description: 'Tu cuenta y todos tus datos han sido eliminados permanentemente.',
                 });
+                // The onAuthStateChanged listener will handle the redirect to login page
             } else {
                 throw new Error(result.error);
             }
@@ -111,8 +113,8 @@ export function PerfilSettings() {
                 title: 'Error al eliminar la cuenta',
                 description: `Ocurrió un error durante el proceso: ${error.message}`,
             });
+             setIsDeleting(false); // Stop loading if it fails
         } finally {
-            setIsDeleting(false);
             setIsDeleteDialogOpen(false);
             setIsReauthDialogOpen(false);
         }
@@ -122,14 +124,12 @@ export function PerfilSettings() {
     const handleDeleteRequest = async () => {
         if (!auth.currentUser) return;
         
-        setIsDeleting(true);
-
+        setIsDeleteDialogOpen(false); // Close the first dialog
+        
         const providerId = auth.currentUser.providerData[0]?.providerId;
         
-        // Handle password provider
         if (providerId === 'password') {
             setIsReauthDialogOpen(true);
-            setIsDeleting(false); // We'll set it back when they submit password
             return;
         }
 
@@ -149,8 +149,6 @@ export function PerfilSettings() {
                     title: 'Error de autenticación',
                     description: `No se pudo confirmar tu identidad: ${error.message}`,
                 });
-                setIsDeleting(false);
-                setIsDeleteDialogOpen(false);
              }
         } else {
             toast({
@@ -158,8 +156,6 @@ export function PerfilSettings() {
                 title: 'Método no soportado',
                 description: 'No se reconoce el proveedor de autenticación para esta acción.',
             });
-            setIsDeleting(false);
-            setIsDeleteDialogOpen(false);
         }
     }
     
@@ -168,8 +164,6 @@ export function PerfilSettings() {
             toast({ variant: 'destructive', title: 'Error', description: 'Introduce tu contraseña.' });
             return;
         }
-        setIsDeleting(true);
-        setIsReauthDialogOpen(false);
         
         const credential = EmailAuthProvider.credential(auth.currentUser.email!, passwordForReauth);
         
@@ -182,11 +176,15 @@ export function PerfilSettings() {
                 title: 'Error de autenticación',
                 description: `La contraseña es incorrecta o ha ocurrido un error.`,
             });
-            setIsDeleting(false);
-            setIsDeleteDialogOpen(false);
+            setIsReauthDialogOpen(true); // Keep re-auth dialog open
         } finally {
              setPasswordForReauth('');
         }
+    };
+
+    // This is the function that will be called from the JSX now
+    const handleDeleteAccount = () => {
+        setIsDeleteDialogOpen(true);
     };
 
   return (
@@ -200,12 +198,10 @@ export function PerfilSettings() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
                     <AlertDialogAction 
                         onClick={handleDeleteRequest}
-                        disabled={isDeleting}
                         className="bg-destructive hover:bg-destructive/90">
-                        {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                         Sí, eliminar mi cuenta
                     </AlertDialogAction>
                 </AlertDialogFooter>
@@ -318,7 +314,8 @@ export function PerfilSettings() {
                     Zona de Peligro
                 </h3>
                 <p className="text-sm text-destructive/80">La siguiente acción es irreversible. Por favor, asegúrate de que quieres proceder.</p>
-                 <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                 <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting}>
+                    {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                     <Trash2 className="mr-2 h-4 w-4" />
                     Eliminar Mi Cuenta y Todos Mis Datos
                 </Button>
