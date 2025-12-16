@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useContext, useRef } from 'react';
@@ -33,7 +32,7 @@ import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
 import { provincias } from '@/lib/provincias';
-import { type Address } from '@/lib/firebase/user-settings-actions';
+import type { Address } from '@/lib/firebase/user-settings-actions';
 import type { Contact } from '../contactos/page';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
@@ -400,12 +399,16 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                 <AlertTriangle className="text-yellow-500" />
                 Atención: Vas a activar Veri*factu
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4 pt-2">
-                Al activar la opción Veri*factu, esta factura se registrará fiscalmente y será enviada a la Agencia Tributaria. Este proceso es <strong>irreversible</strong> y la factura <strong>no podrá ser modificada ni eliminada</strong> una vez emitida.
-                <ul className="list-disc list-inside text-sm space-y-1">
-                    <li>Te recomendamos crear un <strong>borrador</strong> o una factura normal para verificar los datos antes de la emisión definitiva.</li>
-                    <li>Recuerda que la obligatoriedad de Veri*factu para todas las empresas comienza el <strong>1 de enero de 2027</strong>.</li>
-                </ul>
+            <AlertDialogDescription asChild>
+                <div className="space-y-4 pt-2 text-sm text-muted-foreground">
+                    <p>
+                    Al activar la opción Veri*factu, esta factura se registrará fiscalmente y será enviada a la Agencia Tributaria. Este proceso es <strong>irreversible</strong> y la factura <strong>no podrá ser modificada ni eliminada</strong> una vez emitida.
+                    </p>
+                    <ul className="list-disc list-inside space-y-1">
+                        <li>Te recomendamos crear un <strong>borrador</strong> o una factura normal para verificar los datos antes de la emisión definitiva.</li>
+                        <li>Recuerda que la obligatoriedad de Veri*factu para todas las empresas comienza el <strong>1 de enero de 2027</strong>.</li>
+                    </ul>
+                </div>
             </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -720,3 +723,5 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
     </>
   );
 }
+
+    

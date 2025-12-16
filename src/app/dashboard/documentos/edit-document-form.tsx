@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useContext } from 'react';
@@ -72,7 +71,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
   const [iban, setIban] = useState(document.iban || '');
   const [saveIban, setSaveIban] = useState(false);
   
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsLoading] = useState(false);
   const { toast } = useToast();
   
   const [isVerifactu, setIsVerifactu] = useState(false);
@@ -152,7 +151,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsSaving(true);
+    setIsLoading(true);
 
     if (!user) {
       toast({
@@ -160,7 +159,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
         title: 'No estás autenticado',
         description: 'Por favor, inicia sesión para actualizar un documento.',
       });
-      setIsSaving(false);
+      setIsLoading(false);
       return;
     }
 
@@ -215,7 +214,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
       });
     }
 
-    setIsSaving(false);
+    setIsLoading(false);
   }
 
 
@@ -228,12 +227,16 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                 <AlertTriangle className="text-yellow-500" />
                 Atención: Vas a activar Veri*factu
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4 pt-2">
-                Al activar la opción Veri*factu, esta factura se registrará fiscalmente y será enviada a la Agencia Tributaria. Este proceso es <strong>irreversible</strong> y la factura <strong>no podrá ser modificada ni eliminada</strong> una vez emitida.
-                <ul className="list-disc list-inside text-sm space-y-1">
-                    <li>Te recomendamos crear un <strong>borrador</strong> o una factura normal para verificar los datos antes de la emisión definitiva.</li>
-                    <li>Recuerda que la obligatoriedad de Veri*factu para todas las empresas comienza el <strong>1 de enero de 2027</strong>.</li>
-                </ul>
+            <AlertDialogDescription asChild>
+                <div className="space-y-4 pt-2 text-sm text-muted-foreground">
+                    <p>
+                    Al activar la opción Veri*factu, esta factura se registrará fiscalmente y será enviada a la Agencia Tributaria. Este proceso es <strong>irreversible</strong> y la factura <strong>no podrá ser modificada ni eliminada</strong> una vez emitida.
+                    </p>
+                    <ul className="list-disc list-inside space-y-1">
+                        <li>Te recomendamos crear un <strong>borrador</strong> o una factura normal para verificar los datos antes de la emisión definitiva.</li>
+                        <li>Recuerda que la obligatoriedad de Veri*factu para todas las empresas comienza el <strong>1 de enero de 2027</strong>.</li>
+                    </ul>
+                </div>
             </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -529,3 +532,5 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
     </>
   );
 }
+
+    
