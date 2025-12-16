@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark, ShieldCheck } from 'lucide-react';
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -210,7 +210,13 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                     <SelectItem value="recurrente">Factura Recurrente</SelectItem>
                 </SelectContent>
             </Select>
-            <div />
+            <div className="flex items-center justify-center gap-2">
+                <Switch id="verifactu-switch" />
+                <Label htmlFor="verifactu-switch" className="flex items-center gap-1 font-medium">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    Veri*factu
+                </Label>
+            </div>
              <Input value={docNumber} onChange={e => setDocNumber(e.target.value)} className="font-mono text-right" />
         </div>
 
@@ -466,10 +472,10 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
             </div>
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
-          <Button type="submit" disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? "Guardando..." : "Guardar Cambios"}
+          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading ? "Guardando..." : "Guardar Cambios"}
           </Button>
         </div>
     </form>

@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark, ShieldCheck } from 'lucide-react';
 import { format, parseISO, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -388,7 +388,13 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                         <SelectItem value="recurrente">Factura Recurrente</SelectItem>
                     </SelectContent>
                 </Select>
-                <div />
+                <div className="flex items-center justify-center gap-2">
+                    <Switch id="verifactu-switch" />
+                    <Label htmlFor="verifactu-switch" className="flex items-center gap-1 font-medium">
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        Veri*factu
+                    </Label>
+                </div>
                  <Input value={docNumber} onChange={e => setDocNumber(e.target.value)} className="font-mono text-right" />
             </div>
 

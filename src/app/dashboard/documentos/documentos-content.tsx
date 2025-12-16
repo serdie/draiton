@@ -86,7 +86,6 @@ export function DocumentosContent() {
 
     const q = query(
       collection(db, "invoices"), 
-      where('tipo', '==', activeTab), 
       where('ownerId', '==', user.uid)
     );
     
@@ -120,7 +119,7 @@ export function DocumentosContent() {
       unsubscribe();
       unsubscribeContacts();
     }
-}, [activeTab, toast, user]);
+}, [toast, user]);
 
   const handleCreateNew = (initialData?: ExtractInvoiceDataOutput) => {
     setInitialDataForForm(initialData);
@@ -139,6 +138,7 @@ export function DocumentosContent() {
 
   const documentosFiltrados = useMemo(() => {
     return documents.filter(doc => {
+      const byTab = doc.tipo === activeTab;
       const fechaDoc = new Date(doc.fechaEmision);
       const enRangoFecha = !dateRange || (
         (!dateRange.from || fechaDoc >= dateRange.from) &&
@@ -147,9 +147,9 @@ export function DocumentosContent() {
       const porCliente = !filtroCliente || doc.cliente.toLowerCase().includes(filtroCliente.toLowerCase());
       const porEstado = filtroEstado === 'all' || doc.estado === filtroEstado;
       
-      return enRangoFecha && porCliente && porEstado;
+      return byTab && enRangoFecha && porCliente && porEstado;
     });
-  }, [documents, dateRange, filtroCliente, filtroEstado]);
+  }, [documents, activeTab, dateRange, filtroCliente, filtroEstado]);
 
   const totalPages = Math.ceil(documentosFiltrados.length / itemsPerPage);
 
@@ -225,7 +225,7 @@ export function DocumentosContent() {
         </CardContent>
       );
     }
-     if (documents.length === 0) {
+     if (documentosFiltrados.length === 0) {
       return (
         <CardContent>
           <div className="text-center text-muted-foreground py-12">
@@ -439,10 +439,7 @@ export function DocumentosContent() {
                     <Button variant="outline" onClick={resetFilters}><FilterX className="mr-2 h-4 w-4" />Limpiar Filtros</Button>
                 </div>
             </CardHeader>
-
-             <TabsContent value="factura">{renderContent()}</TabsContent>
-             <TabsContent value="presupuesto">{renderContent()}</TabsContent>
-             <TabsContent value="nota-credito">{renderContent()}</TabsContent>
+            {renderContent()}
           </Card>
         </Tabs>
       </div>
