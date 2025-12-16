@@ -229,9 +229,7 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
                 Atención: Vas a activar Veri*factu
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-4 pt-2">
-                <p>
                 Al activar la opción Veri*factu, esta factura se registrará fiscalmente y será enviada a la Agencia Tributaria. Este proceso es <strong>irreversible</strong> y la factura <strong>no podrá ser modificada ni eliminada</strong> una vez emitida.
-                </p>
                 <ul className="list-disc list-inside text-sm space-y-1">
                     <li>Te recomendamos crear un <strong>borrador</strong> o una factura normal para verificar los datos antes de la emisión definitiva.</li>
                     <li>Recuerda que la obligatoriedad de Veri*factu para todas las empresas comienza el <strong>1 de enero de 2027</strong>.</li>
