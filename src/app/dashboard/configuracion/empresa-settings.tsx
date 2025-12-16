@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Image as ImageIcon, Loader2, Save, Trash2, BookOpen, ChevronDown, FileUp } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Save, Trash2, BookOpen, ChevronDown, FileUp, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { provincias } from '@/lib/provincias';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ConvenioFinder } from './convenio-finder';
+import { Switch } from '@/components/ui/switch';
 
 
 export function EmpresaSettings() {
@@ -32,6 +33,7 @@ export function EmpresaSettings() {
     const [logoPreview, setLogoPreview] = useState(user?.company?.logoUrl || null);
     const [convenio, setConvenio] = useState(user?.company?.convenio || '');
     const [convenioFileName, setConvenioFileName] = useState('');
+    const [verifactuByDefault, setVerifactuByDefault] = useState(user?.company?.verifactuByDefault || false);
 
 
     const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -67,6 +69,7 @@ export function EmpresaSettings() {
             iban: formData.get('companyIban') as string,
             logoUrl: logoPreview || '',
             convenio: convenio,
+            verifactuByDefault,
             phone: user.company?.phone || '', // Persist existing phone
             terminos: user.company?.terminos || '' // Persist existing terminos
         };
@@ -191,6 +194,20 @@ export function EmpresaSettings() {
                     <Label htmlFor="companyIban">Número de cuenta (IBAN)</Label>
                     <Input id="companyIban" name="companyIban" placeholder="ES00 0000 0000 0000 0000 0000" defaultValue={companyData?.iban}/>
                 </div>
+                 <div className="space-y-2 rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="verifactu-default" className="text-base font-medium flex items-center gap-2">
+                                <ShieldCheck className="h-5 w-5 text-primary" />
+                                Veri*factu por Defecto
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                                {verifactuByDefault ? 'Activado: Las nuevas facturas se crearán como Verifactu.' : 'Desactivado: Deberás activar Verifactu factura a factura.'}
+                            </p>
+                        </div>
+                        <Switch id="verifactu-default" checked={verifactuByDefault} onCheckedChange={setVerifactuByDefault} />
+                    </div>
+                 </div>
             </div>
             
             <Separator />
@@ -292,3 +309,5 @@ export function EmpresaSettings() {
     </Card>
   );
 }
+
+    

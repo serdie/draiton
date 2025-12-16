@@ -100,6 +100,16 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
 
   const companyData = user?.company;
 
+  // Set initial Veri*factu state based on company settings and document type
+  useEffect(() => {
+    if (docType === 'factura') {
+      setIsVerifactu(companyData?.verifactuByDefault || false);
+    } else {
+      setIsVerifactu(false);
+    }
+  }, [docType, companyData?.verifactuByDefault]);
+
+
   useEffect(() => {
     if (companyData?.iban) {
       setIban(companyData.iban);
@@ -751,3 +761,5 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
     </>
   );
 }
+
+    

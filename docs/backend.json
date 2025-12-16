@@ -37,7 +37,8 @@
             "logoUrl": { "type": "string", "format": "uri" },
             "phone": { "type": "string" },
             "terminos": { "type": "string" },
-            "convenio": { "type": "string", "description": "Nombre del convenio colectivo aplicable." }
+            "convenio": { "type": "string", "description": "Nombre del convenio colectivo aplicable." },
+            "verifactuByDefault": { "type": "boolean", "description": "Whether to enable Veri*factu by default for new invoices." }
           }
         }
       },
@@ -319,3 +320,5 @@
     }
   }
 }
+
+    

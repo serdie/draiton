@@ -24,6 +24,7 @@ export type CompanySettings = {
     terminos?: string;
     phone?: string;
     convenio?: string;
+    verifactuByDefault?: boolean;
 }
 
 export type UserProfileData = {
@@ -42,3 +43,5 @@ export async function updateUserProfile(userId: string, data: UserProfileData) {
     const userDocRef = doc(db, 'users', userId);
     await updateDoc(userDocRef, data);
 }
+
+    
