@@ -27,7 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Settings, LogOut, Home, LineChart, Search, FileSignature, MonitorCog, ScanSearch } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
-import { clearSessionCookie } from '@/lib/firebase/auth-actions';
+import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils"
 import * as React from "react"
 
@@ -69,10 +69,11 @@ const components: { title: string; href: string; description: string, icon: Reac
 
 export function Header() {
   const { user } = useContext(AuthContext);
+  const router = useRouter();
 
   const handleLogout = async () => {
     await signOut(auth);
-    await clearSessionCookie();
+    router.push('/');
   };
   
   const getInitials = (name: string) => {
