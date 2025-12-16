@@ -156,12 +156,20 @@ export function EmpresaSettings() {
             setShowVerifactuConfirm(true);
         } else {
             setVerifactuByDefault(false);
+            toast({
+                title: 'Veri*factu por Defecto Desactivado',
+                description: 'Deberás activar Veri*factu manualmente en cada factura.',
+            });
         }
     };
 
     const confirmVerifactuDefault = () => {
         setVerifactuByDefault(true);
         setShowVerifactuConfirm(false);
+        toast({
+            title: 'Veri*factu por Defecto Activado',
+            description: 'Las nuevas facturas se crearán con Veri*factu activado.'
+        });
     };
 
     const companyData = user?.company;
