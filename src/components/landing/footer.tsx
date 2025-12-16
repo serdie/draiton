@@ -25,13 +25,19 @@ const featureLinks = [
     { href: "/herramientas-ia/digitalizacion", label: "Digitalización Inteligente" },
 ];
 
+const helpLinks = [
+    { href: "#", label: "Soporte" },
+    { href: "#", label: "Contacto" },
+    { href: "#", label: "Preguntas Frecuentes" },
+];
+
 
 export function Footer() {
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="md:col-span-1 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+            <div className="space-y-4">
                 <Link href="/" className="flex items-center space-x-2">
                     <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-8 w-auto" />
                 </Link>
@@ -53,11 +59,11 @@ export function Footer() {
                     </Link>
                 </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 md:col-span-3 gap-8">
+            <div className="md:col-span-1 lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-8">
                 <div>
-                    <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase">Legal</h3>
+                    <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase">Funcionalidades</h3>
                     <ul className="mt-4 space-y-2">
-                        {legalLinks.map(link => (
+                        {featureLinks.map(link => (
                             <li key={link.href}>
                                 <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">{link.label}</Link>
                             </li>
@@ -74,10 +80,20 @@ export function Footer() {
                         ))}
                     </ul>
                 </div>
-                 <div>
-                    <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase">Funcionalidades</h3>
+                <div>
+                    <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase">Ayuda</h3>
                     <ul className="mt-4 space-y-2">
-                        {featureLinks.map(link => (
+                        {helpLinks.map(link => (
+                            <li key={link.href}>
+                                <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">{link.label}</Link>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                 <div>
+                    <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase">Legal</h3>
+                    <ul className="mt-4 space-y-2">
+                        {legalLinks.map(link => (
                             <li key={link.href}>
                                 <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">{link.label}</Link>
                             </li>
