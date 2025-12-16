@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark, ShieldCheck, AlertTriangle, Signature } from 'lucide-react';
 import { format, parseISO, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -714,8 +714,8 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
           <Button type="submit" disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? "Guardando..." : "Crear Documento"}
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isVerifactu ? <Signature className="mr-2 h-4 w-4" /> : null}
+            {isSaving ? 'Guardando...' : (isVerifactu ? 'Emitir y Firmar (Veri*factu)' : 'Crear Documento')}
           </Button>
         </DialogFooter>
       </form>

@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark, ShieldCheck, AlertTriangle, Signature } from 'lucide-react';
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -523,8 +523,8 @@ export function EditDocumentForm({ document, onClose }: EditDocumentFormProps) {
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoading ? "Guardando..." : "Guardar Cambios"}
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isVerifactu ? <Signature className="mr-2 h-4 w-4" /> : null}
+            {isLoading ? 'Guardando...' : (isVerifactu ? 'Emitir y Firmar (Veri*factu)' : 'Guardar Cambios')}
           </Button>
         </div>
     </form>
