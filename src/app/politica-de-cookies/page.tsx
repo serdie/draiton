@@ -7,7 +7,7 @@ export default function PoliticaDeCookiesPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-1 container py-12 md:py-20">
+      <main className="flex-1 container mx-auto py-12 md:py-20">
         <div className="prose max-w-4xl mx-auto">
           <h1>Política de Cookies</h1>
           <p>
@@ -88,9 +88,9 @@ export default function PoliticaDeCookiesPage() {
               <li>
                   <strong>La configuración de tu navegador:</strong>
                   <ul>
-                      <li>Google Chrome: Configuración &gt; Privacidad y seguridad &gt; Cookies y otros datos de sitios.</li>
-                      <li>Safari (Apple): Preferencias &gt; Privacidad.</li>
-                      <li>Mozilla Firefox: Opciones &gt; Privacidad y Seguridad.</li>
+                      <li>Google Chrome: Configuración > Privacidad y seguridad > Cookies y otros datos de sitios.</li>
+                      <li>Safari (Apple): Preferencias > Privacidad.</li>
+                      <li>Mozilla Firefox: Opciones > Privacidad y Seguridad.</li>
                   </ul>
               </li>
           </ul>

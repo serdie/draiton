@@ -81,7 +81,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center mx-auto">
+      <div className="container mx-auto flex h-14 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-7 w-auto" />
@@ -90,7 +90,7 @@ export function Header() {
              <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                    <Link href="/#features" legacyBehavior passHref>
+                    <Link href="/caracteristicas" legacyBehavior passHref>
                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Características
                         </NavigationMenuLink>
