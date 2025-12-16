@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark, ShieldCheck } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, Pencil, Loader2, ChevronDown, FileText, Landmark, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { format, parseISO, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -35,6 +35,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { provincias } from '@/lib/provincias';
 import { type Address } from '@/lib/firebase/user-settings-actions';
 import type { Contact } from '../contactos/page';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 
 type LineItem = DocLineItem & {
   id: number;
@@ -92,6 +94,9 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   const [suggestions, setSuggestions] = useState<Contact[]>([]);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   
+  const [isVerifactu, setIsVerifactu] = useState(false);
+  const [showVerifactuAlert, setShowVerifactuAlert] = useState(false);
+
   const companyData = user?.company;
 
   useEffect(() => {
@@ -258,6 +263,25 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
     const total = subtotal + taxAmountValue - irpfAmount;
     return { subtotal, taxAmount: taxAmountValue, irpfAmount, total };
   }, [lineItems, taxRate, applyIrpf]);
+  
+  const handleVerifactuToggle = (checked: boolean) => {
+    if (checked) {
+        setShowVerifactuAlert(true);
+    } else {
+        setIsVerifactu(false);
+    }
+  };
+  
+  const confirmVerifactu = () => {
+    setIsVerifactu(true);
+    setShowVerifactuAlert(false);
+  };
+
+  const cancelVerifactu = () => {
+    setIsVerifactu(false);
+    setShowVerifactuAlert(false);
+  };
+
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -368,6 +392,32 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
 
 
   return (
+    <>
+    <AlertDialog open={showVerifactuAlert} onOpenChange={setShowVerifactuAlert}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="text-yellow-500" />
+                Atención: Vas a activar Veri*factu
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 pt-2">
+                <p>
+                Al activar la opción Veri*factu, esta factura se registrará fiscalmente y será enviada a la Agencia Tributaria. Este proceso es <strong>irreversible</strong> y la factura <strong>no podrá ser modificada ni eliminada</strong> una vez emitida.
+                </p>
+                <ul className="list-disc list-inside text-sm space-y-1">
+                    <li>Te recomendamos crear un <strong>borrador</strong> o una factura normal para verificar los datos antes de la emisión definitiva.</li>
+                    <li>Recuerda que la obligatoriedad de Veri*factu para todas las empresas comienza el <strong>1 de enero de 2027</strong>.</li>
+                </ul>
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelVerifactu}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmVerifactu}>
+                Entendido, activar Veri*factu
+            </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
         <DialogHeader>
           <DialogTitle>Crear {getDocumentTypeLabel(docType)}</DialogTitle>
@@ -389,7 +439,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                     </SelectContent>
                 </Select>
                 <div className="flex items-center justify-center gap-2">
-                    <Switch id="verifactu-switch" />
+                    <Switch id="verifactu-switch" checked={isVerifactu} onCheckedChange={handleVerifactuToggle} />
                     <Label htmlFor="verifactu-switch" className="flex items-center gap-1 font-medium">
                         <ShieldCheck className="h-4 w-4 text-primary" />
                         Veri*factu
@@ -669,5 +719,6 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
           </Button>
         </DialogFooter>
       </form>
+    </>
   );
 }
