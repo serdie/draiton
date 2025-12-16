@@ -34,33 +34,33 @@ import * as React from "react"
 const components: { title: string; href: string; description: string, icon: React.ReactNode }[] = [
   {
     title: "Marketing y Redes Sociales",
-    href: "/dashboard/marketing-ia",
+    href: "/herramientas-ia/marketing",
     description:
       "Genera contenido para campañas de email y redes sociales.",
     icon: <LineChart className="h-5 w-5" />
   },
   {
     title: "Buscador de Oportunidades",
-    href: "/dashboard/gestor-ia/ayudas",
+    href: "/herramientas-ia/oportunidades",
     description: "Encuentra ayudas, subvenciones y clientes potenciales.",
     icon: <Search className="h-5 w-5" />
   },
   {
     title: "Asistente Fiscal",
-    href: "/dashboard/gestor-ia/asistente-fiscal",
+    href: "/herramientas-ia/asistente-fiscal",
     description: "Recibe ayuda para cumplimentar los modelos de impuestos.",
     icon: <FileSignature className="h-5 w-5" />
   },
   {
     title: "Gestor y Analizador Web",
-    href: "/dashboard/web-ia",
+    href: "/herramientas-ia/gestor-web",
     description:
       "Crea o analiza tu sitio web para recibir un informe detallado.",
     icon: <MonitorCog className="h-5 w-5" />
   },
   {
     title: "Digitalización Inteligente",
-    href: "/dashboard/extractor-facturas",
+    href: "/herramientas-ia/digitalizacion",
     description:
       "Extrae datos de facturas y tickets con solo una foto.",
     icon: <ScanSearch className="h-5 w-5" />
