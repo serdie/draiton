@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Image as ImageIcon, Loader2, Save, Trash2, BookOpen, ChevronDown, FileUp, ShieldCheck } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Save, Trash2, BookOpen, ChevronDown, FileUp, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/context/auth-context';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -21,6 +21,7 @@ import { provincias } from '@/lib/provincias';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ConvenioFinder } from './convenio-finder';
 import { Switch } from '@/components/ui/switch';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 
 export function EmpresaSettings() {
@@ -34,6 +35,7 @@ export function EmpresaSettings() {
     const [convenio, setConvenio] = useState(user?.company?.convenio || '');
     const [convenioFileName, setConvenioFileName] = useState('');
     const [verifactuByDefault, setVerifactuByDefault] = useState(user?.company?.verifactuByDefault || false);
+    const [showVerifactuConfirm, setShowVerifactuConfirm] = useState(false);
 
 
     const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -149,10 +151,50 @@ export function EmpresaSettings() {
         }
     }
     
+    const handleVerifactuToggle = (checked: boolean) => {
+        if (checked) {
+            setShowVerifactuConfirm(true);
+        } else {
+            setVerifactuByDefault(false);
+        }
+    };
+
+    const confirmVerifactuDefault = () => {
+        setVerifactuByDefault(true);
+        setShowVerifactuConfirm(false);
+    };
+
     const companyData = user?.company;
     const addressData = user?.company?.address;
 
   return (
+    <>
+    <AlertDialog open={showVerifactuConfirm} onOpenChange={setShowVerifactuConfirm}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                    Activar Veri*factu por Defecto
+                </AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                    <div className="space-y-4 pt-2">
+                        <p>Al activar esta opción, todas las nuevas facturas que crees se emitirán bajo el sistema <strong>Veri\*factu</strong> de forma predeterminada.</p>
+                        <ul className="list-disc list-inside text-sm space-y-2">
+                            <li>Esto implica que cada factura será registrada fiscalmente y enviada a la Agencia Tributaria.</li>
+                            <li>Una factura Veri\*factu <strong>no puede ser modificada ni eliminada</strong> tras su emisión.</li>
+                            <li>Aún podrás desactivar Veri\*factu en una factura individual antes de guardarla.</li>
+                        </ul>
+                    </div>
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmVerifactuDefault}>
+                    Entendido, activar por defecto
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
     <Card>
       <input type="file" ref={fileInputRef} onChange={handleLogoChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
       <input type="file" ref={convenioFileRef} onChange={handleConvenioFileChange} className="hidden" accept=".pdf" />
@@ -205,7 +247,7 @@ export function EmpresaSettings() {
                                 {verifactuByDefault ? 'Activado: Las nuevas facturas se crearán como Verifactu.' : 'Desactivado: Deberás activar Verifactu factura a factura.'}
                             </p>
                         </div>
-                        <Switch id="verifactu-default" checked={verifactuByDefault} onCheckedChange={setVerifactuByDefault} />
+                        <Switch id="verifactu-default" checked={verifactuByDefault} onCheckedChange={handleVerifactuToggle} />
                     </div>
                  </div>
             </div>
@@ -307,7 +349,6 @@ export function EmpresaSettings() {
         </form>
       </CardContent>
     </Card>
+    </>
   );
 }
-
-    
