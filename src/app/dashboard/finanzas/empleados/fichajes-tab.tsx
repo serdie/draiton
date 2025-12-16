@@ -13,6 +13,7 @@ import { AuthContext } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
 import { ViewFichajeModal } from '../../proyectos/view-fichaje-modal';
 import { useToast } from '@/hooks/use-toast';
+import { FichajesHistoryTable } from './fichajes-history-table';
 
 const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -141,6 +142,8 @@ export function FichajesTab() {
                     </div>
                 </CardContent>
             </Card>
+
+            <FichajesHistoryTable allFichajes={allFichajes} employees={employees} />
         </div>
         </>
     );
