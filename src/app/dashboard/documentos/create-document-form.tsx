@@ -95,6 +95,8 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   
   const [isVerifactu, setIsVerifactu] = useState(false);
   const [showVerifactuAlert, setShowVerifactuAlert] = useState(false);
+  const [showVerifactuSubmitConfirm, setShowVerifactuSubmitConfirm] = useState(false);
+
 
   const companyData = user?.company;
 
@@ -282,8 +284,14 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
   };
 
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSubmit = async (event?: React.FormEvent) => {
+    event?.preventDefault();
+
+    if (isVerifactu && !showVerifactuSubmitConfirm) {
+        setShowVerifactuSubmitConfirm(true);
+        return;
+    }
+
     setIsSaving(true);
     
     if (!user) {
@@ -386,13 +394,14 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         });
     } finally {
         setIsSaving(false);
+        setShowVerifactuSubmitConfirm(false);
     }
   }
 
 
   return (
     <>
-    <AlertDialog open={showVerifactuAlert} onOpenChange={setShowVerifactuAlert}>
+     <AlertDialog open={showVerifactuAlert} onOpenChange={setShowVerifactuAlert}>
         <AlertDialogContent>
             <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -400,11 +409,11 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                 Atención: Vas a activar Veri*factu
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-                <div className="space-y-4 pt-2 text-sm text-muted-foreground">
+                 <div className="space-y-4 pt-2">
                     <p>
                     Al activar la opción Veri*factu, esta factura se registrará fiscalmente y será enviada a la Agencia Tributaria. Este proceso es <strong>irreversible</strong> y la factura <strong>no podrá ser modificada ni eliminada</strong> una vez emitida.
                     </p>
-                    <ul className="list-disc list-inside space-y-1">
+                    <ul className="list-disc list-inside text-sm space-y-1">
                         <li>Te recomendamos crear un <strong>borrador</strong> o una factura normal para verificar los datos antes de la emisión definitiva.</li>
                         <li>Recuerda que la obligatoriedad de Veri*factu para todas las empresas comienza el <strong>1 de enero de 2027</strong>.</li>
                     </ul>
@@ -419,6 +428,25 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
+     <AlertDialog open={showVerifactuSubmitConfirm} onOpenChange={setShowVerifactuSubmitConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                Confirmación de Emisión Veri*factu
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Estás a punto de emitir una factura bajo el sistema Veri*factu. Esta acción es **irreversible**. La factura será enviada a la Agencia Tributaria y no podrá ser modificada ni eliminada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleSubmit()}>
+              Entendido, emitir y firmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
         <DialogHeader>
           <DialogTitle>Crear {getDocumentTypeLabel(docType)}</DialogTitle>
@@ -714,7 +742,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
-          <Button type="submit" disabled={isSaving}>
+          <Button type={isVerifactu ? 'button' : 'submit'} onClick={isVerifactu ? () => handleSubmit() : undefined} disabled={isSaving}>
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isVerifactu ? <Signature className="mr-2 h-4 w-4" /> : null}
             {isSaving ? 'Guardando...' : (isVerifactu ? 'Emitir y Firmar (Veri*factu)' : 'Crear Documento')}
           </Button>
@@ -723,5 +751,3 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
     </>
   );
 }
-
-    
