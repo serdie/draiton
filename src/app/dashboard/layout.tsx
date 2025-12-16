@@ -107,6 +107,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   
   const handleLogout = async () => {
     await signOut(auth);
+    router.push('/');
   };
 
   const handleStartTour = () => {
