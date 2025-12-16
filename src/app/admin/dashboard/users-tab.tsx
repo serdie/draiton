@@ -6,7 +6,7 @@ import { AuthContext } from "@/context/auth-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Loader2, User, Trash2, ShieldCheck, UserCog, FilterX, ChevronLeft, ChevronRight } from "lucide-react";
+import { MoreHorizontal, Loader2, User, Trash2, ShieldCheck, UserCog, FilterX, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import { collection, onSnapshot, Timestamp } from "firebase/firestore";
@@ -19,6 +19,7 @@ import { EditUserModal } from "./edit-user-modal";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 
 export type UserRole = 'free' | 'pro' | 'admin' | 'empresa' | 'employee';
@@ -42,6 +43,7 @@ const formatProvider = (providerId: string) => {
 
 export function UsersTab() {
     const { user: adminUser } = useContext(AuthContext);
+    const router = useRouter();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
@@ -216,6 +218,10 @@ export function UsersTab() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent>
                                                     <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                                    <DropdownMenuItem onClick={() => router.push(`/admin/dashboard/users/${user.id}`)}>
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        Ver Usuario
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => setUserToEdit(user)}>
                                                         <UserCog className="mr-2 h-4 w-4" />
                                                         Editar Usuario
