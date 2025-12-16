@@ -14,11 +14,58 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Settings, LogOut, Home } from 'lucide-react';
+import { Settings, LogOut, Home, LineChart, Search, FileSignature, MonitorCog, ScanSearch } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { clearSessionCookie } from '@/lib/firebase/auth-actions';
+import { cn } from "@/lib/utils"
+import * as React from "react"
+
+const components: { title: string; href: string; description: string, icon: React.ReactNode }[] = [
+  {
+    title: "Marketing y Redes Sociales",
+    href: "/dashboard/marketing-ia",
+    description:
+      "Genera contenido para campañas de email y redes sociales.",
+    icon: <LineChart className="h-5 w-5" />
+  },
+  {
+    title: "Buscador de Oportunidades",
+    href: "/dashboard/gestor-ia/ayudas",
+    description: "Encuentra ayudas, subvenciones y clientes potenciales.",
+    icon: <Search className="h-5 w-5" />
+  },
+  {
+    title: "Asistente Fiscal",
+    href: "/dashboard/gestor-ia/asistente-fiscal",
+    description: "Recibe ayuda para cumplimentar los modelos de impuestos.",
+    icon: <FileSignature className="h-5 w-5" />
+  },
+  {
+    title: "Gestor y Analizador Web",
+    href: "/dashboard/web-ia",
+    description:
+      "Crea o analiza tu sitio web para recibir un informe detallado.",
+    icon: <MonitorCog className="h-5 w-5" />
+  },
+  {
+    title: "Digitalización Inteligente",
+    href: "/dashboard/extractor-facturas",
+    description:
+      "Extrae datos de facturas y tickets con solo una foto.",
+    icon: <ScanSearch className="h-5 w-5" />
+  },
+]
 
 export function Header() {
   const { user } = useContext(AuthContext);
@@ -39,19 +86,49 @@ export function Header() {
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-7 w-auto" />
           </Link>
-          <nav className="hidden items-center gap-6 text-sm md:flex">
-            <Link
-              href="/#features"
-              className="text-foreground/60 transition-colors hover:text-foreground/80"
-            >
-              Características
-            </Link>
-            <Link
-              href="/#pricing"
-              className="text-foreground/60 transition-colors hover:text-foreground/80"
-            >
-              Precios
-            </Link>
+          <nav className="hidden items-center gap-2 text-sm md:flex">
+             <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                    <Link href="/#features" legacyBehavior passHref>
+                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Características
+                        </NavigationMenuLink>
+                    </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Herramientas IA</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                      {components.map((component) => (
+                        <ListItem
+                          key={component.title}
+                          title={component.title}
+                          href={component.href}
+                          icon={component.icon}
+                        >
+                          {component.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                 <NavigationMenuItem>
+                    <Link href="/#pricing" legacyBehavior passHref>
+                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Precios
+                        </NavigationMenuLink>
+                    </Link>
+                </NavigationMenuItem>
+                 <NavigationMenuItem>
+                    <Link href="/control-horario" legacyBehavior passHref>
+                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Control Horario
+                        </NavigationMenuLink>
+                    </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
@@ -107,3 +184,34 @@ export function Header() {
     </header>
   );
 }
+
+const ListItem = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a"> & { icon: React.ReactNode }
+>(({ className, title, children, icon, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <a
+          ref={ref}
+          className={cn(
+            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            className
+          )}
+          {...props}
+        >
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 text-primary p-2 rounded-md">{icon}</div>
+            <div>
+                <div className="text-sm font-medium leading-none">{title}</div>
+                <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                    {children}
+                </p>
+            </div>
+          </div>
+        </a>
+      </NavigationMenuLink>
+    </li>
+  )
+})
+ListItem.displayName = "ListItem"
