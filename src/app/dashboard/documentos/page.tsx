@@ -1,4 +1,3 @@
-
 'use client';
 
 import { DocumentosContent } from './documentos-content';
@@ -41,6 +40,13 @@ export type Document = {
   moneda: string;
   terminos?: string;
   iban?: string;
+
+  // --- Campos nuevos para Veri*factu ---
+  verifactuStatus?: 'pending' | 'sent' | 'error';
+  verifactuQR?: string;
+  verifactuChainHash?: string;
+  verifactuCSV?: string;
+  verifactuDate?: string;
 };
 
 export default function DocumentosPage() {

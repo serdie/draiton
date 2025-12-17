@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useContext, useRef } from 'react';
@@ -345,18 +344,94 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
         subtotal,
         impuestos: taxAmount,
         importe: total,
-        estado: status,
+        estado: isVerifactu ? 'Emitido' : status, // Si es Veri*factu, nace emitido
         moneda: 'EUR',
         terminos: terminos,
         iban: iban,
+        // Flags para el futuro
+        verifactuStatus: isVerifactu ? 'pending' : undefined
     };
 
     try {
-        await addDoc(collection(db, "invoices"), {
+        // 1. Guardar en Firestore (Siempre primero)
+        const docRef = await addDoc(collection(db, "invoices"), {
             ...documentData,
             fechaCreacion: serverTimestamp(),
         });
         
+        // 2. LOGICA VERI*FACTU
+        if (isVerifactu) {
+          try {
+             toast({
+               title: "Conectando con Hacienda...",
+               description: "Enviando factura al sistema Veri*factu.",
+             });
+
+             // Preparamos los datos tal cual los espera tu API route.ts
+             const verifactuPayload = {
+                NumSerieFactura: docNumber,
+                FechaExpedicionFactura: format(emissionDate!, 'dd-MM-yyyy'),
+                DescripcionOperacion: lineItems[0]?.description || "Prestación de servicios",
+                IDEmisorFactura: companyData?.cif || user.email, // Fallback si no hay CIF
+                ImporteTotal: total,
+                Destinatarios: [{
+                    NombreRazon: clientName,
+                    NIF: clientCif,
+                    Domicilio: clientAddress?.addressLine1 || "",
+                    CodigoPostal: clientAddress?.postalCode || "",
+                    Municipio: clientAddress?.city || "",
+                    Provincia: clientAddress?.province || "Madrid"
+                }],
+                Desglose: lineItems.map(item => ({
+                    BaseImponible: item.total, 
+                    // Nota: Aquí asumo que todas las líneas van al mismo % de IVA definido en el formulario
+                    TipoImpositivo: taxRate,
+                    CuotaRepercutida: (item.total * taxRate) / 100
+                }))
+             };
+
+             // Llamada a NUESTRA API
+             const response = await fetch('/api/verifactu/emitir', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.uid,
+                    invoiceId: docRef.id,
+                    invoiceData: verifactuPayload
+                })
+             });
+
+             const result = await response.json();
+
+             if (!response.ok || !result.success) {
+               console.error("Error Verifactu API:", result);
+               toast({
+                 variant: 'destructive',
+                 title: 'Error en envío Veri*factu',
+                 description: result.message || 'La factura se guardó pero no se pudo enviar a Hacienda.',
+               });
+               // No cerramos el modal si falla el envío crítico? O sí? 
+               // De momento dejamos que siga para que vea la factura creada.
+             } else {
+               toast({
+                 title: '¡Factura Enviada y Firmada!',
+                 description: 'El registro en Hacienda se ha completado correctamente.',
+                 variant: "default",
+                 className: "bg-green-600 text-white"
+               });
+             }
+
+          } catch (verifactuError) {
+             console.error("Fallo de red Verifactu:", verifactuError);
+             toast({
+                 variant: 'destructive',
+                 title: 'Error de Conexión',
+                 description: 'No se pudo contactar con el servidor de firma.',
+             });
+          }
+        }
+
+        // 3. Actualizar preferencias de usuario
         if (saveIban) {
             const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, { 'company.iban': iban });
@@ -366,6 +441,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
             await updateDoc(userDocRef, { 'company.terminos': terminos });
         }
 
+        // 4. Gestión de Contactos
         const contactsRef = collection(db, 'contacts');
         const q = query(contactsRef, where('name', '==', clientName), where('ownerId', '==', user.uid));
         const querySnapshot = await getDocs(q);
@@ -374,7 +450,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
             await addDoc(contactsRef, {
                 ownerId: user.uid,
                 name: clientName,
-                company: '', // Placeholder, can be added in CRM
+                company: '', 
                 cif: clientCif,
                 address: clientAddress,
                 email: clientEmail,
@@ -383,11 +459,13 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
                 notes: `Contacto creado automáticamente desde el documento ${docNumber}`,
                 createdAt: serverTimestamp(),
             });
-            toast({
-                title: 'Documento y Contacto Creados',
-                description: `El documento ${docNumber} se ha guardado y se ha añadido a ${clientName} a tus contactos.`,
-            });
-        } else {
+            if (!isVerifactu) {
+              toast({
+                  title: 'Documento y Contacto Creados',
+                  description: `El documento ${docNumber} se ha guardado y se ha añadido a ${clientName} a tus contactos.`,
+              });
+            }
+        } else if (!isVerifactu) {
              toast({
                 title: 'Documento Creado',
                 description: `El documento ${docNumber} se ha guardado correctamente.`,
@@ -761,5 +839,3 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
     </>
   );
 }
-
-    

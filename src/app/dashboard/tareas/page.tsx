@@ -82,19 +82,23 @@ export default function TareasPage() {
              if (!isMounted) return;
              setUsersLoading(true);
              const userList = new Map<string, { id: string; name: string; }>();
-             const selfQuery = query(collection(db, 'users'), where('uid', '==', user.uid));
-             const employeesQuery = query(collection(db, 'users'), where('companyOwnerId', '==', user.uid));
+             
+             // Add the current user (owner)
+             if (user.uid && user.displayName) {
+                userList.set(user.uid, { id: user.uid, name: user.displayName });
+             }
+
+             // Fetch employees
+             const employeesQuery = query(collection(db, 'employees'), where('ownerId', '==', user.uid));
 
             try {
-                const [selfSnapshot, employeesSnapshot] = await Promise.all([getDocs(selfQuery), getDocs(employeesQuery)]);
+                const employeesSnapshot = await getDocs(employeesQuery);
                 
                 if (!isMounted) return;
 
-                selfSnapshot.forEach(doc => {
-                    userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
-                });
                 employeesSnapshot.forEach(doc => {
-                    userList.set(doc.id, { id: doc.id, name: doc.data().displayName || 'Usuario sin nombre' });
+                    // The employee ID is the same as their user UID
+                    userList.set(doc.id, { id: doc.id, name: doc.data().name || 'Empleado sin nombre' });
                 });
                 setUsers(Array.from(userList.values()));
 
