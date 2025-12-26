@@ -1,39 +1,34 @@
-import Stripe from 'stripe';
+import { stripe, PRICE_ROLE_MAP } from '@/lib/stripe';
+import { checkoutLimiter } from '@/lib/ratelimit';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+const CheckoutSchema = z.object({
+  priceId: z.string().min(1, 'Price ID requerido'),
+  userEmail: z.string().email('Email inválido'),
+  userId: z.string().min(1, 'User ID requerido'),
+});
 
 export async function POST(req: Request) {
   try {
-    const { priceId, userEmail, userId } = await req.json();
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+    const { success } = await checkoutLimiter.limit(ip);
 
-    if (!priceId || !userEmail || !userId) {
-      return NextResponse.json({ error: 'Faltan datos' }, { status: 400 });
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Demasiadas solicitudes. Intenta en 1 minuto.' },
+        { status: 429 }
+      );
     }
 
-    // LISTAS DE PRECIOS (Más ordenado y seguro)
-    const proPrices = [
-        'price_1SdamoDaJWPk1oF9vTeHa0g4', // Pro Mensual
-        'price_1Sdam5DaJWPk1oF9IQyia1Ui'  // Pro Anual
-    ];
+    const body = await req.json();
+    
+    // Validar con Zod
+    const { priceId, userEmail, userId } = CheckoutSchema.parse(body);
 
-    const empresaPrices = [
-        'price_1SdanqDaJWPk1oF94oQKfJ4c', // Empresa Mensual
-        'price_1Sdan8DaJWPk1oF9fRGdppbU'  // Empresa Anual
-    ];
-
-    // LÓGICA DE DETECCIÓN DE ROL
-    let targetRole = 'free'; // Por seguridad empezamos en free
-
-    if (proPrices.includes(priceId)) {
-        targetRole = 'pro';
-    } else if (empresaPrices.includes(priceId)) {
-        targetRole = 'empresa';
-    } else {
-        // Si el precio no está en ninguna lista, algo raro pasa.
-        // Podríamos lanzar error, o dejarlo en 'pro' por defecto si prefieres.
-        targetRole = 'pro'; 
-    }
+    // Detectar rol desde el mapa
+    const targetRole = PRICE_ROLE_MAP[priceId] || 'pro';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -45,10 +40,9 @@ export async function POST(req: Request) {
         },
       ],
       mode: 'subscription',
-      // Guardamos el rol detectado en los metadatos
       metadata: {
-        userId: userId,
-        targetRole: targetRole 
+        userId,
+        targetRole,
       },
       automatic_tax: { enabled: true },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?payment_success=true`,
@@ -58,7 +52,19 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    console.error('Error creando sesión:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Checkout error:', error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: error.message || 'Error creando sesión' },
+      { status: 500 }
+    );
   }
 }
+
