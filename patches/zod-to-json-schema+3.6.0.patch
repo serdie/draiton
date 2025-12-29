@@ -1,0 +1,25 @@
+diff --git a/node_modules/zod-to-json-schema/dist/cjs/parsers/array.js b/node_modules/zod-to-json-schema/dist/cjs/parsers/array.js
+index 589710f..449b775 100644
+--- a/node_modules/zod-to-json-schema/dist/cjs/parsers/array.js
++++ b/node_modules/zod-to-json-schema/dist/cjs/parsers/array.js
+@@ -1,6 +1,6 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+-exports.parseArrayDef = void 0;
++exports.parseArrayDef = exports.z = void 0;
+ const zod_1 = require("zod");
+ const index_1 = require("../index");
+ const errorMessages_1 = require("../errorMessages");
+diff --git a/node_modules/zod-to-json-schema/dist/esm/parsers/array.js b/node_modules/zod-to-json-schema/dist/esm/parsers/array.js
+index 927702a..6bd989f 100644
+--- a/node_modules/zod-to-json-schema/dist/esm/parsers/array.js
++++ b/node_modules/zod-to-json-schema/dist/esm/parsers/array.js
+@@ -1,5 +1,5 @@
+-import { ZodArray, ZodNumber, ZodString } from "zod";
+-import { parseDef, getRefs } from "../index";
++import { z as Zod, ZodArray, ZodNumber, ZodString } from "zod";
++import { parseDef, getRefs, z } from "../index";
+ import { errorMessages } from "../errorMessages";
+ export function parseArrayDef(def, refs) {
+     const res = {
+

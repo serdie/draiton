@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 98%; /* Light Grey */
+    --foreground: 224 71% 4%; /* Dark Blue-Black for text */
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+
+    --primary: 217 91% 60%; /* Professional Blue */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 224 71% 4%;
+
+    --muted: 220 15% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 217 91% 60%; /* Same as primary for this design */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 94%;
+    --ring: 217 91% 60%;
+
+    --chart-1: 197 65% 60%;
+    --chart-2: 266 53% 55%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 160 60% 45%;
+    --chart-5: 340 75% 55%;
+
+    /* Light Theme Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 224 71% 10%;
+    --sidebar-primary: 217 91% 60%; /* Professional Blue */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 96%;
+    --sidebar-accent-foreground: 224 71% 4%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    --background: 223 38% 8%; /* main-bg */
+    --foreground: 210 40% 98%; /* text-primary */
+    --card: 222 39% 11%; /* card-bg */
+    --card-foreground: 210 40% 98%; /* text-primary */
+    --popover: 222 39% 11%; /* card-bg */
+    --popover-foreground: 210 40% 98%; /* text-primary */
+    --primary: 217 91% 60%; /* Professional Blue */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 222 39% 16%; /* Slightly lighter card bg for secondary elements */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 39% 16%;
+    --muted-foreground: 215 20% 65%; /* text-secondary */
+    --accent: 217 91% 60%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 39% 20%;
+    --input: 222 39% 18%;
+    --ring: 217 91% 60%;
+
+    --chart-1: 197 65% 60%;
+    --chart-2: 266 53% 55%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 160 60% 45%;
+    --chart-5: 340 75% 55%;
+
+    --sidebar-background: 223 38% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 222 39% 16%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 39% 18%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .neumorphism {
+    --background: 220 20% 95%;
+    --foreground: 224 40% 20%;
+    --card: 220 20% 95%;
+    --card-foreground: 224 40% 20%;
+    --popover: 220 20% 90%;
+    --popover-foreground: 224 40% 20%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 220 15% 90%;
+    --secondary-foreground: 224 40% 20%;
+    --muted: 220 15% 90%;
+    --muted-foreground: 215.4 16.3% 55%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 13% 88%;
+    --input: 220 20% 95%;
+    --ring: 217 91% 60%;
+
+    --sidebar-background: 220 20% 95%;
+    --sidebar-foreground: 224 40% 20%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 220 15% 90%;
+    --sidebar-accent-foreground: 224 40% 20%;
+    --sidebar-border: 220 13% 88%;
+    --sidebar-ring: 217 91% 60%;
+
+    --light-shadow: 6px 6px 12px rgba(180, 180, 200, 0.4);
+    --dark-shadow: -6px -6px 12px rgba(255, 255, 255, 0.7);
+    --light-shadow-inset: inset 6px 6px 12px rgba(180, 180, 200, 0.4);
+    --dark-shadow-inset: inset -6px -6px 12px rgba(255, 255, 255, 0.7);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .neumorphism body {
+    @apply bg-background;
+  }
+
+  video {
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+  }
+  
+  /* Add padding-bottom to the body on mobile to account for the fixed bottom nav */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: 4rem; /* Height of the bottom nav */
+    }
+  }
+}

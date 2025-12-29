@@ -1,0 +1,17 @@
+// Defines a custom error class for Firestore permission errors.
+
+export type SecurityRuleContext = {
+  path: string;
+  operation: 'get' | 'list' | 'create' | 'update' | 'delete';
+  requestResourceData?: any;
+};
+
+export class FirestorePermissionError extends Error {
+  public context: SecurityRuleContext;
+
+  constructor(context: SecurityRuleContext) {
+    super(`Firestore Permission Denied: Cannot ${context.operation} at ${context.path}.`);
+    this.name = 'FirestorePermissionError';
+    this.context = context;
+  }
+}

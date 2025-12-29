@@ -1,0 +1,324 @@
+
+{
+  "entities": {
+    "Address": {
+      "title": "Address",
+      "description": "Represents a structured address.",
+      "type": "object",
+      "properties": {
+        "addressLine1": { "type": "string" },
+        "addressLine2": { "type": "string" },
+        "city": { "type": "string" },
+        "province": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile in the system.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The user's unique ID." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "photoURL": { "type": "string", "format": "uri", "description": "URL of the user's profile picture." },
+        "role": { "type": "string", "enum": ["free", "pro", "empresa", "admin", "employee"], "description": "The user's role." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the user was created." },
+        "company": {
+          "type": "object",
+          "description": "Company settings for the user.",
+          "properties": {
+            "name": { "type": "string" },
+            "cif": { "type": "string" },
+            "address": { "$ref": "#/entities/Address" },
+            "brandColor": { "type": "string" },
+            "iban": { "type": "string" },
+            "logoUrl": { "type": "string", "format": "uri" },
+            "phone": { "type": "string" },
+            "terminos": { "type": "string" },
+            "convenio": { "type": "string", "description": "Nombre del convenio colectivo aplicable." },
+            "verifactuByDefault": { "type": "boolean", "description": "Whether to enable Veri*factu by default for new invoices." }
+          }
+        }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Represents a user's project.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the project." },
+        "client": { "type": "string", "description": "The client associated with the project." },
+        "description": { "type": "string", "description": "A brief description of the project." },
+        "status": { "type": "string", "enum": ["Planificación", "En Progreso", "En Espera", "Completado", "Cancelado"], "description": "The current status of the project." },
+        "budget": { "type": "number", "description": "The budget allocated for the project." },
+        "progress": { "type": "number", "description": "The completion percentage of the project." },
+        "startDate": { "type": "string", "format": "date-time", "description": "The start date of the project." },
+        "endDate": { "type": "string", "format": "date-time", "description": "The estimated end date of the project." },
+        "ownerId": { "type": "string", "description": "The ID of the user who owns the project." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the project was created." },
+        "clientPortalActive": { "type": "boolean", "description": "Whether the client portal is active for this project." },
+        "clientPortalId": { "type": "string", "description": "A unique ID for the client portal URL." }
+      },
+      "required": ["name", "client", "status", "ownerId", "createdAt", "clientPortalActive", "clientPortalId"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Represents a single task within a project or standalone.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title of the task." },
+        "description": { "type": "string", "description": "A detailed description of the task." },
+        "status": { "type": "string", "enum": ["Pendiente", "En Progreso", "Completado"], "description": "The current status of the task." },
+        "priority": { "type": "string", "enum": ["Baja", "Media", "Alta"], "description": "The priority of the task." },
+        "isCompleted": { "type": "boolean", "description": "Whether the task is completed or not." },
+        "ownerId": { "type": "string", "description": "The ID of the user who owns the task." },
+        "assigneeId": { "type": "string", "description": "The ID of the user assigned to the task." },
+        "projectId": { "type": "string", "description": "The ID of the project this task belongs to." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the task was created." },
+        "dueDate": { "type": "string", "format": "date-time", "description": "The due date for the task." },
+        "timeTracked": { "type": "number", "description": "Total seconds tracked for this task."}
+      },
+      "required": ["title", "isCompleted", "ownerId", "assigneeId", "createdAt", "status", "priority"]
+    },
+    "Document": {
+      "title": "Document",
+      "description": "Represents a financial document like an invoice or quote.",
+      "type": "object",
+      "properties": {
+        "numero": { "type": "string" },
+        "tipo": { "type": "string", "enum": ["factura", "presupuesto", "nota-credito", "recurrente"] },
+        "cliente": { "type": "string" },
+        "importe": { "type": "number" },
+        "estado": { "type": "string" },
+        "fechaEmision": { "type": "string", "format": "date-time" },
+        "ownerId": { "type": "string" },
+        "iban": { "type": "string" },
+        "terminos": { "type": "string" }
+      },
+      "required": ["numero", "tipo", "cliente", "importe", "estado", "fechaEmision", "ownerId"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Represents a business expense.",
+      "type": "object",
+      "properties": {
+        "fecha": { "type": "string", "format": "date-time" },
+        "categoria": { "type": "string" },
+        "proveedor": { "type": "string" },
+        "importe": { "type": "number" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["fecha", "categoria", "proveedor", "importe", "ownerId"]
+    },
+    "Contact": {
+        "title": "Contact",
+        "description": "Represents a contact in the CRM.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string"},
+            "email": { "type": "string", "format": "email"},
+            "phone": { "type": "string"},
+            "company": { "type": "string"},
+            "cif": { "type": "string" },
+            "address": { "$ref": "#/entities/Address" },
+            "type": { "type": "string", "enum": ["Cliente", "Proveedor", "Lead", "Colaborador"]},
+            "ownerId": { "type": "string"}
+        },
+        "required": ["name", "email", "type", "ownerId"]
+    },
+    "WorkSchedule": {
+      "title": "Work Schedule",
+      "description": "Defines the weekly work schedule for an employee.",
+      "type": "object",
+      "properties": {
+        "monday": { "$ref": "#/entities/WorkDay" },
+        "tuesday": { "$ref": "#/entities/WorkDay" },
+        "wednesday": { "$ref": "#/entities/WorkDay" },
+        "thursday": { "$ref": "#/entities/WorkDay" },
+        "friday": { "$ref": "#/entities/WorkDay" },
+        "saturday": { "$ref": "#/entities/WorkDay" },
+        "sunday": { "$ref": "#/entities/WorkDay" }
+      }
+    },
+    "WorkDay": {
+      "title": "Work Day",
+      "description": "Defines the schedule for a single day.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["no-laboral", "continua", "partida"] },
+        "timeSlots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": { "type": "string", "format": "time" },
+              "end": { "type": "string", "format": "time" }
+            }
+          }
+        }
+      }
+    },
+    "Employee": {
+        "title": "Employee",
+        "description": "Represents an employee of a company.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "position": { "type": "string" },
+            "professionalGroup": { "type": "string" },
+            "nif": { "type": "string" },
+            "phone": { "type": "string" },
+            "socialSecurityNumber": { "type": "string" },
+            "contractType": { "type": "string", "enum": ["Indefinido", "Temporal", "Formación", "Prácticas"] },
+            "workModality": { "type": "string", "enum": ["Presencial", "Mixto", "Teletrabajo"], "description": "Work modality for the employee." },
+            "presencialPercentage": { "type": "number", "description": "Percentage of time working in person for hybrid modality." },
+            "remotePercentage": { "type": "number", "description": "Percentage of time working remotely for hybrid modality." },
+            "paymentFrequency": { "type": "string", "enum": ["Mensual", "Diario", "Semanal", "Quincenal", "Personalizar"] },
+            "salaryType": { "type": "string", "enum": ["Bruto Anual", "Neto Anual", "Según Convenio"] },
+            "convenio": { "type": "string", "enum": ["Personalizado", "Según convenio"], "description": "Type of agreement for salary and conditions." },
+            "grossAnnualSalary": { "type": "number" },
+            "weeklyHours": { "type": "number", "description": "Contracted weekly work hours." },
+            "annualHours": { "type": "number", "description": "Total contracted annual work hours." },
+            "vacationDays": { "type": "number", "description": "Total de días de vacaciones anuales." },
+            "proratedExtraPays": { "type": "boolean", "description": "Whether extra pays are prorated monthly." },
+            "extraPaysConfig": { "type": "string", "description": "Configuration for non-prorated extra pays." },
+            "hireDate": { "type": "string", "format": "date-time" },
+            "ownerId": { "type": "string" },
+            "companyOwnerId": { "type": "string" },
+            "employeePortalActive": { "type": "boolean", "description": "Whether the employee portal is active." },
+            "employeePortalId": { "type": "string", "description": "A unique ID for the employee portal URL." },
+            "rgpdTrainingProgress": { "type": "number", "description": "Progress of the mandatory GDPR and time tracking training (0-100)." },
+            "rgpdTrainingCompletedAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the training was completed and signed." },
+            "rgpdTrainingSignature": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string", "description": "Full name used for the signature." },
+                    "nif": { "type": "string", "description": "NIF/DNI used for the signature." }
+                }
+            },
+            "workSchedule": { "$ref": "#/entities/WorkSchedule" },
+            "strictSchedule": { "type": "boolean", "description": "Enforce clock-in/out times based on the work schedule." },
+            "courtesyMargin": { "type": "number", "description": "Courtesy margin in minutes for clocking in." }
+        },
+        "required": ["name", "email", "ownerId", "companyOwnerId", "employeePortalActive", "employeePortalId"]
+    },
+    "Fichaje": {
+        "title": "Fichaje",
+        "description": "Represents a single clock-in or clock-out event for an employee.",
+        "type": "object",
+        "properties": {
+            "employeeId": { "type": "string" },
+            "employeeName": { "type": "string" },
+            "ownerId": { "type": "string" },
+            "type": { "type": "string", "enum": ["Entrada", "Salida", "Inicio Descanso", "Fin Descanso"] },
+            "timestamp": { "type": "string", "format": "date-time" },
+            "requestChangeReason": { "type": "string", "description": "Reason provided by the employee to request a change on this entry." },
+            "requestedTimestamp": { "type": "string", "format": "date-time", "description": "The new timestamp requested by the employee." },
+            "requestStatus": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "The status of the change request." },
+            "requestedAt": { "type": "string", "format": "date-time", "description": "When the change was requested." },
+            "requesterId": { "type": "string", "description": "UID of the user who requested the change (the employee)." },
+            "requesterName": { "type": "string", "description": "Name of the user who requested the change." },
+            "breakDetails": {
+                "type": "object",
+                "description": "Details about the break.",
+                "properties": {
+                    "isSplitShift": { "type": "boolean" },
+                    "isPersonal": { "type": "boolean" },
+                    "isJustified": { "type": "boolean" },
+                    "justificationType": { "type": "string", "enum": ["Visita medica", "Tratamiento", "Gestiones administrativas", "Tutoria", "Otros"] },
+                    "moreInfo": { "type": "string" }
+                }
+            },
+            "workModality": {
+              "type": "string",
+              "enum": ["Presencial", "Teletrabajo"],
+              "description": "Modality of the work session, for hybrid workers."
+            }
+        },
+        "required": ["employeeId", "ownerId", "type", "timestamp"]
+    },
+    "Absence": {
+      "title": "Absence",
+      "description": "Represents an employee's absence from work.",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "description": "The ID of the employee." },
+        "ownerId": { "type": "string", "description": "The ID of the company owner." },
+        "type": { "type": "string", "enum": ["Vacaciones", "Baja por enfermedad", "Paternidad/Maternidad", "Día propio", "Otro"], "description": "The type of absence." },
+        "startDate": { "type": "string", "format": "date-time", "description": "Start date of the absence." },
+        "endDate": { "type": "string", "format": "date-time", "description": "End date of the absence." },
+        "status": { "type": "string", "enum": ["Aprobada", "Pendiente", "Rechazada"], "description": "The status of the absence request." },
+        "notes": { "type": "string", "description": "Additional notes about the absence." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation." }
+      },
+      "required": ["employeeId", "ownerId", "type", "startDate", "endDate", "status", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Represents an in-app notification for a user.",
+      "type": "object",
+      "properties": {
+        "recipientId": { "type": "string", "description": "UID of the user who will receive the notification." },
+        "senderId": { "type": "string", "description": "UID of the user who triggered the notification." },
+        "senderName": { "type": "string", "description": "Name of the user who triggered the notification." },
+        "type": { "type": "string", "enum": ["FICHAGE_CHANGE_REQUEST", "FICHAGE_CHANGE_RESPONSE"], "description": "The type of the notification." },
+        "message": { "type": "string", "description": "The main content of the notification." },
+        "link": { "type": "string", "description": "URL to navigate to when the notification is clicked." },
+        "isRead": { "type": "boolean", "description": "Whether the notification has been read." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation." }
+      },
+      "required": ["recipientId", "senderId", "type", "message", "link", "isRead", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": ["anonymous", "google.com", "microsoft.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores user profile information."
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Stores project details."
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Stores individual tasks."
+    },
+    "/invoices/{invoiceId}": {
+        "schema": { "$ref": "#/entities/Document" },
+        "description": "Stores invoices, quotes, and other financial documents."
+    },
+    "/expenses/{expenseId}": {
+        "schema": { "$ref": "#/entities/Expense" },
+        "description": "Stores business expenses."
+    },
+    "/contacts/{contactId}": {
+        "schema": { "$ref": "#/entities/Contact" },
+        "description": "Stores CRM contacts."
+    },
+    "/employees/{employeeId}": {
+      "schema": { "$ref": "#/entities/Employee" },
+      "description": "Stores employee data, linked to a user account."
+    },
+    "/fichajes/{fichajeId}": {
+      "schema": { "$ref": "#/entities/Fichaje" },
+      "description": "Stores all clock-in and clock-out events."
+    },
+    "/absences/{absenceId}": {
+      "schema": { "$ref": "#/entities/Absence" },
+      "description": "Stores employee absence records."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Stores in-app notifications for users."
+    }
+  }
+}
+
+    

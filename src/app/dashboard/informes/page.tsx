@@ -1,0 +1,274 @@
+
+'use client';
+
+import { useState, useMemo, useEffect, useContext, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sparkles, FileText, Copy, Download, Mail, Loader2, CalendarIcon } from 'lucide-react';
+import { AuthContext } from '@/context/auth-context';
+import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { useToast } from '@/hooks/use-toast';
+import type { Project } from '../proyectos/page';
+import jsPDF from 'jspdf';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from '@/lib/utils';
+import type { DateRange } from 'react-day-picker';
+import Image from 'next/image';
+
+
+export default function InformesPage() {
+    const { user } = useContext(AuthContext);
+    const { toast } = useToast();
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [generatedReport, setGeneratedReport] = useState<string | null>(null);
+    const printableRef = useRef<HTMLDivElement>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [period, setPeriod] = useState<string>('mes');
+    const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
+
+
+    useEffect(() => {
+        if (!db || !user) {
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        const q = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const docsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+            setProjects(docsList);
+            setLoading(false);
+        }, (error) => {
+            toast({ variant: 'destructive', title: 'Error de Permisos', description: 'No se pudieron cargar los proyectos. Revisa tus reglas de seguridad de Firestore.' });
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, [user, toast]);
+
+    const handleGenerateReport = () => {
+        setGeneratedReport(`**Informe de Progreso - Resumen Interno (Q3 2024)**
+
+**1. Resumen Ejecutivo:**
+El proyecto "Desarrollo Web Corporativa" para Tech Solutions avanza según lo planeado, con un 75% de las tareas completadas. El equipo ha mostrado un rendimiento excelente, superando los hitos clave de diseño y desarrollo inicial. El presupuesto se mantiene dentro de los límites establecidos, con un gasto actual del 60%.
+
+**2. Hitos Clave Completados:**
+-   **Diseño UI/UX Aprobado:** 15 de Julio, 2024
+-   **Desarrollo del Frontend (Componentes Principales):** 1 de Agosto, 2024
+-   **Configuración del Backend y Base de Datos:** 10 de Agosto, 2024
+
+**3. Próximos Pasos:**
+-   Integración del CMS y funcionalidades del blog.
+-   Fase de Pruebas y QA.
+-   Lanzamiento y despliegue final.
+
+**4. Riesgos y Mitigaciones:**
+-   **Riesgo:** Posible retraso en la entrega de contenido por parte del cliente.
+-   **Mitigación:** Se ha establecido un calendario de contenido compartido y recordatorios automáticos.
+`);
+    };
+
+    const handleDownloadPdf = async () => {
+        const reportElement = printableRef.current;
+        if (!reportElement || !generatedReport) return;
+        setIsDownloading(true);
+
+        try {
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const margin = 15;
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const textWidth = pdfWidth - margin * 2;
+
+            // --- Render Header with html2canvas ---
+            const headerElement = reportElement.querySelector('#report-header');
+            if (headerElement) {
+                 const canvas = await import('html2canvas').then(mod => mod.default);
+                const headerCanvas = await canvas(headerElement as HTMLElement, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: null,
+                });
+                const imgData = headerCanvas.toDataURL('image/png');
+                const imgProps = pdf.getImageProperties(imgData);
+                const headerHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, headerHeight);
+            }
+            
+            let cursorY = 70; // Start position after header
+
+            // --- Render Text Content with jsPDF ---
+            pdf.setFontSize(11);
+            pdf.setTextColor(40);
+            
+            const lines = pdf.splitTextToSize(generatedReport, textWidth);
+            
+            lines.forEach((line: string) => {
+                if (cursorY > pdf.internal.pageSize.getHeight() - margin) {
+                    pdf.addPage();
+                    cursorY = margin;
+                }
+                 pdf.text(line, margin, cursorY);
+                 cursorY += 7; // Line height
+            });
+
+
+            pdf.save('informe-generado.pdf');
+
+        } catch (error) {
+            console.error('Error al generar el PDF:', error);
+            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo generar el informe en PDF.' });
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+    
+    const handleCopyToClipboard = () => {
+        if (!generatedReport) return;
+        navigator.clipboard.writeText(generatedReport).then(() => {
+            toast({
+                title: 'Informe Copiado',
+                description: 'El contenido del informe ha sido copiado al portapapeles.',
+            });
+        });
+    };
+
+
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+                <Card className="bg-secondary/50 border-border/30">
+                    <CardHeader>
+                        <CardTitle>Generador de Informes IA</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="report-project">Seleccionar Proyecto (Opcional)</Label>
+                             <Select>
+                                <SelectTrigger id="report-project">
+                                    <SelectValue placeholder="Todos los proyectos" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="todos">Todos los proyectos</SelectItem>
+                                    {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="report-type">Tipo de Informe</Label>
+                            <Select>
+                                <SelectTrigger id="report-type">
+                                    <SelectValue placeholder="Seleccionar tipo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="progreso">Informe de Progreso</SelectItem>
+                                    <SelectItem value="financiero">Resumen Financiero</SelectItem>
+                                    <SelectItem value="tareas">Detalle de Tareas</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="report-audience">Destinatario del Informe</Label>
+                            <Select>
+                                <SelectTrigger id="report-audience">
+                                    <SelectValue placeholder="Seleccionar destinatario" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="interno">Resumen Interno (Jefe de Proyecto)</SelectItem>
+                                    <SelectItem value="cliente">Reporte para el Cliente</SelectItem>
+                                    <SelectItem value="equipo">Feedback para el Equipo</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="report-period">Periodo</Label>
+                            <Select value={period} onValueChange={setPeriod}>
+                                <SelectTrigger id="report-period">
+                                    <SelectValue placeholder="Seleccionar periodo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="semana">Última Semana</SelectItem>
+                                    <SelectItem value="mes">Último Mes</SelectItem>
+                                    <SelectItem value="trimestre">Último Trimestre</SelectItem>
+                                    <SelectItem value="custom">Personalizado</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {period === 'custom' && (
+                            <div className="space-y-2">
+                                <Label>Rango de Fechas</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button id="date" variant={"outline"} className={cn("w-full justify-start text-left font-normal", !customDateRange && "text-muted-foreground")}>
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {customDateRange?.from ? (customDateRange.to ? (<>{format(customDateRange.from, "dd LLL, y", { locale: es })} - {format(customDateRange.to, "dd LLL, y", { locale: es })}</>) : (format(customDateRange.from, "dd LLL, y", { locale: es }))) : (<span>Elige un rango</span>)}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar initialFocus mode="range" defaultMonth={customDateRange?.from} selected={customDateRange} onSelect={setCustomDateRange} numberOfMonths={2} locale={es}/>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        )}
+                    </CardContent>
+                    <CardFooter>
+                         <Button className="w-full" onClick={handleGenerateReport}>
+                            <Sparkles className="mr-2 h-4 w-4"/>
+                            Generar con IA
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+            <div className="lg:col-span-2">
+                 <Card className="bg-secondary/50 border-border/30 min-h-[500px] flex flex-col">
+                    <CardHeader className="flex flex-row justify-between items-center">
+                        <CardTitle>Informe Generado</CardTitle>
+                         {generatedReport && (
+                            <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCopyToClipboard}><Copy className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownloadPdf} disabled={isDownloading}>
+                                    {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8"><Mail className="h-4 w-4" /></Button>
+                            </div>
+                        )}
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                        {generatedReport ? (
+                            <div ref={printableRef} className="p-6 bg-background rounded-md">
+                                <header id="report-header" className="flex justify-between items-start mb-6 pb-4 border-b">
+                                    <div>
+                                        <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-8 w-auto mb-2" />
+                                        <h2 className="font-bold text-lg">{user?.company?.name || 'Tu Empresa'}</h2>
+                                        <p className="text-sm text-muted-foreground">{user?.company?.cif || 'Tu CIF'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <h3 className="text-xl font-semibold">Informe de Proyecto</h3>
+                                        <p className="text-sm text-muted-foreground">Fecha: {new Date().toLocaleDateString('es-ES')}</p>
+                                    </div>
+                                </header>
+                                <Textarea
+                                    value={generatedReport}
+                                    onChange={(e) => setGeneratedReport(e.target.value)}
+                                    className="w-full h-[400px] p-2 border rounded-md prose prose-sm dark:prose-invert max-w-none"
+                                />
+                            </div>
+                        ) : (
+                             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                                <FileText className="h-12 w-12 mb-4"/>
+                                <p>El informe generado por la IA aparecerá aquí.</p>
+                            </div>
+                        )}
+                       
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
+}
