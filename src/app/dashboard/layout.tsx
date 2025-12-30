@@ -44,6 +44,7 @@ import {
   Bell,
   CheckCircle,
   Cookie,
+  LifeBuoy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -105,9 +106,10 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
   
+  const { logout } = useContext(AuthContext);
+
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/');
+    await logout();
   };
 
   const handleStartTour = () => {
@@ -244,6 +246,15 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                   <SidebarMenuButton isActive={isActive('/dashboard/configuracion')} tooltip="Configuración">
                     <Settings />
                     <span>Configuración</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <Link href="/soporte">
+                  <SidebarMenuButton isActive={pathname === '/soporte'} tooltip="Soporte">
+                    <LifeBuoy />
+                    <span>Soporte</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>

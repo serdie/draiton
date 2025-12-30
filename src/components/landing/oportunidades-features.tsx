@@ -51,35 +51,41 @@ export function OportunidadesFeatures() {
         </section>
 
         <section className="py-20 md:py-28">
-            <div className="container mx-auto space-y-20">
-                {features.map((feature, index) => (
-                    <div key={index} className={`grid md:grid-cols-2 gap-10 md:gap-16 items-center ${feature.imageLeft ? '' : 'md:grid-flow-row-dense'}`}>
-                        <div className={`relative aspect-[4/3] rounded-lg overflow-hidden shadow-lg ${feature.imageLeft ? '' : 'md:col-start-2'}`}>
-                            <Image src={feature.image} alt={feature.title} fill className="object-cover" data-ai-hint={feature.aiHint} />
-                        </div>
-                        <div className="space-y-4">
-                            <div className="inline-block p-4 bg-primary/10 text-primary rounded-xl mb-4">
-                                {feature.icon}
+            <div className="px-4 sm:px-6 lg:px-8">
+                <div className="container mx-auto space-y-20">
+                    {features.map((feature, index) => (
+                        <div key={index} className={`grid md:grid-cols-2 gap-10 md:gap-16 items-center ${feature.imageLeft ? '' : 'md:grid-flow-row-dense'}`}>
+                            <div className={`relative aspect-[4/3] rounded-lg overflow-hidden shadow-lg ${feature.imageLeft ? '' : 'md:col-start-2'}`}>
+                                <Image src={feature.image} alt={feature.title} fill className="object-cover" data-ai-hint={feature.aiHint} />
                             </div>
-                            <h3 className="text-2xl font-bold">{feature.title}</h3>
-                            <p className="text-muted-foreground text-lg">{feature.description}</p>
+                            <div className="space-y-4">
+                                <div className="inline-block p-4 bg-primary/10 text-primary rounded-xl mb-4">
+                                    {feature.icon}
+                                </div>
+                                <h3 className="text-2xl font-bold">{feature.title}</h3>
+                                <p className="text-muted-foreground text-lg">{feature.description}</p>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </section>
 
-        <section className="py-20 md:py-28 text-center container border-t">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">No Dejes Pasar ni una Oportunidad</h2>
-            <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
-                Activa a tu asistente personal de IA y empieza a descubrir nuevas vías de financiación y crecimiento para tu empresa.
-            </p>
-            <div className="mt-8">
-                <Button size="lg" asChild>
-                    <Link href="/seleccionar-plan">
-                        Desbloquear con Plan Pro <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                </Button>
+        <section className="py-20 md:py-28 text-center border-t">
+            <div className="px-4 sm:px-6 lg:px-8">
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight">No Dejes Pasar ni una Oportunidad</h2>
+                    <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
+                        Activa a tu asistente personal de IA y empieza a descubrir nuevas vías de financiación y crecimiento para tu empresa.
+                    </p>
+                    <div className="mt-8">
+                        <Button size="lg" asChild>
+                            <Link href="/seleccionar-plan">
+                                Desbloquear con Plan Pro <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
             </div>
         </section>
     </div>

@@ -113,51 +113,61 @@ const featureSections = [
 export function FeaturesDetailed() {
   return (
     <div className="bg-background text-foreground">
-      <section className="py-20 md:py-28 text-center container">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Todo lo que necesitas, en un solo lugar.</h1>
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-          Desde finanzas y marketing hasta la gestión de equipos y proyectos, Draiton centraliza las herramientas esenciales para el autónomo y la pyme moderna.
-        </p>
+      <section className="py-20 md:py-28 text-center">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Todo lo que necesitas, en un solo lugar.</h1>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Desde finanzas y marketing hasta la gestión de equipos y proyectos, Draiton centraliza las herramientas esenciales para el autónomo y la pyme moderna.
+            </p>
+          </div>
+        </div>
       </section>
 
       {featureSections.map((section, index) => (
         <section key={index} className="py-16 md:py-24 border-t">
-          <div className="container mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-block p-4 bg-primary/10 text-primary rounded-xl mb-4">
-                {section.icon}
-              </div>
-              <h2 className="text-3xl font-bold">{section.category}</h2>
-            </div>
-            <div className="space-y-20">
-              {section.features.map((feature, featureIndex) => (
-                <div key={featureIndex} className={`grid md:grid-cols-2 gap-10 md:gap-16 items-center ${feature.imageLeft ? '' : 'md:grid-flow-row-dense'}`}>
-                  <div className={`relative aspect-video rounded-lg overflow-hidden shadow-lg ${feature.imageLeft ? '' : 'md:col-start-2'}`}>
-                     <Image src={feature.image} alt={feature.title} fill className="object-cover" data-ai-hint={feature.aiHint}/>
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-bold">{feature.title}</h3>
-                    <p className="text-muted-foreground text-lg">{feature.description}</p>
-                  </div>
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center mb-12">
+                <div className="inline-block p-4 bg-primary/10 text-primary rounded-xl mb-4">
+                  {section.icon}
                 </div>
-              ))}
+                <h2 className="text-3xl font-bold">{section.category}</h2>
+              </div>
+              <div className="space-y-20">
+                {section.features.map((feature, featureIndex) => (
+                  <div key={featureIndex} className={`grid md:grid-cols-2 gap-10 md:gap-16 items-center ${feature.imageLeft ? '' : 'md:grid-flow-row-dense'}`}>
+                    <div className={`relative aspect-video rounded-lg overflow-hidden shadow-lg ${feature.imageLeft ? '' : 'md:col-start-2'}`}>
+                       <Image src={feature.image} alt={feature.title} fill className="object-cover" data-ai-hint={feature.aiHint}/>
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-2xl font-bold">{feature.title}</h3>
+                      <p className="text-muted-foreground text-lg">{feature.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
       ))}
 
-        <section className="py-20 md:py-28 text-center container">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">¿Listo para transformar tu negocio?</h2>
-            <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
-            Únete a cientos de profesionales que ya gestionan su negocio de forma más inteligente.
-            </p>
-            <div className="mt-8">
-                <Button size="lg" asChild>
-                    <Link href="/register">
-                        Empieza Gratis <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                </Button>
+        <section className="py-20 md:py-28 text-center">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">¿Listo para transformar tu negocio?</h2>
+              <p className="mt-4 text-lg text-muted-foreground">
+              Únete a cientos de profesionales que ya gestionan su negocio de forma más inteligente.
+              </p>
+              <div className="mt-8">
+                  <Button size="lg" asChild>
+                      <Link href="/register">
+                          Empieza Gratis <ArrowRight className="ml-2 h-5 w-5" />
+                      </Link>
+                  </Button>
+              </div>
             </div>
+          </div>
         </section>
 
     </div>

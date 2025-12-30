@@ -59,8 +59,10 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const { startTour } = useTour();
   
+  const { logout } = useContext(AuthContext);
+
   const handleLogout = async () => {
-    await signOut(auth);
+    await logout();
     await clearSessionCookie();
   };
 

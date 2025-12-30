@@ -10,8 +10,10 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <Hero />
-        <Features />
-        <Pricing />
+        <div className="px-4 sm:px-6 lg:px-8">
+          <Features />
+          <Pricing />
+        </div>
       </main>
       <Footer />
     </div>

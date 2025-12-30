@@ -68,12 +68,11 @@ const components: { title: string; href: string; description: string, icon: Reac
 ]
 
 export function Header() {
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const router = useRouter();
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/');
+    await logout();
   };
   
   const getInitials = (name: string) => {
@@ -82,7 +81,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-14 items-center">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-14 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-7 w-auto" />
@@ -91,10 +90,8 @@ export function Header() {
              <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                    <Link href="/caracteristicas" legacyBehavior passHref>
-                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    <Link href="/caracteristicas" className={navigationMenuTriggerStyle()}>
                         Características
-                        </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
@@ -115,17 +112,13 @@ export function Header() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                  <NavigationMenuItem>
-                    <Link href="/#pricing" legacyBehavior passHref>
-                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    <Link href="/#pricing" className={navigationMenuTriggerStyle()}>
                         Precios
-                        </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
                  <NavigationMenuItem>
-                    <Link href="/control-horario" legacyBehavior passHref>
-                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    <Link href="/control-horario" className={navigationMenuTriggerStyle()}>
                         Control Horario
-                        </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
               </NavigationMenuList>

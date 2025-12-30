@@ -164,7 +164,7 @@ export default function SeleccionarPlanPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-1 container py-12 md:py-20">
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-12 md:py-20">
         <div className="mx-auto mb-12 max-w-2xl text-center">
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl">Elige tu Plan para Empezar</h1>
             <p className="mt-4 text-muted-foreground">

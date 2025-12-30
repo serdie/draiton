@@ -27,8 +27,9 @@ const featureLinks = [
 
 const helpLinks = [
     { href: "/soporte", label: "Soporte" },
-    { href: "/contacto", label: "Contacto" },
+    { href: "/centro-de-ayuda", label: "Centro de Ayuda" },
     { href: "/preguntas-frecuentes", label: "Preguntas Frecuentes" },
+    { href: "/tutoriales-video", label: "Tutoriales en Video" },
 ];
 
 
