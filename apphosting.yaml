@@ -2,6 +2,119 @@
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
   maxInstances: 1
+
+env:
+  # Firebase Cliente (Frontend) - Públicas
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyD7ZLbpvM2RZo9-3mRkptmFSaC_h2DIUew"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "emprende-total.firebaseapp.com"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "emprende-total"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "emprende-total.firebasestorage.app"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "614944452739"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:614944452739:web:e269831d66e0464b186bb6"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  # Firebase Admin (Backend)
+  - variable: FIREBASE_PROJECT_ID
+    value: "emprende-total"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: FIREBASE_CLIENT_EMAIL
+    value: "firebase-adminsdk-fbsvc@emprende-total.iam.gserviceaccount.com"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  # Stripe Públicas
+  - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+    value: "pk_test_51Sd7nzDaJWPk1oF9WSWO23OD8HPeKcyi4vN3VWcGURDXcUQ0pKh1GVgyPH07jOm6g7UASTEpRp9ggXUbrY6YEo5000cX0L5pcJ"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_STRIPE_PRO_PRICE_ID_MENSUAL
+    value: "price_1SdamoDaJWPk1oF9vTeHa0g4"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_STRIPE_PRO_PRICE_ID_ANUAL
+    value: "price_1Sdam5DaJWPk1oF9IQyia1Ui"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_STRIPE_EMPRESA_PRICE_ID_MENSUAL
+    value: "price_1SdanqDaJWPk1oF94oQKfJ4c"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  - variable: NEXT_PUBLIC_STRIPE_EMPRESA_PRICE_ID_ANUAL
+    value: "price_1Sdan8DaJWPk1oF9fRGdppbU"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  # Configuración App
+  - variable: NEXT_PUBLIC_BASE_URL
+    value: "https://draiton.es"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  # Veri*Factu
+  - variable: VERIFACTU_API_URL
+    value: "https://api.verifacti.com"
+    availability:
+      - BUILD
+      - RUNTIME
+  
+  # Secretos (usaremos Cloud Secret Manager)
+  - variable: FIREBASE_PRIVATE_KEY_ID
+    secret: firebase-private-key-id
+  
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: firebase-private-key
+  
+  - variable: STRIPE_SECRET_KEY
+    secret: stripe-secret-key
+  
+  - variable: STRIPE_WEBHOOK_SECRET
+    secret: stripe-webhook-secret
+  
+  - variable: VERIFACTU_API_KEY
+    secret: verifactu-api-key
+  
+  - variable: GEMINI_API_KEY
+    secret: gemini-api-key
