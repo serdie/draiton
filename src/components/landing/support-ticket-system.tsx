@@ -205,7 +205,8 @@ export function SupportTicketSystem() {
       // Upload image if selected
       if (selectedImage) {
         const storage = getStorage();
-        const storageRef = ref(storage, `support-tickets/${user.uid}/${Date.now()}_${selectedImage.name}`);
+        const timestamp = typeof window !== 'undefined' ? Date.now() : new Date().getTime();
+        const storageRef = ref(storage, `support-tickets/${user.uid}/${timestamp}_${selectedImage.name}`);
 
         await uploadBytes(storageRef, selectedImage);
         imageUrl = await getDownloadURL(storageRef);

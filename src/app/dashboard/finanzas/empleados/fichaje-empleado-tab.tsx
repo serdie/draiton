@@ -57,6 +57,7 @@ export function FichajeEmpleadoTab() {
     const [lastFichajeTime, setLastFichajeTime] = useState<string | null>(null);
     const [allFichajes, setAllFichajes] = useState<Fichaje[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
     const [isWorkModalityModalOpen, setIsWorkModalityModalOpen] = useState(false);
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
@@ -81,7 +82,12 @@ export function FichajeEmpleadoTab() {
         if (!user) return;
         const q = query(collection(db, 'absences'), where('employeeId', '==', user.uid), where('status', '==', 'Aprobada'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const userAbsences = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, startDate: doc.data().startDate.toDate(), endDate: doc.data().endDate.toDate() } as Absence));
+            const userAbsences = snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                startDate: doc.data().startDate ? doc.data().startDate.toDate() : new Date(),
+                endDate: doc.data().endDate ? doc.data().endDate.toDate() : new Date()
+            } as Absence));
             setAbsences(userAbsences);
         });
         return () => unsubscribe();
@@ -92,7 +98,7 @@ export function FichajeEmpleadoTab() {
         if (!user?.uid) {
             setStatus('out');
             setBreakStatus('working');
-            setLoading(false);
+            setIsInitialLoading(false);
             return;
         }
 
@@ -107,7 +113,7 @@ export function FichajeEmpleadoTab() {
                  return {
                     id: doc.id,
                     ...data,
-                    timestamp: (data.timestamp as Timestamp).toDate(),
+                    timestamp: data.timestamp ? (data.timestamp as Timestamp).toDate() : new Date(),
                     requestedTimestamp: data.requestedTimestamp ? (data.requestedTimestamp as Timestamp).toDate() : undefined,
                     requestedAt: data.requestedAt ? (data.requestedAt as Timestamp).toDate() : undefined,
                  } as Fichaje;
@@ -167,11 +173,11 @@ export function FichajeEmpleadoTab() {
                 }
             }
             setWeeklyWorkedMinutes(totalMinutes);
-            setLoading(false);
+            setIsInitialLoading(false);
         }, (error) => {
             console.error("Error al obtener el estado de fichaje:", error);
             setStatus('out');
-            setLoading(false);
+            setIsInitialLoading(false);
         });
 
         return () => unsubscribe();
@@ -257,7 +263,7 @@ export function FichajeEmpleadoTab() {
 
     const isClockIn = status === 'in';
     const isOnBreak = breakStatus === 'on_break';
-    const isLoading = status === 'loading';
+    const isLoading = isInitialLoading || isProcessing;
 
     // Get current day's schedule to check if clock-in is allowed
     const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0, ..., Sunday = 6

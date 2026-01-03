@@ -110,7 +110,7 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
     setConnectedSites(prevSites => [
         ...prevSites,
         {
-            id: `site-${Date.now()}`,
+            id: `site-${typeof window !== 'undefined' ? Date.now() : 'server'}`,
             ...newSite
         }
     ]);
@@ -120,7 +120,7 @@ export function WebIAPageContent({ getWebsiteConceptAction, analyzeWebsiteAction
     if (!templateContent) return;
     const newTemplate: SavedTemplate = {
         ...templateContent,
-        id: `template-${Date.now()}`,
+        id: `template-${typeof window !== 'undefined' ? Date.now() : 'server'}`,
         name: `Plantilla - ${new Date().toLocaleString('es-ES')}`,
     };
     setSavedTemplates(prev => [newTemplate, ...prev]);

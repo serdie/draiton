@@ -3,8 +3,6 @@ import { NextResponse } from 'next/server';
 import { stripe, PRICE_ROLE_MAP } from '@/lib/stripe';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { webhookLimiter } from '@/lib/ratelimit';
-
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -44,20 +42,6 @@ async function logPaymentEvent(
 export async function POST(req: Request) {
   const body = await req.text();
   const signature = (await headers()).get('stripe-signature');
-
-  // ================================================================
-// VALIDACIÓN 0: Rate Limiting
-// ================================================================
-const ip = (await headers()).get('x-forwarded-for') || (await headers()).get('x-real-ip') || 'unknown';
-const { success, remaining } = await webhookLimiter.limit(ip);
-
-if (!success) {
-  console.error('❌ RATE LIMIT EXCEEDED:', { ip, remaining });
-  return NextResponse.json(
-    { error: 'Rate limit exceeded' },
-    { status: 429 }
-  );
-}
 
   // ================================================================
   // VALIDACIÓN 1: Verificar que tenemos firma y secret
@@ -132,9 +116,11 @@ if (!success) {
         const amount = priceItem.unit_amount ? priceItem.unit_amount / 100 : 0;
         const interval = priceItem.recurring?.interval || 'month';
         const newRole = PRICE_ROLE_MAP[priceId] || 'pro';
-        const endDate = Timestamp.fromMillis(
-          (subscription as any).current_period_end * 1000
-        );
+
+        // Stripe envía current_period_end en segundos UNIX
+        const rawEnd = (subscription as any).current_period_end;
+        const endSeconds = Number(rawEnd) || 0;
+        const endDate = Timestamp.fromMillis(endSeconds * 1000);
 
         // Actualizar usuario
         await adminDb.collection('users').doc(userId).update({
@@ -191,9 +177,10 @@ if (!success) {
               : 0;
             const interval = priceItem.recurring?.interval || 'month';
             const newRole = PRICE_ROLE_MAP[priceId] || 'pro';
-            const endDate = Timestamp.fromMillis(
-              subscription.current_period_end * 1000
-            );
+
+            const rawEnd = (subscription as any).current_period_end;
+            const endSeconds = Number(rawEnd) || 0;
+            const endDate = Timestamp.fromMillis(endSeconds * 1000);
 
             await adminDb.collection('users').doc(userId).update({
               role: newRole,
@@ -278,11 +265,15 @@ if (!success) {
         failure_message: charge.failure_message,
       });
 
-      await logPaymentEvent('charge.failed', charge.metadata?.userId || 'unknown', {
-        charge_id: charge.id,
-        failure_code: charge.failure_code,
-        failure_message: charge.failure_message,
-      });
+      await logPaymentEvent(
+        'charge.failed',
+        charge.metadata?.userId || 'unknown',
+        {
+          charge_id: charge.id,
+          failure_code: charge.failure_code,
+          failure_message: charge.failure_message,
+        }
+      );
     }
 
     return NextResponse.json({ received: true }, { status: 200 });

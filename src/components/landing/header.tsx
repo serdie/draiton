@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -70,11 +70,16 @@ const components: { title: string; href: string; description: string, icon: Reac
 export function Header() {
   const { user, logout } = useContext(AuthContext);
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
   };
-  
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
@@ -87,6 +92,7 @@ export function Header() {
             <Image src="https://firebasestorage.googleapis.com/v0/b/emprende-total.firebasestorage.app/o/logo1.jpg?alt=media&token=a1592962-ac39-48cb-8cc1-55d21909329e" alt="Draiton Logo" width={110} height={40} className="h-7 w-auto" />
           </Link>
           <nav className="hidden items-center gap-2 text-sm md:flex">
+            {isMounted && (
              <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
@@ -123,6 +129,7 @@ export function Header() {
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
+            )}
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">

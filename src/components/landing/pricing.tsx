@@ -97,7 +97,7 @@ export function Pricing() {
           </CardContent>
           <CardFooter>
             <Button variant="outline" className="w-full" asChild>
-              <Link href="/dashboard">Comienza Gratis</Link>
+              <Link href="/seleccionar-plan">Comienza Gratis</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -131,7 +131,7 @@ export function Pricing() {
           </CardContent>
           <CardFooter>
             <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
-              <Link href="/dashboard">Elegir Plan Pro</Link>
+              <Link href="/seleccionar-plan">Elegir Plan Pro</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -164,7 +164,7 @@ export function Pricing() {
           </CardContent>
           <CardFooter>
             <Button variant="outline" className="w-full" asChild>
-              <Link href="/dashboard">Elegir Plan Empresa</Link>
+              <Link href="/seleccionar-plan">Elegir Plan Empresa</Link>
             </Button>
           </CardFooter>
         </Card>

@@ -1,5 +1,4 @@
 import { stripe, PRICE_ROLE_MAP } from '@/lib/stripe';
-import { checkoutLimiter } from '@/lib/ratelimit';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -11,17 +10,6 @@ const CheckoutSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    // Rate limiting
-    const ip = req.headers.get('x-forwarded-for') || 'unknown';
-    const { success } = await checkoutLimiter.limit(ip);
-
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Demasiadas solicitudes. Intenta en 1 minuto.' },
-        { status: 429 }
-      );
-    }
-
     const body = await req.json();
     
     // Validar con Zod
@@ -29,6 +17,11 @@ export async function POST(req: Request) {
 
     // Detectar rol desde el mapa
     const targetRole = PRICE_ROLE_MAP[priceId] || 'pro';
+
+    // Construir la base URL
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+
+    console.log('🔍 Checkout:', { baseUrl, priceId, targetRole });
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -44,15 +37,16 @@ export async function POST(req: Request) {
         userId,
         targetRole,
       },
-      automatic_tax: { enabled: true },
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?payment_success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/register?canceled=true`,
-      tax_id_collection: { enabled: true },
+      automatic_tax: { enabled: false },
+      success_url: `${baseUrl}/dashboard?payment_success=true`,
+      cancel_url: `${baseUrl}/register?canceled=true`,
     });
+
+    console.log('✅ Sesión creada:', session.id);
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    console.error('Checkout error:', error);
+    console.error('❌ Checkout error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -67,4 +61,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

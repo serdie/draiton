@@ -62,7 +62,7 @@ export function GeneratePayrollModal({ isOpen, onClose, employee }: GeneratePayr
   };
 
   const addConcept = () => {
-    setAdditionalConcepts([...additionalConcepts, { id: Date.now(), concept: '', amount: '' }]);
+    setAdditionalConcepts([...additionalConcepts, { id: typeof window !== 'undefined' ? Date.now() : Math.floor(Math.random() * 1000000), concept: '', amount: '' }]);
   };
 
   const removeConcept = (id: number) => {

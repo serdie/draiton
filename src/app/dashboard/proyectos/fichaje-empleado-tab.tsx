@@ -30,6 +30,7 @@ export function FichajeEmpleadoTab() {
     const [lastFichajeTime, setLastFichajeTime] = useState<string | null>(null);
     const [allFichajes, setAllFichajes] = useState<Fichaje[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isBreakModalOpen, setIsBreakModalOpen] = useState(false);
     const [isWorkModalityModalOpen, setIsWorkModalityModalOpen] = useState(false);
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
@@ -53,7 +54,7 @@ export function FichajeEmpleadoTab() {
         if (!user?.uid) {
             setStatus('out');
             setBreakStatus('working');
-            setLoading(false);
+            setIsInitialLoading(false);
             return;
         }
 
@@ -68,7 +69,7 @@ export function FichajeEmpleadoTab() {
                  return {
                     id: doc.id,
                     ...data,
-                    timestamp: (data.timestamp as Timestamp).toDate(),
+                    timestamp: data.timestamp ? (data.timestamp as Timestamp).toDate() : new Date(),
                     requestedTimestamp: data.requestedTimestamp ? (data.requestedTimestamp as Timestamp).toDate() : undefined,
                     requestedAt: data.requestedAt ? (data.requestedAt as Timestamp).toDate() : undefined,
                  } as Fichaje;
@@ -100,11 +101,11 @@ export function FichajeEmpleadoTab() {
                 setBreakStatus('working');
                 setLastFichajeTime(null);
             }
-             setLoading(false);
+             setIsInitialLoading(false);
         }, (error) => {
             console.error("Error al obtener el estado de fichaje:", error);
             setStatus('out');
-            setLoading(false);
+            setIsInitialLoading(false);
         });
 
         return () => unsubscribe();
@@ -189,7 +190,7 @@ export function FichajeEmpleadoTab() {
 
     const isClockIn = status === 'in';
     const isOnBreak = breakStatus === 'on_break';
-    const isLoading = status === 'loading';
+    const isLoading = isInitialLoading || isProcessing;
 
     return (
         <>

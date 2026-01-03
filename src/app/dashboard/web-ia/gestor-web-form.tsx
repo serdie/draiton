@@ -265,7 +265,7 @@ input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #cc
         {/* Hero Section */}
         <section className="relative h-96 rounded-lg overflow-hidden flex items-center justify-center text-center text-white bg-secondary">
             <Image 
-                src={`https://picsum.photos/1200/800?random=${Math.random()}`}
+                src={`https://picsum.photos/1200/800?random=${typeof window !== 'undefined' ? Math.random() : 'server'}`}
                 alt={editableContent.hero.imagePrompt}
                 data-ai-hint={editableContent.hero.imagePrompt}
                 fill
@@ -300,7 +300,7 @@ input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #cc
                 </div>
                 <div className="h-80 w-full relative rounded-lg overflow-hidden">
                     <Image 
-                         src={`https://picsum.photos/600/400?random=${Math.random()}`}
+                         src={`https://picsum.photos/600/400?random=${typeof window !== 'undefined' ? Math.random() : 'server'}`}
                          alt={editableContent.about.imagePrompt}
                          data-ai-hint={editableContent.about.imagePrompt}
                          fill

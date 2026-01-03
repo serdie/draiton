@@ -217,7 +217,7 @@ export function CreateDocumentForm({ onClose, documentType, initialData, documen
 
   const handleAddLine = () => {
     const newLine: LineItem = {
-      id: Date.now(),
+      id: typeof window !== 'undefined' ? Date.now() : Math.floor(Math.random() * 1000000),
       description: '',
       quantity: 1,
       unitPrice: 0,

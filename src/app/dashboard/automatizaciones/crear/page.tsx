@@ -23,7 +23,7 @@ export default function CrearAutomatizacionPage() {
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
 
   const addAction = (action: Action) => {
-    setActions([...actions, { ...action, id: `action-${Date.now()}` }]);
+    setActions([...actions, { ...action, id: `action-${typeof window !== 'undefined' ? Date.now() : 'server'}` }]);
     setIsActionModalOpen(false);
   };
 
