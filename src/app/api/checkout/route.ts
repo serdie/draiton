@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const targetRole = PRICE_ROLE_MAP[priceId] || 'pro';
 
     // Construir la base URL
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.BASE_URL || 'https://draiton.es';
 
     console.log('🔍 Checkout:', { baseUrl, priceId, targetRole });
 
